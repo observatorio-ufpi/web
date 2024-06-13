@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import RevenueTable from './components/RevenueTable';
-import { transformDataForTableRevenues } from './dataTransformingUtils';
-import { mapAdditionalMunicipalEducationRevenue, mapMunicipalTaxesRevenues, mapOwnRevenues, standardizeTypeAdditionalEducationRevenues, standardizeTypeMunicipalTaxesRevenues, standardizeTypeOwnRevenues } from './tablesMapping';
+import { transformDataForTableExpenses, transformDataForTableRevenues } from './dataTransformingUtils';
+import { mapAdditionalMunicipalEducationRevenue, mapAreasActivityExpense, mapComplementationFundebFundef, mapConstitutionalTransfersRevenue, mapMunicipalFundebFundefComposition, mapMunicipalTaxesRevenues, mapOwnRevenues, standardizeTypeAdditionalEducationRevenues, standardizeTypeMunicipalTaxesRevenues, standardizeTypeOwnRevenues, standardizedTypeAreasActivityExpense, standardizedTypeComplementationFundebFundef, standardizedTypeConstitutionalTransfersRevenue, standardizedTypeMunicipalFundebFundefComposition } from './tablesMapping';
 
 class App extends Component {
   constructor(props) {
@@ -21,8 +21,12 @@ class App extends Component {
   fetchData = (table) => {
     const endpoints = {
       ownRevenues: 'http://localhost:3003/researches/mot-revenue',
+      constitutionalTransfersRevenue: 'http://localhost:3003/researches/ct-revenue',
       municipalTaxesRevenues: 'http://localhost:3003/researches/mt-revenue',
-      additionalEducationRevenue: 'http://localhost:3003/researches/addtional-education-revenue'
+      additionalEducationRevenue: 'http://localhost:3003/researches/addtional-education-revenue',
+      municipalFundebFundefComposition: 'http://localhost:3003/researches/mfc-revenue',
+      complementationFundebFundef: 'http://localhost:3003/researches/cf-revenue',
+      areasActivityExpense: 'http://localhost:3003/researches/areas-activity-expense'
       // Adicione outros endpoints conforme necessário
     };
 
@@ -73,8 +77,12 @@ class App extends Component {
           <h2>Selecione a tabela:</h2>
           <select value={selectedTable} onChange={this.handleTableChange}>
             <option value="ownRevenues">Impostos Próprios</option>
+            <option value="constitutionalTransfersRevenue">Receita de transferências constitucionais e legais</option>
             <option value="municipalTaxesRevenues">Receita Líquida de Impostos do Município</option>
             <option value="additionalEducationRevenue">Receitas adicionais da educação no Município</option>
+            <option value="municipalFundebFundefComposition">Composição do Fundef/Fundeb no município</option>
+            <option value="complementationFundebFundef">Composição da complementação do Fundef/Fundeb</option>
+            <option value="areasActivityExpense">Despesas em MDE por área de atuação </option>
             {/* Adicione outras opções de tabela conforme necessário */}
           </select>
         </div>
@@ -86,11 +94,23 @@ class App extends Component {
                 {selectedTable === 'ownRevenues' && (
                   <RevenueTable data={apiData[municipio]} transformDataFunction={transformDataForTableRevenues} standardizeTypeFunction={standardizeTypeOwnRevenues} tableMapping={mapOwnRevenues} />
                 )}
+                {selectedTable === 'constitutionalTransfersRevenue' && (
+                  <RevenueTable data={apiData[municipio]} transformDataFunction={transformDataForTableRevenues} standardizeTypeFunction={standardizedTypeConstitutionalTransfersRevenue} tableMapping={mapConstitutionalTransfersRevenue} />
+                )}
                 {selectedTable === 'municipalTaxesRevenues' && (
                   <RevenueTable data={apiData[municipio]} transformDataFunction={transformDataForTableRevenues} standardizeTypeFunction={standardizeTypeMunicipalTaxesRevenues} tableMapping={mapMunicipalTaxesRevenues}/>
                 )}
+                {selectedTable === 'municipalFundebFundefComposition' && (
+                  <RevenueTable data={apiData[municipio]} transformDataFunction={transformDataForTableRevenues} standardizeTypeFunction={standardizedTypeMunicipalFundebFundefComposition} tableMapping={mapMunicipalFundebFundefComposition}/>
+                )}
                 {selectedTable === 'additionalEducationRevenue' && (
                   <RevenueTable data={apiData[municipio]} transformDataFunction={transformDataForTableRevenues} standardizeTypeFunction={standardizeTypeAdditionalEducationRevenues} tableMapping={mapAdditionalMunicipalEducationRevenue}/>
+                )}
+                {selectedTable === 'complementationFundebFundef' && (
+                  <RevenueTable data={apiData[municipio]} transformDataFunction={transformDataForTableRevenues} standardizeTypeFunction={standardizedTypeComplementationFundebFundef} tableMapping={mapComplementationFundebFundef}/>
+                )}
+                {selectedTable === 'areasActivityExpense' && (
+                  <RevenueTable data={apiData[municipio]} transformDataFunction={transformDataForTableExpenses} standardizeTypeFunction={standardizedTypeAreasActivityExpense} tableMapping={mapAreasActivityExpense}/>
                 )}
                 {/* Adicione outras condições para diferentes tabelas conforme necessário */}
               </div>

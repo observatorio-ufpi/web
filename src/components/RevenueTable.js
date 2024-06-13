@@ -39,9 +39,12 @@ const RevenueTable = ({ data, transformDataFunction, standardizeTypeFunction, ta
         return [
           type,
           ...years.map((year) => {
-            return typeToYearToValue[type][year] !== undefined
-              ? typeToYearToValue[type][year].toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-              : '-';
+            // Verifica se typeToYearToValue[type] e typeToYearToValue[type][year] não são undefined
+            if (typeToYearToValue[type] && typeToYearToValue[type][year] !== undefined) {
+              return typeToYearToValue[type][year].toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            } else {
+              return '-';
+            }
           }),
         ];
       }),
@@ -73,7 +76,7 @@ const RevenueTable = ({ data, transformDataFunction, standardizeTypeFunction, ta
                 </TableCell>
                 {years.map((year) => (
                   <TableCell key={year} align="right">
-                    {typeToYearToValue[type][year] !== undefined
+                    {typeToYearToValue[type] && typeToYearToValue[type][year] !== undefined
                       ? typeToYearToValue[type][year].toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
                       : '-'}
                   </TableCell>
