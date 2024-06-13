@@ -1,0 +1,59 @@
+export const mapOwnRevenues = {
+  "IPTU": ["RECEITA_RESULTANTE_IMPOSTO_IPTU", "IPTU_RECEITA_RESULTANTE", "RECEITA_IPTU"],
+  "ITBI": ["ITBI_RECEITA_RESULTANTE", "RECEITA_ITBI", "RECEITA_RESULTANTE_ITBI"],
+  "ISS": ["RECEITA_ISS", "ISS_RECEITA_RESULTANTE", "RECEITA_RESULTANTE_ISS"],
+  "IRRF": ["IRRF_RECEITA_RESULTANTE", "RECEITA_RESULTANTE_IRRF", "RECEITA_IRRF"],
+  "ITR": ["ITR_RECEITA_RESULTANTE"],
+  "TOTAL": ["RECEITAS_DE_IMPOSTO", "RECEITAS_DE_IMPOSTOS", "RECEITA_DE_IMPOSTOS"]
+};
+
+export const mapMunicipalTaxesRevenues = {
+  "Receita líquida de impostos próprios": ["RECEITAS_DE_IMPOSTO", "RECEITA_DE_IMPOSTOS", "RECEITAS_DE_IMPOSTOS"],
+  "Receita líquida de transferências constitucionais federais (FPM, IPI-EXP, IOF-Ouro, ICMS desoneração)": [
+    "RECEITAS_DE_TRANSFERENCIAS_CONSTITUCIONAIS_E_LEGAL",
+    "RECEITA_DE_TRANSFERENCIAS_CONSTITUCIONAIS_E_LEGAIS",
+    "RECEITA_TRANSFERENCIAS_CONSTITUCIONAIS"
+  ],
+  "TOTAL": ["RECEITA_RESULTANTE_DE_IMPOSTOS", "TOTAL_RECEITA_BRUTA_IMPOSTOS", "TOTAL_RECEITA_IMPOSTOS"]
+};
+
+export const mapAdditionalMunicipalEducationRevenue = {
+  "Salário-Educação": ["TRANSFERENCIAS_DO_SALARIO_EDUCACAO", "TRANSFERENCIAS_SALARIO_EDUCACAO", "FIN_ENSINO_SALARIO_EDUCACAO"],
+  "Outras transferências do FNDE": [
+    "OUTRAS_TRANSFERENCIAS_DO_FNDE",
+    "OUTRAS_TRANSFERENCIAS_FNDE",
+    "FIN_ENSINO_OUTRAS_TRANSFERENCIAS_FNDE"
+  ],
+  "Aplicação financeira dos recursos do FNDE": ["APLICACAO_FINANCEIRA_FNDE"],
+  "PDDE": ["TRANSFERENCIAS_DIRETAS_PDDE", "FIN_ENSINO_PDDE"],
+  "PNAE": ["TRANSFERENCIAS_DIRETAS_PNAE", "FIN_ENSINO_PNAE"],
+  "PNATE": ["FIN_ENSINO_PNATE", "TRANSFERENCIAS_DIRETAS_PNATE"],
+  "Convênios": [
+    "TRANSFERENCIAS_DESTINADAS_A_PROGRAMAS_DE_EDUCACAO",
+    "TRANSFERENCIAS_CONVENIOS_PROGRAMAS_EDUCACAO",
+    "TRANSFERENCIAS_CONVENIOS",
+    "FIN_ENSINO_RECEITA_TRANSFERENCIAS_CONVENIOS"
+  ],
+  "Operação de créditos": [
+    "RECEITA_DE_OPERACOES_DE_CREDITO_DESTINADAS_A_EDUCACAO",
+    "RECEITA_OPERACOES_CREDITO_DESTINADA_EDUCACAO",
+    "RECEITA_OPERACOES_CREDITO",
+    "FIN_ENSINO_RECEITA_OPERACOES_CREDITO_EDUCACAO"
+  ],
+  "Royalties": ["FIN_ENSINO_RECEITA_ROYALTIES_DESTINADOS_EDUCACAO"],
+  "Outras receitas": ["FIN_ENSINO_OUTRAS_RECEITAS", "OUTRAS_RECEITAS_FINANCIAMENTO_ENSINO", "OUTRAS_RECEITAS_DESTINADAS_EDUCACAO"],
+  "TOTAL": ["TOTAL_OUTRAS_RECEITAS_DESTINADAS_ENSINO", "TOTAL_RECEITAS_ADICIONAIS_FINANCIAMENTO_ENSINO", "FIN_ENSINO_TOTAL_RECEITAS_ADICIONAIS"]
+};
+
+const standardizeType = (type, map) => {
+  for (const [standardType, types] of Object.entries(map)) {
+    if (types.includes(type)) {
+      return standardType;
+    }
+  }
+  return type;
+};
+
+export const standardizeTypeOwnRevenues = (type) => standardizeType(type, mapOwnRevenues);
+export const standardizeTypeMunicipalTaxesRevenues = (type) => standardizeType(type, mapMunicipalTaxesRevenues);
+export const standardizeTypeAdditionalEducationRevenues = (type) => standardizeType(type, mapAdditionalMunicipalEducationRevenue);
