@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import RevenueTable from './components/RevenueTable';
-import { transformDataForTableExpenses, transformDataForTableRevenues } from './dataTransformingUtils';
-import { mapAdditionalMunicipalEducationRevenue, mapAreasActivityExpense, mapComplementationFundebFundef, mapConstitutionalTransfersRevenue, mapMunicipalFundebFundefComposition, mapMunicipalTaxesRevenues, mapOwnRevenues, standardizeTypeAdditionalEducationRevenues, standardizeTypeMunicipalTaxesRevenues, standardizeTypeOwnRevenues, standardizedTypeAreasActivityExpense, standardizedTypeComplementationFundebFundef, standardizedTypeConstitutionalTransfersRevenue, standardizedTypeMunicipalFundebFundefComposition } from './tablesMapping';
+import { transformDataForTableRevenues } from './dataTransformingUtils';
+import { mapAdditionalMunicipalEducationRevenue, mapAreasActivityExpense, mapBasicEducationMinimalPotential, mapComplementationFundebFundef, mapConstitutionalLimitMde, mapConstitutionalTransfersRevenue, mapExpensesBasicEducationFundeb, mapMunicipalFundebFundefComposition, mapMunicipalTaxesRevenues, mapOwnRevenues, standardizeTypeAdditionalEducationRevenues, standardizeTypeMunicipalTaxesRevenues, standardizeTypeOwnRevenues, standardizedTypeAreasActivityExpense, standardizedTypeBasicEducationMinimalPotential, standardizedTypeComplementationFundebFundef, standardizedTypeConstitutionalLimitMde, standardizedTypeConstitutionalTransfersRevenue, standardizedTypeExpensesBasicEducationFundeb, standardizedTypeMunicipalFundebFundefComposition } from './tablesMapping';
 
 class App extends Component {
   constructor(props) {
@@ -26,7 +26,10 @@ class App extends Component {
       additionalEducationRevenue: 'http://localhost:3003/researches/addtional-education-revenue',
       municipalFundebFundefComposition: 'http://localhost:3003/researches/mfc-revenue',
       complementationFundebFundef: 'http://localhost:3003/researches/cf-revenue',
-      areasActivityExpense: 'http://localhost:3003/researches/areas-activity-expense'
+      areasActivityExpense: 'http://localhost:3003/researches/areas-activity-expense',
+      basicEducationMinimalPotential: 'http://localhost:3003/researches/basic-education-minimal-potential-revenue',
+      constitutionalLimitMde: 'http://localhost:3003/researches/mc-limit-revenue',
+      expensesBasicEducationFundeb: 'http://localhost:3003/researches/basic-education-expense',
       // Adicione outros endpoints conforme necessário
     };
 
@@ -74,7 +77,6 @@ class App extends Component {
     return (
       <div>
         <div>
-          <h2>Selecione a tabela:</h2>
           <select value={selectedTable} onChange={this.handleTableChange}>
             <option value="ownRevenues">Impostos Próprios</option>
             <option value="constitutionalTransfersRevenue">Receita de transferências constitucionais e legais</option>
@@ -82,7 +84,10 @@ class App extends Component {
             <option value="additionalEducationRevenue">Receitas adicionais da educação no Município</option>
             <option value="municipalFundebFundefComposition">Composição do Fundef/Fundeb no município</option>
             <option value="complementationFundebFundef">Composição da complementação do Fundef/Fundeb</option>
-            <option value="areasActivityExpense">Despesas em MDE por área de atuação </option>
+            <option value="constitutionalLimitMde">Limite constitucional em MDE no município </option>
+            <option value="expensesBasicEducationFundeb">Despesas com profissionais da educação básica com o Fundef/Fundeb</option>
+            <option value="areasActivityExpense">Despesas em MDE por área de atuação</option>
+            <option value="basicEducationMinimalPotential">Receita Potencial Mínima vinculada à Educação Básica</option>
             {/* Adicione outras opções de tabela conforme necessário */}
           </select>
         </div>
@@ -92,25 +97,104 @@ class App extends Component {
               <div key={municipio}>
                 <h2>Município: {municipio}</h2>
                 {selectedTable === 'ownRevenues' && (
-                  <RevenueTable data={apiData[municipio]} transformDataFunction={transformDataForTableRevenues} standardizeTypeFunction={standardizeTypeOwnRevenues} tableMapping={mapOwnRevenues} />
+                  <RevenueTable
+                    data={apiData[municipio]}
+                    transformDataFunction={transformDataForTableRevenues}
+                    standardizeTypeFunction={standardizeTypeOwnRevenues}
+                    tableMapping={mapOwnRevenues}
+                    tableName="Impostos_Proprios"
+                    municipio={municipio}
+                  />
                 )}
                 {selectedTable === 'constitutionalTransfersRevenue' && (
-                  <RevenueTable data={apiData[municipio]} transformDataFunction={transformDataForTableRevenues} standardizeTypeFunction={standardizedTypeConstitutionalTransfersRevenue} tableMapping={mapConstitutionalTransfersRevenue} />
+                  <RevenueTable
+                    data={apiData[municipio]}
+                    transformDataFunction={transformDataForTableRevenues}
+                    standardizeTypeFunction={standardizedTypeConstitutionalTransfersRevenue}
+                    tableMapping={mapConstitutionalTransfersRevenue}
+                    tableName="Receita_de_Transferencias_Constitucionais_e_Legais"
+                    municipio={municipio}
+                  />
                 )}
                 {selectedTable === 'municipalTaxesRevenues' && (
-                  <RevenueTable data={apiData[municipio]} transformDataFunction={transformDataForTableRevenues} standardizeTypeFunction={standardizeTypeMunicipalTaxesRevenues} tableMapping={mapMunicipalTaxesRevenues}/>
+                  <RevenueTable
+                    data={apiData[municipio]}
+                    transformDataFunction={transformDataForTableRevenues}
+                    standardizeTypeFunction={standardizeTypeMunicipalTaxesRevenues}
+                    tableMapping={mapMunicipalTaxesRevenues}
+                    tableName="Receita_Liquida_de_Impostos_do_Municipio"
+                    municipio={municipio}
+                  />
                 )}
                 {selectedTable === 'municipalFundebFundefComposition' && (
-                  <RevenueTable data={apiData[municipio]} transformDataFunction={transformDataForTableRevenues} standardizeTypeFunction={standardizedTypeMunicipalFundebFundefComposition} tableMapping={mapMunicipalFundebFundefComposition}/>
+                  <RevenueTable
+                    data={apiData[municipio]}
+                    transformDataFunction={transformDataForTableRevenues}
+                    standardizeTypeFunction={standardizedTypeMunicipalFundebFundefComposition}
+                    tableMapping={mapMunicipalFundebFundefComposition}
+                    tableName="Composicao_do_Fundef-Fundeb_no_Município"
+                    municipio={municipio}
+                  />
                 )}
                 {selectedTable === 'additionalEducationRevenue' && (
-                  <RevenueTable data={apiData[municipio]} transformDataFunction={transformDataForTableRevenues} standardizeTypeFunction={standardizeTypeAdditionalEducationRevenues} tableMapping={mapAdditionalMunicipalEducationRevenue}/>
+                  <RevenueTable
+                    data={apiData[municipio]}
+                    transformDataFunction={transformDataForTableRevenues}
+                    standardizeTypeFunction={standardizeTypeAdditionalEducationRevenues}
+                    tableMapping={mapAdditionalMunicipalEducationRevenue}
+                    tableName="Receitas_Adicionais_da_Educacao_no_Municipio"
+                    municipio={municipio}
+                  />
                 )}
                 {selectedTable === 'complementationFundebFundef' && (
-                  <RevenueTable data={apiData[municipio]} transformDataFunction={transformDataForTableRevenues} standardizeTypeFunction={standardizedTypeComplementationFundebFundef} tableMapping={mapComplementationFundebFundef}/>
+                  <RevenueTable
+                    data={apiData[municipio]}
+                    transformDataFunction={transformDataForTableRevenues}
+                    standardizeTypeFunction={standardizedTypeComplementationFundebFundef}
+                    tableMapping={mapComplementationFundebFundef}
+                    tableName="Composicao_da_Complementacao_do_Fundef-Fundeb"
+                    municipio={municipio}
+                  />
+                )}
+                {selectedTable === 'constitutionalLimitMde' && (
+                  <RevenueTable
+                    data={apiData[municipio]}
+                    transformDataFunction={transformDataForTableRevenues}
+                    standardizeTypeFunction={standardizedTypeConstitutionalLimitMde}
+                    tableMapping={mapConstitutionalLimitMde}
+                    tableName="Limite_Constitucional_em_MDE_no_Municipio"
+                    municipio={municipio}
+                  />
+                )}
+                {selectedTable === 'expensesBasicEducationFundeb' && (
+                  <RevenueTable
+                    data={apiData[municipio]}
+                    transformDataFunction={transformDataForTableRevenues}
+                    standardizeTypeFunction={standardizedTypeExpensesBasicEducationFundeb}
+                    tableMapping={mapExpensesBasicEducationFundeb}
+                    tableName="Despesas_com_Profissionais_da_Educacao_Basica_com_o_Fundef-Fundeb"
+                    municipio={municipio}
+                  />
                 )}
                 {selectedTable === 'areasActivityExpense' && (
-                  <RevenueTable data={apiData[municipio]} transformDataFunction={transformDataForTableExpenses} standardizeTypeFunction={standardizedTypeAreasActivityExpense} tableMapping={mapAreasActivityExpense}/>
+                  <RevenueTable
+                    data={apiData[municipio]}
+                    transformDataFunction={transformDataForTableRevenues}
+                    standardizeTypeFunction={standardizedTypeAreasActivityExpense}
+                    tableMapping={mapAreasActivityExpense}
+                    tableName="Despesas_em_MDE_por_Area_de_Atuacao"
+                    municipio={municipio}
+                  />
+                )}
+                {selectedTable === 'basicEducationMinimalPotential' && (
+                  <RevenueTable
+                    data={apiData[municipio]}
+                    transformDataFunction={transformDataForTableRevenues}
+                    standardizeTypeFunction={standardizedTypeBasicEducationMinimalPotential}
+                    tableMapping={mapBasicEducationMinimalPotential}
+                    tableName="Receita_Potencial_Minima_Vinculada_a_Educacao_Basica"
+                    municipio={municipio}
+                  />
                 )}
                 {/* Adicione outras condições para diferentes tabelas conforme necessário */}
               </div>

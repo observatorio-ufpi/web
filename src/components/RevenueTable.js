@@ -17,6 +17,9 @@ const theme = createTheme({
       tableHeader: '#cccccc',
     },
   },
+  typography: {
+    fontSize: 14,
+  },
 });
 
 const StyledTableHead = styled(TableHead)(({ theme }) => ({
@@ -25,21 +28,31 @@ const StyledTableHead = styled(TableHead)(({ theme }) => ({
 
 const BoldTableCell = styled(TableCell)(({ theme }) => ({
   fontWeight: 'bold',
+  minWidth: '8rem', // Define a largura mínima de cada célula usando rem
+  textAlign: 'center', // Centraliza o texto horizontalmente
+  verticalAlign: 'middle', // Centraliza o texto verticalmente
+  '@media (max-width: 600px)': {
+    minWidth: '6rem', // Ajusta a largura mínima para telas menores
+  },
 }));
 
-const RevenueTable = ({ data, transformDataFunction, standardizeTypeFunction, tableMapping }) => {
+const CenteredTableCell = styled(TableCell)(({ theme }) => ({
+  textAlign: 'center', // Centraliza o texto horizontalmente
+  verticalAlign: 'middle', // Centraliza o texto verticalmente
+}));
+
+const RevenueTable = ({ data, transformDataFunction, standardizeTypeFunction, tableMapping, tableName, municipio }) => {
   const { years, typeToYearToValue } = transformDataFunction(data, standardizeTypeFunction);
   const types = Object.keys(tableMapping);
 
   const exportToExcel = () => {
     const wb = XLSX.utils.book_new();
     const wsData = [
-      ['Tipo de Receita', ...years],
-      ...types.map((type) => {
+      ['Ano', ...types],
+      ...years.map((year) => {
         return [
-          type,
-          ...years.map((year) => {
-            // Verifica se typeToYearToValue[type] e typeToYearToValue[type][year] não são undefined
+          year,
+          ...types.map((type) => {
             if (typeToYearToValue[type] && typeToYearToValue[type][year] !== undefined) {
               return typeToYearToValue[type][year].toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
             } else {
@@ -51,41 +64,44 @@ const RevenueTable = ({ data, transformDataFunction, standardizeTypeFunction, ta
     ];
     const ws = XLSX.utils.aoa_to_sheet(wsData);
     XLSX.utils.book_append_sheet(wb, ws, 'Receitas');
-    XLSX.writeFile(wb, 'receitas.xlsx');
+    const fileName = `${tableName}_${municipio}.xlsx`; // Nome do arquivo incluindo o nome da tabela e o município
+    XLSX.writeFile(wb, fileName);
   };
 
   return (
     <ThemeProvider theme={theme}>
-      <TableContainer component={Paper} sx={{ backgroundColor: theme.palette.background.default }}>
-        <Table sx={{ minWidth: 650 }} aria-label="simple table">
-          <StyledTableHead>
-            <TableRow>
-              <BoldTableCell>Tipo de Receita</BoldTableCell>
-              {years.map((year) => (
-                <BoldTableCell key={year} align="right">
-                  {year}
-                </BoldTableCell>
-              ))}
-            </TableRow>
-          </StyledTableHead>
-          <TableBody>
-            {types.map((type) => (
-              <TableRow key={type} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
-                <TableCell component="th" scope="row">
-                  {type}
-                </TableCell>
-                {years.map((year) => (
-                  <TableCell key={year} align="right">
-                    {typeToYearToValue[type] && typeToYearToValue[type][year] !== undefined
-                      ? typeToYearToValue[type][year].toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-                      : '-'}
-                  </TableCell>
+      <Paper sx={{ backgroundColor: theme.palette.background.default, padding: '1rem' }}>
+        <TableContainer component={Paper} sx={{ maxWidth: '100%', overflowX: 'auto' }}>
+          <Table sx={{ minWidth: 650 }} aria-label="simple table">
+            <StyledTableHead>
+              <TableRow>
+                <BoldTableCell>Ano</BoldTableCell>
+                {types.map((type) => (
+                  <BoldTableCell key={type} align="center">
+                    {type}
+                  </BoldTableCell>
                 ))}
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+            </StyledTableHead>
+            <TableBody>
+              {years.map((year) => (
+                <TableRow key={year} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
+                  <BoldTableCell component="th" scope="row">
+                    {year}
+                  </BoldTableCell>
+                  {types.map((type) => (
+                    <CenteredTableCell key={type} align="center">
+                      {typeToYearToValue[type] && typeToYearToValue[type][year] !== undefined
+                        ? typeToYearToValue[type][year].toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+                        : '-'}
+                    </CenteredTableCell>
+                  ))}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Paper>
       <Button variant="contained" color="primary" onClick={exportToExcel} sx={{ marginTop: 2 }}>
         Exportar para Excel
       </Button>
