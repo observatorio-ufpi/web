@@ -54,7 +54,7 @@ const RevenueTable = ({ data, transformDataFunction, standardizeTypeFunction, ta
           year,
           ...types.map((type) => {
             if (typeToYearToValue[type] && typeToYearToValue[type][year] !== undefined) {
-              return typeToYearToValue[type][year].toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+              return typeToYearToValue[type][year];
             } else {
               return '-';
             }
@@ -70,41 +70,43 @@ const RevenueTable = ({ data, transformDataFunction, standardizeTypeFunction, ta
 
   return (
     <ThemeProvider theme={theme}>
-      <Paper sx={{ backgroundColor: theme.palette.background.default, padding: '1rem' }}>
-        <TableContainer component={Paper} sx={{ maxWidth: '100%', overflowX: 'auto' }}>
-          <Table sx={{ minWidth: 650 }} aria-label="simple table">
-            <StyledTableHead>
-              <TableRow>
-                <BoldTableCell>Ano</BoldTableCell>
-                {types.map((type) => (
-                  <BoldTableCell key={type} align="center">
-                    {type}
-                  </BoldTableCell>
-                ))}
-              </TableRow>
-            </StyledTableHead>
-            <TableBody>
-              {years.map((year) => (
-                <TableRow key={year} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
-                  <BoldTableCell component="th" scope="row">
-                    {year}
-                  </BoldTableCell>
+      <div style={{ margin: '0 2rem' }}> {/* Adiciona margem nas laterais */}
+        <Paper sx={{ backgroundColor: theme.palette.background.default, padding: '1rem' }}>
+          <TableContainer component={Paper} sx={{ maxWidth: '100%', overflowX: 'auto' }}>
+            <Table sx={{ minWidth: 650 }} aria-label="simple table">
+              <StyledTableHead>
+                <TableRow>
+                  <BoldTableCell>Ano</BoldTableCell>
                   {types.map((type) => (
-                    <CenteredTableCell key={type} align="center">
-                      {typeToYearToValue[type] && typeToYearToValue[type][year] !== undefined
-                        ? typeToYearToValue[type][year].toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-                        : '-'}
-                    </CenteredTableCell>
+                    <BoldTableCell key={type} align="center">
+                      {type}
+                    </BoldTableCell>
                   ))}
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Paper>
-      <Button variant="contained" color="primary" onClick={exportToExcel} sx={{ marginTop: 2 }}>
-        Exportar para Excel
-      </Button>
+              </StyledTableHead>
+              <TableBody>
+                {years.map((year) => (
+                  <TableRow key={year} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
+                    <BoldTableCell component="th" scope="row">
+                      {year}
+                    </BoldTableCell>
+                    {types.map((type) => (
+                      <CenteredTableCell key={type} align="center">
+                        {typeToYearToValue[type] && typeToYearToValue[type][year] !== undefined
+                          ? typeToYearToValue[type][year].toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+                          : '-'}
+                      </CenteredTableCell>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Paper>
+        <Button variant="contained" color="success" onClick={exportToExcel} sx={{ marginTop: 2 }}>
+          Exportar para Excel
+        </Button>
+      </div>
     </ThemeProvider>
   );
 };

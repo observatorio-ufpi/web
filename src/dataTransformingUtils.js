@@ -44,6 +44,9 @@ function getValidValue(item) {
   if (item.valor !== undefined) {
     return item.valor
   }
+  if (item.valorExigido !== undefined) {
+    return item.valorExigido
+  }
 }
 
 export const transformDataForTableRevenues = (data, standardizeTypeFunction) => {

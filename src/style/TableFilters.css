@@ -1,0 +1,24 @@
+/* FilterComponent.css */
+
+.filter-container {
+    margin-bottom: 20px;
+    margin-top: 20px;
+  }
+
+  .filter-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .filter-item {
+    flex: 1;
+    min-width: 150px; /* Define uma largura mínima para os itens */
+    max-width: 300px;
+  }
+
+  .filter-button {
+    margin-top: 10px;
+    width: auto;
+    max-width: 150px;
+  }

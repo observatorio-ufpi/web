@@ -28,6 +28,85 @@
   color: #61dafb;
 }
 
+.app-container {
+  padding: 20px;
+  min-height: 100vh; /* Garante que o container ocupe toda a altura da viewport */
+}
+
+.table-container {
+  padding: 10px;
+}
+
+.divider {
+  border: 0;
+  border-top: 1px solid #ccc;
+  margin: 16px 0; /* Adjust spacing as needed */
+}
+
+.select-container {
+  margin: 10px 0;
+}
+
+.select-label {
+  display: inline;
+  font-size: 22px; /* Tamanho da fonte */
+  font-weight: bold; /* Peso da fonte */
+  margin-bottom: 12px; /* Espaçamento abaixo do texto */
+  margin-right: 5px;
+  color: black; /* Cor do texto */
+}
+
+.select-box {
+  display: inline-block;
+  width: 100%;
+  max-width: 300px; /* Ajuste a largura máxima se necessário */
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: #fff;
+  font-size: 16px;
+  font-family: 'Arial', sans-serif;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
+}
+
+.select-box option {
+  padding: 8px;
+  background-color: #fff; /* Cor de fundo para opções */
+  color: #333; /* Cor do texto */
+}
+
+.select-box option:hover {
+  background-color: #f1f1f1; /* Cor de fundo ao passar o mouse */
+}
+
+.select-box:focus {
+  border-color: #007bff;
+  outline: none;
+}
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh; /* Ajuste a altura conforme necessário */
+  background-color: #f0f0f0; /* Cor de fundo opcional */
+}
+
+.loading-spinner {
+  border: 8px solid #f3f3f3; /* Cor do fundo do spinner */
+  border-top: 8px solid #3498db; /* Cor da parte superior do spinner */
+  border-radius: 50%;
+  width: 50px; /* Ajuste o tamanho do spinner conforme necessário */
+  height: 50px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 @keyframes App-logo-spin {
   from {
     transform: rotate(0deg);
