@@ -9,7 +9,7 @@ const FilterComponent = ({ onFilterChange }) => {
   const [territorioDeDesenvolvimentoMunicipio, setTerritorioDeDesenvolvimentoMunicipio] = useState(null);
   const [faixaPopulacionalMunicipio, setFaixaPopulacionalMunicipio] = useState(null);
   const [aglomeradoMunicipio, setAglomeradoMunicipio] = useState('');
-  const [gerenciaMunicipio, setGerenciaMunicipio] = useState('');
+  const [gerenciaRegionalMunicipio, setGerenciaMunicipio] = useState('');
 
   const handleSearch = () => {
     onFilterChange({
@@ -17,7 +17,7 @@ const FilterComponent = ({ onFilterChange }) => {
       territorioDeDesenvolvimentoMunicipio: territorioDeDesenvolvimentoMunicipio ? territorioDeDesenvolvimentoMunicipio.value : null,
       faixaPopulacionalMunicipio: faixaPopulacionalMunicipio ? faixaPopulacionalMunicipio.value : null,
       aglomeradoMunicipio,
-      gerenciaMunicipio,
+      gerenciaRegionalMunicipio,
       loading: true,
     });
   };
@@ -71,7 +71,7 @@ const FilterComponent = ({ onFilterChange }) => {
 
         <TextField
           className="filter-item"
-          value={gerenciaMunicipio}
+          value={gerenciaRegionalMunicipio}
           onChange={(e) => setGerenciaMunicipio(e.target.value)}
           label="Gerência"
           variant="outlined"

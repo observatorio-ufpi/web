@@ -1,4 +1,4 @@
-import React from 'react';
+import Button from '@mui/material/Button';
 import Paper from '@mui/material/Paper';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
@@ -7,8 +7,9 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import { ThemeProvider, createTheme, styled } from '@mui/material/styles';
-import Button from '@mui/material/Button';
-import * as XLSX from 'xlsx'; // Importando todos os métodos da biblioteca xlsx
+import React from 'react';
+import * as XLSX from 'xlsx';
+import { municipios } from '../municipios.mapping';
 
 const theme = createTheme({
   palette: {
@@ -41,20 +42,27 @@ const CenteredTableCell = styled(TableCell)(({ theme }) => ({
   verticalAlign: 'middle', // Centraliza o texto verticalmente
 }));
 
-const RevenueTable = ({ data, transformDataFunction, standardizeTypeFunction, tableMapping, tableName, municipio }) => {
-  const { years, typeToYearToValue } = transformDataFunction(data, standardizeTypeFunction);
+const RevenueTable = ({ data, transformDataFunction, standardizeTypeFunction, tableMapping, tableName, key, groupType }) => {
+  let rows
+  let typeToRowToValue
+
+  ({ rows, typeToRowToValue } = transformDataFunction(data, standardizeTypeFunction));
+
+  console.log(groupType)
+
+
   const types = Object.keys(tableMapping);
 
   const exportToExcel = () => {
     const wb = XLSX.utils.book_new();
     const wsData = [
       ['Ano', ...types],
-      ...years.map((year) => {
+      ...rows.map((row) => {
         return [
-          year,
+          row,
           ...types.map((type) => {
-            if (typeToYearToValue[type] && typeToYearToValue[type][year] !== undefined) {
-              return typeToYearToValue[type][year];
+            if (typeToRowToValue[type] && typeToRowToValue[type][row] !== undefined) {
+              return typeToRowToValue[type][row];
             } else {
               return '-';
             }
@@ -64,7 +72,7 @@ const RevenueTable = ({ data, transformDataFunction, standardizeTypeFunction, ta
     ];
     const ws = XLSX.utils.aoa_to_sheet(wsData);
     XLSX.utils.book_append_sheet(wb, ws, 'Receitas');
-    const fileName = `${tableName}_${municipio}.xlsx`; // Nome do arquivo incluindo o nome da tabela e o município
+    const fileName = `${tableName}_${key}.xlsx`; // Nome do arquivo incluindo o nome da tabela e o município
     XLSX.writeFile(wb, fileName);
   };
 
@@ -76,7 +84,7 @@ const RevenueTable = ({ data, transformDataFunction, standardizeTypeFunction, ta
             <Table sx={{ minWidth: 650 }} aria-label="simple table">
               <StyledTableHead>
                 <TableRow>
-                  <BoldTableCell>Ano</BoldTableCell>
+                  <BoldTableCell>{groupType === 'ano' ? 'Municipio' : 'Ano'}</BoldTableCell>
                   {types.map((type) => (
                     <BoldTableCell key={type} align="center">
                       {type}
@@ -85,15 +93,15 @@ const RevenueTable = ({ data, transformDataFunction, standardizeTypeFunction, ta
                 </TableRow>
               </StyledTableHead>
               <TableBody>
-                {years.map((year) => (
-                  <TableRow key={year} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
+                {rows.map((row) => (
+                  <TableRow key={row} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
                     <BoldTableCell component="th" scope="row">
-                      {year}
+                    {groupType === 'ano' ? `${municipios[row]?.nomeMunicipio}` : `${row}`}
                     </BoldTableCell>
                     {types.map((type) => (
                       <CenteredTableCell key={type} align="center">
-                        {typeToYearToValue[type] && typeToYearToValue[type][year] !== undefined
-                          ? typeToYearToValue[type][year].toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+                        {typeToRowToValue[type] && typeToRowToValue[type][row] !== undefined
+                          ? typeToRowToValue[type][row].toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
                           : '-'}
                       </CenteredTableCell>
                     ))}

@@ -1,51 +1,51 @@
 function getValidRevenue(revenue) {
   if (revenue.receitasRealizadasNoAno !== undefined) {
-    return revenue.receitasRealizadasNoAno;
+    return Number(revenue.receitasRealizadasNoAno.toFixed(3));
   }
   if (revenue.receitasRealizadaBimestre !== undefined) {
-    return revenue.receitasRealizadaBimestre;
+    return Number(revenue.receitasRealizadaBimestre.toFixed(3));
   }
   if (revenue.receitasRealizadaAteBimestre !== undefined) {
-    return revenue.receitasRealizadaAteBimestre;
+    return Number(revenue.receitasRealizadaAteBimestre.toFixed(3));
   }
   if (revenue.receitasRealizadasAteBimestre !== undefined) {
-    return revenue.receitasRealizadasAteBimestre;
+    return Number(revenue.receitasRealizadasAteBimestre.toFixed(3));
   }
 }
 
 function getValidExpense(expense) {
   if (expense.despesasLiquidadasNoAno !== undefined) {
-    return expense.despesasLiquidadasNoAno;
+    return Number(expense.despesasLiquidadasNoAno.toFixed(3));
   }
   if (expense.despesasEmpenhadasNoAno !== undefined) {
-    return expense.despesasEmpenhadasNoAno;
+    return Number(expense.despesasEmpenhadasNoAno.toFixed(3));
   }
   if (expense.despesasLiquidadasAteBimestre !== undefined) {
-    return expense.despesasLiquidadasAteBimestre;
+    return Number(expense.despesasLiquidadasAteBimestre.toFixed(3));
   }
 };
 
 function getValidConstitutionalLimit(item) {
   if (item.valorExigido !== undefined) {
-    return item.valorExigido;
+    return Number(item.valorExigido.toFixed(3));
   }
 }
 
 function getValidPercentage(item) {
  if (item.porcentagem !== undefined) {
-    return item.porcentagem;
+    return item.porcentagem.toFixed(2);
  }
  if (item.despesasRealizadasPercentual !== undefined) {
-    return item.despesasRealizadasPercentual
+    return item.despesasRealizadasPercentual.toFixed(2);
  }
 }
 
 function getValidValue(item) {
   if (item.valor !== undefined) {
-    return item.valor
+    return Number(item.valor.toFixed(3));
   }
   if (item.valorExigido !== undefined) {
-    return item.valorExigido
+    return Number(item.valorExigido.toFixed(3));
   }
 }
 
@@ -56,6 +56,7 @@ export const transformDataForTableRevenues = (data, standardizeTypeFunction) => 
   Object.keys(data).forEach((key) => {
     data[key].forEach((yearData) => {
       const year = yearData.ano;
+      console.log(yearData)
       years.add(year);
 
       if (yearData.receita) {
@@ -192,9 +193,162 @@ export const transformDataForTableRevenues = (data, standardizeTypeFunction) => 
     });
   });
 
+  console.log(Array.from(years).sort())
+
   return {
-    years: Array.from(years).sort(),
-    typeToYearToValue,
+    rows: Array.from(years).sort(),
+    typeToRowToValue: typeToYearToValue,
+  };
+};
+
+export const transformDataForTableByYear = (data, standardizeTypeFunction) => {
+  const municipios = new Set();
+  const typeToMunicipioToValue = {};
+
+  console.log('data' + data)
+
+  Object.keys(data).forEach((key) => {
+    data[key].forEach((municipioData) => {
+      const municipio = municipioData.codigoMunicipio;
+      municipios.add(municipio);
+
+      if (municipioData.receita) {
+        municipioData.receita.forEach((revenue) => {
+          const standardizedType = standardizeTypeFunction(revenue.tipo);
+          if (!typeToMunicipioToValue[standardizedType]) {
+            typeToMunicipioToValue[standardizedType] = {};
+          }
+
+          typeToMunicipioToValue[standardizedType][municipio] = getValidRevenue(revenue);
+        });
+      }
+
+      if (municipioData.despesa) {
+        municipioData.despesa.forEach((expense) => {
+          const standardizedType = standardizeTypeFunction(expense.tipo);
+          if (!typeToMunicipioToValue[standardizedType]) {
+            typeToMunicipioToValue[standardizedType] = {};
+          }
+
+          typeToMunicipioToValue[standardizedType][municipio] = getValidExpense(expense);
+        });
+      }
+
+      if (municipioData.tabelaCumprimentoLimitesConstitucionais) {
+        municipioData.tabelaCumprimentoLimitesConstitucionais.forEach((item) => {
+          const standardizedType = standardizeTypeFunction(item.tipo);
+          if (!typeToMunicipioToValue[standardizedType]) {
+            typeToMunicipioToValue[standardizedType] = {};
+          }
+
+          typeToMunicipioToValue[standardizedType][municipio] = getValidPercentage(item);
+        });
+      }
+
+      if (municipioData.apuracaoLimiteMinimoConstitucional) {
+        municipioData.apuracaoLimiteMinimoConstitucional.forEach((item) => {
+          const standardizedType = standardizeTypeFunction(item.tipo);
+          if (!typeToMunicipioToValue[standardizedType]) {
+            typeToMunicipioToValue[standardizedType] = {};
+          }
+
+          typeToMunicipioToValue[standardizedType][municipio] = getValidValue(item);
+        });
+      }
+
+      if (municipioData.deducoesParaFinsDeLimitesConstitucional) {
+        municipioData.deducoesParaFinsDeLimitesConstitucional.forEach((item) => {
+          const standardizedType = standardizeTypeFunction(item.tipo);
+          if (!typeToMunicipioToValue[standardizedType]) {
+            typeToMunicipioToValue[standardizedType] = {};
+          }
+
+          typeToMunicipioToValue[standardizedType][municipio] = getValidValue(item);
+        });
+      }
+
+      if (municipioData.minimo60PorCentoFundeb) {
+        municipioData.minimo60PorCentoFundeb.forEach((item) => {
+          const standardizedType = standardizeTypeFunction(item.tipo);
+          if (!typeToMunicipioToValue[standardizedType]) {
+            typeToMunicipioToValue[standardizedType] = {};
+          }
+
+          typeToMunicipioToValue[standardizedType][municipio] = getValidPercentage(item);
+        });
+      }
+
+      if (municipioData.deducoesFundebMagisterio) {
+        municipioData.deducoesFundebMagisterio.forEach((item) => {
+          const standardizedType = standardizeTypeFunction(item.tipo);
+          if (!typeToMunicipioToValue[standardizedType]) {
+            typeToMunicipioToValue[standardizedType] = {};
+          }
+
+          typeToMunicipioToValue[standardizedType][municipio] = getValidValue(item);
+        });
+      }
+
+      if (municipioData.deducoesParaFinsLimiteFundeb) {
+        municipioData.deducoesParaFinsLimiteFundeb.forEach((item) => {
+          const standardizedType = standardizeTypeFunction(item.tipo);
+          if (!typeToMunicipioToValue[standardizedType]) {
+            typeToMunicipioToValue[standardizedType] = {};
+          }
+
+          typeToMunicipioToValue[standardizedType][municipio] = getValidValue(item);
+        });
+      }
+
+      if (municipioData.indicadoresFundeb) {
+        municipioData.indicadoresFundeb.forEach((item) => {
+          const standardizedType = standardizeTypeFunction(item.tipo);
+          if (!typeToMunicipioToValue[standardizedType]) {
+            typeToMunicipioToValue[standardizedType] = {};
+          }
+
+          typeToMunicipioToValue[standardizedType][municipio] = getValidValue(item);
+        });
+      }
+
+      if (municipioData.indicadoresArt212) {
+        municipioData.indicadoresArt212.forEach((item) => {
+          const standardizedType = standardizeTypeFunction(item.tipo);
+          if (!typeToMunicipioToValue[standardizedType]) {
+            typeToMunicipioToValue[standardizedType] = {};
+          }
+
+          typeToMunicipioToValue[standardizedType][municipio] = getValidValue(item);
+        });
+      }
+
+      if (municipioData.deducoesAdicoesParaFinsLimiteConstitucional) {
+        municipioData.deducoesAdicoesParaFinsLimiteConstitucional.forEach((item) => {
+          const standardizedType = standardizeTypeFunction(item.tipo);
+          if (!typeToMunicipioToValue[standardizedType]) {
+            typeToMunicipioToValue[standardizedType] = {};
+          }
+
+          typeToMunicipioToValue[standardizedType][municipio] = getValidValue(item);
+        });
+      }
+
+      if (municipioData.deducoesParaFinsDeLimitesConstitucionais) {
+        municipioData.deducoesParaFinsDeLimitesConstitucionais.forEach((item) => {
+          const standardizedType = standardizeTypeFunction(item.tipo);
+          if (!typeToMunicipioToValue[standardizedType]) {
+            typeToMunicipioToValue[standardizedType] = {};
+          }
+
+          typeToMunicipioToValue[standardizedType][municipio] = getValidValue(item);
+        });
+      }
+    });
+  });
+
+  return {
+    rows: Array.from(municipios).sort(),
+    typeToRowToValue: typeToMunicipioToValue,
   };
 };
 
