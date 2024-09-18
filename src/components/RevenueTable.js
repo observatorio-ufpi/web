@@ -42,38 +42,64 @@ const CenteredTableCell = styled(TableCell)(({ theme }) => ({
   verticalAlign: 'middle', // Centraliza o texto verticalmente
 }));
 
-const RevenueTable = ({ data, transformDataFunction, standardizeTypeFunction, tableMapping, tableName, key, groupType }) => {
+const RevenueTable = ({ data, transformDataFunction, standardizeTypeFunction, tableMapping, tableName, keyTable, groupType }) => {
   let rows
   let typeToRowToValue
 
   ({ rows, typeToRowToValue } = transformDataFunction(data, standardizeTypeFunction));
 
-  console.log(groupType)
+
+  console.log(keyTable)
 
 
   const types = Object.keys(tableMapping);
 
   const exportToExcel = () => {
-    const wb = XLSX.utils.book_new();
-    const wsData = [
-      ['Ano', ...types],
-      ...rows.map((row) => {
-        return [
-          row,
-          ...types.map((type) => {
-            if (typeToRowToValue[type] && typeToRowToValue[type][row] !== undefined) {
-              return typeToRowToValue[type][row];
-            } else {
-              return '-';
-            }
-          }),
-        ];
-      }),
-    ];
-    const ws = XLSX.utils.aoa_to_sheet(wsData);
-    XLSX.utils.book_append_sheet(wb, ws, 'Receitas');
-    const fileName = `${tableName}_${key}.xlsx`; // Nome do arquivo incluindo o nome da tabela e o município
-    XLSX.writeFile(wb, fileName);
+    if (groupType === 'municipio') {
+      const wb = XLSX.utils.book_new();
+      const wsData = [
+        ['Ano', ...types],
+        ...rows.map((row) => {
+          return [
+            row,
+            ...types.map((type) => {
+              if (typeToRowToValue[type] && typeToRowToValue[type][row] !== undefined) {
+                return typeToRowToValue[type][row];
+              } else {
+                return '-';
+              }
+            }),
+          ];
+        }),
+      ];
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+      XLSX.utils.book_append_sheet(wb, ws, 'Receitas');
+      const fileName = `${tableName}_${keyTable}.xlsx`; // Nome do arquivo incluindo o nome da tabela e o município
+      XLSX.writeFile(wb, fileName);
+    }
+
+    if (groupType === 'ano') {
+      const wb = XLSX.utils.book_new();
+      const wsData = [
+        ['Municipio', ...types],
+        ...rows.map((row) => {
+          return [
+            municipios[row]?.nomeMunicipio,
+            ...types.map((type) => {
+              if (typeToRowToValue[type] && typeToRowToValue[type][row] !== undefined) {
+                return typeToRowToValue[type][row];
+              } else {
+                return '-';
+              }
+            }),
+          ];
+        }),
+      ];
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+      XLSX.utils.book_append_sheet(wb, ws, 'Receitas');
+      const fileName = `${tableName}_${keyTable}.xlsx`; // Nome do arquivo incluindo o nome da tabela e o município
+      XLSX.writeFile(wb, fileName);
+    }
   };
 
   return (
