@@ -22,6 +22,14 @@ export  const FaixaPopulacional = {
   };
 
 export const municipios = {
+  '220005': {
+    nomeMunicipio: 'Acauã',
+    territorioDesenvolvimento: Regioes.CHAPADA_VALE_DO_RIO_ITAIM,
+    aglomerado: '14',
+    gerencia: '17',
+    populacao: 6420,
+    faixaPopulacional: FaixaPopulacional.DE_5001_A_10000_HABITANTES,
+  },
   '220010': {
     nomeMunicipio: 'Agricolândia',
     territorioDesenvolvimento: Regioes.ENTRE_RIOS,

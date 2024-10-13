@@ -119,18 +119,18 @@ class App extends Component {
   }
 
   downloadAllTables = () => {
-    const { apiData, selectedTable, selectedMunicipio } = this.state;
+    const { apiData, selectedTable, selectedKey } = this.state;
 
     const tableMappings = {
       ownRevenues: { transform: transformDataForTableByYear, standardize: standardizedTypeOwnRevenues, map: mapOwnRevenues, name: 'Impostos_Proprios' },
-      constitutionalTransfersRevenue: { transform: transformDataForTableRevenues, standardize: standardizedTypeConstitutionalTransfersRevenue, map: mapConstitutionalTransfersRevenue, name: 'Receita_Transferencias_Constitucionais_Legais' },
-      municipalTaxesRevenues: { transform: transformDataForTableRevenues, standardize: standardizeTypeMunicipalTaxesRevenues, map: mapMunicipalTaxesRevenues, name: 'Receita_Liquida_Impostos_Municipio' },
-      additionalEducationRevenue: { transform: transformDataForTableRevenues, standardize: standardizeTypeAdditionalEducationRevenues, map: mapAdditionalMunicipalEducationRevenue, name: 'Receitas_Adicionais_Educacao_Municipio' },
-      municipalFundebFundefComposition: { transform: transformDataForTableRevenues, standardize: standardizedTypeMunicipalFundebFundefComposition, map: mapMunicipalFundebFundefComposition, name: 'Composicao_Fundef_Fundeb_Municipio' },
-      complementationFundebFundef: { transform: transformDataForTableRevenues, standardize: standardizedTypeComplementationFundebFundef, map: mapComplementationFundebFundef, name: 'Composicao_Complementacao_Fundef_Fundeb' },
-      areasActivityExpense: { transform: transformDataForTableRevenues, standardize: standardizedTypeAreasActivityExpense, map: mapAreasActivityExpense, name: 'Despesas_MDE_Area_Atuacao' },
-      basicEducationMinimalPotential: { transform: transformDataForTableRevenues, standardize: standardizedTypeBasicEducationMinimalPotential, map: mapBasicEducationMinimalPotential, name: 'Receita_Potencial_Minima_Educacao_Basica' },
-      constitutionalLimitMde: { transform: transformDataForTableRevenues, standardize: standardizedTypeConstitutionalLimitMde, map: mapConstitutionalLimitMde, name: 'Limite_Constitucional_MDE_Municipio' },
+      constitutionalTransfersRevenue: { transform: transformDataForTableByYear, standardize: standardizedTypeConstitutionalTransfersRevenue, map: mapConstitutionalTransfersRevenue, name: 'Receita_Transferencias_Constitucionais_Legais' },
+      municipalTaxesRevenues: { transform: transformDataForTableByYear, standardize: standardizeTypeMunicipalTaxesRevenues, map: mapMunicipalTaxesRevenues, name: 'Receita_Liquida_Impostos_Municipio' },
+      additionalEducationRevenue: { transform: transformDataForTableByYear, standardize: standardizeTypeAdditionalEducationRevenues, map: mapAdditionalMunicipalEducationRevenue, name: 'Receitas_Adicionais_Educacao_Municipio' },
+      municipalFundebFundefComposition: { transform: transformDataForTableByYear, standardize: standardizedTypeMunicipalFundebFundefComposition, map: mapMunicipalFundebFundefComposition, name: 'Composicao_Fundef_Fundeb_Municipio' },
+      complementationFundebFundef: { transform: transformDataForTableByYear, standardize: standardizedTypeComplementationFundebFundef, map: mapComplementationFundebFundef, name: 'Composicao_Complementacao_Fundef_Fundeb' },
+      areasActivityExpense: { transform: transformDataForTableByYear, standardize: standardizedTypeAreasActivityExpense, map: mapAreasActivityExpense, name: 'Despesas_MDE_Area_Atuacao' },
+      basicEducationMinimalPotential: { transform: transformDataForTableByYear, standardize: standardizedTypeBasicEducationMinimalPotential, map: mapBasicEducationMinimalPotential, name: 'Receita_Potencial_Minima_Educacao_Basica' },
+      constitutionalLimitMde: { transform: transformDataForTableByYear, standardize: standardizedTypeConstitutionalLimitMde, map: mapConstitutionalLimitMde, name: 'Limite_Constitucional_MDE_Municipio' },
       expensesBasicEducationFundeb: { transform: transformDataForTableRevenues, standardize: standardizedTypeExpensesBasicEducationFundeb, map: mapExpensesBasicEducationFundeb, name: 'Despesas_Profissionais_Educacao_Basica_Fundef_Fundeb' },
       allTables: { transform: transformDataForTableByYear, standardize: standardizedTypeAllTables, map: mapAllTables, name: 'Tabelao_RREO' }
     };
@@ -138,32 +138,65 @@ class App extends Component {
     const { transform, standardize, map, name } = tableMappings[selectedTable];
     const zip = new JSZip();
 
-    const selectedMunicipioName = selectedMunicipio?.label || 'Todos_Municipios';
-    const selectedMunicipioData = selectedMunicipio ? { [selectedMunicipio.value]: apiData[selectedMunicipio.value] } : apiData;
+    if (this.state.groupType === 'municipio') {
+      const selectedMunicipioName = selectedKey?.label || 'Todos_Municipios';
+      const selectedMunicipioData = selectedKey ? { [selectedKey.value]: apiData[selectedKey.value] } : apiData;
 
 
-    Object.keys(selectedMunicipioData).forEach(municipio => {
-      const { years, typeToYearToValue } = transform(selectedMunicipioData[municipio], standardize);
-      const types = Object.keys(map);
+      Object.keys(selectedMunicipioData).forEach(municipio => {
+        const { rows, typeToRowToValue } = transform(selectedMunicipioData[municipio], standardize);
+        const types = Object.keys(map);
 
-      const wsData = [
-        ['Ano', ...types],
-        ...years.map((year) => [
-          year,
-          ...types.map((type) => typeToYearToValue[type] && typeToYearToValue[type][year] !== undefined ? typeToYearToValue[type][year] : '-')
-        ]),
-      ];
-      const ws = XLSX.utils.aoa_to_sheet(wsData);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'Receitas');
+        console.log(rows)
 
-      const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-      zip.file(`${name}_${municipio}.xlsx`, excelBuffer);
-    });
+        const wsData = [
+          ['Ano', ...types],
+          ...rows.map((row) => [
+            row,
+            ...types.map((type) => typeToRowToValue[type] && typeToRowToValue[type][row] !== undefined ? typeToRowToValue[type][row] : '-')
+          ]),
+        ];
+        const ws = XLSX.utils.aoa_to_sheet(wsData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Receitas');
 
-    zip.generateAsync({ type: 'blob' }).then((content) => {
-      saveAs(content, `${name}_${selectedMunicipioName}_tabelas_municipios.zip`);
-    });
+        const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+        zip.file(`${name}_${ municipios[municipio]?.nomeMunicipio}.xlsx`, excelBuffer);
+      });
+
+      zip.generateAsync({ type: 'blob' }).then((content) => {
+        saveAs(content, `${name}_${selectedMunicipioName}_tabelas_municipios.zip`);
+      });
+    } else if (this.state.groupType === 'ano') {
+      const selectedYearName = selectedKey?.label || 'Todos_Anos';
+      const selectedYearData = selectedKey ? { [selectedKey.value]: apiData[selectedKey.value] } : apiData;
+
+
+      Object.keys(selectedYearData).forEach(year => {
+        const { rows, typeToRowToValue } = transform(selectedYearData[year], standardize);
+        const types = Object.keys(map);
+
+        console.log(rows)
+
+        const wsData = [
+          ['Municipio', ...types],
+          ...rows.map((row) => [
+            municipios[row]?.nomeMunicipio,
+            ...types.map((type) => typeToRowToValue[type] && typeToRowToValue[type][row] !== undefined ? typeToRowToValue[type][row] : '-')
+          ]),
+        ];
+        const ws = XLSX.utils.aoa_to_sheet(wsData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Receitas');
+
+        const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+        zip.file(`${name}_${year}.xlsx`, excelBuffer);
+      });
+
+      zip.generateAsync({ type: 'blob' }).then((content) => {
+        saveAs(content, `${name}_${selectedYearName}_tabelas_municipios.zip`);
+      });
+    }
   }
 
   render() {
@@ -246,7 +279,7 @@ class App extends Component {
                   <RevenueTable data={apiData[key]} transformDataFunction={groupType === "municipio" ?  transformDataForTableRevenues : transformDataForTableByYear} standardizeTypeFunction={standardizedTypeOwnRevenues} tableMapping={mapOwnRevenues} tableName="Impostos Próprios" keyTable={key} groupType={groupType}/>
                 )}
                 {selectedTable === 'constitutionalTransfersRevenue' && (
-                  <RevenueTable data={apiData[key]} transformDataFunction={groupType === "municipio" ?  transformDataForTableRevenues : transformDataForTableByYear}  standardizeTypeFunction={standardizedTypeConstitutionalTransfersRevenue} tableMapping={mapConstitutionalTransfersRevenue} tableName="Receita de transferências constitucionais e legais" keTable={key} groupType={groupType} />
+                  <RevenueTable data={apiData[key]} transformDataFunction={groupType === "municipio" ?  transformDataForTableRevenues : transformDataForTableByYear}  standardizeTypeFunction={standardizedTypeConstitutionalTransfersRevenue} tableMapping={mapConstitutionalTransfersRevenue} tableName="Receita de transferências constitucionais e legais" keyTable={key} groupType={groupType} />
                 )}
                 {selectedTable === 'municipalTaxesRevenues' && (
                   <RevenueTable data={apiData[key]} transformDataFunction={groupType === "municipio" ?  transformDataForTableRevenues : transformDataForTableByYear}  standardizeTypeFunction={standardizeTypeMunicipalTaxesRevenues} tableMapping={mapMunicipalTaxesRevenues} tableName="Receita Líquida de Impostos do Município" keyTable={key} groupType={groupType}/>
