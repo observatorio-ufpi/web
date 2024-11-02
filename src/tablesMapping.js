@@ -115,6 +115,22 @@ export const mapBasicEducationMinimalPotential = {
   "TOTAL_RPEB": ["TOTAL"]
 }
 
+export const mapComplementaryProtocol = {
+  "VAAT na educação infantil(%)": ["PERCENTUAL_50_COMPLEMENTACAO_UNIAO_VAAT_EDUCACAO_INFANTIL", "PROPORCAO_50_PORCENTO_FUNDEB_VAAT_EDUCACAO_INFANTIL"],
+
+  "VAAT nas despesas de capital(%)": ["MINIMO_15_COMPLEMENTACAO_UNIAO_VAAT_DESPESAS_CAPITAL", "MINIMO_15_PORCENTO_FUNDEB_VAAT_DESPESAS_CAPITAL"],
+
+  "Total geral das despesas com educação": ["TOTAL_DAS_DESPESAS_COM_ENSINO_POR_SUBFUNCAO", "TOTAL_DESPESAS_COM_ENSINO", "TOTAL_GERAL_DESPESAS_MDE", "TOTAL_GERAL_DESPESAS_EDUCACAO", "TOTAL_GERAL_DAS_DESPESAS_COM_EDUCACAO"],
+
+  "Despesas com pessoal ativo": ["PESSOAL_ATIVO", "DESPESAS_CORRENTES_PESSOAL_ATIVO"],
+
+  "Despesas com pessoal inativo": ["PESSOAL_INATIVO", "DESPESAS_CORRENTES_PESSOAL_INATIVO"],
+
+  "Transferência para instituições conveniadas": ["TRANSFERENCIAS_INSTITUICOES_47_1_3", "DESPESAS_CORRENTES_TRANSFERENCIAS_INSTITUICOES_COMUNITARIAS"],
+
+  "Despesas de capital": ["DESPESAS_DE_CAPITAL"],
+}
+
 export const mapAllTables = {
   "IPTU": ["RECEITA_RESULTANTE_IMPOSTO_IPTU", "IPTU_RECEITA_RESULTANTE", "RECEITA_IPTU", "RECEITA_RESULTANTE_DO_IPTU"],
   "ITBI": ["ITBI_RECEITA_RESULTANTE", "RECEITA_ITBI", "RECEITA_RESULTANTE_ITBI", "RECEITA_RESULTANTE_DO_ITBI"],
@@ -222,4 +238,5 @@ export const standardizedTypeConstitutionalLimitMde = (type) => standardizeType(
 export const standardizedTypeExpensesBasicEducationFundeb = (type) => standardizeType(type, mapExpensesBasicEducationFundeb)
 export const standardizedTypeAreasActivityExpense = (type) => standardizeType(type, mapAreasActivityExpense)
 export const standardizedTypeBasicEducationMinimalPotential = (type) => standardizeType(type, mapBasicEducationMinimalPotential)
+export const standardizedTypeComplementaryProtocol = (type) => standardizeType(type, mapComplementaryProtocol)
 export const standardizedTypeAllTables = (type) => standardizeType(type, mapAllTables)

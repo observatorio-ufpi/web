@@ -47,6 +47,15 @@ function getValidValue(item) {
   if (item.valorExigido !== undefined) {
     return Number(item.valorExigido.toFixed(3));
   }
+  if (item.valorAplicado !== undefined) {
+    return Number(item.valorAplicado.toFixed(3));
+  }
+  if (item.valorConsideradoAposDeducoes !== undefined) {
+    return Number(item.valorConsideradoAposDeducoes.toFixed(3));
+  }
+  if (item.percentualAplicado !== undefined) {
+    return Number(item.percentualAplicado.toFixed(3));
+  }
 }
 
 export const transformDataForTableRevenues = (data, standardizeTypeFunction) => {

@@ -11,10 +11,12 @@ import { transformDataForTableByYear, transformDataForTableRevenues } from './da
 import { municipios } from './municipios.mapping';
 import {
   mapAdditionalMunicipalEducationRevenue, mapAllTables, mapAreasActivityExpense, mapBasicEducationMinimalPotential,
+  mapComplementaryProtocol,
   mapComplementationFundebFundef, mapConstitutionalLimitMde, mapConstitutionalTransfersRevenue,
   mapExpensesBasicEducationFundeb, mapMunicipalFundebFundefComposition, mapMunicipalTaxesRevenues,
   mapOwnRevenues, standardizeTypeAdditionalEducationRevenues, standardizeTypeMunicipalTaxesRevenues,
   standardizedTypeAllTables, standardizedTypeAreasActivityExpense, standardizedTypeBasicEducationMinimalPotential,
+  standardizedTypeComplementaryProtocol,
   standardizedTypeComplementationFundebFundef, standardizedTypeConstitutionalLimitMde,
   standardizedTypeConstitutionalTransfersRevenue, standardizedTypeExpensesBasicEducationFundeb,
   standardizedTypeMunicipalFundebFundefComposition,
@@ -55,6 +57,7 @@ class App extends Component {
       basicEducationMinimalPotential: 'http://localhost:3003/researches/basic-education-minimal-potential-revenue',
       constitutionalLimitMde: 'http://localhost:3003/researches/mc-limit-revenue',
       expensesBasicEducationFundeb: 'http://localhost:3003/researches/basic-education-expense',
+      complementaryProtocol: 'http://localhost:3003/researches/complementary-protocol',
       allTables: 'http://localhost:3003/researches/all-revenues-expenses'
     };
 
@@ -131,7 +134,8 @@ class App extends Component {
       areasActivityExpense: { transform: transformDataForTableByYear, standardize: standardizedTypeAreasActivityExpense, map: mapAreasActivityExpense, name: 'Despesas_MDE_Area_Atuacao' },
       basicEducationMinimalPotential: { transform: transformDataForTableByYear, standardize: standardizedTypeBasicEducationMinimalPotential, map: mapBasicEducationMinimalPotential, name: 'Receita_Potencial_Minima_Educacao_Basica' },
       constitutionalLimitMde: { transform: transformDataForTableByYear, standardize: standardizedTypeConstitutionalLimitMde, map: mapConstitutionalLimitMde, name: 'Limite_Constitucional_MDE_Municipio' },
-      expensesBasicEducationFundeb: { transform: transformDataForTableRevenues, standardize: standardizedTypeExpensesBasicEducationFundeb, map: mapExpensesBasicEducationFundeb, name: 'Despesas_Profissionais_Educacao_Basica_Fundef_Fundeb' },
+      expensesBasicEducationFundeb: { transform: transformDataForTableByYear, standardize: standardizedTypeExpensesBasicEducationFundeb, map: mapExpensesBasicEducationFundeb, name: 'Despesas_Profissionais_Educacao_Basica_Fundef_Fundeb' },
+      complementaryProtocol: { transform: transformDataForTableByYear, standardize: standardizedTypeComplementaryProtocol, map: mapComplementaryProtocol, name: 'Protocolo_Complementar' },
       allTables: { transform: transformDataForTableByYear, standardize: standardizedTypeAllTables, map: mapAllTables, name: 'Tabelao_RREO' }
     };
 
@@ -232,6 +236,7 @@ class App extends Component {
               <option value="expensesBasicEducationFundeb">Despesas de profissionais da educação básica do Fundef/Fundeb</option>
               <option value="areasActivityExpense">Despesas em MDE por área de atuação</option>
               <option value="basicEducationMinimalPotential">Receita potencial mínima da educação básica</option>
+              <option value="complementaryProtocol">Protocolo Complementar</option>
               <option value="allTables">Tabelão</option>
             </select>
           </div>
@@ -304,6 +309,9 @@ class App extends Component {
                 )}
                 {selectedTable === 'basicEducationMinimalPotential' && (
                   <RevenueTable data={apiData[key]} transformDataFunction={groupType === "municipio" ?  transformDataForTableRevenues : transformDataForTableByYear}  standardizeTypeFunction={standardizedTypeBasicEducationMinimalPotential} tableMapping={mapBasicEducationMinimalPotential} tableName="Receita Potencial Mínima vinculada à Educação Básica" keyTable={key} groupType={groupType}/>
+                )}
+                {selectedTable === 'complementaryProtocol' && (
+                  <RevenueTable data={apiData[key]} transformDataFunction={groupType === "municipio" ?  transformDataForTableRevenues : transformDataForTableByYear}  standardizeTypeFunction={standardizedTypeComplementaryProtocol} tableMapping={mapComplementaryProtocol} tableName="Receita Potencial Mínima vinculada à Educação Básica" keyTable={key} groupType={groupType}/>
                 )}
                 {/* Adicione outros mapeamentos de tabelas conforme necessário */}
               </div>
