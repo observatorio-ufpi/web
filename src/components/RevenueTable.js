@@ -9,7 +9,7 @@ import TableRow from '@mui/material/TableRow';
 import { ThemeProvider, createTheme, styled } from '@mui/material/styles';
 import React from 'react';
 import * as XLSX from 'xlsx';
-import { municipios } from '../municipios.mapping';
+import { municipios } from '../utils/municipios.mapping';
 
 const theme = createTheme({
   palette: {

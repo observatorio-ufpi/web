@@ -1,0 +1,37 @@
+/* src/components/HomePage.css */
+
+.homepage {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh; /* Altura total da tela */
+    background-color: #f0f4ff; /* Tom de azul suave */
+  }
+
+  .container {
+    display: flex;
+    justify-content: space-between;
+    width: 80%; /* Largura dos containers */
+  }
+
+  .box {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 45%; /* Largura de cada box */
+    padding: 20px;
+    margin: 10px;
+    border: 2px solid #007bff; /* Borda azul suave */
+    border-radius: 10px;
+    background-color: #ffffff; /* Fundo branco */
+    text-align: center;
+    text-decoration: none; /* Remove sublinhado */
+    color: #007bff; /* Cor do texto */
+    transition: transform 0.3s, box-shadow 0.3s; /* Animações de hover */
+  }
+
+  .box:hover {
+    transform: translateY(-5px); /* Eleva o box */
+    box-shadow: 0 4px 15px rgba(0, 123, 255, 0.2); /* Sombra suave */
+  }

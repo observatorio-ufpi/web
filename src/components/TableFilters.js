@@ -1,8 +1,8 @@
 import { Button, TextField } from '@mui/material';
 import React, { useState } from 'react';
 import Select from 'react-select';
-import { FaixaPopulacional, municipios, Regioes } from '../municipios.mapping'; // Ajuste o caminho conforme necessário
 import '../style/TableFilters.css'; // Importa o arquivo CSS
+import { FaixaPopulacional, municipios, Regioes } from '../utils/municipios.mapping'; // Ajuste o caminho conforme necessário
 
 const FilterComponent = ({ onFilterChange }) => {
   const [selectedMunicipio, setSelectedMunicipio] = useState(null);
