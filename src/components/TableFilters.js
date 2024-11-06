@@ -1,23 +1,23 @@
-import { Button, TextField } from '@mui/material';
+import { Button } from '@mui/material';
 import React, { useState } from 'react';
 import Select from 'react-select';
-import '../style/TableFilters.css'; // Importa o arquivo CSS
-import { FaixaPopulacional, municipios, Regioes } from '../utils/municipios.mapping'; // Ajuste o caminho conforme necessário
+import '../style/TableFilters.css';
+import { FaixaPopulacional, municipios, Regioes } from '../utils/municipios.mapping';
 
 const FilterComponent = ({ onFilterChange }) => {
   const [selectedMunicipio, setSelectedMunicipio] = useState(null);
   const [territorioDeDesenvolvimentoMunicipio, setTerritorioDeDesenvolvimentoMunicipio] = useState(null);
   const [faixaPopulacionalMunicipio, setFaixaPopulacionalMunicipio] = useState(null);
-  const [aglomeradoMunicipio, setAglomeradoMunicipio] = useState('');
-  const [gerenciaRegionalMunicipio, setGerenciaMunicipio] = useState('');
+  const [aglomeradoMunicipio, setAglomeradoMunicipio] = useState(null);
+  const [gerenciaRegionalMunicipio, setGerenciaRegionalMunicipio] = useState(null);
 
   const handleSearch = () => {
     onFilterChange({
       selectedMunicipio: selectedMunicipio ? selectedMunicipio.label : null,
       territorioDeDesenvolvimentoMunicipio: territorioDeDesenvolvimentoMunicipio ? territorioDeDesenvolvimentoMunicipio.value : null,
       faixaPopulacionalMunicipio: faixaPopulacionalMunicipio ? faixaPopulacionalMunicipio.value : null,
-      aglomeradoMunicipio,
-      gerenciaRegionalMunicipio,
+      aglomeradoMunicipio: aglomeradoMunicipio ? aglomeradoMunicipio.value : null,
+      gerenciaRegionalMunicipio: gerenciaRegionalMunicipio ? gerenciaRegionalMunicipio.value : null,
       loading: true,
     });
   };
@@ -25,6 +25,16 @@ const FilterComponent = ({ onFilterChange }) => {
   const municipioOptions = Object.keys(municipios).map((codigo) => ({
     value: codigo,
     label: municipios[codigo].nomeMunicipio,
+  }));
+
+  const aglomeradoOptions = [...new Set(Object.values(municipios).map(m => m.aglomerado))].map(aglomerado => ({
+    value: aglomerado,
+    label: `Aglomerado ${aglomerado}`,
+  }));
+
+  const gerenciaOptions = [...new Set(Object.values(municipios).map(m => m.gerencia))].map(gerencia => ({
+    value: gerencia,
+    label: `Gerência ${gerencia}`,
   }));
 
   return (
@@ -60,32 +70,32 @@ const FilterComponent = ({ onFilterChange }) => {
           isSearchable
         />
 
-        <TextField
+        <Select
           className="filter-item"
           value={aglomeradoMunicipio}
-          onChange={(e) => setAglomeradoMunicipio(e.target.value)}
-          label="Aglomerado"
-          variant="outlined"
-          size="small"
+          onChange={setAglomeradoMunicipio}
+          options={aglomeradoOptions}
+          placeholder="Aglomerado"
+          isClearable
         />
 
-        <TextField
+        <Select
           className="filter-item"
           value={gerenciaRegionalMunicipio}
-          onChange={(e) => setGerenciaMunicipio(e.target.value)}
-          label="Gerência"
-          variant="outlined"
-          size="small"
+          onChange={setGerenciaRegionalMunicipio}
+          options={gerenciaOptions}
+          placeholder="Gerência"
+          isClearable
         />
       </div>
       <Button
-          className="filter-button"
-          variant="contained"
-          color="primary"
-          onClick={handleSearch}
-        >
-          Filtrar
-        </Button>
+        className="filter-button"
+        variant="contained"
+        color="primary"
+        onClick={handleSearch}
+      >
+        Filtrar
+      </Button>
     </div>
   );
 };

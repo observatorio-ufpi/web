@@ -1,0 +1,35 @@
+.indicators-container {
+    display: flex;
+    flex-direction: column; /* Exibe os itens em coluna */
+    align-items: flex-start; /* Alinha os itens à esquerda */
+    padding: 10px; /* Espaçamento interno */
+    margin: 20px;
+  }
+
+  .indicator-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px; /* Espaço entre os itens da legenda */
+  }
+
+
+  .legend-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center; /* Centraliza a legenda */
+    margin-top: 100px; /* Espaço entre o gráfico e a legenda */
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    margin-right: 15px; /* Espaço à direita dos itens da legenda */
+    font-size: 13px
+  }
+
+  .legend-color-box {
+    width: 15px;
+    height: 15px;
+    margin-right: 5px; /* Espaço à direita da caixa de cor */
+    border-radius: 2px; /* Cantos arredondados */
+  }

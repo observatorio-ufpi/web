@@ -49,11 +49,11 @@
 
 .select-label {
   display: inline;
-  font-size: 22px; /* Tamanho da fonte */
+  font-size: 15px;
+  color: #333;
   font-weight: bold; /* Peso da fonte */
   margin-bottom: 12px; /* Espaçamento abaixo do texto */
   margin-right: 5px;
-  color: black; /* Cor do texto */
 }
 
 .select-box {

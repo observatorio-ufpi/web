@@ -1,9 +1,9 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
+import ChartContainer from './components/ChartContainer';
 import Header from './components/Header';
-import RevenueTableContainer from './components/RevenueTableContainer';
-import MDEChartComponent from './components/MdeChartComponent';
 import HomePage from './components/HomePage';
+import RevenueTableContainer from './components/RevenueTableContainer';
 
 function App() {
   return (
@@ -12,7 +12,7 @@ function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/tabelas" element={<RevenueTableContainer />} />
-        <Route path="/indicadores" element={<MDEChartComponent />} />
+        <Route path="/indicadores" element={<ChartContainer />} />
       </Routes>
     </Router>
   );

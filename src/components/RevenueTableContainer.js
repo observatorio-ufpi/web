@@ -30,12 +30,12 @@ class App extends Component {
       apiData: null,
       loading: true,
       error: null,
-      selectedTable: 'ownRevenues', // Valor inicial para Impostos Próprios
+      selectedTable: 'ownRevenues',
       selectedMunicipio: null,
       territorioDeDesenvolvimentoMunicipio: null,
       faixaPopulacionalMunicipio: null,
       aglomeradoMunicipio: '',
-      gerenciRegionalMunicipio: '',
+      gerenciaRegionalMunicipio: '',
       groupType: 'municipio'
     };
   }
@@ -74,7 +74,7 @@ class App extends Component {
       territorioDeDesenvolvimentoMunicipio: filters.territorioDeDesenvolvimentoMunicipio,
       faixaPopulacionalMunicipio: filters.faixaPopulacionalMunicipio,
       aglomeradoMunicipio: filters.aglomeradoMunicipio,
-      gerenciaMunicipio: filters.gerenciaMunicipio,
+      gerenciaRegionalMunicipio: filters.gerenciaRegionalMunicipio,
     }, this.fetchTableData);
   };
 
@@ -230,7 +230,6 @@ class App extends Component {
               {selectedTable === 'allTables' ?   Object.keys(apiData).map(revenueType => (
                  Object.keys(apiData[revenueType]).map(key => (
                   <div key={key}>
-                    {console.log(apiData[revenueType][key])}
                      {selectedTable === 'allTables' && (
                       <RevenueTable data={apiData[revenueType][key]} transformDataFunction={groupType === "municipio" ?  transformDataForTableRevenues : transformDataForTableByYear} standardizeTypeFunction={standardizedTypeAllTables} tableMapping={mapAllTables} tableName="Tabelão" keyTable={key} groupType={groupType}/>
                     )}
@@ -239,7 +238,6 @@ class App extends Component {
             )) : Object.keys(apiData).map((key) => (
               <div key={key}>
                 <h2>{groupType==='municipio'? `Município: ${municipios[key]?.nomeMunicipio}` : `Ano: ${key}`}</h2>
-                {console.log(key)}
                 {selectedTable === 'ownRevenues' && (
                   <RevenueTable data={apiData[key]} transformDataFunction={groupType === "municipio" ?  transformDataForTableRevenues : transformDataForTableByYear} standardizeTypeFunction={standardizedTypeOwnRevenues} tableMapping={mapOwnRevenues} tableName="Impostos Próprios" keyTable={key} groupType={groupType}/>
                 )}

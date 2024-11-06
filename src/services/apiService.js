@@ -16,15 +16,13 @@ const endpoints = {
 
   export const fetchData = async (table, groupType, filters) => {
     const endpoint = `${endpoints[table]}/${groupType}`;
-    console.log(endpoint)
-    console.log(process.env.REACT_APP_API_PUBLIC_URL)
     const params = new URLSearchParams();
 
     if (filters.selectedMunicipio) params.append('nomeMunicipio', filters.selectedMunicipio);
     if (filters.territorioDeDesenvolvimentoMunicipio) params.append('territorioDeDesenvolvimentoMunicipio', filters.territorioDeDesenvolvimentoMunicipio);
     if (filters.faixaPopulacionalMunicipio) params.append('faixaPopulacionalMunicipio', filters.faixaPopulacionalMunicipio);
     if (filters.aglomeradoMunicipio) params.append('aglomeradoMunicipio', filters.aglomeradoMunicipio);
-    if (filters.gerenciaRegionalMunicipio) params.append('gerenciaMunicipio', filters.gerenciaRegionalMunicipio);
+    if (filters.gerenciaRegionalMunicipio) params.append('gerenciaRegionalMunicipio', filters.gerenciaRegionalMunicipio);
 
     const url = `${endpoint}?${params.toString()}`;
 

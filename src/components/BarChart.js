@@ -8,14 +8,25 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend,
 const BarChart = ({ chartData, title }) => {
   const chartRef = React.useRef(null);
 
+  const exportChart = () => {
+    if (chartRef.current) {
+      const base64Image = chartRef.current.toBase64Image();
+      const fileName = title && title.trim() ? title.replace(/\s+/g, '_') : 'chart'; // Verifica se title está disponível e não vazio
+      const link = document.createElement('a');
+      link.href = base64Image;
+      link.download = `${fileName}.png`; // Formata o nome do arquivo
+      link.click();
+    }
+  };
+
   return (
     <div style={{ width: '100%', height: 500 }}>
-      <h3>{title}</h3>
       <Bar
         ref={chartRef}
         data={chartData}
         options={{
           responsive: true,
+          maintainAspectRatio: false,
           plugins: {
             legend: {
               display: true,
@@ -26,20 +37,20 @@ const BarChart = ({ chartData, title }) => {
               text: title,
             },
             zoom: {
-                pan: {
-                    enabled: true,
-                    mode: 'xy',
-                    threshold: 5,
+              pan: {
+                enabled: true,
+                mode: 'xy',
+                threshold: 5,
+              },
+              zoom: {
+                wheel: {
+                  enabled: true,
                 },
-                zoom: {
-                    wheel: {
-                    enabled: true
-                    },
-                    pinch: {
-                    enabled: true
-                    },
-                    mode: 'xy',
+                pinch: {
+                  enabled: true,
                 },
+                mode: 'xy',
+              },
             },
           },
           scales: {
@@ -53,6 +64,9 @@ const BarChart = ({ chartData, title }) => {
           },
         }}
       />
+      <button onClick={exportChart} style={{ marginTop: '10px' }}>
+        Exportar Gráfico
+      </button>
     </div>
   );
 };

@@ -49,9 +49,6 @@ const RevenueTable = ({ data, transformDataFunction, standardizeTypeFunction, ta
   ({ rows, typeToRowToValue } = transformDataFunction(data, standardizeTypeFunction));
 
 
-  console.log(keyTable)
-
-
   const types = Object.keys(tableMapping);
 
   const exportToExcel = () => {

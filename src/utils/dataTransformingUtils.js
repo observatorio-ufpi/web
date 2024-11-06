@@ -65,7 +65,6 @@ export const transformDataForTableRevenues = (data, standardizeTypeFunction) => 
   Object.keys(data).forEach((key) => {
     data[key].forEach((yearData) => {
       const year = yearData.ano;
-      console.log(yearData)
       years.add(year);
 
       if (yearData.receita) {
@@ -202,8 +201,6 @@ export const transformDataForTableRevenues = (data, standardizeTypeFunction) => 
     });
   });
 
-  console.log(Array.from(years).sort())
-
   return {
     rows: Array.from(years).sort(),
     typeToRowToValue: typeToYearToValue,
@@ -214,7 +211,6 @@ export const transformDataForTableByYear = (data, standardizeTypeFunction) => {
   const municipios = new Set();
   const typeToMunicipioToValue = {};
 
-  console.log('data' + data)
 
   Object.keys(data).forEach((key) => {
     data[key].forEach((municipioData) => {
