@@ -197,7 +197,6 @@ class App extends Component {
               <option value="areasActivityExpense">Despesas em MDE por área de atuação</option>
               <option value="basicEducationMinimalPotential">Receita potencial mínima da educação básica</option>
               <option value="complementaryProtocol">Protocolo Complementar</option>
-              <option value="allTables">Tabelão</option>
             </select>
           </div>
 
