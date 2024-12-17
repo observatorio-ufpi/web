@@ -22,6 +22,14 @@ import {
     standardizedTypeOwnRevenues
 } from '../utils/tablesMapping';
 import { fetchData } from '../services/apiService';
+import {
+  Pagination,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem
+} from '@mui/material';
+import '../style/RevenueTableContainer.css';
 
 class App extends Component {
   constructor(props) {
@@ -36,7 +44,10 @@ class App extends Component {
       faixaPopulacionalMunicipio: null,
       aglomeradoMunicipio: '',
       gerenciaRegionalMunicipio: '',
-      groupType: 'municipio'
+      groupType: 'municipio',
+      page: 1,
+      limit: 10,
+      totalPages: 1
     };
   }
 
@@ -44,23 +55,59 @@ class App extends Component {
     this.fetchTableData();
   }
 
-  fetchTableData = () => {
-    const { selectedTable, groupType, selectedMunicipio, territorioDeDesenvolvimentoMunicipio, faixaPopulacionalMunicipio, aglomeradoMunicipio, gerenciaRegionalMunicipio } = this.state;
+  handlePageChange = (event, newPage) => {
+    this.setState({ page: newPage }, () => {
+      this.fetchTableData();
+    });
+  };
 
-    // Chamando a função do serviço de API
+  handleLimitChange = (event) => {
+    this.setState({
+      limit: parseInt(event.target.value),
+      page: 1
+    }, () => {
+      this.fetchTableData();
+    });
+  };
+
+  fetchTableData = () => {
+    const {
+      selectedTable,
+      groupType,
+      selectedMunicipio,
+      territorioDeDesenvolvimentoMunicipio,
+      faixaPopulacionalMunicipio,
+      aglomeradoMunicipio,
+      gerenciaRegionalMunicipio,
+      page,
+      limit
+    } = this.state;
+
     fetchData(selectedTable, groupType, {
       selectedMunicipio,
       territorioDeDesenvolvimentoMunicipio,
       faixaPopulacionalMunicipio,
       aglomeradoMunicipio,
-      gerenciaRegionalMunicipio
+      gerenciaRegionalMunicipio,
+      page,
+      limit
     })
-    .then(data => {
-      this.setState({ apiData: data, loading: false });
+    .then(response => {
+      this.setState({
+        apiData: response.data,
+        loading: false,
+        page: response.pagination.page,
+        limit: response.pagination.limit,
+        totalPages: response.pagination.totalPages || 1
+      });
     })
     .catch(error => {
-      console.log(error)
-      this.setState({ error: error.message, loading: false });
+      console.error(error);
+      this.setState({
+        error: error.message,
+        loading: false,
+        totalPages: 1
+      });
     });
   };
 
@@ -165,7 +212,7 @@ class App extends Component {
   }
 
   render() {
-    const { apiData, loading, error, selectedTable, groupType } = this.state;
+    const { apiData, loading, error, selectedTable, groupType, page, limit, totalPages } = this.state;
 
     if (loading) {
       return(
@@ -273,6 +320,25 @@ class App extends Component {
                 {/* Adicione outros mapeamentos de tabelas conforme necessário */}
               </div>
             ))}
+
+            <div className="pagination-controls">
+              <FormControl>
+                <InputLabel>Linhas por página</InputLabel>
+                <Select value={limit} onChange={this.handleLimitChange}>
+                  <MenuItem value={1}>1</MenuItem>
+                  <MenuItem value={10}>10</MenuItem>
+                  <MenuItem value={25}>25</MenuItem>
+                  <MenuItem value={50}>50</MenuItem>
+                </Select>
+              </FormControl>
+
+              <Pagination
+                count={totalPages}
+                page={page}
+                onChange={this.handlePageChange}
+                color="primary"
+              />
+            </div>
 
             </div>
           )}

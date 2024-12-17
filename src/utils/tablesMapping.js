@@ -129,6 +129,8 @@ export const mapComplementaryProtocol = {
   "Transferência para instituições conveniadas": ["TRANSFERENCIAS_INSTITUICOES_47_1_3", "DESPESAS_CORRENTES_TRANSFERENCIAS_INSTITUICOES_COMUNITARIAS"],
 
   "Despesas de capital": ["DESPESAS_DE_CAPITAL"],
+
+  "Recursos de MDE fora do Fundeb": ["VALOR_MINIMO_A_SER_APLICADO_ALEM_DO_VALOR_DESTINADO_AO_FUNDEB", "VALOR_MINIMO_APLICADO_MDE"],
 }
 
 export const mapAllTables = {

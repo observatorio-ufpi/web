@@ -24,12 +24,19 @@ const endpoints = {
     if (filters.aglomeradoMunicipio) params.append('aglomeradoMunicipio', filters.aglomeradoMunicipio);
     if (filters.gerenciaRegionalMunicipio) params.append('gerenciaRegionalMunicipio', filters.gerenciaRegionalMunicipio);
 
+    // Add pagination parameters
+    if (filters.page) params.append('page', filters.page);
+    if (filters.limit) params.append('limit', filters.limit);
+
     const url = `${endpoint}?${params.toString()}`;
 
     try {
       const response = await fetch(url);
       if (!response.ok) throw new Error('Failed to fetch data');
-      return await response.json();
+      const data = await response.json();
+
+      // Return both data and pagination info if available, otherwise wrap data
+      return data.pagination ? data : { data, pagination: { total: 0, page: 1, limit: 10, totalPages: 1 } };
     } catch (error) {
       throw error;
     }
