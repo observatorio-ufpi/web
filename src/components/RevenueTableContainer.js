@@ -4,32 +4,26 @@ import * as JSZip from 'jszip';
 import React, { Component } from 'react';
 import * as XLSX from 'xlsx';
 import '../App.css';
-import RevenueTable from './RevenueTable';
-import FilterComponent from './TableFilters';
+import { fetchData } from '../services/apiService';
+import '../style/RevenueTableContainer.css';
 import { transformDataForTableByYear, transformDataForTableRevenues } from '../utils/dataTransformingUtils';
 import { municipios } from '../utils/municipios.mapping';
 import {
-    mapAdditionalMunicipalEducationRevenue, mapAllTables, mapAreasActivityExpense, mapBasicEducationMinimalPotential,
-    mapComplementaryProtocol,
-    mapComplementationFundebFundef, mapConstitutionalLimitMde, mapConstitutionalTransfersRevenue,
-    mapExpensesBasicEducationFundeb, mapMunicipalFundebFundefComposition, mapMunicipalTaxesRevenues,
-    mapOwnRevenues, standardizeTypeAdditionalEducationRevenues, standardizeTypeMunicipalTaxesRevenues,
-    standardizedTypeAllTables, standardizedTypeAreasActivityExpense, standardizedTypeBasicEducationMinimalPotential,
-    standardizedTypeComplementaryProtocol,
-    standardizedTypeComplementationFundebFundef, standardizedTypeConstitutionalLimitMde,
-    standardizedTypeConstitutionalTransfersRevenue, standardizedTypeExpensesBasicEducationFundeb,
-    standardizedTypeMunicipalFundebFundefComposition,
-    standardizedTypeOwnRevenues
+  mapAdditionalMunicipalEducationRevenue, mapAllTables, mapAreasActivityExpense, mapBasicEducationMinimalPotential,
+  mapComplementaryProtocol,
+  mapComplementationFundebFundef, mapConstitutionalLimitMde, mapConstitutionalTransfersRevenue,
+  mapExpensesBasicEducationFundeb, mapMunicipalFundebFundefComposition, mapMunicipalTaxesRevenues,
+  mapOwnRevenues, standardizeTypeAdditionalEducationRevenues, standardizeTypeMunicipalTaxesRevenues,
+  standardizedTypeAllTables, standardizedTypeAreasActivityExpense, standardizedTypeBasicEducationMinimalPotential,
+  standardizedTypeComplementaryProtocol,
+  standardizedTypeComplementationFundebFundef, standardizedTypeConstitutionalLimitMde,
+  standardizedTypeConstitutionalTransfersRevenue, standardizedTypeExpensesBasicEducationFundeb,
+  standardizedTypeMunicipalFundebFundefComposition,
+  standardizedTypeOwnRevenues
 } from '../utils/tablesMapping';
-import { fetchData } from '../services/apiService';
-import {
-  Pagination,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem
-} from '@mui/material';
-import '../style/RevenueTableContainer.css';
+import RevenueTable from './RevenueTable';
+import FilterComponent from './TableFilters';
+import CustomPagination from './CustomPagination';
 
 class App extends Component {
   constructor(props) {
@@ -46,7 +40,7 @@ class App extends Component {
       gerenciaRegionalMunicipio: '',
       groupType: 'municipio',
       page: 1,
-      limit: 10,
+      limit: 1,
       totalPages: 1
     };
   }
@@ -56,7 +50,10 @@ class App extends Component {
   }
 
   handlePageChange = (event, newPage) => {
-    this.setState({ page: newPage }, () => {
+    this.setState({
+      page: newPage,
+      loading: true
+    }, () => {
       this.fetchTableData();
     });
   };
@@ -64,7 +61,8 @@ class App extends Component {
   handleLimitChange = (event) => {
     this.setState({
       limit: parseInt(event.target.value),
-      page: 1
+      page: 1,
+      loading: true
     }, () => {
       this.fetchTableData();
     });
@@ -122,7 +120,11 @@ class App extends Component {
       faixaPopulacionalMunicipio: filters.faixaPopulacionalMunicipio,
       aglomeradoMunicipio: filters.aglomeradoMunicipio,
       gerenciaRegionalMunicipio: filters.gerenciaRegionalMunicipio,
-    }, this.fetchTableData);
+      loading: true,
+      page: 1
+    }, () => {
+      this.fetchTableData();
+    });
   };
 
   handleGroupTypeChange = (event) => {
@@ -230,34 +232,42 @@ class App extends Component {
     return (
       <div>
         <div className='app-container'>
-          <div className="select-container">
-          <label htmlFor="tableSelect" className="select-label">Tipo de Imposto:</label>
-            <select value={selectedTable} onChange={this.handleTableChange} className="select-box">
-              <option value="ownRevenues">Impostos Próprios</option>
-              <option value="constitutionalTransfersRevenue">Receita de transferências constitucionais e legais</option>
-              <option value="municipalTaxesRevenues">Receita Líquida de Impostos do Município</option>
-              <option value="additionalEducationRevenue">Receitas adicionais da educação no Município</option>
-              <option value="municipalFundebFundefComposition">Composição do Fundef/Fundeb no município</option>
-              <option value="complementationFundebFundef">Composição da complementação do Fundef/Fundeb</option>
-              <option value="constitutionalLimitMde">Limite constitucional em MDE no município</option>
-              <option value="expensesBasicEducationFundeb">Despesas de profissionais da educação básica do Fundef/Fundeb</option>
-              <option value="areasActivityExpense">Despesas em MDE por área de atuação</option>
-              <option value="basicEducationMinimalPotential">Receita potencial mínima da educação básica</option>
-              <option value="complementaryProtocol">Protocolo Complementar</option>
-            </select>
-          </div>
+          <div className="filters-section">
+            <div className="selects-wrapper">
+              <div className="select-container">
+                <label htmlFor="tableSelect" className="select-label">Tipo de Imposto:</label>
+                <select id="tableSelect" value={selectedTable} onChange={this.handleTableChange} className="select-box">
+                  <option value="ownRevenues">Impostos Próprios</option>
+                  <option value="constitutionalTransfersRevenue">Receita de transferências constitucionais e legais</option>
+                  <option value="municipalTaxesRevenues">Receita Líquida de Impostos do Município</option>
+                  <option value="additionalEducationRevenue">Receitas adicionais da educação no Município</option>
+                  <option value="municipalFundebFundefComposition">Composição do Fundef/Fundeb no município</option>
+                  <option value="complementationFundebFundef">Composição da complementação do Fundef/Fundeb</option>
+                  <option value="constitutionalLimitMde">Limite constitucional em MDE no município</option>
+                  <option value="expensesBasicEducationFundeb">Despesas de profissionais da educação básica do Fundef/Fundeb</option>
+                  <option value="areasActivityExpense">Despesas em MDE por área de atuação</option>
+                  <option value="basicEducationMinimalPotential">Receita potencial mínima da educação básica</option>
+                  <option value="complementaryProtocol">Protocolo Complementar</option>
+                </select>
+              </div>
 
-          <div className="select-container">
-            <label htmlFor="groupTypeSelect" className="select-label">Tipo de Agrupamento:</label>
-            <select value={groupType} onChange={this.handleGroupTypeChange} className="select-box">
-              <option value="municipio">Município</option>
-              <option value="ano">Ano</option>
-            </select>
-          </div>
+              <div className="select-container">
+                <label htmlFor="groupTypeSelect" className="select-label">Tipo de Agrupamento:</label>
+                <select id="groupTypeSelect" value={groupType} onChange={this.handleGroupTypeChange} className="select-box">
+                  <option value="municipio">Município</option>
+                  <option value="ano">Ano</option>
+                </select>
+              </div>
+            </div>
 
-
-          <div className="filter-container">
-            <FilterComponent onFilterChange={this.handleFilterChange} />
+            <FilterComponent
+              onFilterChange={this.handleFilterChange}
+              selectedMunicipio={this.state.selectedMunicipio}
+              territorioDeDesenvolvimentoMunicipio={this.state.territorioDeDesenvolvimentoMunicipio}
+              faixaPopulacionalMunicipio={this.state.faixaPopulacionalMunicipio}
+              aglomeradoMunicipio={this.state.aglomeradoMunicipio}
+              gerenciaRegionalMunicipio={this.state.gerenciaRegionalMunicipio}
+            />
           </div>
 
           <hr className="divider" />
@@ -270,9 +280,11 @@ class App extends Component {
 
           {apiData && (
             <div className='table-container'>
-              <Button variant="contained" color="primary" onClick={this.downloadAllTables} sx={{ marginTop: 2 }}>
-                Baixar Todas as Tabelas
-              </Button>
+              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                <Button variant="contained" color="info" onClick={this.downloadAllTables} sx={{ marginTop: 2 }}>
+                  Baixar Todas as Tabelas
+                </Button>
+              </div>
               {selectedTable === 'allTables' ?   Object.keys(apiData).map(revenueType => (
                  Object.keys(apiData[revenueType]).map(key => (
                   <div key={key}>
@@ -283,62 +295,80 @@ class App extends Component {
                 ))
             )) : Object.keys(apiData).map((key) => (
               <div key={key}>
-                <h2>{groupType==='municipio'? `Município: ${municipios[key]?.nomeMunicipio}` : `Ano: ${key}`}</h2>
+                <div className="table-header">
+                  <h2>
+                    <span className="table-header-label">
+                      {groupType === 'municipio' ? 'Município: ' : 'Ano: '}
+                    </span>
+                    {groupType === 'municipio' ? municipios[key]?.nomeMunicipio : key}
+                  </h2>
+                </div>
                 {selectedTable === 'ownRevenues' && (
-                  <RevenueTable data={apiData[key]} transformDataFunction={groupType === "municipio" ?  transformDataForTableRevenues : transformDataForTableByYear} standardizeTypeFunction={standardizedTypeOwnRevenues} tableMapping={mapOwnRevenues} tableName="Impostos Próprios" keyTable={key} groupType={groupType}/>
+                  <div style={{ marginTop: '1rem' }}>
+                    <RevenueTable data={apiData[key]} transformDataFunction={groupType === "municipio" ?  transformDataForTableRevenues : transformDataForTableByYear} standardizeTypeFunction={standardizedTypeOwnRevenues} tableMapping={mapOwnRevenues} tableName="Impostos Próprios" keyTable={key} groupType={groupType}/>
+                  </div>
                 )}
                 {selectedTable === 'constitutionalTransfersRevenue' && (
-                  <RevenueTable data={apiData[key]} transformDataFunction={groupType === "municipio" ?  transformDataForTableRevenues : transformDataForTableByYear}  standardizeTypeFunction={standardizedTypeConstitutionalTransfersRevenue} tableMapping={mapConstitutionalTransfersRevenue} tableName="Receita de transferências constitucionais e legais" keyTable={key} groupType={groupType} />
+                  <div className="mui-table-container">
+                    <RevenueTable data={apiData[key]} transformDataFunction={groupType === "municipio" ?  transformDataForTableRevenues : transformDataForTableByYear}  standardizeTypeFunction={standardizedTypeConstitutionalTransfersRevenue} tableMapping={mapConstitutionalTransfersRevenue} tableName="Receita de transferências constitucionais e legais" keyTable={key} groupType={groupType} />
+                  </div>
                 )}
                 {selectedTable === 'municipalTaxesRevenues' && (
-                  <RevenueTable data={apiData[key]} transformDataFunction={groupType === "municipio" ?  transformDataForTableRevenues : transformDataForTableByYear}  standardizeTypeFunction={standardizeTypeMunicipalTaxesRevenues} tableMapping={mapMunicipalTaxesRevenues} tableName="Receita Líquida de Impostos do Município" keyTable={key} groupType={groupType}/>
+                  <div className="mui-table-container">
+                    <RevenueTable data={apiData[key]} transformDataFunction={groupType === "municipio" ?  transformDataForTableRevenues : transformDataForTableByYear}  standardizeTypeFunction={standardizeTypeMunicipalTaxesRevenues} tableMapping={mapMunicipalTaxesRevenues} tableName="Receita Líquida de Impostos do Município" keyTable={key} groupType={groupType}/>
+                  </div>
                 )}
                 {selectedTable === 'additionalEducationRevenue' && (
-                  <RevenueTable data={apiData[key]} transformDataFunction={groupType === "municipio" ?  transformDataForTableRevenues : transformDataForTableByYear}  standardizeTypeFunction={standardizeTypeAdditionalEducationRevenues} tableMapping={mapAdditionalMunicipalEducationRevenue} tableName="Receitas adicionais da educação no Município" keyTable={key} groupType={groupType}/>
+                  <div className="mui-table-container">
+                    <RevenueTable data={apiData[key]} transformDataFunction={groupType === "municipio" ?  transformDataForTableRevenues : transformDataForTableByYear}  standardizeTypeFunction={standardizeTypeAdditionalEducationRevenues} tableMapping={mapAdditionalMunicipalEducationRevenue} tableName="Receitas adicionais da educação no Município" keyTable={key} groupType={groupType}/>
+                  </div>
                 )}
                 {selectedTable === 'municipalFundebFundefComposition' && (
-                  <RevenueTable data={apiData[key]} transformDataFunction={groupType === "municipio" ?  transformDataForTableRevenues : transformDataForTableByYear}  standardizeTypeFunction={standardizedTypeMunicipalFundebFundefComposition} tableMapping={mapMunicipalFundebFundefComposition} tableName="Composição do Fundef/Fundeb no município" keyTable={key} groupType={groupType}/>
+                  <div className="mui-table-container">
+                    <RevenueTable data={apiData[key]} transformDataFunction={groupType === "municipio" ?  transformDataForTableRevenues : transformDataForTableByYear}  standardizeTypeFunction={standardizedTypeMunicipalFundebFundefComposition} tableMapping={mapMunicipalFundebFundefComposition} tableName="Composição do Fundef/Fundeb no município" keyTable={key} groupType={groupType}/>
+                  </div>
                 )}
                 {selectedTable === 'complementationFundebFundef' && (
-                  <RevenueTable data={apiData[key]} transformDataFunction={groupType === "municipio" ?  transformDataForTableRevenues : transformDataForTableByYear}  standardizeTypeFunction={standardizedTypeComplementationFundebFundef} tableMapping={mapComplementationFundebFundef} tableName="Composição da complementação do Fundef/Fundeb" keyTable={key} groupType={groupType}/>
+                  <div className="mui-table-container">
+                    <RevenueTable data={apiData[key]} transformDataFunction={groupType === "municipio" ?  transformDataForTableRevenues : transformDataForTableByYear}  standardizeTypeFunction={standardizedTypeComplementationFundebFundef} tableMapping={mapComplementationFundebFundef} tableName="Composição da complementação do Fundef/Fundeb" keyTable={key} groupType={groupType}/>
+                  </div>
                 )}
                 {selectedTable === 'constitutionalLimitMde' && (
-                  <RevenueTable data={apiData[key]} transformDataFunction={groupType === "municipio" ?  transformDataForTableRevenues : transformDataForTableByYear}  standardizeTypeFunction={standardizedTypeConstitutionalLimitMde} tableMapping={mapConstitutionalLimitMde} tableName="Limite constitucional em MDE no município" keyTable={key} groupType={groupType}/>
+                  <div className="mui-table-container">
+                    <RevenueTable data={apiData[key]} transformDataFunction={groupType === "municipio" ?  transformDataForTableRevenues : transformDataForTableByYear}  standardizeTypeFunction={standardizedTypeConstitutionalLimitMde} tableMapping={mapConstitutionalLimitMde} tableName="Limite constitucional em MDE no município" keyTable={key} groupType={groupType}/>
+                  </div>
                 )}
                 {selectedTable === 'expensesBasicEducationFundeb' && (
-                  <RevenueTable data={apiData[key]} transformDataFunction={groupType === "municipio" ?  transformDataForTableRevenues : transformDataForTableByYear}  standardizeTypeFunction={standardizedTypeExpensesBasicEducationFundeb} tableMapping={mapExpensesBasicEducationFundeb} tableName="Despesas com profissionais da educação básica com o Fundef/Fundeb" keyTable={key} groupType={groupType}/>
+                  <div className="mui-table-container">
+                    <RevenueTable data={apiData[key]} transformDataFunction={groupType === "municipio" ?  transformDataForTableRevenues : transformDataForTableByYear}  standardizeTypeFunction={standardizedTypeExpensesBasicEducationFundeb} tableMapping={mapExpensesBasicEducationFundeb} tableName="Despesas com profissionais da educação básica com o Fundef/Fundeb" keyTable={key} groupType={groupType}/>
+                  </div>
                 )}
                 {selectedTable === 'areasActivityExpense' && (
-                  <RevenueTable data={apiData[key]}transformDataFunction={groupType === "municipio" ?  transformDataForTableRevenues : transformDataForTableByYear}  standardizeTypeFunction={standardizedTypeAreasActivityExpense} tableMapping={mapAreasActivityExpense} tableName="Despesas em MDE por área de atuação" keyTable={key}  groupType={groupType}/>
+                  <div className="mui-table-container">
+                    <RevenueTable data={apiData[key]}transformDataFunction={groupType === "municipio" ?  transformDataForTableRevenues : transformDataForTableByYear}  standardizeTypeFunction={standardizedTypeAreasActivityExpense} tableMapping={mapAreasActivityExpense} tableName="Despesas em MDE por área de atuação" keyTable={key}  groupType={groupType}/>
+                  </div>
                 )}
                 {selectedTable === 'basicEducationMinimalPotential' && (
-                  <RevenueTable data={apiData[key]} transformDataFunction={groupType === "municipio" ?  transformDataForTableRevenues : transformDataForTableByYear}  standardizeTypeFunction={standardizedTypeBasicEducationMinimalPotential} tableMapping={mapBasicEducationMinimalPotential} tableName="Receita Potencial Mínima vinculada à Educação Básica" keyTable={key} groupType={groupType}/>
+                  <div className="mui-table-container">
+                    <RevenueTable data={apiData[key]} transformDataFunction={groupType === "municipio" ?  transformDataForTableRevenues : transformDataForTableByYear}  standardizeTypeFunction={standardizedTypeBasicEducationMinimalPotential} tableMapping={mapBasicEducationMinimalPotential} tableName="Receita Potencial Mínima vinculada à Educação Básica" keyTable={key} groupType={groupType}/>
+                  </div>
                 )}
                 {selectedTable === 'complementaryProtocol' && (
-                  <RevenueTable data={apiData[key]} transformDataFunction={groupType === "municipio" ?  transformDataForTableRevenues : transformDataForTableByYear}  standardizeTypeFunction={standardizedTypeComplementaryProtocol} tableMapping={mapComplementaryProtocol} tableName="Receita Potencial Mínima vinculada à Educação Básica" keyTable={key} groupType={groupType}/>
+                  <div className="mui-table-container">
+                    <RevenueTable data={apiData[key]} transformDataFunction={groupType === "municipio" ?  transformDataForTableRevenues : transformDataForTableByYear}  standardizeTypeFunction={standardizedTypeComplementaryProtocol} tableMapping={mapComplementaryProtocol} tableName="Protocolo Complementar" keyTable={key} groupType={groupType}/>
+                  </div>
                 )}
                 {/* Adicione outros mapeamentos de tabelas conforme necessário */}
               </div>
             ))}
 
-            <div className="pagination-controls">
-              <FormControl>
-                <InputLabel>Linhas por página</InputLabel>
-                <Select value={limit} onChange={this.handleLimitChange}>
-                  <MenuItem value={1}>1</MenuItem>
-                  <MenuItem value={10}>10</MenuItem>
-                  <MenuItem value={25}>25</MenuItem>
-                  <MenuItem value={50}>50</MenuItem>
-                </Select>
-              </FormControl>
-
-              <Pagination
-                count={totalPages}
-                page={page}
-                onChange={this.handlePageChange}
-                color="primary"
-              />
-            </div>
+            <CustomPagination
+              page={page}
+              totalPages={totalPages}
+              limit={limit}
+              onPageChange={this.handlePageChange}
+              onLimitChange={this.handleLimitChange}
+            />
 
             </div>
           )}

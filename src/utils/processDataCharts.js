@@ -9,42 +9,44 @@ export const processMDEData = (rawData, colorPalette) => {
 
     Object.entries(rawData).forEach(([year, dataPerYear]) => {
       Object.keys(dataPerYear).forEach((key) => {
-        dataPerYear[key].forEach((municipality) => {
-          const codigoMunicipio = municipality.codigoMunicipio;
-          const nomeMunicipio = municipios[codigoMunicipio]?.nomeMunicipio || "";
-          const ano = municipality.ano;
+        Object.entries(dataPerYear[key]).forEach(([key, data]) => {
+          data.forEach((municipality) => {
+            const codigoMunicipio = municipality.codigoMunicipio;
+            const nomeMunicipio = municipios[codigoMunicipio]?.nomeMunicipio || "";
+            const ano = municipality.ano;
 
-          const cumprimentoLimites = Object.values(municipality).find(
-            prop => Array.isArray(prop) && prop.some(item =>
+            const cumprimentoLimites = Object.values(municipality).find(
+              prop => Array.isArray(prop) && prop.some(item =>
+                item.tipo === 'MINIMO_DE_25_PORCENTO_DAS_RECEITAS_RESULTANTES_DE_IMPOSTOS' ||
+                item.tipo === 'MINIMO_DE_25_PORCENTO_DAS_RECEITAS_RESULTANTES_DE_IMPOSTOS_MDE' ||
+                item.tipo === "PERCENTUAL_DE_APLICACAO_MDE_SOBRE_RECEITA_LIQUIDA_IMPOSTOS" ||
+                item.tipo === "PERCENTUAL_APLICADO_MDE"
+              )
+            );
+
+            const percentageData = cumprimentoLimites?.find(item =>
               item.tipo === 'MINIMO_DE_25_PORCENTO_DAS_RECEITAS_RESULTANTES_DE_IMPOSTOS' ||
               item.tipo === 'MINIMO_DE_25_PORCENTO_DAS_RECEITAS_RESULTANTES_DE_IMPOSTOS_MDE' ||
               item.tipo === "PERCENTUAL_DE_APLICACAO_MDE_SOBRE_RECEITA_LIQUIDA_IMPOSTOS" ||
               item.tipo === "PERCENTUAL_APLICADO_MDE"
-            )
-          );
+            );
 
-          const percentageData = cumprimentoLimites?.find(item =>
-            item.tipo === 'MINIMO_DE_25_PORCENTO_DAS_RECEITAS_RESULTANTES_DE_IMPOSTOS' ||
-            item.tipo === 'MINIMO_DE_25_PORCENTO_DAS_RECEITAS_RESULTANTES_DE_IMPOSTOS_MDE' ||
-            item.tipo === "PERCENTUAL_DE_APLICACAO_MDE_SOBRE_RECEITA_LIQUIDA_IMPOSTOS" ||
-            item.tipo === "PERCENTUAL_APLICADO_MDE"
-          );
+            const percentageApplied = percentageData?.porcentagem || percentageData?.valor || 0;
 
-          const percentageApplied = percentageData?.porcentagem || percentageData?.valor || 0;
+            labels.push(`${ano} - ${nomeMunicipio}`);
+            percentages.push(percentageApplied.toFixed(2));
 
-          labels.push(`${ano} - ${nomeMunicipio}`);
-          percentages.push(percentageApplied.toFixed(2));
+            if (!municipalityColorsTemp[codigoMunicipio]) {
+              const colorIndex = Object.keys(municipalityColorsTemp).length % colorPalette.length;
+              municipalityColorsTemp[codigoMunicipio] = {
+                color: colorPalette[colorIndex],
+                name: nomeMunicipio
+              };
+            }
 
-          if (!municipalityColorsTemp[codigoMunicipio]) {
-            const colorIndex = Object.keys(municipalityColorsTemp).length % colorPalette.length;
-            municipalityColorsTemp[codigoMunicipio] = {
-              color: colorPalette[colorIndex],
-              name: nomeMunicipio
-            };
-          }
-
-          backgroundColors.push(municipalityColorsTemp[codigoMunicipio].color);
-          borderColors.push(municipalityColorsTemp[codigoMunicipio].color);
+            backgroundColors.push(municipalityColorsTemp[codigoMunicipio].color);
+            borderColors.push(municipalityColorsTemp[codigoMunicipio].color);
+          });
         });
       });
     });
@@ -74,8 +76,9 @@ export const processBasicEducationData = (rawData, colorPalette) => {
     const municipalityColorsTemp = {};
 
     Object.entries(rawData).forEach(([year, dataPerYear]) => {
-        Object.keys(dataPerYear).forEach((key) => {
-        dataPerYear[key].forEach((municipality) => {
+      Object.keys(dataPerYear).forEach((key) => {
+        Object.entries(dataPerYear[key]).forEach(([key, data]) => {
+          data.forEach((municipality) => {
             const codigoMunicipio = municipality.codigoMunicipio;
             const nomeMunicipio = municipios[codigoMunicipio]?.nomeMunicipio || "";
             const ano = municipality.ano;
@@ -111,8 +114,9 @@ export const processBasicEducationData = (rawData, colorPalette) => {
 
             backgroundColors.push(municipalityColorsTemp[codigoMunicipio].color);
             borderColors.push(municipalityColorsTemp[codigoMunicipio].color);
+          }); 
         });
-        });
+      });
     });
 
     return {

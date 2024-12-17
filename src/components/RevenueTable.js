@@ -101,8 +101,8 @@ const RevenueTable = ({ data, transformDataFunction, standardizeTypeFunction, ta
 
   return (
     <ThemeProvider theme={theme}>
-      <div style={{ margin: '0 2rem' }}> {/* Adiciona margem nas laterais */}
-        <Paper sx={{ backgroundColor: theme.palette.background.default, padding: '1rem' }}>
+      <div> {/* Adiciona margem nas laterais */}
+        <Paper sx={{ backgroundColor: theme.palette.background.default }}>
           <TableContainer component={Paper} sx={{ maxWidth: '100%', overflowX: 'auto' }}>
             <Table sx={{ minWidth: 650 }} aria-label="simple table">
               <StyledTableHead>
@@ -134,7 +134,7 @@ const RevenueTable = ({ data, transformDataFunction, standardizeTypeFunction, ta
             </Table>
           </TableContainer>
         </Paper>
-        <Button variant="contained" color="success" onClick={exportToExcel} sx={{ marginTop: 2 }}>
+        <Button variant="contained" color="success" onClick={exportToExcel} sx={{ marginTop: 2, marginBottom: 2 }}>
           Exportar para Excel
         </Button>
       </div>

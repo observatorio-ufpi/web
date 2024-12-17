@@ -1,23 +1,67 @@
 import { Button } from '@mui/material';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Select from 'react-select';
 import '../style/TableFilters.css';
 import { FaixaPopulacional, municipios, Regioes } from '../utils/municipios.mapping';
 
-const FilterComponent = ({ onFilterChange }) => {
-  const [selectedMunicipio, setSelectedMunicipio] = useState(null);
-  const [territorioDeDesenvolvimentoMunicipio, setTerritorioDeDesenvolvimentoMunicipio] = useState(null);
-  const [faixaPopulacionalMunicipio, setFaixaPopulacionalMunicipio] = useState(null);
-  const [aglomeradoMunicipio, setAglomeradoMunicipio] = useState(null);
-  const [gerenciaRegionalMunicipio, setGerenciaRegionalMunicipio] = useState(null);
+const findMunicipioCodigo = (nomeMunicipio) => {
+  return Object.keys(municipios).find(
+    codigo => municipios[codigo].nomeMunicipio === nomeMunicipio
+  );
+};
+
+const FilterComponent = ({
+  onFilterChange,
+  selectedMunicipio,
+  territorioDeDesenvolvimentoMunicipio,
+  faixaPopulacionalMunicipio,
+  aglomeradoMunicipio,
+  gerenciaRegionalMunicipio
+}) => {
+  // Converter os valores recebidos para o formato do react-select
+  const [selectedMunicipioState, setSelectedMunicipio] = useState(
+    selectedMunicipio ?
+      {
+        value: findMunicipioCodigo(selectedMunicipio),
+        label: selectedMunicipio
+      } :
+      null
+  );
+  const [territorioState, setTerritorioDeDesenvolvimentoMunicipio] = useState(
+    territorioDeDesenvolvimentoMunicipio ? { value: territorioDeDesenvolvimentoMunicipio, label: Regioes[territorioDeDesenvolvimentoMunicipio] } : null
+  );
+  const [faixaState, setFaixaPopulacionalMunicipio] = useState(
+    faixaPopulacionalMunicipio ? { value: faixaPopulacionalMunicipio, label: FaixaPopulacional[faixaPopulacionalMunicipio] } : null
+  );
+  const [aglomeradoState, setAglomeradoMunicipio] = useState(
+    aglomeradoMunicipio ? { value: aglomeradoMunicipio, label: `Aglomerado ${aglomeradoMunicipio}` } : null
+  );
+  const [gerenciaState, setGerenciaRegionalMunicipio] = useState(
+    gerenciaRegionalMunicipio ? { value: gerenciaRegionalMunicipio, label: `Gerência ${gerenciaRegionalMunicipio}` } : null
+  );
+
+  useEffect(() => {
+    setSelectedMunicipio(
+      selectedMunicipio ?
+        {
+          value: findMunicipioCodigo(selectedMunicipio),
+          label: selectedMunicipio
+        } :
+        null
+    );
+    setTerritorioDeDesenvolvimentoMunicipio(territorioDeDesenvolvimentoMunicipio ? { value: territorioDeDesenvolvimentoMunicipio, label: Regioes[territorioDeDesenvolvimentoMunicipio] } : null);
+    setFaixaPopulacionalMunicipio(faixaPopulacionalMunicipio ? { value: faixaPopulacionalMunicipio, label: FaixaPopulacional[faixaPopulacionalMunicipio] } : null);
+    setAglomeradoMunicipio(aglomeradoMunicipio ? { value: aglomeradoMunicipio, label: `Aglomerado ${aglomeradoMunicipio}` } : null);
+    setGerenciaRegionalMunicipio(gerenciaRegionalMunicipio ? { value: gerenciaRegionalMunicipio, label: `Gerência ${gerenciaRegionalMunicipio}` } : null);
+  }, [selectedMunicipio, territorioDeDesenvolvimentoMunicipio, faixaPopulacionalMunicipio, aglomeradoMunicipio, gerenciaRegionalMunicipio]);
 
   const handleSearch = () => {
     onFilterChange({
-      selectedMunicipio: selectedMunicipio ? selectedMunicipio.label : null,
-      territorioDeDesenvolvimentoMunicipio: territorioDeDesenvolvimentoMunicipio ? territorioDeDesenvolvimentoMunicipio.value : null,
-      faixaPopulacionalMunicipio: faixaPopulacionalMunicipio ? faixaPopulacionalMunicipio.value : null,
-      aglomeradoMunicipio: aglomeradoMunicipio ? aglomeradoMunicipio.value : null,
-      gerenciaRegionalMunicipio: gerenciaRegionalMunicipio ? gerenciaRegionalMunicipio.value : null,
+      selectedMunicipio: selectedMunicipioState ? municipios[selectedMunicipioState.value]?.nomeMunicipio : null,
+      territorioDeDesenvolvimentoMunicipio: territorioState ? territorioState.value : null,
+      faixaPopulacionalMunicipio: faixaState ? faixaState.value : null,
+      aglomeradoMunicipio: aglomeradoState ? aglomeradoState.value : null,
+      gerenciaRegionalMunicipio: gerenciaState ? gerenciaState.value : null,
       loading: true,
     });
   };
@@ -42,7 +86,7 @@ const FilterComponent = ({ onFilterChange }) => {
       <div className="filter-form">
         <Select
           className="filter-item"
-          value={selectedMunicipio}
+          value={selectedMunicipioState}
           onChange={setSelectedMunicipio}
           options={municipioOptions}
           placeholder="Município"
@@ -51,8 +95,8 @@ const FilterComponent = ({ onFilterChange }) => {
         />
 
         <Select
-          className="filter-item"
-          value={territorioDeDesenvolvimentoMunicipio}
+          className="filter-item filter-item-territorio"
+          value={territorioState}
           onChange={setTerritorioDeDesenvolvimentoMunicipio}
           options={Object.keys(Regioes).map(key => ({ value: key, label: Regioes[key] }))}
           placeholder="Território de Desenvolvimento"
@@ -62,7 +106,7 @@ const FilterComponent = ({ onFilterChange }) => {
 
         <Select
           className="filter-item"
-          value={faixaPopulacionalMunicipio}
+          value={faixaState}
           onChange={setFaixaPopulacionalMunicipio}
           options={Object.keys(FaixaPopulacional).map(key => ({ value: key, label: FaixaPopulacional[key] }))}
           placeholder="Faixa Populacional"
@@ -72,7 +116,7 @@ const FilterComponent = ({ onFilterChange }) => {
 
         <Select
           className="filter-item"
-          value={aglomeradoMunicipio}
+          value={aglomeradoState}
           onChange={setAglomeradoMunicipio}
           options={aglomeradoOptions}
           placeholder="Aglomerado"
@@ -81,21 +125,23 @@ const FilterComponent = ({ onFilterChange }) => {
 
         <Select
           className="filter-item"
-          value={gerenciaRegionalMunicipio}
+          value={gerenciaState}
           onChange={setGerenciaRegionalMunicipio}
           options={gerenciaOptions}
           placeholder="Gerência"
           isClearable
         />
       </div>
-      <Button
-        className="filter-button"
-        variant="contained"
-        color="primary"
-        onClick={handleSearch}
-      >
-        Filtrar
-      </Button>
+      <div className="filter-button-container">
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={handleSearch}
+          className="filter-button"
+        >
+          Filtrar
+        </Button>
+      </div>
     </div>
   );
 };

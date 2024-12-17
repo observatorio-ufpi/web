@@ -1,9 +1,11 @@
 import React, { Component } from 'react';
 import '../App.css';
 import { fetchData } from '../services/apiService';
+import '../style/ChartPagination.css';
 import { processBasicEducationData, processMDEData } from '../utils/processDataCharts';
 import ChartComponent from './ChartComponent';
 import FilterComponent from './TableFilters';
+import CustomPagination from './CustomPagination';
 
 class App extends Component {
   constructor(props) {
@@ -18,7 +20,10 @@ class App extends Component {
       faixaPopulacionalMunicipio: null,
       aglomeradoMunicipio: '',
       gerenciaRegionalMunicipio: '',
-      groupType: 'municipio'
+      groupType: 'municipio',
+      page: 1,
+      limit: 5,
+      totalPages: 1
     };
   }
 
@@ -34,10 +39,12 @@ class App extends Component {
       territorioDeDesenvolvimentoMunicipio,
       faixaPopulacionalMunicipio,
       aglomeradoMunicipio,
-      gerenciaRegionalMunicipio
+      gerenciaRegionalMunicipio,
+      page: this.state.page,
+      limit: this.state.limit
     })
     .then(data => {
-      this.setState({ apiData: data, loading: false });
+      this.setState({ apiData: data, loading: false,  totalPages: data.pagination?.totalPages || 1 });
     })
     .catch(error => {
       console.log(error)
@@ -63,6 +70,20 @@ class App extends Component {
     }, this.fetchTableData);
   };
 
+  handlePageChange = (event, newPage) => {
+    this.setState({
+      page: newPage,
+      loading: true
+    }, this.fetchTableData);
+  };
+
+  handleLimitChange = (event) => {
+    this.setState({
+      limit: parseInt(event.target.value),
+      page: 1,
+      loading: true
+    }, this.fetchTableData);
+  };
 
   render() {
     const { apiData, loading, error, selectedTable, groupType } = this.state;
@@ -83,29 +104,43 @@ class App extends Component {
     return (
         <div>
           <div className="app-container">
+            <div className="filters-section">
+              <div className="selects-wrapper">
+                <div className="select-container">
+                  <label htmlFor="tableSelect" className="select-label">Selecione o indicador:</label>
+                  <select
+                    id="tableSelect"
+                    value={selectedTable}
+                    onChange={this.handleTableChange}
+                    className="select-box"
+                  >
+                    <option value="constitutionalLimitMde">Percentual aplicado em MDE</option>
+                    <option value="expensesBasicEducationFundeb">Percentual do fundeb nos profissionais de educação básica</option>
+                  </select>
+                </div>
 
-            <div className="select-container">
-              <label htmlFor="tableSelect" className="select-label">Selecione o indicador:</label>
-              <select
-                value={selectedTable}
-                onChange={this.handleTableChange}
-                className="select-box"
-              >
-                <option value="constitutionalLimitMde">Percentual aplicado em MDE</option>
-                <option value="expensesBasicEducationFundeb">Percentual do fundeb nos profissionais de educação básica</option>
-              </select>
-            </div>
+                <div className="select-container">
+                  <label htmlFor="groupTypeSelect" className="select-label">Tipo de Agrupamento:</label>
+                  <select
+                    id="groupTypeSelect"
+                    value={groupType}
+                    onChange={this.handleGroupTypeChange}
+                    className="select-box"
+                  >
+                    <option value="municipio">Município</option>
+                    <option value="ano">Ano</option>
+                  </select>
+                </div>
+              </div>
 
-            <div className="select-container">
-                <label htmlFor="groupTypeSelect" className="select-label">Tipo de Agrupamento:</label>
-                <select value={groupType} onChange={this.handleGroupTypeChange} className="select-box">
-                <option value="municipio">Município</option>
-                <option value="ano">Ano</option>
-                </select>
-            </div>
-
-            <div className="filter-container">
-              <FilterComponent onFilterChange={this.handleFilterChange} />
+              <FilterComponent
+                onFilterChange={this.handleFilterChange}
+                selectedMunicipio={this.state.selectedMunicipio}
+                territorioDeDesenvolvimentoMunicipio={this.state.territorioDeDesenvolvimentoMunicipio}
+                faixaPopulacionalMunicipio={this.state.faixaPopulacionalMunicipio}
+                aglomeradoMunicipio={this.state.aglomeradoMunicipio}
+                gerenciaRegionalMunicipio={this.state.gerenciaRegionalMunicipio}
+              />
             </div>
 
             <hr className="divider" />
@@ -137,6 +172,14 @@ class App extends Component {
                     data={apiData}
                   />
                 )}
+
+                <CustomPagination
+                  page={this.state.page}
+                  totalPages={this.state.totalPages}
+                  limit={this.state.limit}
+                  onPageChange={this.handlePageChange}
+                  onLimitChange={this.handleLimitChange}
+                />
               </>
             )}
           </div>
