@@ -1,18 +1,37 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import "../style/Header.css";
+import { FaBars, FaTimes } from 'react-icons/fa';
 
 const Header = () => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const toggleMenu = () => {
+    setIsOpen(!isOpen);
+  };
+
   return (
-    <header className="header">
-      <div className="logo-text"><a href="/">Observatório</a></div>
-      <nav className="navbar">
-        <ul>
-          <li><a href="#sobre">Sobre</a></li>
-          <li><a href="#quem-somos">Quem Somos</a></li>
-          <li><a href="#contato">Contato</a></li>
-        </ul>
-      </nav>
-    </header>
+    <>
+      <header className="header">
+        <div className="logo-text">
+          <Link to="/">Observatório</Link>
+        </div>
+
+        <button className="mobile-menu-button" onClick={toggleMenu}>
+          {isOpen ? <FaTimes /> : <FaBars />}
+        </button>
+
+        <nav className={`navbar ${isOpen ? 'active' : ''}`}>
+          <ul>
+            <li><Link to="/sobre">Sobre</Link></li>
+            <li><Link to="/quem-somos">Quem Somos</Link></li>
+            <li><Link to="/contato">Contato</Link></li>
+          </ul>
+        </nav>
+      </header>
+
+      {isOpen && <div className="overlay" onClick={toggleMenu}></div>}
+    </>
   );
 };
 

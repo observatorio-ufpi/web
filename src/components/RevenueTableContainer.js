@@ -309,52 +309,52 @@ class App extends Component {
                   </div>
                 )}
                 {selectedTable === 'constitutionalTransfersRevenue' && (
-                  <div className="mui-table-container">
+                  <div style={{ marginTop: '1rem' }}>
                     <RevenueTable data={apiData[key]} transformDataFunction={groupType === "municipio" ?  transformDataForTableRevenues : transformDataForTableByYear}  standardizeTypeFunction={standardizedTypeConstitutionalTransfersRevenue} tableMapping={mapConstitutionalTransfersRevenue} tableName="Receita de transferências constitucionais e legais" keyTable={key} groupType={groupType} />
                   </div>
                 )}
                 {selectedTable === 'municipalTaxesRevenues' && (
-                  <div className="mui-table-container">
+                  <div style={{ marginTop: '1rem' }}>
                     <RevenueTable data={apiData[key]} transformDataFunction={groupType === "municipio" ?  transformDataForTableRevenues : transformDataForTableByYear}  standardizeTypeFunction={standardizeTypeMunicipalTaxesRevenues} tableMapping={mapMunicipalTaxesRevenues} tableName="Receita Líquida de Impostos do Município" keyTable={key} groupType={groupType}/>
                   </div>
                 )}
                 {selectedTable === 'additionalEducationRevenue' && (
-                  <div className="mui-table-container">
+                  <div style={{ marginTop: '1rem' }}>
                     <RevenueTable data={apiData[key]} transformDataFunction={groupType === "municipio" ?  transformDataForTableRevenues : transformDataForTableByYear}  standardizeTypeFunction={standardizeTypeAdditionalEducationRevenues} tableMapping={mapAdditionalMunicipalEducationRevenue} tableName="Receitas adicionais da educação no Município" keyTable={key} groupType={groupType}/>
                   </div>
                 )}
                 {selectedTable === 'municipalFundebFundefComposition' && (
-                  <div className="mui-table-container">
+                  <div style={{ marginTop: '1rem' }}>
                     <RevenueTable data={apiData[key]} transformDataFunction={groupType === "municipio" ?  transformDataForTableRevenues : transformDataForTableByYear}  standardizeTypeFunction={standardizedTypeMunicipalFundebFundefComposition} tableMapping={mapMunicipalFundebFundefComposition} tableName="Composição do Fundef/Fundeb no município" keyTable={key} groupType={groupType}/>
                   </div>
                 )}
                 {selectedTable === 'complementationFundebFundef' && (
-                  <div className="mui-table-container">
+                  <div style={{ marginTop: '1rem' }}>
                     <RevenueTable data={apiData[key]} transformDataFunction={groupType === "municipio" ?  transformDataForTableRevenues : transformDataForTableByYear}  standardizeTypeFunction={standardizedTypeComplementationFundebFundef} tableMapping={mapComplementationFundebFundef} tableName="Composição da complementação do Fundef/Fundeb" keyTable={key} groupType={groupType}/>
                   </div>
                 )}
                 {selectedTable === 'constitutionalLimitMde' && (
-                  <div className="mui-table-container">
+                  <div style={{ marginTop: '1rem' }}>
                     <RevenueTable data={apiData[key]} transformDataFunction={groupType === "municipio" ?  transformDataForTableRevenues : transformDataForTableByYear}  standardizeTypeFunction={standardizedTypeConstitutionalLimitMde} tableMapping={mapConstitutionalLimitMde} tableName="Limite constitucional em MDE no município" keyTable={key} groupType={groupType}/>
                   </div>
                 )}
                 {selectedTable === 'expensesBasicEducationFundeb' && (
-                  <div className="mui-table-container">
+                  <div style={{ marginTop: '1rem' }}>
                     <RevenueTable data={apiData[key]} transformDataFunction={groupType === "municipio" ?  transformDataForTableRevenues : transformDataForTableByYear}  standardizeTypeFunction={standardizedTypeExpensesBasicEducationFundeb} tableMapping={mapExpensesBasicEducationFundeb} tableName="Despesas com profissionais da educação básica com o Fundef/Fundeb" keyTable={key} groupType={groupType}/>
                   </div>
                 )}
                 {selectedTable === 'areasActivityExpense' && (
-                  <div className="mui-table-container">
+                  <div style={{ marginTop: '1rem' }}>
                     <RevenueTable data={apiData[key]}transformDataFunction={groupType === "municipio" ?  transformDataForTableRevenues : transformDataForTableByYear}  standardizeTypeFunction={standardizedTypeAreasActivityExpense} tableMapping={mapAreasActivityExpense} tableName="Despesas em MDE por área de atuação" keyTable={key}  groupType={groupType}/>
                   </div>
                 )}
                 {selectedTable === 'basicEducationMinimalPotential' && (
-                  <div className="mui-table-container">
+                  <div style={{ marginTop: '1rem' }}>
                     <RevenueTable data={apiData[key]} transformDataFunction={groupType === "municipio" ?  transformDataForTableRevenues : transformDataForTableByYear}  standardizeTypeFunction={standardizedTypeBasicEducationMinimalPotential} tableMapping={mapBasicEducationMinimalPotential} tableName="Receita Potencial Mínima vinculada à Educação Básica" keyTable={key} groupType={groupType}/>
                   </div>
                 )}
                 {selectedTable === 'complementaryProtocol' && (
-                  <div className="mui-table-container">
+                  <div style={{ marginTop: '1rem' }}>
                     <RevenueTable data={apiData[key]} transformDataFunction={groupType === "municipio" ?  transformDataForTableRevenues : transformDataForTableByYear}  standardizeTypeFunction={standardizedTypeComplementaryProtocol} tableMapping={mapComplementaryProtocol} tableName="Protocolo Complementar" keyTable={key} groupType={groupType}/>
                   </div>
                 )}

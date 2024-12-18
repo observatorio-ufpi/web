@@ -22,7 +22,7 @@ class App extends Component {
       gerenciaRegionalMunicipio: '',
       groupType: 'municipio',
       page: 1,
-      limit: 5,
+      limit: 10,
       totalPages: 1
     };
   }
