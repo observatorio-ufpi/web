@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import '../style/Chart.css';
 import BarChart from './BarChart';
+import * as XLSX from 'xlsx';
+import { FaFileExcel, FaDownload } from 'react-icons/fa';
+import Button from '@mui/material/Button';
 
 const ChartComponent = ({ indicatorType, processDataFunction, title, data }) => {
   const [chartData, setChartData] = useState({

@@ -1,0 +1,22 @@
+.action-button {
+  min-width: 120px;
+}
+
+@media (max-width: 600px) {
+  .action-button {
+    min-width: 40px;
+    padding: 6px !important;
+  }
+
+  .action-button .MuiButton-startIcon {
+    margin: 0;
+  }
+
+  .action-button .button-text {
+    display: none;
+  }
+
+  .action-button svg {
+    font-size: 20px;
+  }
+}

@@ -13,6 +13,7 @@ import { ThemeProvider, createTheme, styled } from '@mui/material/styles';
 import React from 'react';
 import * as XLSX from 'xlsx';
 import { municipios } from '../utils/municipios.mapping';
+import '../style/Buttons.css';
 
 const theme = createTheme({
   palette: {
@@ -215,16 +216,18 @@ const RevenueTable = ({ data, transformDataFunction, standardizeTypeFunction, ta
             color="success"
             onClick={downloadExcel}
             startIcon={<FaFileExcel />}
+            className="action-button"
           >
-            Excel
+            <span className="button-text">Excel</span>
           </Button>
           <Button
             variant="contained"
             color="error"
             onClick={downloadPDF}
             startIcon={<FaFilePdf />}
+            className="action-button"
           >
-            PDF
+            <span className="button-text">PDF</span>
           </Button>
         </div>
       </div>
