@@ -1,5 +1,5 @@
-import React from 'react';
-import ChartComponent from './ChartComponent';
+import React from "react";
+import ChartComponent from "./ChartComponent";
 import {
   processIptuData,
   processIssData,
@@ -12,8 +12,13 @@ import {
   processOutrasTransferenciasData,
   processIcmsDesoneracaoData,
   processCotaParteIpiData,
-  processCotaParteItrData
-} from '../utils/processRevenueCompositionCharts';
+  processCotaParteItrData,
+  processParticipacaoReceitaImpostosProprios,
+  processParticipacaoTransferencias,
+  processRazaoImpostosTransferencias,
+  processRazaoTransferenciasImpostos,
+  processParticipacaoFundeb,
+} from "../utils/processRevenueCompositionCharts";
 
 const RevenueCompositionCharts = ({ data }) => {
   return (
@@ -112,6 +117,46 @@ const RevenueCompositionCharts = ({ data }) => {
         processDataFunction={processOutrasTransferenciasData}
         title="Composição de Outras Transferências na Receita Total de Impostos [%]"
         data={data.outrasTransferencias}
+      />
+
+      <ChartComponent
+        key="participacao-receita-impostos-proprios"
+        indicatorType="participacao-receita-impostos-proprios"
+        processDataFunction={processParticipacaoReceitaImpostosProprios}
+        title="Participação da Receita de Impostos Próprios [%]"
+        data={data.participacaoReceitaImpostosProprios}
+      />
+
+      <ChartComponent
+        key="participacao-transferencias"
+        indicatorType="participacao-transferencias"
+        processDataFunction={processParticipacaoTransferencias}
+        title="Participação das Transferências [%]"
+        data={data.participacaoTransferencias}
+      />
+
+      <ChartComponent
+        key="razao-impostos-transferencias"
+        indicatorType="razao-impostos-transferencias"
+        processDataFunction={processRazaoImpostosTransferencias}
+        title="Razão entre Impostos e Transferências [%]"
+        data={data.razaoImpostosTransferencias}
+      />
+
+      <ChartComponent
+        key="razao-transferencias-impostos"
+        indicatorType="razao-transferencias-impostos"
+        processDataFunction={processRazaoTransferenciasImpostos}
+        title="Razão entre Transferências e Impostos [%]"
+        data={data.razaoTransferenciasImpostos}
+      />
+
+      <ChartComponent
+        key="participacao-fundeb"
+        indicatorType="participacao-fundeb"
+        processDataFunction={processParticipacaoFundeb}
+        title="Participação do FUNDEB [%]"
+        data={data.participacaoFundeb}
       />
     </div>
   );
