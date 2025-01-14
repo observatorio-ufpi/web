@@ -4,8 +4,39 @@ import { fetchData } from '../services/apiService';
 import '../style/ChartPagination.css';
 import { processBasicEducationData, processMDEData } from '../utils/processDataCharts';
 import ChartComponent from './ChartComponent';
-import FilterComponent from './TableFilters';
 import CustomPagination from './CustomPagination';
+import RevenueCompositionCharts from './RevenueCompositionCharts';
+import FilterComponent from './TableFilters';
+
+const endpoints = {
+  // Existing endpoints
+  ownRevenues: process.env.REACT_APP_API_PUBLIC_URL + '/researches/mot-revenue',
+  constitutionalTransfersRevenue: process.env.REACT_APP_API_PUBLIC_URL + '/researches/ct-revenue',
+  municipalTaxesRevenues: process.env.REACT_APP_API_PUBLIC_URL + '/researches/mt-revenue',
+  additionalEducationRevenue: process.env.REACT_APP_API_PUBLIC_URL + '/researches/addtional-education-revenue',
+  municipalFundebFundefComposition: process.env.REACT_APP_API_PUBLIC_URL + '/researches/mfc-revenue',
+  complementationFundebFundef: process.env.REACT_APP_API_PUBLIC_URL + '/researches/cf-revenue',
+  areasActivityExpense: process.env.REACT_APP_API_PUBLIC_URL + '/researches/areas-activity-expense',
+  basicEducationMinimalPotential: process.env.REACT_APP_API_PUBLIC_URL + '/researches/basic-education-minimal-potential-revenue',
+  constitutionalLimitMde: process.env.REACT_APP_API_PUBLIC_URL + '/researches/mc-limit-revenue',
+  expensesBasicEducationFundeb: process.env.REACT_APP_API_PUBLIC_URL + '/researches/basic-education-expense',
+  complementaryProtocol: process.env.REACT_APP_API_PUBLIC_URL + '/researches/complementary-protocol',
+  allTables: process.env.REACT_APP_API_PUBLIC_URL + '/researches/all-revenues-expenses',
+
+  // New revenue composition endpoints
+  'iptu-composition': process.env.REACT_APP_API_PUBLIC_URL + '/revenue-composition/iptu',
+  'iss-composition': process.env.REACT_APP_API_PUBLIC_URL + '/revenue-composition/iss',
+  'itbi-composition': process.env.REACT_APP_API_PUBLIC_URL + '/revenue-composition/itbi',
+  'irrf-composition': process.env.REACT_APP_API_PUBLIC_URL + '/revenue-composition/irrf',
+  'ipva-composition': process.env.REACT_APP_API_PUBLIC_URL + '/revenue-composition/cota-parte-ipva',
+  'icms-composition': process.env.REACT_APP_API_PUBLIC_URL + '/revenue-composition/cota-parte-icms',
+  'fpm-composition': process.env.REACT_APP_API_PUBLIC_URL + '/revenue-composition/fpm',
+  'cota-parte-iof-ouro': process.env.REACT_APP_API_PUBLIC_URL + '/revenue-composition/cota-parte-iof-ouro',
+  'outras-transferencias': process.env.REACT_APP_API_PUBLIC_URL + '/revenue-composition/outras-transferencias',
+  'icms-desoneracao': process.env.REACT_APP_API_PUBLIC_URL + '/revenue-composition/icms-desoneracao',
+  'cota-parte-ipi': process.env.REACT_APP_API_PUBLIC_URL + '/revenue-composition/cota-parte-ipi',
+  'cota-parte-itr': process.env.REACT_APP_API_PUBLIC_URL + '/revenue-composition/cota-parte-itr',
+};
 
 class App extends Component {
   constructor(props) {
@@ -34,22 +65,77 @@ class App extends Component {
   fetchTableData = () => {
     const { selectedTable, groupType, selectedMunicipio, territorioDeDesenvolvimentoMunicipio, faixaPopulacionalMunicipio, aglomeradoMunicipio, gerenciaRegionalMunicipio } = this.state;
 
-    fetchData(selectedTable, groupType, {
-      selectedMunicipio,
-      territorioDeDesenvolvimentoMunicipio,
-      faixaPopulacionalMunicipio,
-      aglomeradoMunicipio,
-      gerenciaRegionalMunicipio,
-      page: this.state.page,
-      limit: this.state.limit
-    })
-    .then(data => {
-      this.setState({ apiData: data, loading: false,  totalPages: data.pagination?.totalPages || 1 });
-    })
-    .catch(error => {
-      console.log(error)
-      this.setState({ error: error.message, loading: false });
-    });
+    if (selectedTable === 'revenueComposition') {
+      // Fetch all revenue composition indicators
+      Promise.all([
+        fetchData('iptu-composition', groupType, { selectedMunicipio, territorioDeDesenvolvimentoMunicipio, faixaPopulacionalMunicipio, aglomeradoMunicipio, gerenciaRegionalMunicipio, page: this.state.page,
+          limit: this.state.limit }),
+        fetchData('iss-composition', groupType, { selectedMunicipio, territorioDeDesenvolvimentoMunicipio, faixaPopulacionalMunicipio, aglomeradoMunicipio, gerenciaRegionalMunicipio, page: this.state.page,
+          limit: this.state.limit }),
+        fetchData('itbi-composition', groupType, { selectedMunicipio, territorioDeDesenvolvimentoMunicipio, faixaPopulacionalMunicipio, aglomeradoMunicipio, gerenciaRegionalMunicipio, page: this.state.page,
+          limit: this.state.limit }),
+        fetchData('irrf-composition', groupType, { selectedMunicipio, territorioDeDesenvolvimentoMunicipio, faixaPopulacionalMunicipio, aglomeradoMunicipio, gerenciaRegionalMunicipio, page: this.state.page,
+          limit: this.state.limit }),
+        fetchData('ipva-composition', groupType, { selectedMunicipio, territorioDeDesenvolvimentoMunicipio, faixaPopulacionalMunicipio, aglomeradoMunicipio, gerenciaRegionalMunicipio, page: this.state.page,
+          limit: this.state.limit }),
+        fetchData('icms-composition', groupType, { selectedMunicipio, territorioDeDesenvolvimentoMunicipio, faixaPopulacionalMunicipio, aglomeradoMunicipio, gerenciaRegionalMunicipio, page: this.state.page,
+          limit: this.state.limit }),
+        fetchData('fpm-composition', groupType, { selectedMunicipio, territorioDeDesenvolvimentoMunicipio, faixaPopulacionalMunicipio, aglomeradoMunicipio, gerenciaRegionalMunicipio, page: this.state.page,
+          limit: this.state.limit }),
+        fetchData('cota-parte-iof-ouro', groupType, { selectedMunicipio, territorioDeDesenvolvimentoMunicipio, faixaPopulacionalMunicipio, aglomeradoMunicipio, gerenciaRegionalMunicipio, page: this.state.page,
+          limit: this.state.limit }),
+        fetchData('outras-transferencias', groupType, { selectedMunicipio, territorioDeDesenvolvimentoMunicipio, faixaPopulacionalMunicipio, aglomeradoMunicipio, gerenciaRegionalMunicipio, page: this.state.page,
+          limit: this.state.limit }),
+        fetchData('icms-desoneracao', groupType, { selectedMunicipio, territorioDeDesenvolvimentoMunicipio, faixaPopulacionalMunicipio, aglomeradoMunicipio, gerenciaRegionalMunicipio, page: this.state.page, limit: this.state.limit }),
+        fetchData('cota-parte-ipi', groupType, { selectedMunicipio, territorioDeDesenvolvimentoMunicipio, faixaPopulacionalMunicipio, aglomeradoMunicipio, gerenciaRegionalMunicipio, page: this.state.page, limit: this.state.limit }),
+        fetchData('cota-parte-itr', groupType, { selectedMunicipio, territorioDeDesenvolvimentoMunicipio, faixaPopulacionalMunicipio, aglomeradoMunicipio, gerenciaRegionalMunicipio, page: this.state.page, limit: this.state.limit })
+      ])
+      .then(([iptu, iss, itbi, irrf, ipva, icms, fpm, iofOuro, outrasTransferencias, icmsDesoneracao, cotaParteIpi, cotaParteItr]) => {
+        this.setState({
+          apiData: {
+            iptu,
+            iss,
+            itbi,
+            irrf,
+            ipva,
+            icms,
+            fpm,
+            iofOuro,
+            outrasTransferencias,
+            icmsDesoneracao,
+            cotaParteIpi,
+            cotaParteItr
+          },
+          loading: false,
+          totalPages: Math.max(
+            ...Object.values({ iptu, iss, itbi, irrf, ipva, icms, fpm, iofOuro, outrasTransferencias, icmsDesoneracao, cotaParteIpi, cotaParteItr })
+              .map(data => data.pagination?.totalPages || 1)
+          )
+        });
+      })
+      .catch(error => {
+        console.error(error);
+        this.setState({ error: error.message, loading: false });
+      });
+    } else {
+      // Existing fetch logic for other tables
+      fetchData(selectedTable, groupType, {
+        selectedMunicipio,
+        territorioDeDesenvolvimentoMunicipio,
+        faixaPopulacionalMunicipio,
+        aglomeradoMunicipio,
+        gerenciaRegionalMunicipio,
+        page: this.state.page,
+        limit: this.state.limit
+      })
+      .then(data => {
+        this.setState({ apiData: data, loading: false, totalPages: data.pagination?.totalPages || 1 });
+      })
+      .catch(error => {
+        console.error(error);
+        this.setState({ error: error.message, loading: false });
+      });
+    }
   };
 
   handleTableChange = (event) => {
@@ -116,6 +202,7 @@ class App extends Component {
                   >
                     <option value="constitutionalLimitMde">Percentual aplicado em MDE</option>
                     <option value="expensesBasicEducationFundeb">Percentual do fundeb nos profissionais de educação básica</option>
+                    <option value="revenueComposition">Composição das Receitas Impostos e Transferências Constitucionais e Legais [%]</option>
                   </select>
                 </div>
 
@@ -169,6 +256,12 @@ class App extends Component {
                     indicatorType={selectedTable}
                     processDataFunction={processMDEData}
                     title="% Aplicado em MDE por Município"
+                    data={apiData}
+                  />
+                )}
+
+                {selectedTable === 'revenueComposition' && (
+                  <RevenueCompositionCharts
                     data={apiData}
                   />
                 )}

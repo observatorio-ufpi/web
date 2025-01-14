@@ -11,7 +11,20 @@ const endpoints = {
     constitutionalLimitMde: process.env.REACT_APP_API_PUBLIC_URL + '/researches/mc-limit-revenue',
     expensesBasicEducationFundeb: process.env.REACT_APP_API_PUBLIC_URL + '/researches/basic-education-expense',
     complementaryProtocol: process.env.REACT_APP_API_PUBLIC_URL + '/researches/complementary-protocol',
-    allTables: process.env.REACT_APP_API_PUBLIC_URL + '/researches/all-revenues-expenses'
+    allTables: process.env.REACT_APP_API_PUBLIC_URL + '/researches/all-revenues-expenses',
+
+    'iptu-composition': process.env.REACT_APP_API_PUBLIC_URL + '/revenue-composition/iptu',
+    'iss-composition': process.env.REACT_APP_API_PUBLIC_URL + '/revenue-composition/iss',
+    'itbi-composition': process.env.REACT_APP_API_PUBLIC_URL + '/revenue-composition/itbi',
+    'irrf-composition': process.env.REACT_APP_API_PUBLIC_URL + '/revenue-composition/irrf',
+    'ipva-composition': process.env.REACT_APP_API_PUBLIC_URL + '/revenue-composition/cota-parte-ipva',
+    'icms-composition': process.env.REACT_APP_API_PUBLIC_URL + '/revenue-composition/cota-parte-icms',
+    'fpm-composition': process.env.REACT_APP_API_PUBLIC_URL + '/revenue-composition/fpm',
+    'cota-parte-iof-ouro': process.env.REACT_APP_API_PUBLIC_URL + '/revenue-composition/cota-parte-iof-ouro',
+    'outras-transferencias': process.env.REACT_APP_API_PUBLIC_URL + '/revenue-composition/outras-transferencias',
+    'icms-desoneracao': process.env.REACT_APP_API_PUBLIC_URL + '/revenue-composition/icms-desoneracao',
+    'cota-parte-ipi': process.env.REACT_APP_API_PUBLIC_URL + '/revenue-composition/cota-parte-ipi',
+    'cota-parte-itr': process.env.REACT_APP_API_PUBLIC_URL + '/revenue-composition/cota-parte-itr',
   };
 
   export const fetchData = async (table, groupType, filters) => {
