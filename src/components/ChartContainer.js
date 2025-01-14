@@ -10,6 +10,7 @@ import ChartComponent from "./ChartComponent";
 import CustomPagination from "./CustomPagination";
 import RevenueCompositionCharts from "./RevenueCompositionCharts";
 import FilterComponent from "./TableFilters";
+import RpebCompositionCharts from "./RpebCompositionCharts";
 
 const endpoints = {
   // Existing endpoints
@@ -87,6 +88,16 @@ const endpoints = {
   "participacao-fundeb":
     process.env.REACT_APP_API_PUBLIC_URL +
     "/revenue-composition/participacao-fundeb",
+  
+  "fundeb_participation_mde":
+    process.env.REACT_APP_API_PUBLIC_URL +
+    "/rpeb-composition/fundeb_participation_mde",
+  "resultado_liquido_fundeb":
+    process.env.REACT_APP_API_PUBLIC_URL +
+    "/rpeb-composition/resultado_liquido_fundeb",
+  "participacao_complementacao_uniao":
+    process.env.REACT_APP_API_PUBLIC_URL +
+    "/rpeb-composition/participacao_complementacao_uniao",
 };
 
 class App extends Component {
@@ -350,6 +361,63 @@ class App extends Component {
           console.error(error);
           this.setState({ error: error.message, loading: false });
         });
+    } else if (selectedTable === "rpebComposition") {
+      Promise.all([
+        fetchData("fundeb_participation_mde", groupType, {
+          selectedMunicipio,
+          territorioDeDesenvolvimentoMunicipio,
+          faixaPopulacionalMunicipio,
+          aglomeradoMunicipio,
+          gerenciaRegionalMunicipio,
+          page: this.state.page,
+          limit: this.state.limit,
+        }),
+        fetchData("resultado_liquido_fundeb", groupType, {
+          selectedMunicipio,
+          territorioDeDesenvolvimentoMunicipio,
+          faixaPopulacionalMunicipio,
+          aglomeradoMunicipio,
+          gerenciaRegionalMunicipio,
+          page: this.state.page,
+          limit: this.state.limit,
+        }),
+        fetchData("participacao_complementacao_uniao", groupType, {
+          selectedMunicipio,
+          territorioDeDesenvolvimentoMunicipio,
+          faixaPopulacionalMunicipio,
+          aglomeradoMunicipio,
+          gerenciaRegionalMunicipio,
+          page: this.state.page,
+          limit: this.state.limit,
+        }),
+      ])
+        .then(
+          ([
+            fundebParticipationMde,
+            resultadoLiquidoFundeb,
+            participacaoComplementacaoUniao,
+          ]) => {
+            this.setState({
+              apiData: {
+                fundebParticipationMde,
+                resultadoLiquidoFundeb,
+                participacaoComplementacaoUniao,
+              },
+              loading: false,
+              totalPages: Math.max(
+                ...Object.values({
+                  fundebParticipationMde,
+                  resultadoLiquidoFundeb,
+                  participacaoComplementacaoUniao,
+                }).map((data) => data.pagination?.totalPages || 1)
+              ),
+            });
+          }
+        )
+        .catch((error) => {
+          console.error(error);
+          this.setState({ error: error.message, loading: false });
+        });
     } else {
       // Existing fetch logic for other tables
       fetchData(selectedTable, groupType, {
@@ -464,6 +532,9 @@ class App extends Component {
                     Composição das Receitas Impostos e Transferências
                     Constitucionais e Legais [%]
                   </option>
+                  <option value="rpebComposition">
+                    Composição da Receita Potencial da Educação Básica [%]
+                  </option>
                 </select>
               </div>
 
@@ -527,6 +598,10 @@ class App extends Component {
 
               {selectedTable === "revenueComposition" && (
                 <RevenueCompositionCharts data={apiData} />
+              )}
+
+              {selectedTable === "rpebComposition" && (
+                <RpebCompositionCharts data={apiData} />
               )}
 
               <CustomPagination
