@@ -73,13 +73,15 @@ const endpoints = {
   "participacao-fundeb":
     process.env.REACT_APP_API_PUBLIC_URL +
     "/revenue-composition/participacao-fundeb",
-  
+
   "fundeb_participation_mde":
     process.env.REACT_APP_API_PUBLIC_URL + "/rpeb-composition/fundeb_participation_mde",
   "resultado_liquido_fundeb":
     process.env.REACT_APP_API_PUBLIC_URL + "/rpeb-composition/resultado_liquido_fundeb",
   "participacao_complementacao_uniao":
     process.env.REACT_APP_API_PUBLIC_URL + "/rpeb-composition/participacao_complementacao_uniao",
+  "participacao_receitas_adicionais":
+    process.env.REACT_APP_API_PUBLIC_URL + "/rpeb-composition/participacao_receitas_adicionais",
 };
 
 export const fetchData = async (table, groupType, filters) => {

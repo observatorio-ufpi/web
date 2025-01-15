@@ -4,7 +4,8 @@ import {
   processFundebParticipationMde,
   processResultadoLiquidoFundeb,
   processParticipacaoComplementacaoUniao,
-} from "../utils/processRpebCompositionCharts";
+  processParticipacaoReceitasAdicionais,
+} from "../utils/processIndicatorsData";
 
 const RpebCompositionCharts = ({ data }) => {
   return (
@@ -31,6 +32,14 @@ const RpebCompositionCharts = ({ data }) => {
         processDataFunction={processParticipacaoComplementacaoUniao}
         title="Composição da Participação Complementação da União na RPEB [%]"
         data={data.participacaoComplementacaoUniao}
+      />
+
+      <ChartComponent
+        key="participacao_receitas_adicionais"
+        indicatorType="participacao_receitas_adicionais"
+        processDataFunction={processParticipacaoReceitasAdicionais}
+        title="Composição da Participação de Receitas Adicionais na RPEB [%]"
+        data={data.participacaoReceitasAdicionais}
       />
     </div>
   );

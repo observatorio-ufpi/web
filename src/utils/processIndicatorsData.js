@@ -88,3 +88,7 @@ export const processRazaoTransferenciasImpostos = createProcessFunction(
 export const processParticipacaoFundeb = createProcessFunction(
   "PARTICIPACAO_FUNDEB"
 );
+export const processFundebParticipationMde = createProcessFunction("FUNDEB_PARTICIPATION_MDE");
+export const processResultadoLiquidoFundeb = createProcessFunction("RESULTADO_LIQUIDO_FUNDEB");
+export const processParticipacaoComplementacaoUniao = createProcessFunction("PARTICIPACAO_COMPLEMENTACAO_UNIAO");
+export const processParticipacaoReceitasAdicionais = createProcessFunction("PARTICIPACAO_RECEITAS_ADICIONAIS");

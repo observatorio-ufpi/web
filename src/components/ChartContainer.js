@@ -88,7 +88,7 @@ const endpoints = {
   "participacao-fundeb":
     process.env.REACT_APP_API_PUBLIC_URL +
     "/revenue-composition/participacao-fundeb",
-  
+
   "fundeb_participation_mde":
     process.env.REACT_APP_API_PUBLIC_URL +
     "/rpeb-composition/fundeb_participation_mde",
@@ -98,6 +98,9 @@ const endpoints = {
   "participacao_complementacao_uniao":
     process.env.REACT_APP_API_PUBLIC_URL +
     "/rpeb-composition/participacao_complementacao_uniao",
+  "participacao_receitas_adicionais":
+    process.env.REACT_APP_API_PUBLIC_URL +
+    "/rpeb-composition/participacao_receitas_adicionais",
 };
 
 class App extends Component {
@@ -390,18 +393,29 @@ class App extends Component {
           page: this.state.page,
           limit: this.state.limit,
         }),
+        fetchData("participacao_receitas_adicionais", groupType, {
+          selectedMunicipio,
+          territorioDeDesenvolvimentoMunicipio,
+          faixaPopulacionalMunicipio,
+          aglomeradoMunicipio,
+          gerenciaRegionalMunicipio,
+          page: this.state.page,
+          limit: this.state.limit,
+        }),
       ])
         .then(
           ([
             fundebParticipationMde,
             resultadoLiquidoFundeb,
             participacaoComplementacaoUniao,
+            participacaoReceitasAdicionais,
           ]) => {
             this.setState({
               apiData: {
                 fundebParticipationMde,
                 resultadoLiquidoFundeb,
                 participacaoComplementacaoUniao,
+                participacaoReceitasAdicionais,
               },
               loading: false,
               totalPages: Math.max(
@@ -409,6 +423,7 @@ class App extends Component {
                   fundebParticipationMde,
                   resultadoLiquidoFundeb,
                   participacaoComplementacaoUniao,
+                  participacaoReceitasAdicionais,
                 }).map((data) => data.pagination?.totalPages || 1)
               ),
             });
