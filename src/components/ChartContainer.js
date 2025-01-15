@@ -11,6 +11,7 @@ import CustomPagination from "./CustomPagination";
 import RevenueCompositionCharts from "./RevenueCompositionCharts";
 import FilterComponent from "./TableFilters";
 import RpebCompositionCharts from "./RpebCompositionCharts";
+import EducationExpenseCompositionCharts from "./EducationExpenseCompositionCharts";
 
 const endpoints = {
   // Existing endpoints
@@ -89,18 +90,30 @@ const endpoints = {
     process.env.REACT_APP_API_PUBLIC_URL +
     "/revenue-composition/participacao-fundeb",
 
-  "fundeb_participation_mde":
+  fundeb_participation_mde:
     process.env.REACT_APP_API_PUBLIC_URL +
     "/rpeb-composition/fundeb_participation_mde",
-  "resultado_liquido_fundeb":
+  resultado_liquido_fundeb:
     process.env.REACT_APP_API_PUBLIC_URL +
     "/rpeb-composition/resultado_liquido_fundeb",
-  "participacao_complementacao_uniao":
+  participacao_complementacao_uniao:
     process.env.REACT_APP_API_PUBLIC_URL +
     "/rpeb-composition/participacao_complementacao_uniao",
-  "participacao_receitas_adicionais":
+  mde_total_expense:
     process.env.REACT_APP_API_PUBLIC_URL +
-    "/rpeb-composition/participacao_receitas_adicionais",
+    "/education-expense-composition/mde_total_expense",
+  mde_pessoal_ativo:
+    process.env.REACT_APP_API_PUBLIC_URL +
+    "/education-expense-composition/mde_pessoal_ativo",
+  mde_pessoal_inativo:
+    process.env.REACT_APP_API_PUBLIC_URL +
+    "/education-expense-composition/mde_pessoal_inativo",
+  mde_capital:
+    process.env.REACT_APP_API_PUBLIC_URL +
+    "/education-expense-composition/mde_capital",
+  mde_transferencias_instituicoes_privadas:
+    process.env.REACT_APP_API_PUBLIC_URL +
+    "/education-expense-composition/mde_transferencias_instituicoes_privadas",
 };
 
 class App extends Component {
@@ -393,7 +406,73 @@ class App extends Component {
           page: this.state.page,
           limit: this.state.limit,
         }),
-        fetchData("participacao_receitas_adicionais", groupType, {
+      ])
+        .then(
+          ([
+            fundebParticipationMde,
+            resultadoLiquidoFundeb,
+            participacaoComplementacaoUniao,
+          ]) => {
+            this.setState({
+              apiData: {
+                fundebParticipationMde,
+                resultadoLiquidoFundeb,
+                participacaoComplementacaoUniao,
+              },
+              loading: false,
+              totalPages: Math.max(
+                ...Object.values({
+                  fundebParticipationMde,
+                  resultadoLiquidoFundeb,
+                  participacaoComplementacaoUniao,
+                }).map((data) => data.pagination?.totalPages || 1)
+              ),
+            });
+          }
+        )
+        .catch((error) => {
+          console.error(error);
+          this.setState({ error: error.message, loading: false });
+        });
+    } else if (selectedTable === "educationExpenseComposition") {
+      Promise.all([
+        fetchData("mde_total_expense", groupType, {
+          selectedMunicipio,
+          territorioDeDesenvolvimentoMunicipio,
+          faixaPopulacionalMunicipio,
+          aglomeradoMunicipio,
+          gerenciaRegionalMunicipio,
+          page: this.state.page,
+          limit: this.state.limit,
+        }),
+        fetchData("mde_pessoal_ativo", groupType, {
+          selectedMunicipio,
+          territorioDeDesenvolvimentoMunicipio,
+          faixaPopulacionalMunicipio,
+          aglomeradoMunicipio,
+          gerenciaRegionalMunicipio,
+          page: this.state.page,
+          limit: this.state.limit,
+        }),
+        fetchData("mde_pessoal_inativo", groupType, {
+          selectedMunicipio,
+          territorioDeDesenvolvimentoMunicipio,
+          faixaPopulacionalMunicipio,
+          aglomeradoMunicipio,
+          gerenciaRegionalMunicipio,
+          page: this.state.page,
+          limit: this.state.limit,
+        }),
+        fetchData("mde_capital", groupType, {
+          selectedMunicipio,
+          territorioDeDesenvolvimentoMunicipio,
+          faixaPopulacionalMunicipio,
+          aglomeradoMunicipio,
+          gerenciaRegionalMunicipio,
+          page: this.state.page,
+          limit: this.state.limit,
+        }),
+        fetchData("mde_transferencias_instituicoes_privadas", groupType, {
           selectedMunicipio,
           territorioDeDesenvolvimentoMunicipio,
           faixaPopulacionalMunicipio,
@@ -405,25 +484,28 @@ class App extends Component {
       ])
         .then(
           ([
-            fundebParticipationMde,
-            resultadoLiquidoFundeb,
-            participacaoComplementacaoUniao,
-            participacaoReceitasAdicionais,
+            mdeTotalExpense,
+            mdePessoalAtivo,
+            mdePessoalInativo,
+            mdeCapital,
+            mdeTransferenciasInstituicoesPrivadas,
           ]) => {
             this.setState({
               apiData: {
-                fundebParticipationMde,
-                resultadoLiquidoFundeb,
-                participacaoComplementacaoUniao,
-                participacaoReceitasAdicionais,
+                mdeTotalExpense,
+                mdePessoalAtivo,
+                mdePessoalInativo,
+                mdeCapital,
+                mdeTransferenciasInstituicoesPrivadas,
               },
               loading: false,
               totalPages: Math.max(
                 ...Object.values({
-                  fundebParticipationMde,
-                  resultadoLiquidoFundeb,
-                  participacaoComplementacaoUniao,
-                  participacaoReceitasAdicionais,
+                  mdeTotalExpense,
+                  mdePessoalAtivo,
+                  mdePessoalInativo,
+                  mdeCapital,
+                  mdeTransferenciasInstituicoesPrivadas,
                 }).map((data) => data.pagination?.totalPages || 1)
               ),
             });
@@ -550,6 +632,9 @@ class App extends Component {
                   <option value="rpebComposition">
                     Composição da Receita Potencial da Educação Básica [%]
                   </option>
+                  <option value="educationExpenseComposition">
+                    Composição das Despesas em Educação [%]
+                  </option>
                 </select>
               </div>
 
@@ -617,6 +702,10 @@ class App extends Component {
 
               {selectedTable === "rpebComposition" && (
                 <RpebCompositionCharts data={apiData} />
+              )}
+
+              {selectedTable === "educationExpenseComposition" && (
+                <EducationExpenseCompositionCharts data={apiData} />
               )}
 
               <CustomPagination

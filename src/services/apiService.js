@@ -82,6 +82,16 @@ const endpoints = {
     process.env.REACT_APP_API_PUBLIC_URL + "/rpeb-composition/participacao_complementacao_uniao",
   "participacao_receitas_adicionais":
     process.env.REACT_APP_API_PUBLIC_URL + "/rpeb-composition/participacao_receitas_adicionais",
+  "mde_total_expense":
+    process.env.REACT_APP_API_PUBLIC_URL + "/education-expense-composition/mde_total_expense",
+  "mde_pessoal_ativo":
+    process.env.REACT_APP_API_PUBLIC_URL + "/education-expense-composition/mde_pessoal_ativo",
+  "mde_pessoal_inativo":
+    process.env.REACT_APP_API_PUBLIC_URL + "/education-expense-composition/mde_pessoal_inativo",
+  "mde_capital":
+    process.env.REACT_APP_API_PUBLIC_URL + "/education-expense-composition/mde_capital",
+  "mde_transferencias_instituicoes_privadas":
+    process.env.REACT_APP_API_PUBLIC_URL + "/education-expense-composition/mde_transferencias_instituicoes_privadas",
 };
 
 export const fetchData = async (table, groupType, filters) => {
