@@ -84,7 +84,7 @@ const BarChart = ({ chartData, title }) => {
             y: {
               title: {
                 display: true,
-                text: '% Aplicado',
+                text: 'Valor', // depois deixar isso dinamico para passar quando chamar o componente
               },
               beginAtZero: true,
             },

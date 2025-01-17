@@ -406,18 +406,29 @@ class App extends Component {
           page: this.state.page,
           limit: this.state.limit,
         }),
+        fetchData("participacao_receitas_adicionais", groupType, {
+          selectedMunicipio,
+          territorioDeDesenvolvimentoMunicipio,
+          faixaPopulacionalMunicipio,
+          aglomeradoMunicipio,
+          gerenciaRegionalMunicipio,
+          page: this.state.page,
+          limit: this.state.limit,
+        }),
       ])
         .then(
           ([
             fundebParticipationMde,
             resultadoLiquidoFundeb,
             participacaoComplementacaoUniao,
+            participacaoReceitasAdicionais,
           ]) => {
             this.setState({
               apiData: {
                 fundebParticipationMde,
                 resultadoLiquidoFundeb,
                 participacaoComplementacaoUniao,
+                participacaoReceitasAdicionais,
               },
               loading: false,
               totalPages: Math.max(
@@ -425,6 +436,7 @@ class App extends Component {
                   fundebParticipationMde,
                   resultadoLiquidoFundeb,
                   participacaoComplementacaoUniao,
+                  participacaoReceitasAdicionais,
                 }).map((data) => data.pagination?.totalPages || 1)
               ),
             });

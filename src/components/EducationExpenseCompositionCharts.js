@@ -15,7 +15,7 @@ const EducationExpenseCompositionCharts = ({ data }) => {
         key="mde_total_expense"
         indicatorType="mde_total_expense"
         processDataFunction={processMdeTotalExpense}
-        title="Composição da Despesa Total em MDE [%]"
+        title="Composição da Despesa Total em MDE"
         data={data.mdeTotalExpense}
       />
 

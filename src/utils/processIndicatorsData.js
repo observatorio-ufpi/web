@@ -64,7 +64,7 @@ export const processItbiData = createProcessFunction("ITBI");
 export const processIrrfData = createProcessFunction("IRRF");
 export const processIpvaData = createProcessFunction("COTA_PARTE_IPVA");
 export const processIcmsData = createProcessFunction("COTA_PARTE_ICMS");
-export const processFpmData = createProcessFunction("COTA_PARTE_FPM");
+export const processFpmData = createProcessFunction("FPM");
 export const processIofOuroData = createProcessFunction("COTA_PARTE_IOF_OURO");
 export const processOutrasTransferenciasData = createProcessFunction(
   "OUTRAS_TRANSFERENCIAS"
@@ -89,7 +89,7 @@ export const processParticipacaoFundeb = createProcessFunction(
   "PARTICIPACAO_FUNDEB"
 );
 export const processFundebParticipationMde = createProcessFunction(
-  "FUNDEB_PARTICIPATION_MDE"
+  "PARTICIPACAO_FUNDEB_MDE"
 );
 export const processResultadoLiquidoFundeb = createProcessFunction(
   "RESULTADO_LIQUIDO_FUNDEB"
@@ -103,10 +103,10 @@ export const processParticipacaoReceitasAdicionais = createProcessFunction(
 export const processMdeTotalExpense =
   createProcessFunction("DESPESA_TOTAL_MDE");
 export const processMdePessoalAtivo =
-  createProcessFunction("DESPESA_PESSOAL_ATIVO_MDE");
+  createProcessFunction("DESPESAS_PESSOAL_ATIVO_MDE");
 export const processMdePessoalInativo = createProcessFunction(
-  "DESPESA_PESSOAL_INATIVO_MDE"
+  "DESPESAS_PESSOAL_INATIVO_MDE"
 );
-export const processMdeCapital = createProcessFunction("DESPESA_CAPITAL_MDE");
+export const processMdeCapital = createProcessFunction("DESPESAS_CAPITAL_MDE");
 export const processMdeTransferenciasInstituicoesPrivadas =
   createProcessFunction("TRANSFERENCIAS_INSTITUICOES_PRIVADAS_MDE");
