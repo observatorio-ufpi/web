@@ -110,3 +110,17 @@ export const processMdePessoalInativo = createProcessFunction(
 export const processMdeCapital = createProcessFunction("DESPESAS_CAPITAL_MDE");
 export const processMdeTransferenciasInstituicoesPrivadas =
   createProcessFunction("TRANSFERENCIAS_INSTITUICOES_PRIVADAS_MDE");
+
+export const processMdeResourcesApplicationControl = createProcessFunction(
+  "APLICACAO_MDE"
+);
+export const processFundebResourcesApplicationControl = createProcessFunction(
+  "APLICACAO_FUNDEB_PAG_PROFISSIONAIS_EDUCACAO"
+);
+export const processEducationalVaatResourcesApplicationControl = createProcessFunction(
+  "APLICACAO_VAAT_EDUCACAO_INFANTIL"
+);
+export const processCapitalVaatResourcesApplicationControl = createProcessFunction(
+  "APLICACAO_VAAT_DESPESA_CAPITAL"
+);
+

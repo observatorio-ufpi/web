@@ -92,6 +92,15 @@ const endpoints = {
     process.env.REACT_APP_API_PUBLIC_URL + "/education-expense-composition/mde_capital",
   "mde_transferencias_instituicoes_privadas":
     process.env.REACT_APP_API_PUBLIC_URL + "/education-expense-composition/mde_transferencias_instituicoes_privadas",
+  
+  "aplicacao_mde":
+    process.env.REACT_APP_API_PUBLIC_URL + "/resources-application-control/mde",
+  "aplicacao_fundeb_pag_profissionais_educacao":
+    process.env.REACT_APP_API_PUBLIC_URL + "/resources-application-control/fundeb",
+  "aplicacao_vaat_educacao_infantil":
+    process.env.REACT_APP_API_PUBLIC_URL + "/resources-application-control/ed-infantil-vaat",
+  "aplicacao_vaat_despesa_capital":
+    process.env.REACT_APP_API_PUBLIC_URL + "/resources-application-control/despesa-capital-vaat",
 };
 
 export const fetchData = async (table, groupType, filters) => {

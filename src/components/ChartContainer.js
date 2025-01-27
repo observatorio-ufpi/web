@@ -12,6 +12,7 @@ import RevenueCompositionCharts from "./RevenueCompositionCharts";
 import FilterComponent from "./TableFilters";
 import RpebCompositionCharts from "./RpebCompositionCharts";
 import EducationExpenseCompositionCharts from "./EducationExpenseCompositionCharts";
+import ResourcesApplicationControlCharts from "./ResourcesApplicationControlCharts";
 
 const endpoints = {
   // Existing endpoints
@@ -527,7 +528,73 @@ class App extends Component {
           console.error(error);
           this.setState({ error: error.message, loading: false });
         });
-    } else {
+    } else if (selectedTable === "resourcesApplicationControl") {
+      Promise.all([
+        fetchData("aplicacao_mde", groupType, {
+          selectedMunicipio,
+          territorioDeDesenvolvimentoMunicipio,
+          faixaPopulacionalMunicipio,
+          aglomeradoMunicipio,
+          gerenciaRegionalMunicipio,
+          page: this.state.page,
+          limit: this.state.limit,
+        }),
+        fetchData("aplicacao_fundeb_pag_profissionais_educacao", groupType, {
+          selectedMunicipio,
+          territorioDeDesenvolvimentoMunicipio,
+          faixaPopulacionalMunicipio,
+          aglomeradoMunicipio,
+          gerenciaRegionalMunicipio,
+          page: this.state.page,
+          limit: this.state.limit,
+        }),
+        fetchData("aplicacao_vaat_educacao_infantil", groupType, {
+          selectedMunicipio,
+          territorioDeDesenvolvimentoMunicipio,
+          faixaPopulacionalMunicipio,
+          aglomeradoMunicipio,
+          gerenciaRegionalMunicipio,
+          page: this.state.page,
+          limit: this.state.limit,
+        }),
+        fetchData("aplicacao_vaat_despesa_capital", groupType, {
+          selectedMunicipio,
+          territorioDeDesenvolvimentoMunicipio,
+          faixaPopulacionalMunicipio,
+          aglomeradoMunicipio,
+          gerenciaRegionalMunicipio,
+          page: this.state.page,
+          limit: this.state.limit,
+        })
+      ]).then(([
+        aplicacaoMde,
+        aplicacaoFundeb,
+        aplicacaoVaatEducacaoInfantil,
+        aplicacaoVaatDespesaCapital,
+      ]) => {
+        this.setState({
+          apiData: {
+            aplicacaoMde,
+            aplicacaoFundeb,
+            aplicacaoVaatEducacaoInfantil,
+            aplicacaoVaatDespesaCapital,
+          },
+          loading: false,
+          totalPages: Math.max(
+            ...Object.values({
+              aplicacaoMde,
+              aplicacaoFundeb,
+              aplicacaoVaatEducacaoInfantil,
+              aplicacaoVaatDespesaCapital,
+            }).map((data) => data.pagination?.totalPages || 1)
+          ),
+        });
+      }).catch((error) => {
+        console.error(error);
+        this.setState({ error: error.message, loading: false });
+      });
+    }
+    else {
       // Existing fetch logic for other tables
       fetchData(selectedTable, groupType, {
         selectedMunicipio,
@@ -644,6 +711,9 @@ class App extends Component {
                   <option value="rpebComposition">
                     Composição da Receita Potencial da Educação Básica [%]
                   </option>
+                  <option value="resourcesApplicationControl">
+                    Controle da Aplicação de Recursos
+                  </option>
                   <option value="educationExpenseComposition">
                     Composição das Despesas em Educação [%]
                   </option>
@@ -710,6 +780,10 @@ class App extends Component {
 
               {selectedTable === "revenueComposition" && (
                 <RevenueCompositionCharts data={apiData} />
+              )}
+
+              {selectedTable === "resourcesApplicationControl" && (
+                <ResourcesApplicationControlCharts data={apiData} />
               )}
 
               {selectedTable === "rpebComposition" && (
