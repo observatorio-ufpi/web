@@ -1,7 +1,7 @@
 import React from 'react';
+import { FaChartBar, FaTable } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import '../style/HomePage.css';
-import { FaTable, FaChartBar } from 'react-icons/fa';
 
 const HomePage = () => {
   return (
@@ -19,6 +19,7 @@ const HomePage = () => {
         </Link>
       </div>
     </div>
+
   );
 };
 
