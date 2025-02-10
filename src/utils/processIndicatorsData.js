@@ -124,3 +124,9 @@ export const processCapitalVaatResourcesApplicationControl = createProcessFuncti
   "APLICACAO_VAAT_DESPESA_CAPITAL"
 );
 
+export const processFundebFinancingCapacity = createProcessFunction(
+  "PARTICIPACAO_FUNDEB_COMPOSICAO"
+);
+export const processRpebFinancingCapacity = createProcessFunction(
+  "RPEB_FINANCING_CAPACITY"
+);

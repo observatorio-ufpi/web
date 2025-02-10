@@ -8,11 +8,12 @@ import {
 } from "../utils/processDataCharts";
 import ChartComponent from "./ChartComponent";
 import CustomPagination from "./CustomPagination";
-import RevenueCompositionCharts from "./RevenueCompositionCharts";
-import FilterComponent from "./TableFilters";
-import RpebCompositionCharts from "./RpebCompositionCharts";
 import EducationExpenseCompositionCharts from "./EducationExpenseCompositionCharts";
+import FinancingCapacityCharts from "./FinancingCapacityCharts";
 import ResourcesApplicationControlCharts from "./ResourcesApplicationControlCharts";
+import RevenueCompositionCharts from "./RevenueCompositionCharts";
+import RpebCompositionCharts from "./RpebCompositionCharts";
+import FilterComponent from "./TableFilters";
 
 const endpoints = {
   // Existing endpoints
@@ -151,6 +152,7 @@ class App extends Component {
       aglomeradoMunicipio,
       gerenciaRegionalMunicipio,
     } = this.state;
+    this.setState({ loading: true });
 
     if (selectedTable === "revenueComposition") {
       // Fetch all revenue composition indicators
@@ -593,8 +595,50 @@ class App extends Component {
         console.error(error);
         this.setState({ error: error.message, loading: false });
       });
-    }
-    else {
+    } else if (selectedTable === "financingCapacity") {
+      Promise.all([
+        fetchData("composicao_fundeb_financiamento", groupType, {
+          selectedMunicipio,
+          territorioDeDesenvolvimentoMunicipio,
+          faixaPopulacionalMunicipio,
+          aglomeradoMunicipio,
+          gerenciaRegionalMunicipio,
+          page: this.state.page,
+          limit: this.state.limit,
+        }),
+        fetchData("composicao_rpeb_financiamento", groupType, {
+          selectedMunicipio,
+          territorioDeDesenvolvimentoMunicipio,
+          faixaPopulacionalMunicipio,
+          aglomeradoMunicipio,
+          gerenciaRegionalMunicipio,
+          page: this.state.page,
+          limit: this.state.limit,
+        }),
+      ])
+        .then(([
+          composicaoFundebFinanciamento,
+          composicaoRpebFinanciamento,
+        ]) => {
+          this.setState({
+            apiData: {
+              composicaoFundebFinanciamento,
+              composicaoRpebFinanciamento,
+            },
+            loading: false,
+            totalPages: Math.max(
+              ...Object.values({
+                composicaoFundebFinanciamento,
+                composicaoRpebFinanciamento,
+              }).map((data) => data.pagination?.totalPages || 1)
+            ),
+          });
+        })
+        .catch((error) => {
+          console.error(error);
+          this.setState({ error: error.message, loading: false });
+        });
+    } else {
       // Existing fetch logic for other tables
       fetchData(selectedTable, groupType, {
         selectedMunicipio,
@@ -708,6 +752,9 @@ class App extends Component {
                     Composição das Receitas Impostos e Transferências
                     Constitucionais e Legais [%]
                   </option>
+                  <option value="financingCapacity">
+                    Capacidade de Financiamento
+                  </option>
                   <option value="rpebComposition">
                     Composição da Receita Potencial da Educação Básica [%]
                   </option>
@@ -780,6 +827,10 @@ class App extends Component {
 
               {selectedTable === "revenueComposition" && (
                 <RevenueCompositionCharts data={apiData} />
+              )}
+
+              {selectedTable === "financingCapacity" && (
+                <FinancingCapacityCharts data={apiData} />
               )}
 
               {selectedTable === "resourcesApplicationControl" && (
