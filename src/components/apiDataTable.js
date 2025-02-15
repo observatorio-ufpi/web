@@ -1,4 +1,3 @@
-import React from 'react';
 import Paper from '@mui/material/Paper';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
@@ -7,6 +6,7 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import { ThemeProvider, createTheme, styled } from '@mui/material/styles';
+import React from 'react';
 
 const theme = createTheme({
   palette: {
@@ -40,11 +40,10 @@ const CenteredTableCell = styled(TableCell)(({ theme }) => ({
 }));
 
 const ApiDataTable = ({ data }) => {
-  // Extrair o array de resultado do objeto de resposta
-  const tableData = data?.result || [];
+  const tableDataArray = [data?.result || []];
 
   // Validação dos dados
-  if (!Array.isArray(tableData) || tableData.length === 0) {
+  if (tableDataArray.every(arr => !Array.isArray(arr) || arr.length === 0)) {
     return (
       <ThemeProvider theme={theme}>
         <Paper sx={{ padding: 2, backgroundColor: theme.palette.background.default }}>
@@ -54,35 +53,51 @@ const ApiDataTable = ({ data }) => {
     );
   }
 
-  const headers = Object.keys(tableData[0]).filter(header => header === 'total');
+  // Pega os headers do primeiro conjunto de dados que tiver conteúdo
+  const firstValidData = tableDataArray.find(arr => arr.length > 0)?.[0] || {};
+  const headers = Object.keys(firstValidData).filter(header => header === 'total');
+
+  const headerDisplayNames = {
+    total: 'Total',
+  };
 
   return (
     <ThemeProvider theme={theme}>
       <div>
-        <Paper sx={{ backgroundColor: theme.palette.background.default }}>
-          <TableContainer component={Paper} sx={{ maxWidth: '100%', overflowX: 'auto' }}>
-            <Table sx={{ minWidth: 650 }} aria-label="simple table">
-              <StyledTableHead>
-                <TableRow>
-                  {headers.map(header => (
-                    <BoldTableCell key={header}>{header}</BoldTableCell>
-                  ))}
-                </TableRow>
-              </StyledTableHead>
-              <TableBody>
-                {tableData.map((item, index) => (
-                  <TableRow key={index}>
+        {tableDataArray.map((tableData, tableIndex) => (
+          <Paper
+            key={tableIndex}
+            sx={{
+              backgroundColor: theme.palette.background.default,
+              marginBottom: 2
+            }}
+          >
+            <TableContainer component={Paper} sx={{ maxWidth: '100%', overflowX: 'auto' }}>
+              <Table sx={{ minWidth: 650 }} aria-label="simple table">
+                <StyledTableHead>
+                  <TableRow>
                     {headers.map(header => (
-                      <CenteredTableCell key={header}>
-                        {item[header]?.toString() || ''}
-                      </CenteredTableCell>
+                      <BoldTableCell key={header}>
+                        {headerDisplayNames[header] || header}
+                      </BoldTableCell>
                     ))}
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </Paper>
+                </StyledTableHead>
+                <TableBody>
+                  {tableData.map((item, index) => (
+                    <TableRow key={index}>
+                      {headers.map(header => (
+                        <CenteredTableCell key={header}>
+                          {item[header]?.toString() || ''}
+                        </CenteredTableCell>
+                      ))}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Paper>
+        ))}
       </div>
     </ThemeProvider>
   );

@@ -1,46 +1,73 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 
-function ApiContainer({ type, year, state = '22', onDataFetched }) {
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+function ApiContainer({ type, year, state = '22', city, citiesList, onDataFetched, onError, onLoading, triggerFetch }) {
 
   useEffect(() => {
+    if (!triggerFetch) return; // Só faz a requisição se triggerFetch for true
+
     const fetchData = async () => {
       try {
-        setIsLoading(true);
+        onError(null);
+        onLoading(true);
 
-        const filter = `min_year:"${year}",max_year:"${year}",state:"${state}"`;
-        const url = `https://simcaq.c3sl.ufpr.br/api/v1/${type}?filter=${encodeURIComponent(filter)}`;
+        await new Promise(resolve => setTimeout(resolve, 1000));
 
-        const response = await fetch(url);
+        if (citiesList.length > 0 && !city) {
+          let totalSum = 0; // Variável para armazenar a soma total
+          for (const cityData of citiesList) {
+            const [cityId, cityInfo] = cityData;
+            const cityFilter = `,city:"${cityId}"`;
+            const filter = `min_year:"${year}",max_year:"${year}",state:"${state}"${cityFilter}`;
+            const url = `https://simcaq.c3sl.ufpr.br/api/v1/${type}?filter=${encodeURIComponent(filter)}`;
 
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+            const response = await fetch(url);
+
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const result = await response.json();
+
+            if (Array.isArray(result.result) && result.result.length > 0) {
+              totalSum += result.result[0].total;
+            }
+          }
+          const finalResult = {
+            result: [
+              {
+                total: totalSum,
+              }
+            ]
+          };
+          onDataFetched(finalResult);
+          onError(null);
+        } else {
+          const cityFilter = city ? `,city:"${city}"` : '';
+          const filter = `min_year:"${year}",max_year:"${year}",state:"${state}"${cityFilter}`;
+          const url = `https://simcaq.c3sl.ufpr.br/api/v1/${type}?filter=${encodeURIComponent(filter)}`;
+
+          const response = await fetch(url);
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          const result = await response.json();
+          onDataFetched(result);
+          onError(null);
         }
-
-        const result = await response.json();
-        onDataFetched(result); // Passa os dados para o ParentComponent
-        setError(null);
       } catch (error) {
         console.error('Erro ao buscar dados:', error);
-        setError('Falha ao carregar os dados. Por favor, tente novamente mais tarde.');
+        onError('Falha ao carregar os dados. Por favor, tente novamente mais tarde.');
       } finally {
-        setIsLoading(false);
+        onLoading(false);
       }
     };
 
     fetchData();
-  }, [type, year, state, onDataFetched]); // Inclui onDataFetched nas dependências
+  }, [triggerFetch, type, year, state, city, citiesList, onDataFetched, onError, onLoading]);
 
-  if (isLoading) {
-    return <div>Carregando dados...</div>;
-  }
-
-  if (error) {
-    return <div>Erro: {error}</div>;
-  }
-
-  return null; // Não renderiza nada, pois os dados são passados para o ParentComponent
+  return null;
 }
 
 export default ApiContainer;
