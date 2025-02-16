@@ -39,11 +39,17 @@ const CenteredTableCell = styled(TableCell)(({ theme }) => ({
   verticalAlign: 'middle',
 }));
 
-const ApiDataTable = ({ data }) => {
+const ApiDataTable = ({ data, municipioData }) => {
   const tableDataArray = [data?.result || []];
+  const municipioDataArray = municipioData?.map(m => ({
+    cityName: m.cityName,
+    total: m.result?.[0]?.total || 0,
+    // year: m.result?.[0]?.year || "Desconhecido",
+  }));
 
   // Validação dos dados
-  if (tableDataArray.every(arr => !Array.isArray(arr) || arr.length === 0)) {
+  if (tableDataArray.every(arr => !Array.isArray(arr) || arr.length === 0) &&
+      municipioDataArray.every(arr => !Array.isArray(arr) || arr.length === 0)) {
     return (
       <ThemeProvider theme={theme}>
         <Paper sx={{ padding: 2, backgroundColor: theme.palette.background.default }}>
@@ -61,9 +67,18 @@ const ApiDataTable = ({ data }) => {
     total: 'Total',
   };
 
+  // Headers para a tabela de município
+  const municipioHeaders = ['cityName', 'total'];
+  const municipioHeaderDisplayNames = {
+    cityName: 'Município',
+    total: 'Total',
+    // year: 'Ano',
+  };
+
   return (
     <ThemeProvider theme={theme}>
       <div>
+        {/* Primeira tabela */}
         {tableDataArray.map((tableData, tableIndex) => (
           <Paper
             key={tableIndex}
@@ -98,6 +113,41 @@ const ApiDataTable = ({ data }) => {
             </TableContainer>
           </Paper>
         ))}
+
+        {/* Segunda tabela para município */}
+        {municipioDataArray.length > 0 && // Verifica se há dados
+          <Paper
+            sx={{
+              backgroundColor: theme.palette.background.default,
+              marginBottom: 2
+            }}
+          >
+            <TableContainer component={Paper} sx={{ maxWidth: '100%', overflowX: 'auto' }}>
+              <Table sx={{ minWidth: 650 }} aria-label="municipio table">
+                <StyledTableHead>
+                  <TableRow>
+                    {municipioHeaders.map(header => (
+                      <BoldTableCell key={header}>
+                        {municipioHeaderDisplayNames[header] || header}
+                      </BoldTableCell>
+                    ))}
+                  </TableRow>
+                </StyledTableHead>
+                <TableBody>
+                  {municipioDataArray.map((item, index) => (
+                    <TableRow key={index}>
+                      {municipioHeaders.map(header => (
+                        <CenteredTableCell key={header}>
+                          {item[header]?.toString() || ''}
+                        </CenteredTableCell>
+                      ))}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Paper>
+        }
       </div>
     </ThemeProvider>
   );

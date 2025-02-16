@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 
-function ApiContainer({ type, year, state = '22', city, citiesList, onDataFetched, onError, onLoading, triggerFetch }) {
+function ApiContainer({ type, year, state = '22', city, territory, faixaPopulacional, citiesList, onDataFetched, onError, onLoading, triggerFetch }) {
 
   useEffect(() => {
     if (!triggerFetch) return; // Só faz a requisição se triggerFetch for true
@@ -14,6 +14,7 @@ function ApiContainer({ type, year, state = '22', city, citiesList, onDataFetche
 
         if (citiesList.length > 0 && !city) {
           let totalSum = 0; // Variável para armazenar a soma total
+          const allResults = []; // Array para armazenar todos os resultados
           for (const cityData of citiesList) {
             const [cityId, cityInfo] = cityData;
             const cityFilter = `,city:"${cityId}"`;
@@ -28,6 +29,9 @@ function ApiContainer({ type, year, state = '22', city, citiesList, onDataFetche
 
             const result = await response.json();
 
+            result.cityName = cityInfo.nomeMunicipio;
+            allResults.push(result);
+
             if (Array.isArray(result.result) && result.result.length > 0) {
               totalSum += result.result[0].total;
             }
@@ -39,7 +43,10 @@ function ApiContainer({ type, year, state = '22', city, citiesList, onDataFetche
               }
             ]
           };
-          onDataFetched(finalResult);
+          onDataFetched({finalResult, allResults});
+          onError(null);
+        } else if(citiesList.length === 0 && (territory || faixaPopulacional)) {
+          onDataFetched({finalResult: [], allResults: []});
           onError(null);
         } else {
           const cityFilter = city ? `,city:"${city}"` : '';
@@ -65,7 +72,7 @@ function ApiContainer({ type, year, state = '22', city, citiesList, onDataFetche
     };
 
     fetchData();
-  }, [triggerFetch, type, year, state, city, citiesList, onDataFetched, onError, onLoading]);
+  }, [triggerFetch, type, year, state, city, territory, faixaPopulacional, citiesList, onDataFetched, onError, onLoading]);
 
   return null;
 }
