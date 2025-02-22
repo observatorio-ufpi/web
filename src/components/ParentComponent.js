@@ -9,6 +9,9 @@ import ApiDataTable from './apiDataTable';
 
 function ParentComponent() {
   const [type, setType] = useState('enrollment');
+  const [isHistorical, setIsHistorical] = useState(false);
+  const [startYear, setStartYear] = useState(2007);
+  const [endYear, setEndYear] = useState(2020);
   const [year, setYear] = useState(2020);
   const [city, setCity] = useState('');
   const [territory, setTerritory] = useState('');
@@ -17,16 +20,27 @@ function ParentComponent() {
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [title, setTitle] = useState('');
+  const [selectedFilters, setSelectedFilters] = useState([]);
+  const [isEtapaSelected, setIsEtapaSelected] = useState(false);
+  const [isLocalidadeSelected, setIsLocalidadeSelected] = useState(false);
+  const [isDependenciaSelected, setIsDependenciaSelected] = useState(false);
 
   const handleFilterClick = () => {
     setIsLoading(true);
     setError(null);
     setData(null);
-    setTitle(type && titleMapping[type] ? `${titleMapping[type]} - ${city ? municipios[city].nomeMunicipio : territory ? '' : "Piauí"}${territory && city === '' ? ` ${Regioes[territory]}` : ''}` : '');
+    const yearDisplay = isHistorical ? `${startYear}-${endYear}` : year;
+    setTitle(type && titleMapping[type] ? `${titleMapping[type]} - ${city ? municipios[city].nomeMunicipio : territory ? '' : "Piauí"}${territory && city === '' ? ` ${Regioes[territory]}` : ''} (${yearDisplay})` : '');
+    setIsEtapaSelected(selectedFilters.some(filter => filter.value === 'etapa'));
+    setIsLocalidadeSelected(selectedFilters.some(filter => filter.value === 'localidade'));
+    setIsDependenciaSelected(selectedFilters.some(filter => filter.value === 'dependencia'));
   };
 
   const handleClearFilters = () => {
     setType('enrollment');
+    setIsHistorical(false);
+    setStartYear(2007);
+    setEndYear(2020);
     setYear(2020);
     setCity('');
     setTerritory('');
@@ -34,6 +48,10 @@ function ParentComponent() {
     setData(null);
     setError(null);
     setTitle('');
+    setSelectedFilters([]);
+    setIsEtapaSelected(false);
+    setIsLocalidadeSelected(false);
+    setIsDependenciaSelected(false);
   };
 
   const filteredCities = Object.entries(municipios).filter(([key, { territorioDesenvolvimento, faixaPopulacional: cityFaixaPopulacional }]) => {
@@ -46,7 +64,6 @@ function ParentComponent() {
     }
     return true;
   });
-
 
   const titleMapping = {
     enrollment: "Número de matrículas",
@@ -86,6 +103,13 @@ function ParentComponent() {
     menuPortal: (base) => ({ ...base, zIndex: 9999 }),
   };
 
+  const filterOptions = [
+    { value: 'localidade', label: 'Localidade' },
+    { value: 'etapa', label: 'Etapa' },
+    { value: 'dependencia', label: 'Dependência Administrativa' },
+    // Adicione mais opções conforme necessário
+  ];
+
   return (
     <div className="app-container">
       <div className="filters-section">
@@ -102,21 +126,72 @@ function ParentComponent() {
               menuPortalTarget={document.body}
               placeholder="Selecione o tipo"
             />
-        </div>
-        <div className="select-container">
-            <label htmlFor="yearSelect">Ano: </label>
-            <Select
-              id="yearSelect"
-              value={yearOptions.find(option => option.value === year)}
-              onChange={(selectedOption) => setYear(selectedOption.value)}
-              options={yearOptions}
-              className="select-box"
-              styles={customStyles}
-              menuPortalTarget={document.body}
-              placeholder="Ano"
-            />
+          </div>
+
+          <div className="year-selection-container">
+            <div className="historical-checkbox">
+              <label>
+                <input
+                  type="checkbox"
+                  checked={isHistorical}
+                  onChange={(e) => setIsHistorical(e.target.checked)}
+                />
+                Série Histórica
+              </label>
+            </div>
+
+            {isHistorical ? (
+              <>
+                <div className="select-container">
+                  <label htmlFor="startYearSelect">Ano Inicial: </label>
+                  <Select
+                    id="startYearSelect"
+                    value={yearOptions.find(option => option.value === startYear)}
+                    onChange={(selectedOption) => {
+                      setStartYear(selectedOption.value);
+                      if (selectedOption.value > endYear) {
+                        setEndYear(selectedOption.value);
+                      }
+                    }}
+                    options={yearOptions}
+                    className="select-box"
+                    styles={customStyles}
+                    menuPortalTarget={document.body}
+                    placeholder="Ano Inicial"
+                  />
+                </div>
+                <div className="select-container">
+                  <label htmlFor="endYearSelect">Ano Final: </label>
+                  <Select
+                    id="endYearSelect"
+                    value={yearOptions.find(option => option.value === endYear)}
+                    onChange={(selectedOption) => setEndYear(selectedOption.value)}
+                    options={yearOptions.filter(option => option.value >= startYear)}
+                    className="select-box"
+                    styles={customStyles}
+                    menuPortalTarget={document.body}
+                    placeholder="Ano Final"
+                  />
+                </div>
+              </>
+            ) : (
+              <div className="select-container">
+                <label htmlFor="yearSelect">Ano: </label>
+                <Select
+                  id="yearSelect"
+                  value={yearOptions.find(option => option.value === year)}
+                  onChange={(selectedOption) => setYear(selectedOption.value)}
+                  options={yearOptions}
+                  className="select-box"
+                  styles={customStyles}
+                  menuPortalTarget={document.body}
+                  placeholder="Ano"
+                />
+              </div>
+            )}
           </div>
         </div>
+
         <div className="selects-wrapper">
           <div className="select-container">
             <Select
@@ -161,6 +236,32 @@ function ParentComponent() {
               menuPortalTarget={document.body}
               isClearable
               placeholder="Cidade"
+            />
+          </div>
+        </div>
+        <div className="selects-wrapper">
+          <div className="select-container">
+            <Select
+              id="multiFilterSelect"
+              value={selectedFilters}
+              onChange={(newValue, actionMeta) => {
+                if (isHistorical) {
+                  // If historical series is selected, allow only one filter
+                  setSelectedFilters(newValue.slice(-1));
+                } else if (newValue.length <= 2) {
+                  // If not historical, allow up to 2 filters
+                  setSelectedFilters(newValue);
+                } else {
+                  // Remove the first item and add the new one
+                  setSelectedFilters(newValue.slice(-2));
+                }
+              }}
+              options={filterOptions}
+              className="select-box"
+              styles={customStyles}
+              menuPortalTarget={document.body}
+              isMulti
+              placeholder={isHistorical ? "Selecione 1 filtro" : "Selecione até 2 filtros"}
             />
           </div>
         </div>
@@ -214,6 +315,9 @@ function ParentComponent() {
       <ApiContainer
         type={type}
         year={year}
+        isHistorical={isHistorical}
+        startYear={startYear}
+        endYear={endYear}
         city={city}
         territory={territory}
         faixaPopulacional={faixaPopulacional}
@@ -222,16 +326,19 @@ function ParentComponent() {
         onError={setError}
         onLoading={setIsLoading}
         triggerFetch={isLoading}
+        selectedFilters={selectedFilters}
       />
       {!isLoading && !error && data && (
         <ApiDataTable
           data={data.finalResult ? data.finalResult : data}
           municipioData={data.allResults && data.allResults.length > 0 ? data.allResults : []}
+          isEtapaSelected={isEtapaSelected}
+          isLocalidadeSelected={isLocalidadeSelected}
+          isDependenciaSelected={isDependenciaSelected}
         />
       )}
     </div>
   );
-
 }
 
 export default ParentComponent;
