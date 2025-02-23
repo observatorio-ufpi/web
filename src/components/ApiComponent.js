@@ -3,6 +3,9 @@ import { useEffect } from "react";
 function ApiContainer({
   type,
   year,
+  isHistorical,
+  startYear,
+  endYear,
   state = "22",
   city,
   territory,
@@ -22,7 +25,11 @@ function ApiContainer({
     const isDependenciaSelected = selectedFilters.some((filter) => filter.value === "dependencia");
 
     const buildFilter = (cityId = null) => {
-      return `min_year:"${year}",max_year:"${year}",state:"${state}"${cityId ? `,city:"${cityId}"` : ""}`;
+      const yearFilter = isHistorical
+        ? `min_year:"${startYear}",max_year:"${endYear}"`
+        : `min_year:"${year}",max_year:"${year}"`;
+
+      return `${yearFilter},state:"${state}"${cityId ? `,city:"${cityId}"` : ""}`;
     };
 
     const buildUrl = (filter) => {
@@ -188,6 +195,57 @@ function ApiContainer({
         onLoading(true);
         await new Promise((resolve) => setTimeout(resolve, 1000));
 
+        if (isHistorical) {
+          if (citiesList.length > 0 && !city) {
+            // Busca dados históricos para múltiplas cidades
+            const allResults = await Promise.all(
+              citiesList.map(([cityId, cityInfo]) => fetchCityData(cityId, cityInfo.nomeMunicipio))
+            );
+
+            // Soma os resultados por ano e filtros selecionados
+            const summedResults = {
+              result: allResults[0].result.map(yearData => {
+                const matchingResults = allResults.map(cityResult =>
+                  cityResult.result.find(y => {
+                    // Verifica o ano
+                    if (y.year !== yearData.year) return false;
+
+                    // Verifica cada filtro selecionado
+                    if (isEtapaSelected &&
+                        y.education_level_mod_id !== yearData.education_level_mod_id) return false;
+
+                    if (isLocalidadeSelected &&
+                        y.location_id !== yearData.location_id) return false;
+
+                    if (isDependenciaSelected &&
+                        y.adm_dependency_detailed_id !== yearData.adm_dependency_detailed_id) return false;
+
+                    return true;
+                  })
+                ).filter(Boolean);
+
+                return {
+                  ...yearData,
+                  total: matchingResults.reduce((sum, result) => sum + result.total, 0)
+                };
+              })
+            };
+
+            onDataFetched(summedResults);
+          } else {
+            // Busca histórica original para cidade/estado único
+            const filter = buildFilter(city);
+            const url = buildUrl(filter);
+            const response = await fetch(url);
+
+            if (!response.ok) throw new Error(`Erro HTTP! Status: ${response.status}`);
+
+            const result = await response.json();
+            onDataFetched(result);
+          }
+          return;
+        }
+
         if (citiesList.length > 0 && !city) {
           const allResults = await Promise.all(
             citiesList.map(([cityId, cityInfo]) => fetchCityData(cityId, cityInfo.nomeMunicipio))
@@ -222,7 +280,7 @@ function ApiContainer({
     };
 
     fetchData();
-  }, [triggerFetch, type, year, state, city, territory, faixaPopulacional, citiesList, onDataFetched, onError, onLoading, selectedFilters]);
+  }, [triggerFetch, type, year, isHistorical, startYear, endYear, state, city, territory, faixaPopulacional, citiesList, onDataFetched, onError, onLoading, selectedFilters]);
 
   return null;
 }

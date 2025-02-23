@@ -39,7 +39,7 @@ const CenteredTableCell = styled(TableCell)(({ theme }) => ({
   verticalAlign: 'middle',
 }));
 
-const ApiDataTable = ({ data, municipioData, isEtapaSelected, isLocalidadeSelected, isDependenciaSelected }) => {
+const ApiDataTable = ({ data, municipioData, isEtapaSelected, isLocalidadeSelected, isDependenciaSelected, isHistorical }) => {
   const tableDataArray = [data?.result || []];
   const municipioDataArray = municipioData?.map(m => ({
     cityName: m.cityName,
@@ -100,6 +100,148 @@ const ApiDataTable = ({ data, municipioData, isEtapaSelected, isLocalidadeSelect
   const dependenciaHeaderDisplayNames = {
     adm_dependency_detailed_name: 'Dependência Administrativa',
     total: 'Total',
+  };
+
+
+  const renderHistoricalTable = () => {
+    // Determinar quais colunas extras precisamos baseado nos filtros
+    const getExtraColumns = () => {
+      if (isEtapaSelected) {
+        return {
+          id: 'education_level_mod_id',
+          name: 'education_level_mod_name',
+          label: 'Etapa'
+        };
+      }
+      if (isLocalidadeSelected) {
+        return {
+          id: 'location_id',
+          name: 'location_name',
+          label: 'Localidade'
+        };
+      }
+      if (isDependenciaSelected) {
+        return {
+          id: 'adm_dependency_detailed_id',
+          name: 'adm_dependency_detailed_name',
+          label: 'Dependência'
+        };
+      }
+      return null;
+    };
+
+    const extraColumn = getExtraColumns();
+
+    if (extraColumn) {
+      // Organizar dados por ano e categoria (etapa/localidade/dependência)
+      const yearCategoryMap = new Map();
+      const categories = new Set();
+
+      // Primeiro passo: organizar os dados
+      data.result.forEach(item => {
+        const year = item.year;
+        const categoryName = item[extraColumn.name];
+        categories.add(categoryName);
+
+        if (!yearCategoryMap.has(year)) {
+          yearCategoryMap.set(year, new Map());
+        }
+        yearCategoryMap.get(year).set(categoryName, item.total);
+      });
+
+      // Converter Set para Array e ordenar
+      const sortedCategories = [...categories].sort();
+      const sortedYears = [...yearCategoryMap.keys()].sort((a, b) => a - b);
+
+      return (
+        <Paper sx={{ padding: 2, backgroundColor: theme.palette.background.default }}>
+          <TableContainer component={Paper} sx={{ maxWidth: '100%', overflowX: 'auto' }}>
+            <Table sx={{ minWidth: 650 }} aria-label="historical table">
+              <StyledTableHead>
+                <TableRow>
+                  <BoldTableCell>Ano</BoldTableCell>
+                  {sortedCategories.map(category => (
+                    <BoldTableCell key={category}>{category}</BoldTableCell>
+                  ))}
+                  <BoldTableCell>Total</BoldTableCell>
+                </TableRow>
+              </StyledTableHead>
+              <TableBody>
+                {sortedYears.map(year => {
+                  const categoryMap = yearCategoryMap.get(year);
+                  const yearTotal = Array.from(categoryMap.values()).reduce((sum, val) => sum + val, 0);
+
+                  return (
+                    <TableRow key={year}>
+                      <CenteredTableCell>{year}</CenteredTableCell>
+                      {sortedCategories.map(category => (
+                        <CenteredTableCell key={`${year}-${category}`}>
+                          {categoryMap.get(category) || 0}
+                        </CenteredTableCell>
+                      ))}
+                      <CenteredTableCell>{yearTotal}</CenteredTableCell>
+                    </TableRow>
+                  );
+                })}
+                {/* Linha de totais */}
+                <TableRow>
+                  <BoldTableCell>Total</BoldTableCell>
+                  {sortedCategories.map(category => {
+                    const categoryTotal = sortedYears.reduce((sum, year) => {
+                      return sum + (yearCategoryMap.get(year).get(category) || 0);
+                    }, 0);
+                    return (
+                      <BoldTableCell key={`total-${category}`}>
+                        {categoryTotal}
+                      </BoldTableCell>
+                    );
+                  })}
+                  <BoldTableCell>
+                    {sortedYears.reduce((sum, year) => {
+                      return sum + Array.from(yearCategoryMap.get(year).values())
+                        .reduce((yearSum, val) => yearSum + val, 0);
+                    }, 0)}
+                  </BoldTableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Paper>
+      );
+    }
+
+    // Para dados históricos simples (sem filtros)
+    return (
+      <Paper sx={{ padding: 2, backgroundColor: theme.palette.background.default }}>
+        <TableContainer component={Paper} sx={{ maxWidth: '100%', overflowX: 'auto' }}>
+          <Table sx={{ minWidth: 650 }} aria-label="historical table">
+            <StyledTableHead>
+              <TableRow>
+                <BoldTableCell>Ano</BoldTableCell>
+                <BoldTableCell>Total</BoldTableCell>
+              </TableRow>
+            </StyledTableHead>
+            <TableBody>
+              {data.result
+                .sort((a, b) => a.year - b.year)
+                .map((item, index) => (
+                  <TableRow key={index}>
+                    <CenteredTableCell>{item.year}</CenteredTableCell>
+                    <CenteredTableCell>{item.total}</CenteredTableCell>
+                  </TableRow>
+                ))}
+              {/* Linha de total geral */}
+              <TableRow>
+                <BoldTableCell>Total</BoldTableCell>
+                <BoldTableCell>
+                  {data.result.reduce((sum, item) => sum + item.total, 0)}
+                </BoldTableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Paper>
+    );
   };
 
   // Nova lógica para renderizar a tabela combinada
@@ -236,8 +378,11 @@ const ApiDataTable = ({ data, municipioData, isEtapaSelected, isLocalidadeSelect
   return (
     <ThemeProvider theme={theme}>
       <div>
+        {isHistorical && (
+          renderHistoricalTable()
+        )}
         {/* Primeira tabela */}
-        {!isEtapaSelected && !isLocalidadeSelected && !isDependenciaSelected && tableDataArray.map((tableData, tableIndex) => (
+        {!isEtapaSelected && !isLocalidadeSelected && !isDependenciaSelected && !isHistorical && tableDataArray.map((tableData, tableIndex) => (
           <Paper
             key={tableIndex}
             sx={{
@@ -308,7 +453,7 @@ const ApiDataTable = ({ data, municipioData, isEtapaSelected, isLocalidadeSelect
         }
 
         {/* Nova tabela para etapa */}
-        {isEtapaSelected && (
+        {isEtapaSelected && !isHistorical && (
           <Paper
             sx={{
               backgroundColor: theme.palette.background.default,
@@ -342,7 +487,7 @@ const ApiDataTable = ({ data, municipioData, isEtapaSelected, isLocalidadeSelect
           </Paper>
         )}
 
-        {isLocalidadeSelected && (
+        {isLocalidadeSelected && !isHistorical && (
           <Paper
             sx={{
               backgroundColor: theme.palette.background.default,
@@ -376,7 +521,7 @@ const ApiDataTable = ({ data, municipioData, isEtapaSelected, isLocalidadeSelect
           </Paper>
         )}
 
-        {isDependenciaSelected && (
+        {isDependenciaSelected && !isHistorical && (
           <Paper
             sx={{
               backgroundColor: theme.palette.background.default,

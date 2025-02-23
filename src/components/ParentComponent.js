@@ -69,7 +69,7 @@ function ParentComponent() {
     enrollment: "Número de matrículas",
     "school/count": "Número de escolas",
     class: "Número de turmas",
-    teacher: "Número de professores",
+    teacher: "Número de docentes",
     auxiliar: "Número de auxiliares docentes",
     employees: "Número de funcionários"
   };
@@ -335,6 +335,7 @@ function ParentComponent() {
           isEtapaSelected={isEtapaSelected}
           isLocalidadeSelected={isLocalidadeSelected}
           isDependenciaSelected={isDependenciaSelected}
+          isHistorical={isHistorical}
         />
       )}
     </div>
