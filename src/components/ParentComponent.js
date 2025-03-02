@@ -9,6 +9,7 @@ import ApiDataTable from './apiDataTable';
 
 function ParentComponent() {
   const [type, setType] = useState('enrollment');
+  const [filteredType, setFilteredType] = useState('enrollment');
   const [isHistorical, setIsHistorical] = useState(false);
   const [startYear, setStartYear] = useState(2007);
   const [endYear, setEndYear] = useState(2020);
@@ -16,6 +17,8 @@ function ParentComponent() {
   const [city, setCity] = useState('');
   const [territory, setTerritory] = useState('');
   const [faixaPopulacional, setFaixaPopulacional] = useState('');
+  const [aglomerado, setAglomerado] = useState('');
+  const [gerencia, setGerencia] = useState('');
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -24,27 +27,36 @@ function ParentComponent() {
   const [isEtapaSelected, setIsEtapaSelected] = useState(false);
   const [isLocalidadeSelected, setIsLocalidadeSelected] = useState(false);
   const [isDependenciaSelected, setIsDependenciaSelected] = useState(false);
+  const [isVinculoSelected, setIsVinculoSelected] = useState(false);
+  const [displayHistorical, setDisplayHistorical] = useState(false);
 
   const handleFilterClick = () => {
     setIsLoading(true);
     setError(null);
     setData(null);
+    setIsHistorical(displayHistorical);
+    setFilteredType(type);
     const yearDisplay = isHistorical ? `${startYear}-${endYear}` : year;
     setTitle(type && titleMapping[type] ? `${titleMapping[type]} - ${city ? municipios[city].nomeMunicipio : territory ? '' : "Piauí"}${territory && city === '' ? ` ${Regioes[territory]}` : ''} (${yearDisplay})` : '');
     setIsEtapaSelected(selectedFilters.some(filter => filter.value === 'etapa'));
     setIsLocalidadeSelected(selectedFilters.some(filter => filter.value === 'localidade'));
     setIsDependenciaSelected(selectedFilters.some(filter => filter.value === 'dependencia'));
+    setIsVinculoSelected(selectedFilters.some(filter => filter.value === 'vinculo'));
   };
 
   const handleClearFilters = () => {
-    setType('enrollment');
+    setDisplayHistorical(false);
     setIsHistorical(false);
+    setType('enrollment');
+    setFilteredType('enrollment');
     setStartYear(2007);
     setEndYear(2020);
     setYear(2020);
     setCity('');
     setTerritory('');
     setFaixaPopulacional('');
+    setAglomerado('');
+    setGerencia('');
     setData(null);
     setError(null);
     setTitle('');
@@ -52,6 +64,7 @@ function ParentComponent() {
     setIsEtapaSelected(false);
     setIsLocalidadeSelected(false);
     setIsDependenciaSelected(false);
+    setIsVinculoSelected(false);
   };
 
   const filteredCities = Object.entries(municipios).filter(([key, { territorioDesenvolvimento, faixaPopulacional: cityFaixaPopulacional }]) => {
@@ -61,6 +74,10 @@ function ParentComponent() {
       return territorioDesenvolvimento === Regioes[territory];
     } else if (faixaPopulacional) {
       return cityFaixaPopulacional === FaixaPopulacional[faixaPopulacional];
+    } else if (aglomerado) {
+      return aglomerado === municipios[city].aglomerado;
+    } else if (gerencia) {
+      return gerencia === municipios[city].gerencia;
     }
     return true;
   });
@@ -94,6 +111,15 @@ function ParentComponent() {
     label: value,
   }));
 
+  const aglomeradoOptions = [...new Set(Object.values(municipios).map(m => m.aglomerado))].map(aglomerado => ({
+    value: aglomerado,
+    label: aglomerado,
+  }));
+
+  const gerenciaOptions = [...new Set(Object.values(municipios).map(m => m.gerencia))].map(gerencia => ({
+    value: gerencia,
+    label: gerencia,
+  }));
   const cityOptions = filteredCities.map(([key, { nomeMunicipio }]) => ({
     value: key,
     label: nomeMunicipio,
@@ -105,9 +131,9 @@ function ParentComponent() {
 
   const filterOptions = [
     { value: 'localidade', label: 'Localidade' },
-    { value: 'etapa', label: 'Etapa' },
+    ...(type !== 'employees' ? [{ value: 'etapa', label: 'Etapa' }] : []),
     { value: 'dependencia', label: 'Dependência Administrativa' },
-    // Adicione mais opções conforme necessário
+    ...(type === 'teacher' ? [{ value: 'vinculo', label: 'Vínculo Funcional' }] : []),
   ];
 
   return (
@@ -133,14 +159,17 @@ function ParentComponent() {
               <label>
                 <input
                   type="checkbox"
-                  checked={isHistorical}
-                  onChange={(e) => setIsHistorical(e.target.checked)}
+                  checked={displayHistorical}
+                  onChange={(e) => {
+                    setDisplayHistorical(e.target.checked);
+                    setSelectedFilters([]);
+                  }}
                 />
                 Série Histórica
               </label>
             </div>
 
-            {isHistorical ? (
+            {displayHistorical ? (
               <>
                 <div className="select-container">
                   <label htmlFor="startYearSelect">Ano Inicial: </label>
@@ -245,7 +274,7 @@ function ParentComponent() {
               id="multiFilterSelect"
               value={selectedFilters}
               onChange={(newValue, actionMeta) => {
-                if (isHistorical) {
+                if (displayHistorical) {
                   // If historical series is selected, allow only one filter
                   setSelectedFilters(newValue.slice(-1));
                 } else if (newValue.length <= 2) {
@@ -261,7 +290,7 @@ function ParentComponent() {
               styles={customStyles}
               menuPortalTarget={document.body}
               isMulti
-              placeholder={isHistorical ? "Selecione 1 filtro" : "Selecione até 2 filtros"}
+              placeholder={displayHistorical ? "Selecione 1 filtro" : "Selecione até 2 filtros"}
             />
           </div>
         </div>
@@ -335,7 +364,9 @@ function ParentComponent() {
           isEtapaSelected={isEtapaSelected}
           isLocalidadeSelected={isLocalidadeSelected}
           isDependenciaSelected={isDependenciaSelected}
+          isVinculoSelected={isVinculoSelected}
           isHistorical={isHistorical}
+          type={filteredType}
         />
       )}
     </div>

@@ -23,6 +23,7 @@ function ApiContainer({
     const isEtapaSelected = selectedFilters.some((filter) => filter.value === "etapa");
     const isLocalidadeSelected = selectedFilters.some((filter) => filter.value === "localidade");
     const isDependenciaSelected = selectedFilters.some((filter) => filter.value === "dependencia");
+    const isVinculoSelected = selectedFilters.some((filter) => filter.value === "vinculo");
 
     const buildFilter = (cityId = null) => {
       const yearFilter = isHistorical
@@ -36,13 +37,20 @@ function ApiContainer({
       const selectedDims = [];
 
       if (isEtapaSelected) {
-        selectedDims.push("education_level_mod");
+        if (type === 'school/count') {
+          selectedDims.push("arrangement");
+        } else {
+          selectedDims.push("education_level_mod");
+        }
       }
       if (isLocalidadeSelected) {
         selectedDims.push("location");
       }
       if (isDependenciaSelected) {
         selectedDims.push("adm_dependency_detailed");
+      }
+      if (isVinculoSelected) {
+        selectedDims.push("contract_type");
       }
 
       const dims = selectedDims.length > 0 ? `dims=${selectedDims.join(",")}` : "";
@@ -66,6 +74,7 @@ function ApiContainer({
       const totalByEtapa = {};
       const totalByLocalidade = {};
       const totalByDependencia = {};
+      const totalByVinculo = {};
       const crossedData = {};
       let totalSum = 0;
 
@@ -88,41 +97,137 @@ function ApiContainer({
             }
             // Cruzamento Etapa x Dependencia
             else if (isEtapaSelected && isDependenciaSelected) {
-              const crossKey = `${item.education_level_mod_id}-${item.adm_dependency_detailed_id}`;
-              if (!crossedData[crossKey]) {
-                crossedData[crossKey] = {
-                  education_level_mod_id: item.education_level_mod_id,
-                  education_level_mod_name: item.education_level_mod_name,
-                  adm_dependency_detailed_id: item.adm_dependency_detailed_id,
-                  adm_dependency_detailed_name: item.adm_dependency_detailed_name,
-                  total: 0
-                };
+              if (type === 'school/count') {
+                const crossKey = `${item.arrangement_id}-${item.adm_dependency_detailed_id}`;
+                if (!crossedData[crossKey]) {
+                  crossedData[crossKey] = {
+                    arrangement_id: item.arrangement_id,
+                    arrangement_name: item.arrangement_name,
+                    adm_dependency_detailed_id: item.adm_dependency_detailed_id,
+                    adm_dependency_detailed_name: item.adm_dependency_detailed_name,
+                    total: 0
+                  };
+                }
+                crossedData[crossKey].total += item.total;
+              } else {
+                const crossKey = `${item.education_level_mod_id}-${item.adm_dependency_detailed_id}`;
+                if (!crossedData[crossKey]) {
+                  crossedData[crossKey] = {
+                    education_level_mod_id: item.education_level_mod_id,
+                    education_level_mod_name: item.education_level_mod_name,
+                    adm_dependency_detailed_id: item.adm_dependency_detailed_id,
+                    adm_dependency_detailed_name: item.adm_dependency_detailed_name,
+                    total: 0
+                  };
+                }
+                crossedData[crossKey].total += item.total;
               }
-              crossedData[crossKey].total += item.total;
             }
             // Cruzamento Etapa x Localidade
             else if (isEtapaSelected && isLocalidadeSelected) {
-              const crossKey = `${item.education_level_mod_id}-${item.location_id}`;
+              if (type === 'school/count') {
+                const crossKey = `${item.arrangement_id}-${item.location_id}`;
+                if (!crossedData[crossKey]) {
+                  crossedData[crossKey] = {
+                    arrangement_id: item.arrangement_id,
+                    arrangement_name: item.arrangement_name,
+                    location_id: item.location_id,
+                    location_name: item.location_name,
+                    total: 0
+                  };
+                }
+                crossedData[crossKey].total += item.total;
+              } else {
+                const crossKey = `${item.education_level_mod_id}-${item.location_id}`;
+                if (!crossedData[crossKey]) {
+                  crossedData[crossKey] = {
+                    education_level_mod_id: item.education_level_mod_id,
+                    education_level_mod_name: item.education_level_mod_name,
+                    location_id: item.location_id,
+                    location_name: item.location_name,
+                    total: 0
+                  };
+                }
+                crossedData[crossKey].total += item.total;
+              }
+            }
+            // Cruzamento Etapa x Vinculo
+            else if (isEtapaSelected && isVinculoSelected) {
+              if (type === 'school/count') {
+                const crossKey = `${item.arrangement_id}-${item.contract_type_id}`;
+                if (!crossedData[crossKey]) {
+                  crossedData[crossKey] = {
+                    arrangement_id: item.arrangement_id,
+                    arrangement_name: item.arrangement_name,
+                    contract_type_id: item.contract_type_id,
+                    contract_type_name: item.contract_type_name,
+                    total: 0
+                  };
+                }
+                crossedData[crossKey].total += item.total;
+              } else {
+                const crossKey = `${item.education_level_mod_id}-${item.contract_type_id}`;
+                if (!crossedData[crossKey]) {
+                  crossedData[crossKey] = {
+                    education_level_mod_id: item.education_level_mod_id,
+                    education_level_mod_name: item.education_level_mod_name,
+                    contract_type_id: item.contract_type_id,
+                    contract_type_name: item.contract_type_name,
+                    total: 0
+                  };
+                }
+                crossedData[crossKey].total += item.total;
+              }
+            }
+            // Cruzamento Localidade x Vinculo
+            else if (isLocalidadeSelected && isVinculoSelected) {
+              const crossKey = `${item.location_id}-${item.contract_type_id}`;
               if (!crossedData[crossKey]) {
                 crossedData[crossKey] = {
-                  education_level_mod_id: item.education_level_mod_id,
-                  education_level_mod_name: item.education_level_mod_name,
                   location_id: item.location_id,
                   location_name: item.location_name,
+                  contract_type_id: item.contract_type_id,
+                  contract_type_name: item.contract_type_name,
                   total: 0
                 };
               }
               crossedData[crossKey].total += item.total;
             }
-            // Totais individuais para filtros únicos
-            else if (isEtapaSelected) {
-              if (!totalByEtapa[item.education_level_mod_id]) {
-                totalByEtapa[item.education_level_mod_id] = {
-                  total: 0,
-                  name: item.education_level_mod_name
+            // Cruzamento Dependencia x Vinculo
+            else if (isDependenciaSelected && isVinculoSelected) {
+              const crossKey = `${item.adm_dependency_detailed_id}-${item.contract_type_id}`;
+              if (!crossedData[crossKey]) {
+                crossedData[crossKey] = {
+                  adm_dependency_detailed_id: item.adm_dependency_detailed_id,
+                  adm_dependency_detailed_name: item.adm_dependency_detailed_name,
+                  contract_type_id: item.contract_type_id,
+                  contract_type_name: item.contract_type_name,
+                  total: 0
                 };
               }
-              totalByEtapa[item.education_level_mod_id].total += item.total;
+              crossedData[crossKey].total += item.total;
+            }
+
+            // Totais individuais para filtros únicos
+            else if (isEtapaSelected) {
+              if (type === 'school/count') {
+                if (!totalByEtapa[item.arrangement_id]) {
+                  totalByEtapa[item.arrangement_id] = {
+                    total: 0,
+                    name: item.arrangement_name
+                  };
+                }
+                totalByEtapa[item.arrangement_id].total += item.total;
+              } else {
+                if (!totalByEtapa[item.education_level_mod_id]) {
+                  totalByEtapa[item.education_level_mod_id] = {
+                    total: 0,
+                    name: item.education_level_mod_name
+                  };
+                }
+                totalByEtapa[item.education_level_mod_id].total += item.total;
+              }
+
             }
             else if (isLocalidadeSelected) {
               if (!totalByLocalidade[item.location_id]) {
@@ -142,6 +247,15 @@ function ApiContainer({
               }
               totalByDependencia[item.adm_dependency_detailed_id].total += item.total;
             }
+            else if (isVinculoSelected) {
+              if (!totalByVinculo[item.contract_type_id]) {
+                totalByVinculo[item.contract_type_id] = {
+                  total: 0,
+                  name: item.contract_type_name
+                };
+              }
+              totalByVinculo[item.contract_type_id].total += item.total;
+            }
             else {
               totalSum += item.total;
             }
@@ -159,14 +273,33 @@ function ApiContainer({
       if (isEtapaSelected && isLocalidadeSelected) {
         return { result: { byEtapaAndLocalidade: Object.values(crossedData) } };
       }
+      if (isEtapaSelected && isVinculoSelected) {
+        return { result: { byEtapaAndVinculo: Object.values(crossedData) } };
+      }
+      if (isLocalidadeSelected && isVinculoSelected) {
+        return { result: { byLocalidadeAndVinculo: Object.values(crossedData) } };
+      }
+      if (isDependenciaSelected && isVinculoSelected) {
+        return { result: { byDependenciaAndVinculo: Object.values(crossedData) } };
+      }
       if (isEtapaSelected) {
+        if (type === 'school/count') {
+          return {
+            result: Object.entries(totalByEtapa).map(([id, { total, name }]) => ({
+              arrangement_id: id,
+              arrangement_name: name,
+              total
+            }))
+          };
+        } else {
         return {
           result: Object.entries(totalByEtapa).map(([id, { total, name }]) => ({
             education_level_mod_id: id,
             education_level_mod_name: name,
             total
-          }))
-        };
+            }))
+          };
+        }
       }
       if (isLocalidadeSelected) {
         return {
@@ -186,6 +319,16 @@ function ApiContainer({
           }))
         };
       }
+      if (isVinculoSelected) {
+        return {
+          result: Object.entries(totalByVinculo).map(([id, { total, name }]) => ({
+            contract_type_id: id,
+            contract_type_name: name,
+            total
+          }))
+        };
+      }
+
       return { result: [{ total: totalSum }] };
     };
 
@@ -217,8 +360,14 @@ function ApiContainer({
                     if (isLocalidadeSelected &&
                         y.location_id !== yearData.location_id) return false;
 
+                    if (isEtapaSelected && type === 'school/count' &&
+                        y.arrangement_id !== yearData.arrangement_id) return false;
+
                     if (isDependenciaSelected &&
                         y.adm_dependency_detailed_id !== yearData.adm_dependency_detailed_id) return false;
+
+                    if (isVinculoSelected &&
+                        y.contract_type_id !== yearData.contract_type_id) return false;
 
                     return true;
                   })
