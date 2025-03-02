@@ -10,6 +10,8 @@ function ApiContainer({
   city,
   territory,
   faixaPopulacional,
+  aglomerado,
+  gerencia,
   citiesList,
   onDataFetched,
   onError,
@@ -24,6 +26,7 @@ function ApiContainer({
     const isLocalidadeSelected = selectedFilters.some((filter) => filter.value === "localidade");
     const isDependenciaSelected = selectedFilters.some((filter) => filter.value === "dependencia");
     const isVinculoSelected = selectedFilters.some((filter) => filter.value === "vinculo");
+    const isFormacaoDocenteSelected = selectedFilters.some((filter) => filter.value === "formacaoDocente");
 
     const buildFilter = (cityId = null) => {
       const yearFilter = isHistorical
@@ -52,6 +55,10 @@ function ApiContainer({
       if (isVinculoSelected) {
         selectedDims.push("contract_type");
       }
+      if (isFormacaoDocenteSelected) {
+        selectedDims.push("initial_training");
+      }
+
 
       const dims = selectedDims.length > 0 ? `dims=${selectedDims.join(",")}` : "";
 
@@ -75,6 +82,7 @@ function ApiContainer({
       const totalByLocalidade = {};
       const totalByDependencia = {};
       const totalByVinculo = {};
+      const totalByFormacaoDocente = {};
       const crossedData = {};
       let totalSum = 0;
 
@@ -207,7 +215,76 @@ function ApiContainer({
               }
               crossedData[crossKey].total += item.total;
             }
-
+            // Cruzamento Etapa x Formação Docente
+            else if (isEtapaSelected && isFormacaoDocenteSelected) {
+              if (type === 'school/count') {
+                const crossKey = `${item.arrangement_id}-${item.initial_training_id}`;
+                if (!crossedData[crossKey]) {
+                  crossedData[crossKey] = {
+                    arrangement_id: item.arrangement_id,
+                    arrangement_name: item.arrangement_name,
+                    initial_training_id: item.initial_training_id,
+                    initial_training_name: item.initial_training_name,
+                    total: 0
+                  };
+                }
+                crossedData[crossKey].total += item.total;
+              } else {
+                const crossKey = `${item.education_level_mod_id}-${item.initial_training_id}`;
+                if (!crossedData[crossKey]) {
+                  crossedData[crossKey] = {
+                    education_level_mod_id: item.education_level_mod_id,
+                    education_level_mod_name: item.education_level_mod_name,
+                    initial_training_id: item.initial_training_id,
+                    initial_training_name: item.initial_training_name,
+                    total: 0
+                  };
+                }
+                crossedData[crossKey].total += item.total;
+              }
+            }
+            // Cruzamento Localidade x Formação Docente
+            else if (isLocalidadeSelected && isFormacaoDocenteSelected) {
+              const crossKey = `${item.location_id}-${item.initial_training_id}`;
+              if (!crossedData[crossKey]) {
+                crossedData[crossKey] = {
+                  location_id: item.location_id,
+                  location_name: item.location_name,
+                  initial_training_id: item.initial_training_id,
+                  initial_training_name: item.initial_training_name,
+                  total: 0
+                };
+              }
+              crossedData[crossKey].total += item.total;
+            }
+            // Cruzamento Dependencia x Formação Docente
+            else if (isDependenciaSelected && isFormacaoDocenteSelected) {
+              const crossKey = `${item.adm_dependency_detailed_id}-${item.initial_training_id}`;
+              if (!crossedData[crossKey]) {
+                crossedData[crossKey] = {
+                  adm_dependency_detailed_id: item.adm_dependency_detailed_id,
+                  adm_dependency_detailed_name: item.adm_dependency_detailed_name,
+                  initial_training_id: item.initial_training_id,
+                  initial_training_name: item.initial_training_name,
+                  total: 0
+                };
+              }
+              crossedData[crossKey].total += item.total;
+            }
+            // Cruzamento Vinculo x Formação Docente
+            else if (isVinculoSelected && isFormacaoDocenteSelected) {
+              const crossKey = `${item.contract_type_id}-${item.initial_training_id}`;
+              if (!crossedData[crossKey]) {
+                crossedData[crossKey] = {
+                  contract_type_id: item.contract_type_id,
+                  contract_type_name: item.contract_type_name,
+                  initial_training_id: item.initial_training_id,
+                  initial_training_name: item.initial_training_name,
+                  total: 0
+                };
+              }
+              crossedData[crossKey].total += item.total;
+            }
             // Totais individuais para filtros únicos
             else if (isEtapaSelected) {
               if (type === 'school/count') {
@@ -256,6 +333,15 @@ function ApiContainer({
               }
               totalByVinculo[item.contract_type_id].total += item.total;
             }
+            else if (isFormacaoDocenteSelected) {
+              if (!totalByFormacaoDocente[item.initial_training_id]) {
+                totalByFormacaoDocente[item.initial_training_id] = {
+                  total: 0,
+                  name: item.initial_training_name
+                };
+              }
+              totalByFormacaoDocente[item.initial_training_id].total += item.total;
+            }
             else {
               totalSum += item.total;
             }
@@ -282,6 +368,19 @@ function ApiContainer({
       if (isDependenciaSelected && isVinculoSelected) {
         return { result: { byDependenciaAndVinculo: Object.values(crossedData) } };
       }
+      if (isEtapaSelected && isFormacaoDocenteSelected) {
+        return { result: { byEtapaAndFormacaoDocente: Object.values(crossedData) } };
+      }
+      if (isLocalidadeSelected && isFormacaoDocenteSelected) {
+        return { result: { byLocalidadeAndFormacaoDocente: Object.values(crossedData) } };
+      }
+      if (isDependenciaSelected && isFormacaoDocenteSelected) {
+        return { result: { byDependenciaAndFormacaoDocente: Object.values(crossedData) } };
+      }
+      if (isVinculoSelected && isFormacaoDocenteSelected) {
+        return { result: { byVinculoAndFormacaoDocente: Object.values(crossedData) } };
+      }
+
       if (isEtapaSelected) {
         if (type === 'school/count') {
           return {
@@ -328,6 +427,15 @@ function ApiContainer({
           }))
         };
       }
+      if (isFormacaoDocenteSelected) {
+        return {
+          result: Object.entries(totalByFormacaoDocente).map(([id, { total, name }]) => ({
+            initial_training_id: id,
+            initial_training_name: name,
+            total
+          }))
+        };
+      }
 
       return { result: [{ total: totalSum }] };
     };
@@ -369,6 +477,9 @@ function ApiContainer({
                     if (isVinculoSelected &&
                         y.contract_type_id !== yearData.contract_type_id) return false;
 
+                    if (isFormacaoDocenteSelected &&
+                        y.initial_training_id !== yearData.initial_training_id) return false;
+
                     return true;
                   })
                 ).filter(Boolean);
@@ -396,6 +507,7 @@ function ApiContainer({
         }
 
         if (citiesList.length > 0 && !city) {
+          console.log("Cities List:", citiesList);
           const allResults = await Promise.all(
             citiesList.map(([cityId, cityInfo]) => fetchCityData(cityId, cityInfo.nomeMunicipio))
           );
@@ -403,7 +515,7 @@ function ApiContainer({
           const finalResult = processResults(allResults);
           console.log("Final Result:", finalResult);
           onDataFetched({ finalResult, allResults });
-        } else if (citiesList.length === 0 && (territory || faixaPopulacional)) {
+        } else if (citiesList.length === 0 && (territory || faixaPopulacional || aglomerado || gerencia)) {
           onDataFetched({ finalResult: [], allResults: [] });
         } else {
           const filter = buildFilter(city);
@@ -429,7 +541,7 @@ function ApiContainer({
     };
 
     fetchData();
-  }, [triggerFetch, type, year, isHistorical, startYear, endYear, state, city, territory, faixaPopulacional, citiesList, onDataFetched, onError, onLoading, selectedFilters]);
+  }, [triggerFetch, type, year, isHistorical, startYear, endYear, state, city, territory, faixaPopulacional, aglomerado, gerencia, citiesList, onDataFetched, onError, onLoading, selectedFilters]);
 
   return null;
 }

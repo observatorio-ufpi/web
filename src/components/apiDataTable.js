@@ -40,7 +40,7 @@ const CenteredTableCell = styled(TableCell)(({ theme }) => ({
   verticalAlign: 'middle',
 }));
 
-const ApiDataTable = ({ data, municipioData, isEtapaSelected, isLocalidadeSelected, isDependenciaSelected, isVinculoSelected, isHistorical, type }) => {
+const ApiDataTable = ({ data, municipioData, isEtapaSelected, isLocalidadeSelected, isDependenciaSelected, isVinculoSelected, isHistorical, type, isFormacaoDocenteSelected }) => {
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
 
@@ -68,6 +68,10 @@ const ApiDataTable = ({ data, municipioData, isEtapaSelected, isLocalidadeSelect
     (!data?.result?.byEtapaAndVinculo || data.result.byEtapaAndVinculo.length === 0) &&
     (!data?.result?.byLocalidadeAndVinculo || data.result.byLocalidadeAndVinculo.length === 0) &&
     (!data?.result?.byDependenciaAndVinculo || data.result.byDependenciaAndVinculo.length === 0) &&
+    (!data?.result?.byLocalidadeAndFormacaoDocente || data.result.byLocalidadeAndFormacaoDocente.length === 0) &&
+    (!data?.result?.byDependenciaAndFormacaoDocente || data.result.byDependenciaAndFormacaoDocente.length === 0) &&
+    (!data?.result?.byVinculoAndFormacaoDocente || data.result.byVinculoAndFormacaoDocente.length === 0) &&
+    (!data?.result?.byEtapaAndFormacaoDocente || data.result.byEtapaAndFormacaoDocente.length === 0) &&
     (!Array.isArray(data?.result) || data.result.length === 0) &&
     tableDataArray.every(arr => !Array.isArray(arr) || arr.length === 0) &&
     municipioDataArray.every(arr => !Array.isArray(arr) || arr.length === 0)
@@ -132,6 +136,13 @@ const ApiDataTable = ({ data, municipioData, isEtapaSelected, isLocalidadeSelect
     total: 'Total',
   };
 
+  // Headers para a tabela de formação docente
+  const formacaoDocenteHeaders = ['initial_training_name', 'total'];
+  const formacaoDocenteHeaderDisplayNames = {
+    initial_training_name: 'Formação Docente',
+    total: 'Total',
+  };
+
 
   const renderHistoricalTable = () => {
     // Determinar quais colunas extras precisamos baseado nos filtros
@@ -170,6 +181,13 @@ const ApiDataTable = ({ data, municipioData, isEtapaSelected, isLocalidadeSelect
           id: 'contract_type_id',
           name: 'contract_type_name',
           label: 'Vínculo'
+        };
+      }
+      if (isFormacaoDocenteSelected) {
+        return {
+          id: 'initial_training_id',
+          name: 'initial_training_name',
+          label: 'Formação Docente'
         };
       }
       return null;
@@ -293,7 +311,11 @@ const ApiDataTable = ({ data, municipioData, isEtapaSelected, isLocalidadeSelect
       (isLocalidadeSelected && isDependenciaSelected) ||
       (isEtapaSelected && isVinculoSelected) ||
       (isLocalidadeSelected && isVinculoSelected) ||
-      (isDependenciaSelected && isVinculoSelected)) {
+      (isDependenciaSelected && isVinculoSelected) ||
+      (isEtapaSelected && isFormacaoDocenteSelected) ||
+      (isLocalidadeSelected && isFormacaoDocenteSelected) ||
+      (isDependenciaSelected && isFormacaoDocenteSelected) ||
+      (isVinculoSelected && isFormacaoDocenteSelected)) {
 
     let crossedData;
     let rowHeader;
@@ -386,7 +408,52 @@ const ApiDataTable = ({ data, municipioData, isEtapaSelected, isLocalidadeSelect
         columnIdField = "location_id";
       }
     }
-
+    else if (isLocalidadeSelected && isFormacaoDocenteSelected) {
+      crossedData = data?.result?.byLocalidadeAndFormacaoDocente || [];
+      rowHeader = "Localidade";
+      columnHeader = "Formação Docente";
+      rowField = "location_name";
+      columnField = "initial_training_name";
+      rowIdField = "location_id";
+      columnIdField = "initial_training_id";
+    }
+    else if (isDependenciaSelected && isFormacaoDocenteSelected) {
+      crossedData = data?.result?.byDependenciaAndFormacaoDocente || [];
+      rowHeader = "Dependência Administrativa";
+      columnHeader = "Formação Docente";
+      rowField = "adm_dependency_detailed_name";
+      columnField = "initial_training_name";
+      rowIdField = "adm_dependency_detailed_id";
+      columnIdField = "initial_training_id";
+    }
+    else if (isVinculoSelected && isFormacaoDocenteSelected) {
+      crossedData = data?.result?.byVinculoAndFormacaoDocente || [];
+      rowHeader = "Vínculo Funcional";
+      columnHeader = "Formação Docente";
+      rowField = "contract_type_name";
+      columnField = "initial_training_name";
+      rowIdField = "contract_type_id";
+      columnIdField = "initial_training_id";
+    }
+    else if (isEtapaSelected && isFormacaoDocenteSelected) {
+      if (type === 'school/count') {
+        crossedData = data?.result?.byEtapaAndFormacaoDocente || [];
+        rowHeader = "Etapa";
+        columnHeader = "Formação Docente";
+        rowField = "arrangement_name";
+        columnField = "initial_training_name";
+        rowIdField = "arrangement_id";
+        columnIdField = "initial_training_id";
+      } else {
+        crossedData = data?.result?.byEtapaAndFormacaoDocente || [];
+        rowHeader = "Etapa";
+        columnHeader = "Formação Docente";
+        rowField = "education_level_mod_name";
+        columnField = "initial_training_name";
+        rowIdField = "education_level_mod_id";
+        columnIdField = "initial_training_id";
+      }
+    }
     // Criar estrutura de dados para a tabela
     const uniqueRows = new Map();
     const uniqueColumns = new Map();
@@ -504,7 +571,7 @@ const ApiDataTable = ({ data, municipioData, isEtapaSelected, isLocalidadeSelect
           renderHistoricalTable()
         )}
         {/* Primeira tabela */}
-        {!isEtapaSelected && !isLocalidadeSelected && !isDependenciaSelected && !isHistorical && !isVinculoSelected && tableDataArray.map((tableData, tableIndex) => (
+        {!isEtapaSelected && !isLocalidadeSelected && !isDependenciaSelected && !isHistorical && !isVinculoSelected && !isFormacaoDocenteSelected && tableDataArray.map((tableData, tableIndex) => (
           <Paper
             key={tableIndex}
             sx={{
@@ -540,7 +607,7 @@ const ApiDataTable = ({ data, municipioData, isEtapaSelected, isLocalidadeSelect
         ))}
 
         {/* Segunda tabela para município */}
-        {!isEtapaSelected && !isLocalidadeSelected && !isDependenciaSelected && !isVinculoSelected && municipioDataArray.length > 0 && // Verifica se há dados
+        {!isEtapaSelected && !isLocalidadeSelected && !isDependenciaSelected && !isVinculoSelected && !isFormacaoDocenteSelected && municipioDataArray.length > 0 && // Verifica se há dados
           <Paper
             sx={{
               backgroundColor: theme.palette.background.default,
@@ -749,6 +816,40 @@ const ApiDataTable = ({ data, municipioData, isEtapaSelected, isLocalidadeSelect
                   {data.result.map((item, index) => (
                     <TableRow key={index}>
                       {vinculoHeaders.map(header => (
+                        <CenteredTableCell key={header}>
+                          {item[header]?.toString() || ''}
+                        </CenteredTableCell>
+                      ))}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Paper>
+        )}
+
+        {isFormacaoDocenteSelected && !isHistorical && (
+          <Paper
+            sx={{
+              backgroundColor: theme.palette.background.default,
+              marginBottom: 2
+            }}
+          >
+            <TableContainer component={Paper} sx={{ maxWidth: '100%', overflowX: 'auto' }}>
+              <Table sx={{ minWidth: 650 }} aria-label="formacaoDocente table">
+                <StyledTableHead>
+                  <TableRow>
+                    {formacaoDocenteHeaders.map(header => (
+                      <BoldTableCell key={header}>
+                        {formacaoDocenteHeaderDisplayNames[header] || header}
+                      </BoldTableCell>
+                    ))}
+                  </TableRow>
+                </StyledTableHead>
+                <TableBody>
+                  {data.result.map((item, index) => (
+                    <TableRow key={index}>
+                      {formacaoDocenteHeaders.map(header => (
                         <CenteredTableCell key={header}>
                           {item[header]?.toString() || ''}
                         </CenteredTableCell>

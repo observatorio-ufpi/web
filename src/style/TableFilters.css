@@ -74,3 +74,27 @@
   align-items: center;
   gap: 5px;
 }
+
+.filters-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: nowrap;
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+.filter-item {
+  flex: 1;
+  min-width: 200px;
+}
+
+/* Para telas menores, permitir quebra de linha */
+@media (max-width: 1200px) {
+  .filters-row {
+    flex-wrap: wrap;
+  }
+
+  .filter-item {
+    min-width: 180px;
+  }
+}

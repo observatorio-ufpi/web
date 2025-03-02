@@ -1,5 +1,5 @@
 import { Button } from '@mui/material'; // Import the new component
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Select from 'react-select'; // Import react-select
 import '../style/RevenueTableContainer.css'; // Importar o CSS para reutilizar estilos
 import '../style/TableFilters.css';
@@ -11,9 +11,6 @@ function ParentComponent() {
   const [type, setType] = useState('enrollment');
   const [filteredType, setFilteredType] = useState('enrollment');
   const [isHistorical, setIsHistorical] = useState(false);
-  const [startYear, setStartYear] = useState(2007);
-  const [endYear, setEndYear] = useState(2020);
-  const [year, setYear] = useState(2020);
   const [city, setCity] = useState('');
   const [territory, setTerritory] = useState('');
   const [faixaPopulacional, setFaixaPopulacional] = useState('');
@@ -28,7 +25,47 @@ function ParentComponent() {
   const [isLocalidadeSelected, setIsLocalidadeSelected] = useState(false);
   const [isDependenciaSelected, setIsDependenciaSelected] = useState(false);
   const [isVinculoSelected, setIsVinculoSelected] = useState(false);
+  const [isFormacaoDocenteSelected, setIsFormacaoDocenteSelected] = useState(false);
   const [displayHistorical, setDisplayHistorical] = useState(false);
+
+  const yearLimits = useMemo(() => ({
+    enrollment: { min: 2007, max: 2020 },
+    'school/count': { min: 2007, max: 2023 },
+    class: { min: 2007, max: 2023 },
+    teacher: { min: 2007, max: 2020 },
+    auxiliar: { min: 2007, max: 2020 },
+    employees: { min: 2007, max: 2023 }
+  }), []);
+
+  // Função para obter os limites de anos
+  const getYearLimits = useMemo(() => {
+    if (type === 'teacher' && selectedFilters.some(filter => filter.value === 'formacaoDocente')) {
+      return { min: 2012, max: 2020 };
+    }
+    return yearLimits[type] || { min: 2007, max: 2022 };
+  }, [type, selectedFilters, yearLimits]);
+
+  // Usar getYearLimits para yearOptions
+  const yearOptions = useMemo(() => {
+    return Array.from(
+      { length: getYearLimits.max - getYearLimits.min + 1 },
+      (_, i) => getYearLimits.min + i
+    ).map((year) => ({
+      value: year,
+      label: year.toString(),
+    }));
+  }, [getYearLimits]);
+
+  const [startYear, setStartYear] = useState(yearLimits.enrollment.min);
+  const [endYear, setEndYear] = useState(yearLimits.enrollment.max);
+  const [year, setYear] = useState(yearLimits.enrollment.max);
+
+  // Atualizar os anos quando os limites mudarem
+  useEffect(() => {
+    setYear(getYearLimits.max);
+    setStartYear(getYearLimits.min);
+    setEndYear(getYearLimits.max);
+  }, [getYearLimits]);
 
   const handleFilterClick = () => {
     setIsLoading(true);
@@ -42,6 +79,7 @@ function ParentComponent() {
     setIsLocalidadeSelected(selectedFilters.some(filter => filter.value === 'localidade'));
     setIsDependenciaSelected(selectedFilters.some(filter => filter.value === 'dependencia'));
     setIsVinculoSelected(selectedFilters.some(filter => filter.value === 'vinculo'));
+    setIsFormacaoDocenteSelected(selectedFilters.some(filter => filter.value === 'formacaoDocente'));
   };
 
   const handleClearFilters = () => {
@@ -49,9 +87,10 @@ function ParentComponent() {
     setIsHistorical(false);
     setType('enrollment');
     setFilteredType('enrollment');
-    setStartYear(2007);
-    setEndYear(2020);
-    setYear(2020);
+    const limits = yearLimits['enrollment']; // usando enrollment pois é o tipo padrão
+    setStartYear(limits.min);
+    setEndYear(limits.max);
+    setYear(limits.max);
     setCity('');
     setTerritory('');
     setFaixaPopulacional('');
@@ -65,21 +104,23 @@ function ParentComponent() {
     setIsLocalidadeSelected(false);
     setIsDependenciaSelected(false);
     setIsVinculoSelected(false);
+    setIsFormacaoDocenteSelected(false);
   };
 
-  const filteredCities = Object.entries(municipios).filter(([key, { territorioDesenvolvimento, faixaPopulacional: cityFaixaPopulacional }]) => {
-    if (territory && faixaPopulacional) {
-      return territorioDesenvolvimento === Regioes[territory] && cityFaixaPopulacional === FaixaPopulacional[faixaPopulacional];
-    } else if (territory) {
-      return territorioDesenvolvimento === Regioes[territory];
-    } else if (faixaPopulacional) {
-      return cityFaixaPopulacional === FaixaPopulacional[faixaPopulacional];
-    } else if (aglomerado) {
-      return aglomerado === municipios[city].aglomerado;
-    } else if (gerencia) {
-      return gerencia === municipios[city].gerencia;
-    }
-    return true;
+  const filteredCities = Object.entries(municipios).filter(([key, {
+    territorioDesenvolvimento,
+    faixaPopulacional: cityFaixaPopulacional,
+    aglomerado: cityAglomerado,
+    gerencia: cityGerencia
+  }]) => {
+    // Verifica todas as condições selecionadas
+    const matchesTerritory = !territory || territorioDesenvolvimento === Regioes[territory];
+    const matchesFaixaPopulacional = !faixaPopulacional || cityFaixaPopulacional === FaixaPopulacional[faixaPopulacional];
+    const matchesAglomerado = !aglomerado || cityAglomerado === aglomerado;
+    const matchesGerencia = !gerencia || cityGerencia === gerencia;
+
+    // Retorna true apenas se TODAS as condições selecionadas são atendidas
+    return matchesTerritory && matchesFaixaPopulacional && matchesAglomerado && matchesGerencia;
   });
 
   const titleMapping = {
@@ -96,11 +137,6 @@ function ParentComponent() {
     label: label,
   }));
 
-  const yearOptions = Array.from({ length: 2022 - 2007 + 1 }, (_, i) => 2007 + i).map((year) => ({
-    value: year,
-    label: year.toString(),
-  }));
-
   const territoryOptions = Object.entries(Regioes).map(([key, value]) => ({
     value: key,
     label: value,
@@ -111,15 +147,24 @@ function ParentComponent() {
     label: value,
   }));
 
-  const aglomeradoOptions = [...new Set(Object.values(municipios).map(m => m.aglomerado))].map(aglomerado => ({
-    value: aglomerado,
-    label: aglomerado,
-  }));
+  const gerenciaOptions = [...new Set(Object.values(municipios).map(m => m.gerencia))]
+    .flatMap(gerencia => gerencia.split(',').map(g => g.trim()))  // Separa os valores por vírgula
+    .filter(Boolean)  // Remove valores vazios
+    .sort((a, b) => parseInt(a) - parseInt(b))  // Ordenação numérica
+    .map(gerencia => ({
+      value: gerencia,
+      label: 'Gerencia ' + gerencia.padStart(2, '0'),
+    }));
 
-  const gerenciaOptions = [...new Set(Object.values(municipios).map(m => m.gerencia))].map(gerencia => ({
-    value: gerencia,
-    label: gerencia,
-  }));
+  const aglomeradoOptions = [...new Set(Object.values(municipios).map(m => m.aglomerado))]
+    .flatMap(aglomerado => aglomerado.split(',').map(a => a.trim()))  // Separa os valores por vírgula
+    .filter(Boolean)  // Remove valores vazios
+    .sort((a, b) => parseInt(a) - parseInt(b))  // Ordenação numérica
+    .map(aglomerado => ({
+      value: aglomerado,
+      label: 'Aglomerado ' + aglomerado.padStart(2, '0'),
+    }));
+
   const cityOptions = filteredCities.map(([key, { nomeMunicipio }]) => ({
     value: key,
     label: nomeMunicipio,
@@ -134,6 +179,7 @@ function ParentComponent() {
     ...(type !== 'employees' ? [{ value: 'etapa', label: 'Etapa' }] : []),
     { value: 'dependencia', label: 'Dependência Administrativa' },
     ...(type === 'teacher' ? [{ value: 'vinculo', label: 'Vínculo Funcional' }] : []),
+    ...(type === 'teacher' ? [{ value: 'formacaoDocente', label: 'Formação Docente' }] : []),
   ];
 
   return (
@@ -221,8 +267,8 @@ function ParentComponent() {
           </div>
         </div>
 
-        <div className="selects-wrapper">
-          <div className="select-container">
+        <div className="selects-wrapper filters-row">
+          <div className="select-container filter-item">
             <Select
               id="territorySelect"
               value={territoryOptions.find(option => option.value === territory) || null}
@@ -238,7 +284,7 @@ function ParentComponent() {
               placeholder="Território de Desenvolvimento"
             />
           </div>
-          <div className="select-container">
+          <div className="select-container filter-item">
             <Select
               id="faixaPopulacionalSelect"
               value={faixaPopulacionalOptions.find(option => option.value === faixaPopulacional) || null}
@@ -254,7 +300,33 @@ function ParentComponent() {
               placeholder="Faixa Populacional"
             />
           </div>
-          <div className="select-container">
+          <div className="select-container filter-item">
+            <Select
+              id="aglomeradoSelect"
+              value={aglomeradoOptions.find(option => option.value === aglomerado) || null}
+              onChange={(selectedOption) => setAglomerado(selectedOption ? selectedOption.value : '')}
+              options={aglomeradoOptions}
+              className="select-box"
+              styles={customStyles}
+              menuPortalTarget={document.body}
+              isClearable
+              placeholder="Aglomerado"
+            />
+          </div>
+          <div className="select-container filter-item">
+            <Select
+              id="gerenciaSelect"
+              value={gerenciaOptions.find(option => option.value === gerencia) || null}
+              onChange={(selectedOption) => setGerencia(selectedOption ? selectedOption.value : '')}
+              options={gerenciaOptions}
+              className="select-box"
+              styles={customStyles}
+              menuPortalTarget={document.body}
+              isClearable
+              placeholder="Gerencia"
+            />
+          </div>
+          <div className="select-container filter-item">
             <Select
               id="citySelect"
               value={cityOptions.find(option => option.value === city) || null}
@@ -350,7 +422,9 @@ function ParentComponent() {
         city={city}
         territory={territory}
         faixaPopulacional={faixaPopulacional}
-        citiesList={territory || faixaPopulacional ? filteredCities : []}
+        aglomerado={aglomerado}
+        gerencia={gerencia}
+        citiesList={territory || faixaPopulacional || aglomerado || gerencia ? filteredCities : []}
         onDataFetched={setData}
         onError={setError}
         onLoading={setIsLoading}
@@ -367,6 +441,7 @@ function ParentComponent() {
           isVinculoSelected={isVinculoSelected}
           isHistorical={isHistorical}
           type={filteredType}
+          isFormacaoDocenteSelected={isFormacaoDocenteSelected}
         />
       )}
     </div>
