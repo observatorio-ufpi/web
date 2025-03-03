@@ -42,6 +42,8 @@ function ApiContainer({
       if (isEtapaSelected) {
         if (type === 'school/count') {
           selectedDims.push("arrangement");
+        } else if (type === 'liquid_enrollment_ratio' || type === 'gloss_enrollment_ratio') {
+          selectedDims.push("education_level_short");
         } else {
           selectedDims.push("education_level_mod");
         }
@@ -139,6 +141,18 @@ function ApiContainer({
                   crossedData[crossKey] = {
                     arrangement_id: item.arrangement_id,
                     arrangement_name: item.arrangement_name,
+                    location_id: item.location_id,
+                    location_name: item.location_name,
+                    total: 0
+                  };
+                }
+                crossedData[crossKey].total += item.total;
+              } else if (type === 'liquid_enrollment_ratio' || type === 'gloss_enrollment_ratio') {
+                const crossKey = `${item.education_level_short_id}-${item.location_id}`;
+                if (!crossedData[crossKey]) {
+                  crossedData[crossKey] = {
+                    education_level_short_id: item.education_level_short_id,
+                    education_level_short_name: item.education_level_short_name,
                     location_id: item.location_id,
                     location_name: item.location_name,
                     total: 0
@@ -295,6 +309,14 @@ function ApiContainer({
                   };
                 }
                 totalByEtapa[item.arrangement_id].total += item.total;
+              } else if (type === 'liquid_enrollment_ratio' || type === 'gloss_enrollment_ratio') {
+                if (!totalByEtapa[item.education_level_short_id]) {
+                  totalByEtapa[item.education_level_short_id] = {
+                    total: 0,
+                    name: item.education_level_short_name
+                  };
+                }
+                totalByEtapa[item.education_level_short_id].total += item.total;
               } else {
                 if (!totalByEtapa[item.education_level_mod_id]) {
                   totalByEtapa[item.education_level_mod_id] = {
@@ -390,6 +412,14 @@ function ApiContainer({
               total
             }))
           };
+        } else if (type === 'liquid_enrollment_ratio' || type === 'gloss_enrollment_ratio') {
+          return {
+            result: Object.entries(totalByEtapa).map(([id, { total, name }]) => ({
+              education_level_short_id: id,
+              education_level_short_name: name,
+              total
+            }))
+          };
         } else {
         return {
           result: Object.entries(totalByEtapa).map(([id, { total, name }]) => ({
@@ -470,6 +500,9 @@ function ApiContainer({
 
                     if (isEtapaSelected && type === 'school/count' &&
                         y.arrangement_id !== yearData.arrangement_id) return false;
+
+                    if (isEtapaSelected && (type === 'liquid_enrollment_ratio' || type === 'gloss_enrollment_ratio') &&
+                        y.education_level_short_id !== yearData.education_level_short_id) return false;
 
                     if (isDependenciaSelected &&
                         y.adm_dependency_detailed_id !== yearData.adm_dependency_detailed_id) return false;

@@ -115,6 +115,12 @@ const ApiDataTable = ({ data, municipioData, isEtapaSelected, isLocalidadeSelect
     total: 'Total',
   };
 
+  const etapaShortHeaders = ['education_level_short_name', 'total'];
+  const etapaShortHeaderDisplayNames = {
+    education_level_short_name: 'Etapa',
+    total: 'Total',
+  };
+
   // Headers para a tabela de localidade
   const localidadeHeaders = ['location_name', 'total'];
   const localidadeHeaderDisplayNames = {
@@ -152,6 +158,12 @@ const ApiDataTable = ({ data, municipioData, isEtapaSelected, isLocalidadeSelect
           return {
             id: 'arrangement_id',
             name: 'arrangement_name',
+            label: 'Etapa'
+          };
+        } else if (type === 'liquid_enrollment_ratio' || type === 'gloss_enrollment_ratio') {
+          return {
+            id: 'education_level_short_id',
+            name: 'education_level_short_name',
             label: 'Etapa'
           };
         } else {
@@ -274,7 +286,9 @@ const ApiDataTable = ({ data, municipioData, isEtapaSelected, isLocalidadeSelect
                       <CenteredTableCell>{category}</CenteredTableCell>
                       {sortedYears.map(year => (
                         <CenteredTableCell key={year}>
-                          {yearMap.get(year) || 0}
+                          {type === 'liquid_enrollment_ratio' || type === 'gloss_enrollment_ratio'
+                            ? `${Number(yearMap.get(year) || 0).toFixed(2)}%`
+                            : yearMap.get(year) || 0}
                         </CenteredTableCell>
                       ))}
                     </TableRow>
@@ -398,6 +412,14 @@ const ApiDataTable = ({ data, municipioData, isEtapaSelected, isLocalidadeSelect
         columnField = "location_name";
         rowIdField = "arrangement_id";
         columnIdField = "location_id";
+      } else if (type === 'liquid_enrollment_ratio' || type === 'gloss_enrollment_ratio') {
+        crossedData = data?.result?.byEtapaAndLocalidade || [];
+        rowHeader = "Etapa";
+        columnHeader = "Localidade";
+        rowField = "education_level_short_name";
+        columnField = "location_name";
+        rowIdField = "education_level_short_id";
+        columnIdField = "location_id";
       } else {
         crossedData = data?.result?.byEtapaAndLocalidade || [];
         rowHeader = "Etapa";
@@ -512,7 +534,7 @@ const ApiDataTable = ({ data, municipioData, isEtapaSelected, isLocalidadeSelect
                   {Array.from(sortedUniqueColumns.entries()).map(([id, name]) => (
                     <BoldTableCell key={id}>{name}</BoldTableCell>
                   ))}
-                  <BoldTableCell>Total</BoldTableCell>
+                  {type !== 'liquid_enrollment_ratio' && type !== 'gloss_enrollment_ratio' && <BoldTableCell>Total</BoldTableCell>}
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -524,23 +546,29 @@ const ApiDataTable = ({ data, municipioData, isEtapaSelected, isLocalidadeSelect
                       <CenteredTableCell>{rowName}</CenteredTableCell>
                       {Array.from(sortedUniqueColumns.keys()).map(columnId => (
                         <CenteredTableCell key={columnId}>
-                          {cellValues.get(`${rowId}-${columnId}`) || 0}
+                          {type === 'liquid_enrollment_ratio' || type === 'gloss_enrollment_ratio'
+                            ? `${Number(cellValues.get(`${rowId}-${columnId}`) || 0).toFixed(2)}%`
+                            : cellValues.get(`${rowId}-${columnId}`) || 0}
                         </CenteredTableCell>
                       ))}
-                      <CenteredTableCell>{rowTotals.get(rowId)}</CenteredTableCell>
+                      {type !== 'liquid_enrollment_ratio' && type !== 'gloss_enrollment_ratio' &&
+                        <CenteredTableCell>{rowTotals.get(rowId)}</CenteredTableCell>
+                      }
                     </TableRow>
                   ))}
-                <TableRow>
-                  <BoldTableCell>Total</BoldTableCell>
-                  {Array.from(sortedUniqueColumns.keys()).map(columnId => (
-                    <BoldTableCell key={columnId}>
-                      {columnTotals.get(columnId)}
+                {type !== 'liquid_enrollment_ratio' && type !== 'gloss_enrollment_ratio' && (
+                  <TableRow>
+                    <BoldTableCell>Total</BoldTableCell>
+                    {Array.from(sortedUniqueColumns.keys()).map(columnId => (
+                      <BoldTableCell key={columnId}>
+                        {columnTotals.get(columnId)}
+                      </BoldTableCell>
+                    ))}
+                    <BoldTableCell>
+                      {Array.from(rowTotals.values()).reduce((sum, total) => Number(sum) + Number(total || 0), 0)}
                     </BoldTableCell>
-                  ))}
-                  <BoldTableCell>
-                    {Array.from(rowTotals.values()).reduce((sum, total) => Number(sum) + Number(total || 0), 0)}
-                  </BoldTableCell>
-                </TableRow>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
           </TableContainer>
@@ -642,7 +670,7 @@ const ApiDataTable = ({ data, municipioData, isEtapaSelected, isLocalidadeSelect
         }
 
         {/* Nova tabela para etapa */}
-        {isEtapaSelected && !isHistorical && type !== 'school/count' && (
+        {isEtapaSelected && !isHistorical && type !== 'school/count' && type !== 'liquid_enrollment_ratio' && type !== 'gloss_enrollment_ratio' && (
           <Paper
             sx={{
               backgroundColor: theme.palette.background.default,
@@ -675,6 +703,44 @@ const ApiDataTable = ({ data, municipioData, isEtapaSelected, isLocalidadeSelect
             </TableContainer>
           </Paper>
         )}
+
+        {isEtapaSelected && !isHistorical && (type === 'liquid_enrollment_ratio' || type === 'gloss_enrollment_ratio') && (
+          <Paper
+            sx={{
+              backgroundColor: theme.palette.background.default,
+              marginBottom: 2
+            }}
+          >
+            <TableContainer component={Paper} sx={{ maxWidth: '100%', overflowX: 'auto' }}>
+              <Table sx={{ minWidth: 650 }} aria-label="etapa table">
+                <StyledTableHead>
+                  <TableRow>
+                    {etapaShortHeaders.map(header => (
+                      <BoldTableCell key={header}>
+                        {etapaShortHeaderDisplayNames[header] || header}
+                      </BoldTableCell>
+                    ))}
+                  </TableRow>
+                </StyledTableHead>
+                <TableBody>
+                  {data.result.map((item, index) => (
+                    <TableRow key={index}>
+                      {etapaShortHeaders.map(header => (
+                        <CenteredTableCell key={header}>
+                          {header === 'total'
+                            ? `${Number(item[header]).toFixed(2)}%`
+                            : item[header]?.toString() || ''}
+                        </CenteredTableCell>
+                      ))}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Paper>
+        )}
+
+
 
         {isEtapaSelected && !isHistorical && type === 'school/count' && (
           <Paper

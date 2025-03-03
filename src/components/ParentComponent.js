@@ -34,7 +34,10 @@ function ParentComponent() {
     class: { min: 2007, max: 2023 },
     teacher: { min: 2007, max: 2020 },
     auxiliar: { min: 2007, max: 2020 },
-    employees: { min: 2007, max: 2023 }
+    employees: { min: 2007, max: 2023 },
+    out_of_school: { min: 2007, max: 2015 },
+    liquid_enrollment_ratio: { min: 2007, max: 2015 },
+    gloss_enrollment_ratio: { min: 2007, max: 2015 }
   }), []);
 
   // Função para obter os limites de anos
@@ -66,6 +69,16 @@ function ParentComponent() {
     setStartYear(getYearLimits.min);
     setEndYear(getYearLimits.max);
   }, [getYearLimits]);
+
+  // Adicionar este useEffect após os outros useEffects existentes
+  useEffect(() => {
+    if (type === 'liquid_enrollment_ratio' || type === 'gloss_enrollment_ratio') {
+      const etapaFilter = { value: 'etapa', label: 'Etapa de Ensino (Obrigatório)' };
+      if (!selectedFilters.some(filter => filter.value === 'etapa')) {
+        setSelectedFilters([etapaFilter]);
+      }
+    }
+  }, [type]);
 
   const handleFilterClick = () => {
     setIsLoading(true);
@@ -129,7 +142,10 @@ function ParentComponent() {
     class: "Número de turmas",
     teacher: "Número de docentes",
     auxiliar: "Número de auxiliares docentes",
-    employees: "Número de funcionários"
+    employees: "Número de funcionários",
+    out_of_school: "Número de alunos fora da escola",
+    liquid_enrollment_ratio: "Taxa de matrículas líquidas",
+    gloss_enrollment_ratio: "Taxa de matrículas brutas"
   };
 
   const typeOptions = Object.entries(titleMapping).map(([key, label]) => ({
@@ -174,13 +190,20 @@ function ParentComponent() {
     menuPortal: (base) => ({ ...base, zIndex: 9999 }),
   };
 
-  const filterOptions = [
-    { value: 'localidade', label: 'Localidade' },
-    ...(type !== 'employees' ? [{ value: 'etapa', label: 'Etapa' }] : []),
-    { value: 'dependencia', label: 'Dependência Administrativa' },
-    ...(type === 'teacher' ? [{ value: 'vinculo', label: 'Vínculo Funcional' }] : []),
-    ...(type === 'teacher' ? [{ value: 'formacaoDocente', label: 'Formação Docente' }] : []),
-  ];
+  const filterOptions = type === 'out_of_school'
+    ? [{ value: 'localidade', label: 'Localidade' }]
+    : type === 'liquid_enrollment_ratio' || type === 'gloss_enrollment_ratio'
+    ? [
+        { value: 'localidade', label: 'Localidade' },
+        { value: 'etapa', label: 'Etapa (Obrigatório)' }
+      ]
+    : [
+        { value: 'localidade', label: 'Localidade' },
+        ...(type !== 'employees' ? [{ value: 'etapa', label: 'Etapa' }] : []),
+        { value: 'dependencia', label: 'Dependência Administrativa' },
+        ...(type === 'teacher' ? [{ value: 'vinculo', label: 'Vínculo Funcional' }] : []),
+        ...(type === 'teacher' ? [{ value: 'formacaoDocente', label: 'Formação Docente' }] : []),
+      ];
 
   return (
     <div className="app-container">
@@ -282,6 +305,7 @@ function ParentComponent() {
               menuPortalTarget={document.body}
               isClearable
               placeholder="Território de Desenvolvimento"
+              isDisabled={type === 'out_of_school' || type === 'liquid_enrollment_ratio'}
             />
           </div>
           <div className="select-container filter-item">
@@ -298,6 +322,7 @@ function ParentComponent() {
               menuPortalTarget={document.body}
               isClearable
               placeholder="Faixa Populacional"
+              isDisabled={type === 'out_of_school' || type === 'liquid_enrollment_ratio' || type === 'gloss_enrollment_ratio'}
             />
           </div>
           <div className="select-container filter-item">
@@ -311,6 +336,7 @@ function ParentComponent() {
               menuPortalTarget={document.body}
               isClearable
               placeholder="Aglomerado"
+              isDisabled={type === 'out_of_school' || type === 'liquid_enrollment_ratio' || type === 'gloss_enrollment_ratio'}
             />
           </div>
           <div className="select-container filter-item">
@@ -324,6 +350,7 @@ function ParentComponent() {
               menuPortalTarget={document.body}
               isClearable
               placeholder="Gerencia"
+              isDisabled={type === 'out_of_school' || type === 'liquid_enrollment_ratio' || type === 'gloss_enrollment_ratio'}
             />
           </div>
           <div className="select-container filter-item">
@@ -337,6 +364,7 @@ function ParentComponent() {
               menuPortalTarget={document.body}
               isClearable
               placeholder="Cidade"
+              isDisabled={type === 'out_of_school' || type === 'liquid_enrollment_ratio' || type === 'gloss_enrollment_ratio'}
             />
           </div>
         </div>
@@ -346,14 +374,21 @@ function ParentComponent() {
               id="multiFilterSelect"
               value={selectedFilters}
               onChange={(newValue, actionMeta) => {
-                if (displayHistorical) {
-                  // If historical series is selected, allow only one filter
+                if (type === 'liquid_enrollment_ratio' || type === 'gloss_enrollment_ratio') {
+                  const etapaFilter = { value: 'etapa', label: 'Etapa de Ensino (Obrigatório)' };
+
+                  if (newValue.length === 0) {
+                    setSelectedFilters([etapaFilter]);
+                  } else if (!newValue.some(filter => filter.value === 'etapa')) {
+                    setSelectedFilters([etapaFilter, ...newValue.slice(-1)]);
+                  } else {
+                    setSelectedFilters(newValue.slice(-2));
+                  }
+                } else if (displayHistorical) {
                   setSelectedFilters(newValue.slice(-1));
                 } else if (newValue.length <= 2) {
-                  // If not historical, allow up to 2 filters
                   setSelectedFilters(newValue);
                 } else {
-                  // Remove the first item and add the new one
                   setSelectedFilters(newValue.slice(-2));
                 }
               }}
@@ -366,6 +401,20 @@ function ParentComponent() {
             />
           </div>
         </div>
+        {(type === 'out_of_school' || type === 'liquid_enrollment_ratio' || type === 'gloss_enrollment_ratio') && (
+          <div className="info-message" style={{
+            width: '100%',
+            color: '#666',
+            fontSize: '0.85em',
+            marginTop: '5px',
+            marginBottom: '10px',
+            maxWidth: '100%'
+          }}>
+            {type === 'out_of_school'
+              ? 'Para população fora da escola, os dados estão disponíveis apenas para consulta consolidada do estado do Piauí.'
+              : <span>Para taxa de matrículas {type === 'liquid_enrollment_ratio' ? 'líquidas' : 'brutas'}, os dados estão disponíveis apenas para consulta consolidada do estado do Piauí <span style={{ color: '#ff6b6b' }}>e é obrigatório selecionar etapa para consulta</span>.</span>}
+          </div>
+        )}
         <div className="filter-button-container">
           <Button
             variant="contained"
