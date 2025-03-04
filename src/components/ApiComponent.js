@@ -27,6 +27,7 @@ function ApiContainer({
     const isDependenciaSelected = selectedFilters.some((filter) => filter.value === "dependencia");
     const isVinculoSelected = selectedFilters.some((filter) => filter.value === "vinculo");
     const isFormacaoDocenteSelected = selectedFilters.some((filter) => filter.value === "formacaoDocente");
+    const isFaixaEtariaSelected = selectedFilters.some((filter) => filter.value === "faixaEtaria");
 
     const buildFilter = (cityId = null) => {
       const yearFilter = isHistorical
@@ -36,7 +37,7 @@ function ApiContainer({
       return `${yearFilter},state:"${state}"${cityId ? `,city:"${cityId}"` : ""}`;
     };
 
-    const buildUrl = (filter) => {
+    const buildUrl = (filter, forceEndpoint = null) => {
       const selectedDims = [];
 
       if (isEtapaSelected) {
@@ -44,6 +45,10 @@ function ApiContainer({
           selectedDims.push("arrangement");
         } else if (type === 'liquid_enrollment_ratio' || type === 'gloss_enrollment_ratio') {
           selectedDims.push("education_level_short");
+        } else if (forceEndpoint === "enrollmentAggregate") {
+          selectedDims.push("education_level_mod_agg");
+        } else if (forceEndpoint === null && type === 'enrollment' && year >= 2021) {
+          selectedDims.push("education_level_mod_agg");
         } else {
           selectedDims.push("education_level_mod");
         }
@@ -60,11 +65,20 @@ function ApiContainer({
       if (isFormacaoDocenteSelected) {
         selectedDims.push("initial_training");
       }
+      if (isFaixaEtariaSelected) {
+        selectedDims.push("age_range");
+      }
 
 
       const dims = selectedDims.length > 0 ? `dims=${selectedDims.join(",")}` : "";
 
-      return `https://simcaq.c3sl.ufpr.br/api/v1/${type}?${dims}&filter=${encodeURIComponent(filter)}`;
+      // Determinar o endpoint correto
+      let endpoint = forceEndpoint || type;
+      if (!forceEndpoint && type === 'enrollment' && year >= 2021) {
+        endpoint = 'enrollmentAggregate';
+      }
+
+      return `https://simcaq.c3sl.ufpr.br/api/v1/${endpoint}?${dims}&filter=${encodeURIComponent(filter)}`;
     };
 
     const fetchCityData = async (cityId, cityName) => {
@@ -85,12 +99,14 @@ function ApiContainer({
       const totalByDependencia = {};
       const totalByVinculo = {};
       const totalByFormacaoDocente = {};
+      const totalByFaixaEtaria = {};
       const crossedData = {};
       let totalSum = 0;
 
       allResults.forEach((result) => {
         if (Array.isArray(result.result) && result.result.length > 0) {
           result.result.forEach((item) => {
+            item.total = Number(item.total);
             // Cruzamento Localidade x Dependencia
             if (isLocalidadeSelected && isDependenciaSelected) {
               const crossKey = `${item.location_id}-${item.adm_dependency_detailed_id}`;
@@ -113,6 +129,21 @@ function ApiContainer({
                   crossedData[crossKey] = {
                     arrangement_id: item.arrangement_id,
                     arrangement_name: item.arrangement_name,
+                    adm_dependency_detailed_id: item.adm_dependency_detailed_id,
+                    adm_dependency_detailed_name: item.adm_dependency_detailed_name,
+                    total: 0
+                  };
+                }
+                crossedData[crossKey].total += item.total;
+              } else if (type === 'enrollment' && year >= 2021) {
+                if (item.education_level_mod_agg_id === 11) {
+                  return; // Pula este item e continua com o próximo
+                }
+                const crossKey = `${item.education_level_mod_agg_id}-${item.adm_dependency_detailed_id}`;
+                if (!crossedData[crossKey]) {
+                  crossedData[crossKey] = {
+                    education_level_mod_agg_id: item.education_level_mod_agg_id,
+                    education_level_mod_agg_name: item.education_level_mod_agg_name,
                     adm_dependency_detailed_id: item.adm_dependency_detailed_id,
                     adm_dependency_detailed_name: item.adm_dependency_detailed_name,
                     total: 0
@@ -153,6 +184,21 @@ function ApiContainer({
                   crossedData[crossKey] = {
                     education_level_short_id: item.education_level_short_id,
                     education_level_short_name: item.education_level_short_name,
+                    location_id: item.location_id,
+                    location_name: item.location_name,
+                    total: 0
+                  };
+                }
+                crossedData[crossKey].total += item.total;
+              } else if (type === 'enrollment' && year >= 2021) {
+                if (item.education_level_mod_agg_id === 11) {
+                  return; // Pula este item e continua com o próximo
+                }
+                const crossKey = `${item.education_level_mod_agg_id}-${item.location_id}`;
+                if (!crossedData[crossKey]) {
+                  crossedData[crossKey] = {
+                    education_level_mod_agg_id: item.education_level_mod_agg_id,
+                    education_level_mod_agg_name: item.education_level_mod_agg_name,
                     location_id: item.location_id,
                     location_name: item.location_name,
                     total: 0
@@ -317,6 +363,17 @@ function ApiContainer({
                   };
                 }
                 totalByEtapa[item.education_level_short_id].total += item.total;
+              } else if (type === 'enrollment' && year >= 2021 ) {
+                if (item.education_level_mod_agg_id === 11) {
+                  return; // Pula este item e continua com o próximo
+                }
+                if (!totalByEtapa[item.education_level_mod_agg_id]) {
+                  totalByEtapa[item.education_level_mod_agg_id] = {
+                    total: 0,
+                    name: item.education_level_mod_agg_name
+                  };
+                }
+                totalByEtapa[item.education_level_mod_agg_id].total += item.total;
               } else {
                 if (!totalByEtapa[item.education_level_mod_id]) {
                   totalByEtapa[item.education_level_mod_id] = {
@@ -363,6 +420,15 @@ function ApiContainer({
                 };
               }
               totalByFormacaoDocente[item.initial_training_id].total += item.total;
+            }
+            else if (isFaixaEtariaSelected) {
+              if (!totalByFaixaEtaria[item.age_range_id]) {
+                totalByFaixaEtaria[item.age_range_id] = {
+                  total: 0,
+                  name: item.age_range_name
+                };
+              }
+              totalByFaixaEtaria[item.age_range_id].total += item.total;
             }
             else {
               totalSum += item.total;
@@ -466,6 +532,15 @@ function ApiContainer({
           }))
         };
       }
+      if (isFaixaEtariaSelected) {
+        return {
+          result: Object.entries(totalByFaixaEtaria).map(([id, { total, name }]) => ({
+            age_range_id: id,
+            age_range_name: name,
+            total
+          }))
+        };
+      }
 
       return { result: [{ total: totalSum }] };
     };
@@ -480,61 +555,166 @@ function ApiContainer({
           if (citiesList.length > 0 && !city) {
             // Busca dados históricos para múltiplas cidades
             const allResults = await Promise.all(
-              citiesList.map(([cityId, cityInfo]) => fetchCityData(cityId, cityInfo.nomeMunicipio))
+              citiesList.map(async ([cityId, cityInfo]) => {
+                if (type === 'enrollment') {
+                  // Buscar dados antigos (até 2020)
+                  const oldFilter = buildFilter(cityId);
+                  const oldUrl = buildUrl(oldFilter, 'enrollment');
+                  const oldResponse = await fetch(oldUrl);
+                  const oldData = await oldResponse.json();
+
+                  // Buscar dados novos (2021 em diante)
+                  const newFilter = buildFilter(cityId);
+                  const newUrl = buildUrl(newFilter, 'enrollmentAggregate');
+                  const newResponse = await fetch(newUrl);
+                  const newData = await newResponse.json();
+
+                  // Normalizar os campos dos dados novos e filtrar agg_id 11
+                  const normalizedNewData = newData.result
+                    .filter(item => !isEtapaSelected || item.education_level_mod_agg_id !== 11)
+                    .map(item => {
+                      // Só adiciona os campos normalizados se etapa estiver selecionada
+                      if (isEtapaSelected) {
+                        return {
+                          ...item,
+                          education_level_mod_id: item.education_level_mod_agg_id,
+                          education_level_mod_name: item.education_level_mod_agg_name
+                        };
+                      }
+                      return item;
+                    });
+
+                  return {
+                    cityName: cityInfo.nomeMunicipio,
+                    result: [
+                      ...oldData.result.filter(item => item.year < 2021),
+                      ...normalizedNewData.filter(item => item.year >= 2021)
+                    ].sort((a, b) => a.year - b.year)
+                  };
+                } else {
+                  return fetchCityData(cityId, cityInfo.nomeMunicipio);
+                }
+              })
             );
 
             // Soma os resultados por ano e filtros selecionados
+            // Primeiro, vamos coletar todos os dados únicos de todas as cidades
+            const allUniqueData = [];
+            allResults.forEach(cityResult => {
+              cityResult.result.forEach(item => {
+                // Verificar se já existe um item com as mesmas características
+                const existingItem = allUniqueData.find(existing => {
+                  // Verificar ano
+                  if (existing.year !== item.year) return false;
+
+                  // Verificar filtros selecionados
+                  if (isEtapaSelected) {
+                    if (type === 'school/count' && existing.arrangement_id !== item.arrangement_id) return false;
+                    else if ((type === 'liquid_enrollment_ratio' || type === 'gloss_enrollment_ratio') &&
+                             existing.education_level_short_id !== item.education_level_short_id) return false;
+                    else if (existing.education_level_mod_id !== item.education_level_mod_id) return false;
+                  }
+
+                  if (isLocalidadeSelected && existing.location_id !== item.location_id) return false;
+                  if (isDependenciaSelected && existing.adm_dependency_detailed_id !== item.adm_dependency_detailed_id) return false;
+                  if (isVinculoSelected && existing.contract_type_id !== item.contract_type_id) return false;
+                  if (isFormacaoDocenteSelected && existing.initial_training_id !== item.initial_training_id) return false;
+                  if (isFaixaEtariaSelected && existing.age_range_id !== item.age_range_id) return false;
+
+                  return true;
+                });
+
+                if (!existingItem) {
+                  // Se não existe, adiciona à lista
+                  allUniqueData.push({...item, total: 0});
+                }
+              });
+            });
+
+            // Agora, para cada item único, somamos os totais de todas as cidades
+            allUniqueData.forEach(uniqueItem => {
+              allResults.forEach(cityResult => {
+                const matchingItem = cityResult.result.find(item => {
+                  // Verificar ano
+                  if (item.year !== uniqueItem.year) return false;
+
+                  // Verificar filtros selecionados
+                  if (isEtapaSelected) {
+                    if (type === 'school/count' && item.arrangement_id !== uniqueItem.arrangement_id) return false;
+                    else if ((type === 'liquid_enrollment_ratio' || type === 'gloss_enrollment_ratio') &&
+                             item.education_level_short_id !== uniqueItem.education_level_short_id) return false;
+                    else if (item.education_level_mod_id !== uniqueItem.education_level_mod_id) return false;
+                  }
+
+                  if (isLocalidadeSelected && item.location_id !== uniqueItem.location_id) return false;
+                  if (isDependenciaSelected && item.adm_dependency_detailed_id !== uniqueItem.adm_dependency_detailed_id) return false;
+                  if (isVinculoSelected && item.contract_type_id !== uniqueItem.contract_type_id) return false;
+                  if (isFormacaoDocenteSelected && item.initial_training_id !== uniqueItem.initial_training_id) return false;
+                  if (isFaixaEtariaSelected && item.age_range_id !== uniqueItem.age_range_id) return false;
+
+                  return true;
+                });
+
+                if (matchingItem) {
+                  uniqueItem.total += matchingItem.total;
+                }
+              });
+            });
+
             const summedResults = {
-              result: allResults[0].result.map(yearData => {
-                const matchingResults = allResults.map(cityResult =>
-                  cityResult.result.find(y => {
-                    // Verifica o ano
-                    if (y.year !== yearData.year) return false;
-
-                    // Verifica cada filtro selecionado
-                    if (isEtapaSelected &&
-                        y.education_level_mod_id !== yearData.education_level_mod_id) return false;
-
-                    if (isLocalidadeSelected &&
-                        y.location_id !== yearData.location_id) return false;
-
-                    if (isEtapaSelected && type === 'school/count' &&
-                        y.arrangement_id !== yearData.arrangement_id) return false;
-
-                    if (isEtapaSelected && (type === 'liquid_enrollment_ratio' || type === 'gloss_enrollment_ratio') &&
-                        y.education_level_short_id !== yearData.education_level_short_id) return false;
-
-                    if (isDependenciaSelected &&
-                        y.adm_dependency_detailed_id !== yearData.adm_dependency_detailed_id) return false;
-
-                    if (isVinculoSelected &&
-                        y.contract_type_id !== yearData.contract_type_id) return false;
-
-                    if (isFormacaoDocenteSelected &&
-                        y.initial_training_id !== yearData.initial_training_id) return false;
-
-                    return true;
-                  })
-                ).filter(Boolean);
-
-                return {
-                  ...yearData,
-                  total: matchingResults.reduce((sum, result) => sum + result.total, 0)
-                };
-              })
+              result: allUniqueData
             };
 
             onDataFetched(summedResults);
           } else {
-            // Busca histórica original para cidade/estado único
-            const filter = buildFilter(city);
-            const url = buildUrl(filter);
-            const response = await fetch(url);
+            if(type === 'enrollment') {
+              // Buscar dados antigos (até 2020)
+              const oldFilter = buildFilter(city);
+              const oldUrl = buildUrl(oldFilter, 'enrollment');
+              const oldResponse = await fetch(oldUrl);
+              const oldData = await oldResponse.json();
 
-            if (!response.ok) throw new Error(`Erro HTTP! Status: ${response.status}`);
+              // Buscar dados novos (2021 em diante)
+              const newFilter = buildFilter(city);
+              const newUrl = buildUrl(newFilter, 'enrollmentAggregate');
+              const newResponse = await fetch(newUrl);
+              const newData = await newResponse.json();
 
-            const result = await response.json();
-            onDataFetched(result);
+              // Normalizar os campos dos dados novos e filtrar agg_id 11
+              const normalizedNewData = newData.result
+                .filter(item => !isEtapaSelected || item.education_level_mod_agg_id !== 11)
+                .map(item => {
+                  // Só adiciona os campos normalizados se etapa estiver selecionada
+                  if (isEtapaSelected) {
+                    return {
+                      ...item,
+                      education_level_mod_id: item.education_level_mod_agg_id,
+                      education_level_mod_name: item.education_level_mod_agg_name
+                    };
+                  }
+                  return item;
+                });
+
+              // Combinar os resultados
+              const combinedResults = {
+                result: [
+                  ...oldData.result.filter(item => item.year < 2021),
+                  ...normalizedNewData.filter(item => item.year >= 2021)
+                ].sort((a, b) => a.year - b.year)
+              };
+
+              onDataFetched(combinedResults);
+            } else {
+              // Busca histórica original para cidade/estado único
+              const filter = buildFilter(city);
+              const url = buildUrl(filter);
+              const response = await fetch(url);
+
+              if (!response.ok) throw new Error(`Erro HTTP! Status: ${response.status}`);
+
+              const result = await response.json();
+              onDataFetched(result);
+            }
           }
           return;
         }
@@ -558,7 +738,8 @@ function ApiContainer({
           if (!response.ok) throw new Error(`Erro HTTP! Status: ${response.status}`);
 
           const result = await response.json();
-          const allResults = [result]; // Wrap result in an array to use processResults
+          const allResults = [result];
+          console.log("All Results:", allResults);
           const finalResult = processResults(allResults);
           console.log("AQui API Result:", finalResult);
           onDataFetched(finalResult);

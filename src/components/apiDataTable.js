@@ -40,7 +40,7 @@ const CenteredTableCell = styled(TableCell)(({ theme }) => ({
   verticalAlign: 'middle',
 }));
 
-const ApiDataTable = ({ data, municipioData, isEtapaSelected, isLocalidadeSelected, isDependenciaSelected, isVinculoSelected, isHistorical, type, isFormacaoDocenteSelected }) => {
+const ApiDataTable = ({ data, municipioData, isEtapaSelected, isLocalidadeSelected, isDependenciaSelected, isVinculoSelected, isHistorical, type, isFormacaoDocenteSelected, isFaixaEtariaSelected, year }) => {
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
 
@@ -149,6 +149,13 @@ const ApiDataTable = ({ data, municipioData, isEtapaSelected, isLocalidadeSelect
     total: 'Total',
   };
 
+  // Headers para a tabela de faixa etária
+  const faixaEtariaHeaders = ['age_range_name', 'total'];
+  const faixaEtariaHeaderDisplayNames = {
+    age_range_name: 'Faixa Etária',
+    total: 'Total',
+  };
+
 
   const renderHistoricalTable = () => {
     // Determinar quais colunas extras precisamos baseado nos filtros
@@ -202,6 +209,13 @@ const ApiDataTable = ({ data, municipioData, isEtapaSelected, isLocalidadeSelect
           label: 'Formação Docente'
         };
       }
+      if (isFaixaEtariaSelected) {
+        return {
+          id: 'age_range_id',
+          name: 'age_range_name',
+          label: 'Faixa Etária'
+        };
+      }
       return null;
     };
 
@@ -230,7 +244,11 @@ const ApiDataTable = ({ data, municipioData, isEtapaSelected, isLocalidadeSelect
               <TableBody>
                 <TableRow>
                   {sortedYears.map(year => (
-                    <CenteredTableCell key={year}>{yearMap.get(year)}</CenteredTableCell>
+                    <CenteredTableCell key={year}>
+                      {type === 'liquid_enrollment_ratio' || type === 'gloss_enrollment_ratio' || type === 'rate_school_new'
+                        ? `${Number(yearMap.get(year) || 0).toFixed(2)}%`
+                        : yearMap.get(year)}
+                    </CenteredTableCell>
                   ))}
                 </TableRow>
               </TableBody>
@@ -244,13 +262,16 @@ const ApiDataTable = ({ data, municipioData, isEtapaSelected, isLocalidadeSelect
     const categoryYearMap = new Map();
     const years = new Set();
     const categories = new Set();
+    const categoryIds = new Map(); // Novo: Mapa para armazenar IDs das categorias
 
     // Primeiro passo: organizar os dados
     data.result.forEach(item => {
       const year = item.year;
       const categoryName = item[extraColumn.name];
+      const categoryId = item[extraColumn.id]; // Novo: Pegar o ID da categoria
       years.add(year);
       categories.add(categoryName);
+      categoryIds.set(categoryName, categoryId); // Novo: Armazenar o ID
 
       if (!categoryYearMap.has(categoryName)) {
         categoryYearMap.set(categoryName, new Map());
@@ -259,8 +280,11 @@ const ApiDataTable = ({ data, municipioData, isEtapaSelected, isLocalidadeSelect
     });
 
     // Converter Set para Array e ordenar
-    const sortedCategories = [...categories].sort();
     const sortedYears = [...years].sort((a, b) => a - b);
+    const sortedCategories = [...categories].sort((a, b) => {
+      // Ordenar por ID numérico
+      return Number(categoryIds.get(a)) - Number(categoryIds.get(b));
+    });
 
     return (
       <Paper sx={{ padding: 2, backgroundColor: theme.palette.background.default }}>
@@ -286,7 +310,7 @@ const ApiDataTable = ({ data, municipioData, isEtapaSelected, isLocalidadeSelect
                       <CenteredTableCell>{category}</CenteredTableCell>
                       {sortedYears.map(year => (
                         <CenteredTableCell key={year}>
-                          {type === 'liquid_enrollment_ratio' || type === 'gloss_enrollment_ratio'
+                          {type === 'liquid_enrollment_ratio' || type === 'gloss_enrollment_ratio' || type === 'rate_school_new'
                             ? `${Number(yearMap.get(year) || 0).toFixed(2)}%`
                             : yearMap.get(year) || 0}
                         </CenteredTableCell>
@@ -356,6 +380,14 @@ const ApiDataTable = ({ data, municipioData, isEtapaSelected, isLocalidadeSelect
         columnField = "adm_dependency_detailed_name";
         rowIdField = "arrangement_id";
         columnIdField = "adm_dependency_detailed_id";
+      } else if (type === 'enrollment' && year >= 2021) {
+        crossedData = data?.result?.byEtapaAndDependencia || [];
+        rowHeader = "Etapa";
+        columnHeader = "Dependência Administrativa";
+        rowField = "education_level_mod_agg_name";
+        columnField = "adm_dependency_detailed_name";
+        rowIdField = "education_level_mod_agg_id";
+        columnIdField = "adm_dependency_detailed_id";
       } else {
         crossedData = data?.result?.byEtapaAndDependencia || [];
         rowHeader = "Etapa";
@@ -420,12 +452,19 @@ const ApiDataTable = ({ data, municipioData, isEtapaSelected, isLocalidadeSelect
         columnField = "location_name";
         rowIdField = "education_level_short_id";
         columnIdField = "location_id";
+      } else if (type === 'enrollment' && year >= 2021) {
+        crossedData = data?.result?.byEtapaAndLocalidade || [];
+        rowHeader = "Etapa";
+        columnHeader = "Localidade";
+        rowField = "education_level_mod_agg_name";
+        columnField = "location_name";
+        rowIdField = "education_level_mod_agg_id";
+        columnIdField = "location_id";
       } else {
         crossedData = data?.result?.byEtapaAndLocalidade || [];
         rowHeader = "Etapa";
         columnHeader = "Localidade";
         rowField = "education_level_mod_name";
-        columnField = "location_name";
         rowIdField = "education_level_mod_id";
         columnIdField = "location_id";
       }
@@ -599,7 +638,7 @@ const ApiDataTable = ({ data, municipioData, isEtapaSelected, isLocalidadeSelect
           renderHistoricalTable()
         )}
         {/* Primeira tabela */}
-        {!isEtapaSelected && !isLocalidadeSelected && !isDependenciaSelected && !isHistorical && !isVinculoSelected && !isFormacaoDocenteSelected && tableDataArray.map((tableData, tableIndex) => (
+        {!isEtapaSelected && !isLocalidadeSelected && !isDependenciaSelected && !isHistorical && !isVinculoSelected && !isFormacaoDocenteSelected && !isFaixaEtariaSelected && tableDataArray.map((tableData, tableIndex) => (
           <Paper
             key={tableIndex}
             sx={{
@@ -635,7 +674,7 @@ const ApiDataTable = ({ data, municipioData, isEtapaSelected, isLocalidadeSelect
         ))}
 
         {/* Segunda tabela para município */}
-        {!isEtapaSelected && !isLocalidadeSelected && !isDependenciaSelected && !isVinculoSelected && !isFormacaoDocenteSelected && municipioDataArray.length > 0 && // Verifica se há dados
+        {!isEtapaSelected && !isLocalidadeSelected && !isDependenciaSelected && !isVinculoSelected && !isFormacaoDocenteSelected && !isFaixaEtariaSelected && municipioDataArray.length > 0 && // Verifica se há dados
           <Paper
             sx={{
               backgroundColor: theme.palette.background.default,
@@ -832,7 +871,6 @@ const ApiDataTable = ({ data, municipioData, isEtapaSelected, isLocalidadeSelect
               backgroundColor: theme.palette.background.default,
               marginBottom: 2
             }}
-
           >
             <TableContainer component={Paper} sx={{ maxWidth: '100%', overflowX: 'auto' }}>
               <Table sx={{ minWidth: 650 }} aria-label="dependencia table">
@@ -846,15 +884,19 @@ const ApiDataTable = ({ data, municipioData, isEtapaSelected, isLocalidadeSelect
                   </TableRow>
                 </StyledTableHead>
                 <TableBody>
-                  {data.result.map((item, index) => (
-                    <TableRow key={index}>
-                      {dependenciaHeaders.map(header => (
-                        <CenteredTableCell key={header}>
-                          {item[header]?.toString() || ''}
-                        </CenteredTableCell>
-                      ))}
-                    </TableRow>
-                  ))}
+                  {[...data.result]
+                    .sort((a, b) => Number(a.adm_dependency_detailed_id) - Number(b.adm_dependency_detailed_id))
+                    .map((item, index) => (
+                      <TableRow key={index}>
+                        {dependenciaHeaders.map(header => (
+                          <CenteredTableCell key={header}>
+                            {header === 'total' && (type === 'liquid_enrollment_ratio' || type === 'gloss_enrollment_ratio' || type === 'rate_school_new')
+                              ? `${Number(item[header]).toFixed(2)}%`
+                              : item[header]?.toString() || ''}
+                          </CenteredTableCell>
+                        ))}
+                      </TableRow>
+                    ))}
                 </TableBody>
               </Table>
             </TableContainer>
@@ -879,15 +921,19 @@ const ApiDataTable = ({ data, municipioData, isEtapaSelected, isLocalidadeSelect
                   </TableRow>
                 </StyledTableHead>
                 <TableBody>
-                  {data.result.map((item, index) => (
-                    <TableRow key={index}>
-                      {vinculoHeaders.map(header => (
-                        <CenteredTableCell key={header}>
-                          {item[header]?.toString() || ''}
-                        </CenteredTableCell>
-                      ))}
-                    </TableRow>
-                  ))}
+                  {[...data.result]
+                    .sort((a, b) => Number(a.contract_type_id) - Number(b.contract_type_id))
+                    .map((item, index) => (
+                      <TableRow key={index}>
+                        {vinculoHeaders.map(header => (
+                          <CenteredTableCell key={header}>
+                            {header === 'total' && (type === 'liquid_enrollment_ratio' || type === 'gloss_enrollment_ratio' || type === 'rate_school_new')
+                              ? `${Number(item[header]).toFixed(2)}%`
+                              : item[header]?.toString() || ''}
+                          </CenteredTableCell>
+                        ))}
+                      </TableRow>
+                    ))}
                 </TableBody>
               </Table>
             </TableContainer>
@@ -913,15 +959,56 @@ const ApiDataTable = ({ data, municipioData, isEtapaSelected, isLocalidadeSelect
                   </TableRow>
                 </StyledTableHead>
                 <TableBody>
-                  {data.result.map((item, index) => (
-                    <TableRow key={index}>
-                      {formacaoDocenteHeaders.map(header => (
-                        <CenteredTableCell key={header}>
-                          {item[header]?.toString() || ''}
-                        </CenteredTableCell>
-                      ))}
-                    </TableRow>
-                  ))}
+                  {[...data.result]
+                    .sort((a, b) => Number(a.initial_training_id) - Number(b.initial_training_id))
+                    .map((item, index) => (
+                      <TableRow key={index}>
+                        {formacaoDocenteHeaders.map(header => (
+                          <CenteredTableCell key={header}>
+                            {header === 'total' && (type === 'liquid_enrollment_ratio' || type === 'gloss_enrollment_ratio' || type === 'rate_school_new')
+                              ? `${Number(item[header]).toFixed(2)}%`
+                              : item[header]?.toString() || ''}
+                          </CenteredTableCell>
+                        ))}
+                      </TableRow>
+                    ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Paper>
+        )}
+        {isFaixaEtariaSelected && !isHistorical && (
+          <Paper
+            sx={{
+              backgroundColor: theme.palette.background.default,
+              marginBottom: 2
+            }}
+          >
+            <TableContainer component={Paper} sx={{ maxWidth: '100%', overflowX: 'auto' }}>
+              <Table sx={{ minWidth: 650 }} aria-label="faixaEtaria table">
+                <StyledTableHead>
+                  <TableRow>
+                    {faixaEtariaHeaders.map(header => (
+                      <BoldTableCell key={header}>
+                        {faixaEtariaHeaderDisplayNames[header] || header}
+                      </BoldTableCell>
+                    ))}
+                  </TableRow>
+                </StyledTableHead>
+                <TableBody>
+                  {[...data.result]
+                    .sort((a, b) => Number(a.age_range_id) - Number(b.age_range_id))
+                    .map((item, index) => (
+                      <TableRow key={index}>
+                        {faixaEtariaHeaders.map(header => (
+                          <CenteredTableCell key={header}>
+                            {header === 'total'
+                              ? `${Number(item[header]).toFixed(2)}%`
+                              : item[header]?.toString() || ''}
+                          </CenteredTableCell>
+                        ))}
+                      </TableRow>
+                    ))}
                 </TableBody>
               </Table>
             </TableContainer>

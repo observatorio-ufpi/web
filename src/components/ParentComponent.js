@@ -26,10 +26,11 @@ function ParentComponent() {
   const [isDependenciaSelected, setIsDependenciaSelected] = useState(false);
   const [isVinculoSelected, setIsVinculoSelected] = useState(false);
   const [isFormacaoDocenteSelected, setIsFormacaoDocenteSelected] = useState(false);
+  const [isFaixaEtariaSelected, setIsFaixaEtariaSelected] = useState(false);
   const [displayHistorical, setDisplayHistorical] = useState(false);
 
   const yearLimits = useMemo(() => ({
-    enrollment: { min: 2007, max: 2020 },
+    enrollment: { min: 2007, max: 2023 },
     'school/count': { min: 2007, max: 2023 },
     class: { min: 2007, max: 2023 },
     teacher: { min: 2007, max: 2020 },
@@ -37,7 +38,8 @@ function ParentComponent() {
     employees: { min: 2007, max: 2023 },
     out_of_school: { min: 2007, max: 2015 },
     liquid_enrollment_ratio: { min: 2007, max: 2015 },
-    gloss_enrollment_ratio: { min: 2007, max: 2015 }
+    gloss_enrollment_ratio: { min: 2007, max: 2015 },
+    rate_school_new: { min: 2019, max: 2023 }
   }), []);
 
   // Função para obter os limites de anos
@@ -77,8 +79,13 @@ function ParentComponent() {
       if (!selectedFilters.some(filter => filter.value === 'etapa')) {
         setSelectedFilters([etapaFilter]);
       }
+    } else if (type === 'rate_school_new') {
+      const faixaEtariaFilter = { value: 'faixaEtaria', label: 'Faixa Etária (Obrigatório)' };
+      if (!selectedFilters.some(filter => filter.value === 'faixaEtaria')) {
+        setSelectedFilters([faixaEtariaFilter]);
+      }
     }
-  }, [type]);
+  }, [type, selectedFilters]);
 
   const handleFilterClick = () => {
     setIsLoading(true);
@@ -86,13 +93,18 @@ function ParentComponent() {
     setData(null);
     setIsHistorical(displayHistorical);
     setFilteredType(type);
-    const yearDisplay = isHistorical ? `${startYear}-${endYear}` : year;
-    setTitle(type && titleMapping[type] ? `${titleMapping[type]} - ${city ? municipios[city].nomeMunicipio : territory ? '' : "Piauí"}${territory && city === '' ? ` ${Regioes[territory]}` : ''} (${yearDisplay})` : '');
+
+    // Original title generation logic
+    const yearDisplay = displayHistorical ? `${startYear}-${endYear}` : year;
+
+    setTitle(type && titleMapping[type] ? `${titleMapping[type]} - Piauí (${yearDisplay})` : '');
+
     setIsEtapaSelected(selectedFilters.some(filter => filter.value === 'etapa'));
     setIsLocalidadeSelected(selectedFilters.some(filter => filter.value === 'localidade'));
     setIsDependenciaSelected(selectedFilters.some(filter => filter.value === 'dependencia'));
     setIsVinculoSelected(selectedFilters.some(filter => filter.value === 'vinculo'));
     setIsFormacaoDocenteSelected(selectedFilters.some(filter => filter.value === 'formacaoDocente'));
+    setIsFaixaEtariaSelected(selectedFilters.some(filter => filter.value === 'faixaEtaria'));
   };
 
   const handleClearFilters = () => {
@@ -118,6 +130,7 @@ function ParentComponent() {
     setIsDependenciaSelected(false);
     setIsVinculoSelected(false);
     setIsFormacaoDocenteSelected(false);
+    setIsFaixaEtariaSelected(false);
   };
 
   const filteredCities = Object.entries(municipios).filter(([key, {
@@ -145,7 +158,8 @@ function ParentComponent() {
     employees: "Número de funcionários",
     out_of_school: "Número de alunos fora da escola",
     liquid_enrollment_ratio: "Taxa de matrículas líquidas",
-    gloss_enrollment_ratio: "Taxa de matrículas brutas"
+    gloss_enrollment_ratio: "Taxa de matrículas brutas",
+    rate_school_new: "Taxa de atendimento educacional"
   };
 
   const typeOptions = Object.entries(titleMapping).map(([key, label]) => ({
@@ -197,6 +211,8 @@ function ParentComponent() {
         { value: 'localidade', label: 'Localidade' },
         { value: 'etapa', label: 'Etapa (Obrigatório)' }
       ]
+    : type === 'rate_school_new'
+    ? [{ value: 'faixaEtaria', label: 'Faixa Etária (Obrigatório)' }]
     : [
         { value: 'localidade', label: 'Localidade' },
         ...(type !== 'employees' ? [{ value: 'etapa', label: 'Etapa' }] : []),
@@ -214,7 +230,10 @@ function ParentComponent() {
             <Select
               id="typeSelect"
               value={typeOptions.find(option => option.value === type)}
-              onChange={(selectedOption) => setType(selectedOption.value)}
+              onChange={(selectedOption) => {
+                setType(selectedOption.value);
+                setSelectedFilters([]);
+              }}
               options={typeOptions}
               className="select-box"
               styles={customStyles}
@@ -322,7 +341,7 @@ function ParentComponent() {
               menuPortalTarget={document.body}
               isClearable
               placeholder="Faixa Populacional"
-              isDisabled={type === 'out_of_school' || type === 'liquid_enrollment_ratio' || type === 'gloss_enrollment_ratio'}
+              isDisabled={type === 'out_of_school' || type === 'liquid_enrollment_ratio' || type === 'gloss_enrollment_ratio' || type === 'rate_school_new'}
             />
           </div>
           <div className="select-container filter-item">
@@ -336,7 +355,7 @@ function ParentComponent() {
               menuPortalTarget={document.body}
               isClearable
               placeholder="Aglomerado"
-              isDisabled={type === 'out_of_school' || type === 'liquid_enrollment_ratio' || type === 'gloss_enrollment_ratio'}
+              isDisabled={type === 'out_of_school' || type === 'liquid_enrollment_ratio' || type === 'gloss_enrollment_ratio' || type === 'rate_school_new'}
             />
           </div>
           <div className="select-container filter-item">
@@ -350,7 +369,7 @@ function ParentComponent() {
               menuPortalTarget={document.body}
               isClearable
               placeholder="Gerencia"
-              isDisabled={type === 'out_of_school' || type === 'liquid_enrollment_ratio' || type === 'gloss_enrollment_ratio'}
+              isDisabled={type === 'out_of_school' || type === 'liquid_enrollment_ratio' || type === 'gloss_enrollment_ratio' || type === 'rate_school_new'}
             />
           </div>
           <div className="select-container filter-item">
@@ -364,7 +383,7 @@ function ParentComponent() {
               menuPortalTarget={document.body}
               isClearable
               placeholder="Cidade"
-              isDisabled={type === 'out_of_school' || type === 'liquid_enrollment_ratio' || type === 'gloss_enrollment_ratio'}
+              isDisabled={type === 'out_of_school' || type === 'liquid_enrollment_ratio' || type === 'gloss_enrollment_ratio' || type === 'rate_school_new'}
             />
           </div>
         </div>
@@ -401,7 +420,7 @@ function ParentComponent() {
             />
           </div>
         </div>
-        {(type === 'out_of_school' || type === 'liquid_enrollment_ratio' || type === 'gloss_enrollment_ratio') && (
+        {(type === 'out_of_school' || type === 'liquid_enrollment_ratio' || type === 'gloss_enrollment_ratio' || type === 'rate_school_new') && (
           <div className="info-message" style={{
             width: '100%',
             color: '#666',
@@ -412,6 +431,8 @@ function ParentComponent() {
           }}>
             {type === 'out_of_school'
               ? 'Para população fora da escola, os dados estão disponíveis apenas para consulta consolidada do estado do Piauí.'
+              : type === 'rate_school_new'
+              ? <span>Para taxa de atendimento educacional, os dados estão disponíveis apenas para consulta consolidada do estado do Piauí <span style={{ color: '#ff6b6b' }}>e é obrigatório selecionar faixa etaria para consulta</span>.</span>
               : <span>Para taxa de matrículas {type === 'liquid_enrollment_ratio' ? 'líquidas' : 'brutas'}, os dados estão disponíveis apenas para consulta consolidada do estado do Piauí <span style={{ color: '#ff6b6b' }}>e é obrigatório selecionar etapa para consulta</span>.</span>}
           </div>
         )}
@@ -480,7 +501,7 @@ function ParentComponent() {
         triggerFetch={isLoading}
         selectedFilters={selectedFilters}
       />
-      {!isLoading && !error && data && (
+      {!isLoading && !error && data && title ? (
         <ApiDataTable
           data={data.finalResult ? data.finalResult : data}
           municipioData={data.allResults && data.allResults.length > 0 ? data.allResults : []}
@@ -488,11 +509,13 @@ function ParentComponent() {
           isLocalidadeSelected={isLocalidadeSelected}
           isDependenciaSelected={isDependenciaSelected}
           isVinculoSelected={isVinculoSelected}
+          isFaixaEtariaSelected={isFaixaEtariaSelected}
           isHistorical={isHistorical}
           type={filteredType}
           isFormacaoDocenteSelected={isFormacaoDocenteSelected}
+          year={year}
         />
-      )}
+      ) : null}
     </div>
   );
 }
