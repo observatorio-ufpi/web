@@ -72,14 +72,28 @@ function ParentComponent() {
     setEndYear(getYearLimits.max);
   }, [getYearLimits]);
 
-  // Adicionar este useEffect após os outros useEffects existentes
+  // Adicionar este useEffect para limpar filtros desabilitados quando o tipo muda
   useEffect(() => {
+    // Limpar filtros que não se aplicam ao tipo selecionado
+    if (type === 'out_of_school' || type === 'liquid_enrollment_ratio' ||
+        type === 'gloss_enrollment_ratio' || type === 'rate_school_new') {
+      // Limpar filtros geográficos para tipos que só funcionam a nível estadual
+      setCity('');
+      setTerritory('');
+      setFaixaPopulacional('');
+      setAglomerado('');
+      setGerencia('');
+    }
+
+    // Ajustar filtros específicos para cada tipo
     if (type === 'liquid_enrollment_ratio' || type === 'gloss_enrollment_ratio') {
+      // Garantir que etapa esteja selecionada
       const etapaFilter = { value: 'etapa', label: 'Etapa de Ensino (Obrigatório)' };
       if (!selectedFilters.some(filter => filter.value === 'etapa')) {
         setSelectedFilters([etapaFilter]);
       }
     } else if (type === 'rate_school_new') {
+      // Garantir que faixa etária esteja selecionada
       const faixaEtariaFilter = { value: 'faixaEtaria', label: 'Faixa Etária (Obrigatório)' };
       if (!selectedFilters.some(filter => filter.value === 'faixaEtaria')) {
         setSelectedFilters([faixaEtariaFilter]);
@@ -91,13 +105,72 @@ function ParentComponent() {
     setIsLoading(true);
     setError(null);
     setData(null);
+    // Limpar o título antes de definir um novo
+    setTitle('');
+
     setIsHistorical(displayHistorical);
     setFilteredType(type);
 
-    // Original title generation logic
+    // Improved title generation logic
     const yearDisplay = displayHistorical ? `${startYear}-${endYear}` : year;
 
-    setTitle(type && titleMapping[type] ? `${titleMapping[type]} - Piauí (${yearDisplay})` : '');
+    // Get the city name if a city is selected
+    let locationName = "Piauí";
+    if (city) {
+      const selectedCity = municipios[city];
+      if (selectedCity) {
+        locationName = selectedCity.nomeMunicipio;
+      }
+    }
+
+    // Adicionar informações sobre os filtros selecionados
+    let filterInfo = [];
+
+    // Adicionar território se selecionado
+    if (territory) {
+      filterInfo.push(`Território: ${Regioes[territory]}`);
+    }
+
+    // Adicionar faixa populacional se selecionada
+    if (faixaPopulacional) {
+      filterInfo.push(`Faixa Populacional: ${FaixaPopulacional[faixaPopulacional]}`);
+    }
+
+    // Adicionar aglomerado se selecionado
+    if (aglomerado) {
+      filterInfo.push(`Aglomerado: ${aglomerado}`);
+    }
+
+    // Adicionar gerência se selecionada
+    if (gerencia) {
+      filterInfo.push(`Gerência: ${gerencia}`);
+    }
+
+    // Adicionar filtros adicionais selecionados
+    if (selectedFilters.length > 0) {
+      const filterNames = selectedFilters.map(filter => {
+        switch(filter.value) {
+          case 'etapa': return 'Etapa de Ensino';
+          case 'localidade': return 'Localidade';
+          case 'dependencia': return 'Dependência Administrativa';
+          case 'vinculo': return 'Vínculo Funcional';
+          case 'formacaoDocente': return 'Formação Docente';
+          case 'faixaEtaria': return 'Faixa Etária';
+          default: return filter.value;
+        }
+      });
+      filterInfo.push(`Filtros: ${filterNames.join(', ')}`);
+    }
+
+    // Construir o título completo
+    let fullTitle = `${titleMapping[type]} - ${locationName} (${yearDisplay})`;
+
+    // Adicionar informações de filtro se houver
+    if (filterInfo.length > 0) {
+      fullTitle += ` | ${filterInfo.join(' | ')}`;
+    }
+
+    setTitle(type ? fullTitle : '');
 
     setIsEtapaSelected(selectedFilters.some(filter => filter.value === 'etapa'));
     setIsLocalidadeSelected(selectedFilters.some(filter => filter.value === 'localidade'));

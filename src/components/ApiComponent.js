@@ -573,15 +573,22 @@ function ApiContainer({
                   const normalizedNewData = newData.result
                     .filter(item => !isEtapaSelected || item.education_level_mod_agg_id !== 11)
                     .map(item => {
+                      // Converter total para número
+                      const numericTotal = Number(item.total);
+
                       // Só adiciona os campos normalizados se etapa estiver selecionada
                       if (isEtapaSelected) {
                         return {
                           ...item,
                           education_level_mod_id: item.education_level_mod_agg_id,
-                          education_level_mod_name: item.education_level_mod_agg_name
+                          education_level_mod_name: item.education_level_mod_agg_name,
+                          total: numericTotal
                         };
                       }
-                      return item;
+                      return {
+                        ...item,
+                        total: numericTotal
+                      };
                     });
 
                   return {
@@ -656,7 +663,8 @@ function ApiContainer({
                 });
 
                 if (matchingItem) {
-                  uniqueItem.total += matchingItem.total;
+                  // Garantir que estamos somando números, não strings
+                  uniqueItem.total += Number(matchingItem.total);
                 }
               });
             });
@@ -684,15 +692,22 @@ function ApiContainer({
               const normalizedNewData = newData.result
                 .filter(item => !isEtapaSelected || item.education_level_mod_agg_id !== 11)
                 .map(item => {
+                  // Converter total para número
+                  const numericTotal = Number(item.total);
+
                   // Só adiciona os campos normalizados se etapa estiver selecionada
                   if (isEtapaSelected) {
                     return {
                       ...item,
                       education_level_mod_id: item.education_level_mod_agg_id,
-                      education_level_mod_name: item.education_level_mod_agg_name
+                      education_level_mod_name: item.education_level_mod_agg_name,
+                      total: numericTotal
                     };
                   }
-                  return item;
+                  return {
+                    ...item,
+                    total: numericTotal
+                  };
                 });
 
               // Combinar os resultados
