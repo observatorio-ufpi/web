@@ -5,7 +5,7 @@ import {
   processFundebResourcesApplicationControl,
   processEducationalVaatResourcesApplicationControl,
   processCapitalVaatResourcesApplicationControl,
-} from "../utils/processIndicatorsData";
+} from "../../../../../../utils/processIndicatorsData";
 
 const ResourcesApplicationControlCharts = ({ data }) => {
   return (

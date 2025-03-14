@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import '../style/Chart.css';
+import '../../../../../../style/Chart.css';
 import BarChart from './BarChart';
 import * as XLSX from 'xlsx';
 import { FaFileExcel, FaDownload } from 'react-icons/fa';

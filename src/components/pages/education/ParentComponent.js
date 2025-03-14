@@ -1,9 +1,9 @@
 import { Button } from '@mui/material'; // Import the new component
 import React, { useEffect, useMemo, useState } from 'react';
 import Select from 'react-select'; // Import react-select
-import '../style/RevenueTableContainer.css'; // Importar o CSS para reutilizar estilos
-import '../style/TableFilters.css';
-import { FaixaPopulacional, municipios, Regioes } from '../utils/citiesMapping';
+import '../../../style/RevenueTableContainer.css'; // Importar o CSS para reutilizar estilos
+import '../../../style/TableFilters.css';
+import { FaixaPopulacional, municipios, Regioes } from '../../../utils/citiesMapping';
 import ApiContainer from './ApiComponent';
 import ApiDataTable from './apiDataTable';
 

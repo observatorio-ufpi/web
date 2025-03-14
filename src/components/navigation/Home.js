@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, Typography, Grid, Button, Container } from '@mui/material';
 import { FaChartLine, FaGraduationCap } from 'react-icons/fa';
-import '../style/Home.css';
+import '../../style/Home.css';
 
 const Home = () => {
   return (

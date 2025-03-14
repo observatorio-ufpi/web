@@ -1,6 +1,6 @@
 import React from 'react';
 import { Typography, Container, Box, Link } from '@mui/material';
-import '../style/Footer.css';
+import '../../style/Footer.css';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();

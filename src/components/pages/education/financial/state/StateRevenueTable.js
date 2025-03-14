@@ -12,7 +12,7 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import { ThemeProvider, createTheme, styled } from '@mui/material/styles';
 import * as XLSX from 'xlsx';
-import '../style/Buttons.css';
+import '../../../../../style/Buttons.css';
 
 const theme = createTheme({
   palette: {

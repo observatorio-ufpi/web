@@ -1,6 +1,6 @@
 import { Pagination } from '@mui/material';
 import React from 'react';
-import '../style/ChartPagination.css';
+import '../../style/ChartPagination.css';
 
 const CustomPagination = ({ page, totalPages, limit, onPageChange, onLimitChange }) => {
   return (

@@ -1,8 +1,8 @@
 import { Button } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 import Select from 'react-select';
-import '../style/TableFilters.css';
-import { FaixaPopulacional, municipios, Regioes } from '../utils/municipios.mapping';
+import '../../style/TableFilters.css';
+import { FaixaPopulacional, municipios, Regioes } from '../../utils/municipios.mapping';
 
 const findMunicipioCodigo = (nomeMunicipio) => {
   return Object.keys(municipios).find(

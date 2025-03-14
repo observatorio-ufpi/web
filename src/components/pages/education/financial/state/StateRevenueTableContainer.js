@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { loadCSVFile, stateTableNames } from '../services/csvService';
+import { loadCSVFile, stateTableNames } from '../../../../../services/csvService';
 import StateRevenueTable from './StateRevenueTable';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import '../style/RevenueTableContainer.css';
+import '../../../../../style/RevenueTableContainer.css';
 
 const theme = createTheme({
   palette: {

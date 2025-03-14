@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, Typography, Grid, Button, Container } from '@mui/material';
 import { FaCity, FaLandmark, FaChartBar } from 'react-icons/fa';
-import '../style/FinancialDataSelection.css';
+import '../../style/FinancialDataSelection.css';
 
 const FinancialDataSelection = () => {
   return (

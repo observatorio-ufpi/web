@@ -5,7 +5,7 @@ import zoomPlugin from 'chartjs-plugin-zoom';
 import * as XLSX from 'xlsx';
 import { FaFileExcel, FaDownload } from 'react-icons/fa';
 import Button from '@mui/material/Button';
-import '../style/Buttons.css';
+import '../../../../../../style/Buttons.css';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, zoomPlugin);
 

@@ -1,19 +1,19 @@
 import React, { Component } from "react";
-import "../App.css";
-import { fetchData } from "../services/apiService";
-import "../style/ChartPagination.css";
+import "../../../../../../App.css";
+import { fetchData } from "../../../../../../services/apiService";
+import "../../../../../../style/ChartPagination.css";
 import {
   processBasicEducationData,
   processMDEData,
-} from "../utils/processDataCharts";
+} from "../../../../../../utils/processDataCharts";
 import ChartComponent from "./ChartComponent";
-import CustomPagination from "./CustomPagination";
+import CustomPagination from "../../../../../helpers/CustomPagination";
 import EducationExpenseCompositionCharts from "./EducationExpenseCompositionCharts";
 import FinancingCapacityCharts from "./FinancingCapacityCharts";
 import ResourcesApplicationControlCharts from "./ResourcesApplicationControlCharts";
 import RevenueCompositionCharts from "./RevenueCompositionCharts";
 import RpebCompositionCharts from "./RpebCompositionCharts";
-import FilterComponent from "./TableFilters";
+import FilterComponent from "../../../../../helpers/TableFilters";
 
 const endpoints = {
   // Existing endpoints
@@ -567,34 +567,38 @@ class App extends Component {
           gerenciaRegionalMunicipio,
           page: this.state.page,
           limit: this.state.limit,
-        })
-      ]).then(([
-        aplicacaoMde,
-        aplicacaoFundeb,
-        aplicacaoVaatEducacaoInfantil,
-        aplicacaoVaatDespesaCapital,
-      ]) => {
-        this.setState({
-          apiData: {
+        }),
+      ])
+        .then(
+          ([
             aplicacaoMde,
             aplicacaoFundeb,
             aplicacaoVaatEducacaoInfantil,
             aplicacaoVaatDespesaCapital,
-          },
-          loading: false,
-          totalPages: Math.max(
-            ...Object.values({
-              aplicacaoMde,
-              aplicacaoFundeb,
-              aplicacaoVaatEducacaoInfantil,
-              aplicacaoVaatDespesaCapital,
-            }).map((data) => data.pagination?.totalPages || 1)
-          ),
+          ]) => {
+            this.setState({
+              apiData: {
+                aplicacaoMde,
+                aplicacaoFundeb,
+                aplicacaoVaatEducacaoInfantil,
+                aplicacaoVaatDespesaCapital,
+              },
+              loading: false,
+              totalPages: Math.max(
+                ...Object.values({
+                  aplicacaoMde,
+                  aplicacaoFundeb,
+                  aplicacaoVaatEducacaoInfantil,
+                  aplicacaoVaatDespesaCapital,
+                }).map((data) => data.pagination?.totalPages || 1)
+              ),
+            });
+          }
+        )
+        .catch((error) => {
+          console.error(error);
+          this.setState({ error: error.message, loading: false });
         });
-      }).catch((error) => {
-        console.error(error);
-        this.setState({ error: error.message, loading: false });
-      });
     } else if (selectedTable === "financingCapacity") {
       Promise.all([
         fetchData("composicao_fundeb_financiamento", groupType, {
@@ -616,24 +620,23 @@ class App extends Component {
           limit: this.state.limit,
         }),
       ])
-        .then(([
-          composicaoFundebFinanciamento,
-          composicaoRpebFinanciamento,
-        ]) => {
-          this.setState({
-            apiData: {
-              composicaoFundebFinanciamento,
-              composicaoRpebFinanciamento,
-            },
-            loading: false,
-            totalPages: Math.max(
-              ...Object.values({
+        .then(
+          ([composicaoFundebFinanciamento, composicaoRpebFinanciamento]) => {
+            this.setState({
+              apiData: {
                 composicaoFundebFinanciamento,
                 composicaoRpebFinanciamento,
-              }).map((data) => data.pagination?.totalPages || 1)
-            ),
-          });
-        })
+              },
+              loading: false,
+              totalPages: Math.max(
+                ...Object.values({
+                  composicaoFundebFinanciamento,
+                  composicaoRpebFinanciamento,
+                }).map((data) => data.pagination?.totalPages || 1)
+              ),
+            });
+          }
+        )
         .catch((error) => {
           console.error(error);
           this.setState({ error: error.message, loading: false });
