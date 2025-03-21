@@ -6,7 +6,7 @@ import {
   processMdePessoalInativo,
   processMdeCapital,
   processMdeTransferenciasInstituicoesPrivadas,
-} from "../utils/processIndicatorsData";
+} from "../../../../../../utils/processIndicatorsData";
 
 const EducationExpenseCompositionCharts = ({ data }) => {
   return (

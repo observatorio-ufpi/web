@@ -18,7 +18,7 @@ import {
   processRazaoImpostosTransferencias,
   processRazaoTransferenciasImpostos,
   processParticipacaoFundeb,
-} from "../utils/processIndicatorsData";
+} from "../../../../../../utils/processIndicatorsData";
 
 const RevenueCompositionCharts = ({ data }) => {
   return (

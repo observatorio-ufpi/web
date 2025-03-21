@@ -5,7 +5,7 @@ import {
   processResultadoLiquidoFundeb,
   processParticipacaoComplementacaoUniao,
   processParticipacaoReceitasAdicionais,
-} from "../utils/processIndicatorsData";
+} from "../../../../../../utils/processIndicatorsData";
 
 const RpebCompositionCharts = ({ data }) => {
   return (
