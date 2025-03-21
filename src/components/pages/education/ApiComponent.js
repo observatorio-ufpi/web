@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { processResults as processApiResults } from "../services/dataProcessors";
+import { processResults as processApiResults } from "../../../services/dataProcessors";
 
 function ApiContainer({
   type,
