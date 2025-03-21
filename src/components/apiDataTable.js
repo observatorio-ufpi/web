@@ -9,6 +9,9 @@ import TableRow from '@mui/material/TableRow';
 import { ThemeProvider, createTheme, styled } from '@mui/material/styles';
 import React from 'react';
 
+// ==========================================
+// TEMA E ESTILOS
+// ==========================================
 const theme = createTheme({
   palette: {
     background: {
@@ -40,7 +43,614 @@ const CenteredTableCell = styled(TableCell)(({ theme }) => ({
   verticalAlign: 'middle',
 }));
 
-const ApiDataTable = ({ data, municipioData, isEtapaSelected, isLocalidadeSelected, isDependenciaSelected, isVinculoSelected, isHistorical, type, isFormacaoDocenteSelected, isFaixaEtariaSelected, year }) => {
+// ==========================================
+// CONSTANTES E CONFIGURAÇÕES
+// ==========================================
+
+// Tipos de dados que usam formatação de porcentagem
+const RATIO_TYPES = ['liquid_enrollment_ratio', 'gloss_enrollment_ratio', 'rate_school_new'];
+
+// Nota para tabelas de etapa escolar
+const ETAPA_ESCOLA_NOTE = "Nota: Ao selecionar etapa e modalidade de oferta ao montar sua consulta, temos os seguintes significados das abreviações: CRE – creche; PRE - pré-escola; EF-AI - Ensino Fundamental - Anos Iniciais; EF-AF - Ensino Fundamental - Anos Finais; MULTIETAPA - Ed. Infantil Unificada/Multietapa/Multissérie/Correção fluxo; EM - Ensino Médio; EJA - Educação de Jovens e Adultos; PROF - Educação Profissional; EE - Educação Especial Exclusivo.";
+
+// Configurações de cabeçalhos para diferentes tipos de tabelas
+const HEADERS = {
+  // Cabeçalhos padrão
+  default: ['total'],
+
+  // Cabeçalhos para município
+  municipio: ['cityName', 'total'],
+
+  // Cabeçalhos para etapa
+  etapa: {
+    standard: ['education_level_mod_name', 'total'],
+    school: ['arrangement_name', 'total'],
+    short: ['education_level_short_name', 'total']
+  },
+
+  // Cabeçalhos para localidade
+  localidade: ['location_name', 'total'],
+
+  // Cabeçalhos para dependência administrativa
+  dependencia: ['adm_dependency_detailed_name', 'total'],
+
+  // Cabeçalhos para vínculo funcional
+  vinculo: ['contract_type_name', 'total'],
+
+  // Cabeçalhos para formação docente
+  formacaoDocente: ['initial_training_name', 'total'],
+
+  // Cabeçalhos para faixa etária
+  faixaEtaria: ['age_range_name', 'total']
+};
+
+// Nomes de exibição para cabeçalhos
+const HEADER_DISPLAY_NAMES = {
+  total: 'Total',
+  cityName: 'Município',
+  education_level_mod_name: 'Etapa',
+  arrangement_name: 'Etapa',
+  education_level_short_name: 'Etapa',
+  location_name: 'Localidade',
+  adm_dependency_detailed_name: 'Dependência Administrativa',
+  contract_type_name: 'Vínculo Funcional',
+  initial_training_name: 'Formação Docente',
+  age_range_name: 'Faixa Etária'
+};
+
+// Configurações para tabelas cruzadas
+const CROSS_TABLE_CONFIGS = {
+  // Etapa x Localidade
+  etapaLocalidade: {
+    dataKey: 'byEtapaAndLocalidade',
+    configs: {
+      standard: {
+        rowField: 'education_level_mod_name',
+        rowIdField: 'education_level_mod_id',
+        columnField: 'location_name',
+        columnIdField: 'location_id',
+        rowHeader: 'Etapa'
+      },
+      school: {
+        rowField: 'arrangement_name',
+        rowIdField: 'arrangement_id',
+        columnField: 'location_name',
+        columnIdField: 'location_id',
+        rowHeader: 'Etapa'
+      },
+      short: {
+        rowField: 'education_level_short_name',
+        rowIdField: 'education_level_short_id',
+        columnField: 'location_name',
+        columnIdField: 'location_id',
+        rowHeader: 'Etapa'
+      },
+      agg: {
+        rowField: 'education_level_mod_agg_name',
+        rowIdField: 'education_level_mod_agg_id',
+        columnField: 'location_name',
+        columnIdField: 'location_id',
+        rowHeader: 'Etapa'
+      }
+    }
+  },
+
+  // Etapa x Dependência
+  etapaDependencia: {
+    dataKey: 'byEtapaAndDependencia',
+    configs: {
+      standard: {
+        rowField: 'education_level_mod_name',
+        rowIdField: 'education_level_mod_id',
+        columnField: 'adm_dependency_detailed_name',
+        columnIdField: 'adm_dependency_detailed_id',
+        rowHeader: 'Etapa'
+      },
+      school: {
+        rowField: 'arrangement_name',
+        rowIdField: 'arrangement_id',
+        columnField: 'adm_dependency_detailed_name',
+        columnIdField: 'adm_dependency_detailed_id',
+        rowHeader: 'Etapa'
+      },
+      agg: {
+        rowField: 'education_level_mod_agg_name',
+        rowIdField: 'education_level_mod_agg_id',
+        columnField: 'adm_dependency_detailed_name',
+        columnIdField: 'adm_dependency_detailed_id',
+        rowHeader: 'Etapa'
+      }
+    }
+  },
+
+  // Localidade x Dependência
+  localidadeDependencia: {
+    dataKey: 'byLocalidadeAndDependencia',
+    config: {
+      rowField: 'location_name',
+      rowIdField: 'location_id',
+      columnField: 'adm_dependency_detailed_name',
+      columnIdField: 'adm_dependency_detailed_id',
+      rowHeader: 'Localidade'
+    }
+  },
+
+  // Etapa x Vínculo
+  etapaVinculo: {
+    dataKey: 'byEtapaAndVinculo',
+    configs: {
+      standard: {
+        rowField: 'education_level_mod_name',
+        rowIdField: 'education_level_mod_id',
+        columnField: 'contract_type_name',
+        columnIdField: 'contract_type_id',
+        rowHeader: 'Etapa'
+      },
+      school: {
+        rowField: 'arrangement_name',
+        rowIdField: 'arrangement_id',
+        columnField: 'contract_type_name',
+        columnIdField: 'contract_type_id',
+        rowHeader: 'Etapa'
+      }
+    }
+  },
+
+  // Localidade x Vínculo
+  localidadeVinculo: {
+    dataKey: 'byLocalidadeAndVinculo',
+    config: {
+      rowField: 'location_name',
+      rowIdField: 'location_id',
+      columnField: 'contract_type_name',
+      columnIdField: 'contract_type_id',
+      rowHeader: 'Localidade'
+    }
+  },
+
+  // Dependência x Vínculo
+  dependenciaVinculo: {
+    dataKey: 'byDependenciaAndVinculo',
+    config: {
+      rowField: 'adm_dependency_detailed_name',
+      rowIdField: 'adm_dependency_detailed_id',
+      columnField: 'contract_type_name',
+      columnIdField: 'contract_type_id',
+      rowHeader: 'Dependência Administrativa'
+    }
+  },
+
+  // Localidade x Formação Docente
+  localidadeFormacaoDocente: {
+    dataKey: 'byLocalidadeAndFormacaoDocente',
+    config: {
+      rowField: 'location_name',
+      rowIdField: 'location_id',
+      columnField: 'initial_training_name',
+      columnIdField: 'initial_training_id',
+      rowHeader: 'Localidade'
+    }
+  },
+
+  // Dependência x Formação Docente
+  dependenciaFormacaoDocente: {
+    dataKey: 'byDependenciaAndFormacaoDocente',
+    config: {
+      rowField: 'adm_dependency_detailed_name',
+      rowIdField: 'adm_dependency_detailed_id',
+      columnField: 'initial_training_name',
+      columnIdField: 'initial_training_id',
+      rowHeader: 'Dependência Administrativa'
+    }
+  },
+
+  // Vínculo x Formação Docente
+  vinculoFormacaoDocente: {
+    dataKey: 'byVinculoAndFormacaoDocente',
+    config: {
+      rowField: 'contract_type_name',
+      rowIdField: 'contract_type_id',
+      columnField: 'initial_training_name',
+      columnIdField: 'initial_training_id',
+      rowHeader: 'Vínculo Funcional'
+    }
+  },
+
+  // Etapa x Formação Docente
+  etapaFormacaoDocente: {
+    dataKey: 'byEtapaAndFormacaoDocente',
+    configs: {
+      standard: {
+        rowField: 'education_level_mod_name',
+        rowIdField: 'education_level_mod_id',
+        columnField: 'initial_training_name',
+        columnIdField: 'initial_training_id',
+        rowHeader: 'Etapa'
+      },
+      school: {
+        rowField: 'arrangement_name',
+        rowIdField: 'arrangement_id',
+        columnField: 'initial_training_name',
+        columnIdField: 'initial_training_id',
+        rowHeader: 'Etapa'
+      }
+    }
+  }
+};
+
+// ==========================================
+// FUNÇÕES UTILITÁRIAS
+// ==========================================
+
+// Verifica se o tipo de dados deve ser formatado como porcentagem
+const isRatioType = (type) => RATIO_TYPES.includes(type);
+
+// Obtém a configuração de etapa com base no tipo e ano
+const getEtapaConfig = (type, year) => {
+  if (type === 'school/count') {
+    return 'school';
+  } else if (type === 'liquid_enrollment_ratio' || type === 'gloss_enrollment_ratio') {
+    return 'short';
+  } else if (type === 'enrollment' && year >= 2021) {
+    return 'agg';
+  }
+  return 'standard';
+};
+
+// Obtém a configuração para tabela cruzada com base nos filtros selecionados
+const getCrossTableConfig = (filters, type, year) => {
+  const { isEtapaSelected, isLocalidadeSelected, isDependenciaSelected, isVinculoSelected, isFormacaoDocenteSelected } = filters;
+
+  if (isEtapaSelected && isLocalidadeSelected) {
+    const etapaType = getEtapaConfig(type, year);
+    return {
+      dataKey: CROSS_TABLE_CONFIGS.etapaLocalidade.dataKey,
+      ...CROSS_TABLE_CONFIGS.etapaLocalidade.configs[etapaType]
+    };
+  }
+
+  if (isEtapaSelected && isDependenciaSelected) {
+    const etapaType = getEtapaConfig(type, year);
+    return {
+      dataKey: CROSS_TABLE_CONFIGS.etapaDependencia.dataKey,
+      ...CROSS_TABLE_CONFIGS.etapaDependencia.configs[etapaType]
+    };
+  }
+
+  if (isLocalidadeSelected && isDependenciaSelected) {
+    return {
+      dataKey: CROSS_TABLE_CONFIGS.localidadeDependencia.dataKey,
+      ...CROSS_TABLE_CONFIGS.localidadeDependencia.config
+    };
+  }
+
+  if (isEtapaSelected && isVinculoSelected) {
+    const etapaType = type === 'school/count' ? 'school' : 'standard';
+    return {
+      dataKey: CROSS_TABLE_CONFIGS.etapaVinculo.dataKey,
+      ...CROSS_TABLE_CONFIGS.etapaVinculo.configs[etapaType]
+    };
+  }
+
+  if (isLocalidadeSelected && isVinculoSelected) {
+    return {
+      dataKey: CROSS_TABLE_CONFIGS.localidadeVinculo.dataKey,
+      ...CROSS_TABLE_CONFIGS.localidadeVinculo.config
+    };
+  }
+
+  if (isDependenciaSelected && isVinculoSelected) {
+    return {
+      dataKey: CROSS_TABLE_CONFIGS.dependenciaVinculo.dataKey,
+      ...CROSS_TABLE_CONFIGS.dependenciaVinculo.config
+    };
+  }
+
+  if (isLocalidadeSelected && isFormacaoDocenteSelected) {
+    return {
+      dataKey: CROSS_TABLE_CONFIGS.localidadeFormacaoDocente.dataKey,
+      ...CROSS_TABLE_CONFIGS.localidadeFormacaoDocente.config
+    };
+  }
+
+  if (isDependenciaSelected && isFormacaoDocenteSelected) {
+    return {
+      dataKey: CROSS_TABLE_CONFIGS.dependenciaFormacaoDocente.dataKey,
+      ...CROSS_TABLE_CONFIGS.dependenciaFormacaoDocente.config
+    };
+  }
+
+  if (isVinculoSelected && isFormacaoDocenteSelected) {
+    return {
+      dataKey: CROSS_TABLE_CONFIGS.vinculoFormacaoDocente.dataKey,
+      ...CROSS_TABLE_CONFIGS.vinculoFormacaoDocente.config
+    };
+  }
+
+  if (isEtapaSelected && isFormacaoDocenteSelected) {
+    const etapaType = type === 'school/count' ? 'school' : 'standard';
+    return {
+      dataKey: CROSS_TABLE_CONFIGS.etapaFormacaoDocente.dataKey,
+      ...CROSS_TABLE_CONFIGS.etapaFormacaoDocente.configs[etapaType]
+    };
+  }
+
+  return null;
+};
+
+// Processa dados para tabela cruzada
+const processCrossTableData = (data, rowIdField, columnIdField, rowField, columnField) => {
+  const uniqueRows = new Map();
+  const uniqueColumns = new Map();
+  const cellValues = new Map();
+
+  // Processar os dados
+  data.forEach(item => {
+    const rowId = item[rowIdField];
+    const columnId = item[columnIdField];
+    const rowName = item[rowField];
+    const columnName = item[columnField];
+    const total = item.total;
+
+    uniqueRows.set(rowId, rowName);
+    uniqueColumns.set(columnId, columnName);
+    cellValues.set(`${rowId}-${columnId}`, total);
+  });
+
+  // Ordenar linhas e colunas por ID numericamente
+  const sortedUniqueRows = new Map([...uniqueRows.entries()].sort((a, b) => {
+    return parseInt(a[0], 10) - parseInt(b[0], 10);
+  }));
+
+  const sortedUniqueColumns = new Map([...uniqueColumns.entries()].sort((a, b) => {
+    return parseInt(a[0], 10) - parseInt(b[0], 10);
+  }));
+
+  // Calcular totais das linhas
+  const rowTotals = new Map();
+  sortedUniqueRows.forEach((_, rowId) => {
+    const total = Array.from(sortedUniqueColumns.keys())
+      .reduce((sum, colId) => Number(sum) + Number(cellValues.get(`${rowId}-${colId}`) || 0), 0);
+    rowTotals.set(rowId, total);
+  });
+
+  // Calcular totais das colunas
+  const columnTotals = new Map();
+  sortedUniqueColumns.forEach((_, colId) => {
+    const total = Array.from(sortedUniqueRows.keys())
+      .reduce((sum, rowId) => Number(sum) + Number(cellValues.get(`${rowId}-${colId}`) || 0), 0);
+    columnTotals.set(colId, total);
+  });
+
+  return {
+    uniqueRows: sortedUniqueRows,
+    uniqueColumns: sortedUniqueColumns,
+    cellValues,
+    rowTotals,
+    columnTotals
+  };
+};
+
+// Verifica se os dados estão vazios
+const hasNoData = (data, tableDataArray, municipioDataArray) => {
+  const noFilterData = !Array.isArray(data?.result) || data.result.length === 0;
+  const noCrossData = !data?.result?.byEtapaAndLocalidade?.length &&
+                      !data?.result?.byEtapaAndDependencia?.length &&
+                      !data?.result?.byLocalidadeAndDependencia?.length &&
+                      !data?.result?.byEtapaAndVinculo?.length &&
+                      !data?.result?.byLocalidadeAndVinculo?.length &&
+                      !data?.result?.byDependenciaAndVinculo?.length &&
+                      !data?.result?.byLocalidadeAndFormacaoDocente?.length &&
+                      !data?.result?.byDependenciaAndFormacaoDocente?.length &&
+                      !data?.result?.byVinculoAndFormacaoDocente?.length &&
+                      !data?.result?.byEtapaAndFormacaoDocente?.length;
+
+  return noFilterData && noCrossData &&
+         tableDataArray.every(arr => !Array.isArray(arr) || arr.length === 0) &&
+         municipioDataArray.every(arr => !Array.isArray(arr) || arr.length === 0);
+};
+
+// ==========================================
+// COMPONENTES REUTILIZÁVEIS
+// ==========================================
+
+// Componente de tabela básica
+const BasicTable = ({ headers, data, formatTotal = false, sortField = null }) => {
+  const sortedData = sortField
+    ? [...data].sort((a, b) => Number(a[sortField]) - Number(b[sortField]))
+    : data;
+
+  return (
+    <TableContainer component={Paper} sx={{ maxWidth: '100%', overflowX: 'auto' }}>
+      <Table sx={{ minWidth: 650 }} aria-label="data table">
+        <StyledTableHead>
+          <TableRow>
+            {headers.map(header => (
+              <BoldTableCell key={header}>
+                {HEADER_DISPLAY_NAMES[header] || header}
+              </BoldTableCell>
+            ))}
+          </TableRow>
+        </StyledTableHead>
+        <TableBody>
+          {sortedData.map((item, index) => (
+            <TableRow key={index}>
+              {headers.map(header => (
+                <CenteredTableCell key={header}>
+                  {header === 'total' && formatTotal
+                    ? `${Number(item[header] || 0).toFixed(2)}%`
+                    : item[header]?.toString() || ''}
+                </CenteredTableCell>
+              ))}
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </TableContainer>
+  );
+};
+
+// Componente de tabela com paginação
+const PaginatedTable = ({
+  headers,
+  data,
+  page,
+  rowsPerPage,
+  handleChangePage,
+  handleChangeRowsPerPage,
+  formatTotal = false,
+  sortField = null,
+  note = null
+}) => {
+  const sortedData = sortField
+    ? [...data].sort((a, b) => Number(a[sortField]) - Number(b[sortField]))
+    : data;
+
+  return (
+    <>
+      <TableContainer component={Paper} sx={{ maxWidth: '100%', overflowX: 'auto' }}>
+        <Table sx={{ minWidth: 650 }} aria-label="paginated table">
+          <StyledTableHead>
+            <TableRow>
+              {headers.map(header => (
+                <BoldTableCell key={header}>
+                  {HEADER_DISPLAY_NAMES[header] || header}
+                </BoldTableCell>
+              ))}
+            </TableRow>
+          </StyledTableHead>
+          <TableBody>
+            {sortedData
+              .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+              .map((item, index) => (
+                <TableRow key={index}>
+                  {headers.map(header => (
+                    <CenteredTableCell key={header}>
+                      {header === 'total' && formatTotal
+                        ? `${Number(item[header] || 0).toFixed(2)}%`
+                        : item[header]?.toString() || ''}
+                    </CenteredTableCell>
+                  ))}
+                </TableRow>
+              ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+      <TablePagination
+        component="div"
+        count={sortedData.length}
+        page={page}
+        onPageChange={handleChangePage}
+        rowsPerPage={rowsPerPage}
+        onRowsPerPageChange={handleChangeRowsPerPage}
+        rowsPerPageOptions={[5, 10, 25, 50]}
+        labelRowsPerPage="Linhas por página:"
+        labelDisplayedRows={({ from, to, count }) =>
+          `${from}-${to} de ${count !== -1 ? count : `mais de ${to}`}`
+        }
+      />
+      {note && <p>{note}</p>}
+    </>
+  );
+};
+
+// Componente para tabela cruzada
+const CrossTable = ({
+  rowHeader,
+  uniqueRows,
+  uniqueColumns,
+  cellValues,
+  rowTotals,
+  columnTotals,
+  type,
+  isEtapaSelected,
+  page,
+  rowsPerPage,
+  handleChangePage,
+  handleChangeRowsPerPage
+}) => {
+  const showTotals = !isRatioType(type);
+
+  return (
+    <>
+      <TableContainer component={Paper} sx={{ maxWidth: '100%', overflowX: 'auto' }}>
+        <Table sx={{ minWidth: 650 }} aria-label="combined table">
+          <TableHead>
+            <TableRow>
+              <BoldTableCell>{rowHeader}</BoldTableCell>
+              {Array.from(uniqueColumns.entries()).map(([id, name]) => (
+                <BoldTableCell key={id}>{name}</BoldTableCell>
+              ))}
+              {showTotals && <BoldTableCell>Total</BoldTableCell>}
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {Array.from(uniqueRows.entries())
+              .slice(type === 'school/count' && isEtapaSelected ? page * rowsPerPage : 0,
+                    type === 'school/count' && isEtapaSelected ? page * rowsPerPage + rowsPerPage : undefined)
+              .map(([rowId, rowName]) => (
+                <TableRow key={rowId}>
+                  <CenteredTableCell>{rowName}</CenteredTableCell>
+                  {Array.from(uniqueColumns.keys()).map(columnId => (
+                    <CenteredTableCell key={columnId}>
+                      {isRatioType(type)
+                        ? `${Number(cellValues.get(`${rowId}-${columnId}`) || 0).toFixed(2)}%`
+                        : cellValues.get(`${rowId}-${columnId}`) || 0}
+                    </CenteredTableCell>
+                  ))}
+                  {showTotals &&
+                    <CenteredTableCell>{rowTotals.get(rowId)}</CenteredTableCell>
+                  }
+                </TableRow>
+              ))}
+            {showTotals && (
+              <TableRow>
+                <BoldTableCell>Total</BoldTableCell>
+                {Array.from(uniqueColumns.keys()).map(columnId => (
+                  <BoldTableCell key={columnId}>
+                    {columnTotals.get(columnId)}
+                  </BoldTableCell>
+                ))}
+                <BoldTableCell>
+                  {Array.from(rowTotals.values()).reduce((sum, total) => Number(sum) + Number(total || 0), 0)}
+                </BoldTableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
+      {type === 'school/count' && isEtapaSelected && (
+        <TablePagination
+          component="div"
+          count={uniqueRows.size}
+          page={page}
+          onPageChange={handleChangePage}
+          rowsPerPage={rowsPerPage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+          rowsPerPageOptions={[5, 10, 25, 50]}
+          labelRowsPerPage="Linhas por página:"
+          labelDisplayedRows={({ from, to, count }) =>
+            `${from}-${to} de ${count !== -1 ? count : `mais de ${to}`}`
+          }
+        />
+      )}
+    </>
+  );
+};
+
+const ApiDataTable = ({
+  data,
+  municipioData,
+  isEtapaSelected,
+  isLocalidadeSelected,
+  isDependenciaSelected,
+  isVinculoSelected,
+  isHistorical,
+  type,
+  isFormacaoDocenteSelected,
+  isFaixaEtariaSelected,
+  year
+}) => {
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
 
@@ -53,29 +663,15 @@ const ApiDataTable = ({ data, municipioData, isEtapaSelected, isLocalidadeSelect
     setPage(0);
   };
 
+  // Preparação de dados
   const tableDataArray = [data?.result || []];
   const municipioDataArray = municipioData?.map(m => ({
     cityName: m.cityName,
     total: m.result?.[0]?.total || 0,
-    // year: m.result?.[0]?.year || "Desconhecido",
   }));
 
-  // Validação dos dados
-  if (
-    (!data?.result?.byEtapaAndLocalidade || data.result.byEtapaAndLocalidade.length === 0) &&
-    (!data?.result?.byEtapaAndDependencia || data.result.byEtapaAndDependencia.length === 0) &&
-    (!data?.result?.byLocalidadeAndDependencia || data.result.byLocalidadeAndDependencia.length === 0) &&
-    (!data?.result?.byEtapaAndVinculo || data.result.byEtapaAndVinculo.length === 0) &&
-    (!data?.result?.byLocalidadeAndVinculo || data.result.byLocalidadeAndVinculo.length === 0) &&
-    (!data?.result?.byDependenciaAndVinculo || data.result.byDependenciaAndVinculo.length === 0) &&
-    (!data?.result?.byLocalidadeAndFormacaoDocente || data.result.byLocalidadeAndFormacaoDocente.length === 0) &&
-    (!data?.result?.byDependenciaAndFormacaoDocente || data.result.byDependenciaAndFormacaoDocente.length === 0) &&
-    (!data?.result?.byVinculoAndFormacaoDocente || data.result.byVinculoAndFormacaoDocente.length === 0) &&
-    (!data?.result?.byEtapaAndFormacaoDocente || data.result.byEtapaAndFormacaoDocente.length === 0) &&
-    (!Array.isArray(data?.result) || data.result.length === 0) &&
-    tableDataArray.every(arr => !Array.isArray(arr) || arr.length === 0) &&
-    municipioDataArray.every(arr => !Array.isArray(arr) || arr.length === 0)
-  ) {
+  // Verificação de dados vazios
+  if (hasNoData(data, tableDataArray, municipioDataArray)) {
     return (
       <ThemeProvider theme={theme}>
         <Paper sx={{ padding: 2, backgroundColor: theme.palette.background.default }}>
@@ -85,78 +681,7 @@ const ApiDataTable = ({ data, municipioData, isEtapaSelected, isLocalidadeSelect
     );
   }
 
-  // Pega os headers do primeiro conjunto de dados que tiver conteúdo
-  const firstValidData = tableDataArray.find(arr => arr.length > 0)?.[0] || {};
-  const headers = Object.keys(firstValidData).filter(header => header === 'total');
-
-  const headerDisplayNames = {
-    total: 'Total',
-  };
-
-  // Headers para a tabela de município
-  const municipioHeaders = ['cityName', 'total'];
-  const municipioHeaderDisplayNames = {
-    cityName: 'Município',
-    total: 'Total',
-    // year: 'Ano',
-  };
-
-  // Headers para a tabela de etapa
-  const etapaHeaders = ['education_level_mod_name', 'total'];
-  const etapaHeaderDisplayNames = {
-    education_level_mod_name: 'Etapa',
-    total: 'Total',
-  };
-
-  // Headers para a etapa de escola
-  const etapaEscolaHeaders = ['arrangement_name', 'total'];
-  const etapaEscolaHeaderDisplayNames = {
-    arrangement_name: 'Etapa',
-    total: 'Total',
-  };
-
-  const etapaShortHeaders = ['education_level_short_name', 'total'];
-  const etapaShortHeaderDisplayNames = {
-    education_level_short_name: 'Etapa',
-    total: 'Total',
-  };
-
-  // Headers para a tabela de localidade
-  const localidadeHeaders = ['location_name', 'total'];
-  const localidadeHeaderDisplayNames = {
-    location_name: 'Localidade',
-    total: 'Total',
-  };
-
-  // Headers para a tabela de dependência administrativa
-  const dependenciaHeaders = ['adm_dependency_detailed_name', 'total'];
-  const dependenciaHeaderDisplayNames = {
-    adm_dependency_detailed_name: 'Dependência Administrativa',
-    total: 'Total',
-  };
-
-  // Headers para a tabela de vínculo funcional
-  const vinculoHeaders = ['contract_type_name', 'total'];
-  const vinculoHeaderDisplayNames = {
-    contract_type_name: 'Vínculo Funcional',
-    total: 'Total',
-  };
-
-  // Headers para a tabela de formação docente
-  const formacaoDocenteHeaders = ['initial_training_name', 'total'];
-  const formacaoDocenteHeaderDisplayNames = {
-    initial_training_name: 'Formação Docente',
-    total: 'Total',
-  };
-
-  // Headers para a tabela de faixa etária
-  const faixaEtariaHeaders = ['age_range_name', 'total'];
-  const faixaEtariaHeaderDisplayNames = {
-    age_range_name: 'Faixa Etária',
-    total: 'Total',
-  };
-
-
+  // Renderização de tabela histórica
   const renderHistoricalTable = () => {
     // Determinar quais colunas extras precisamos baseado nos filtros
     const getExtraColumns = () => {
@@ -245,7 +770,7 @@ const ApiDataTable = ({ data, municipioData, isEtapaSelected, isLocalidadeSelect
                 <TableRow>
                   {sortedYears.map(year => (
                     <CenteredTableCell key={year}>
-                      {type === 'liquid_enrollment_ratio' || type === 'gloss_enrollment_ratio' || type === 'rate_school_new'
+                      {isRatioType(type)
                         ? `${Number(yearMap.get(year) || 0).toFixed(2)}%`
                         : yearMap.get(year)}
                     </CenteredTableCell>
@@ -262,16 +787,16 @@ const ApiDataTable = ({ data, municipioData, isEtapaSelected, isLocalidadeSelect
     const categoryYearMap = new Map();
     const years = new Set();
     const categories = new Set();
-    const categoryIds = new Map(); // Novo: Mapa para armazenar IDs das categorias
+    const categoryIds = new Map();
 
     // Primeiro passo: organizar os dados
     data.result.forEach(item => {
       const year = item.year;
       const categoryName = item[extraColumn.name];
-      const categoryId = item[extraColumn.id]; // Novo: Pegar o ID da categoria
+      const categoryId = item[extraColumn.id];
       years.add(year);
       categories.add(categoryName);
-      categoryIds.set(categoryName, categoryId); // Novo: Armazenar o ID
+      categoryIds.set(categoryName, categoryId);
 
       if (!categoryYearMap.has(categoryName)) {
         categoryYearMap.set(categoryName, new Map());
@@ -282,7 +807,6 @@ const ApiDataTable = ({ data, municipioData, isEtapaSelected, isLocalidadeSelect
     // Converter Set para Array e ordenar
     const sortedYears = [...years].sort((a, b) => a - b);
     const sortedCategories = [...categories].sort((a, b) => {
-      // Ordenar por ID numérico
       return Number(categoryIds.get(a)) - Number(categoryIds.get(b));
     });
 
@@ -310,7 +834,7 @@ const ApiDataTable = ({ data, municipioData, isEtapaSelected, isLocalidadeSelect
                       <CenteredTableCell>{category}</CenteredTableCell>
                       {sortedYears.map(year => (
                         <CenteredTableCell key={year}>
-                          {type === 'liquid_enrollment_ratio' || type === 'gloss_enrollment_ratio' || type === 'rate_school_new'
+                          {isRatioType(type)
                             ? `${Number(yearMap.get(year) || 0).toFixed(2)}%`
                             : yearMap.get(year) || 0}
                         </CenteredTableCell>
@@ -337,682 +861,198 @@ const ApiDataTable = ({ data, municipioData, isEtapaSelected, isLocalidadeSelect
           />
         )}
         {type === 'school/count' && isEtapaSelected && (
-          <p>Nota: Ao selecionar etapa e modalidade de oferta ao montar sua consulta, temos os seguintes significados das abreviações: CRE – creche; PRE - pré-escola; EF-AI - Ensino Fundamental - Anos Iniciais; EF-AF - Ensino Fundamental - Anos Finais; MULTIETAPA - Ed. Infantil Unificada/Multietapa/Multissérie/Correção fluxo; EM - Ensino Médio; EJA - Educação de Jovens e Adultos; PROF - Educação Profissional; EE - Educação Especial Exclusivo.</p>
+          <p>{ETAPA_ESCOLA_NOTE}</p>
         )}
       </Paper>
     );
   };
 
-  // Nova lógica para renderizar a tabela combinada
-  if ((isEtapaSelected && isLocalidadeSelected) ||
-      (isEtapaSelected && isDependenciaSelected) ||
-      (isLocalidadeSelected && isDependenciaSelected) ||
-      (isEtapaSelected && isVinculoSelected) ||
-      (isLocalidadeSelected && isVinculoSelected) ||
-      (isDependenciaSelected && isVinculoSelected) ||
-      (isEtapaSelected && isFormacaoDocenteSelected) ||
-      (isLocalidadeSelected && isFormacaoDocenteSelected) ||
-      (isDependenciaSelected && isFormacaoDocenteSelected) ||
-      (isVinculoSelected && isFormacaoDocenteSelected)) {
+  // Renderização de tabela cruzada
+  const renderCrossTable = () => {
+    const filters = { isEtapaSelected, isLocalidadeSelected, isDependenciaSelected, isVinculoSelected, isFormacaoDocenteSelected };
+    const config = getCrossTableConfig(filters, type, year);
 
-    let crossedData;
-    let rowHeader;
-    let columnHeader;
-    let rowField;
-    let columnField;
-    let rowIdField;
-    let columnIdField;
+    if (!config) return null;
 
-    if (isLocalidadeSelected && isDependenciaSelected) {
-      crossedData = data?.result?.byLocalidadeAndDependencia || [];
-      rowHeader = "Localidade";
-      columnHeader = "Dependência Administrativa";
-      rowField = "location_name";
-      columnField = "adm_dependency_detailed_name";
-      rowIdField = "location_id";
-      columnIdField = "adm_dependency_detailed_id";
-    } else if (isEtapaSelected && isDependenciaSelected) {
-      if (type === 'school/count') {
-        crossedData = data?.result?.byEtapaAndDependencia || [];
-        rowHeader = "Etapa";
-        columnHeader = "Dependência Administrativa";
-        rowField = "arrangement_name";
-        columnField = "adm_dependency_detailed_name";
-        rowIdField = "arrangement_id";
-        columnIdField = "adm_dependency_detailed_id";
-      } else if (type === 'enrollment' && year >= 2021) {
-        crossedData = data?.result?.byEtapaAndDependencia || [];
-        rowHeader = "Etapa";
-        columnHeader = "Dependência Administrativa";
-        rowField = "education_level_mod_agg_name";
-        columnField = "adm_dependency_detailed_name";
-        rowIdField = "education_level_mod_agg_id";
-        columnIdField = "adm_dependency_detailed_id";
-      } else {
-        crossedData = data?.result?.byEtapaAndDependencia || [];
-        rowHeader = "Etapa";
-        columnHeader = "Dependência Administrativa";
-        rowField = "education_level_mod_name";
-        columnField = "adm_dependency_detailed_name";
-        rowIdField = "education_level_mod_id";
-        columnIdField = "adm_dependency_detailed_id";
-      }
-    }
-    else if (isEtapaSelected && isVinculoSelected) {
-      if (type === 'school/count') {
-        crossedData = data?.result?.byEtapaAndVinculo || [];
-        rowHeader = "Etapa";
-        columnHeader = "Vínculo Funcional";
-        rowField = "arrangement_name";
-        columnField = "contract_type_name";
-        rowIdField = "arrangement_id";
-        columnIdField = "contract_type_id";
-      } else {
-        crossedData = data?.result?.byEtapaAndVinculo || [];
-        rowHeader = "Etapa";
-        columnHeader = "Vínculo Funcional";
-        rowField = "education_level_mod_name";
-        columnField = "contract_type_name";
-        rowIdField = "education_level_mod_id";
-        columnIdField = "contract_type_id";
-      }
-    }
-    else if (isLocalidadeSelected && isVinculoSelected) {
-      crossedData = data?.result?.byLocalidadeAndVinculo || [];
-      rowHeader = "Localidade";
-      columnHeader = "Vínculo Funcional";
-      rowField = "location_name";
-      columnField = "contract_type_name";
-      rowIdField = "location_id";
-      columnIdField = "contract_type_id";
-      }
-    else if (isDependenciaSelected && isVinculoSelected) {
-      crossedData = data?.result?.byDependenciaAndVinculo || [];
-      rowHeader = "Dependência Administrativa";
-      columnHeader = "Vínculo Funcional";
-      rowField = "adm_dependency_detailed_name";
-      columnField = "contract_type_name";
-      rowIdField = "adm_dependency_detailed_id";
-      columnIdField = "contract_type_id";
-    }
-    else if (isEtapaSelected && isLocalidadeSelected) {
-      if (type === 'school/count') {
-        crossedData = data?.result?.byEtapaAndLocalidade || [];
-        rowHeader = "Etapa";
-        columnHeader = "Localidade";
-        rowField = "arrangement_name";
-        columnField = "location_name";
-        rowIdField = "arrangement_id";
-        columnIdField = "location_id";
-      } else if (type === 'liquid_enrollment_ratio' || type === 'gloss_enrollment_ratio') {
-        crossedData = data?.result?.byEtapaAndLocalidade || [];
-        rowHeader = "Etapa";
-        columnHeader = "Localidade";
-        rowField = "education_level_short_name";
-        columnField = "location_name";
-        rowIdField = "education_level_short_id";
-        columnIdField = "location_id";
-      } else if (type === 'enrollment' && year >= 2021) {
-        crossedData = data?.result?.byEtapaAndLocalidade || [];
-        rowHeader = "Etapa";
-        columnHeader = "Localidade";
-        rowField = "education_level_mod_agg_name";
-        columnField = "location_name";
-        rowIdField = "education_level_mod_agg_id";
-        columnIdField = "location_id";
-      } else {
-        crossedData = data?.result?.byEtapaAndLocalidade || [];
-        rowHeader = "Etapa";
-        columnHeader = "Localidade";
-        rowField = "education_level_mod_name";
-        rowIdField = "education_level_mod_id";
-        columnIdField = "location_id";
-      }
-    }
-    else if (isLocalidadeSelected && isFormacaoDocenteSelected) {
-      crossedData = data?.result?.byLocalidadeAndFormacaoDocente || [];
-      rowHeader = "Localidade";
-      columnHeader = "Formação Docente";
-      rowField = "location_name";
-      columnField = "initial_training_name";
-      rowIdField = "location_id";
-      columnIdField = "initial_training_id";
-    }
-    else if (isDependenciaSelected && isFormacaoDocenteSelected) {
-      crossedData = data?.result?.byDependenciaAndFormacaoDocente || [];
-      rowHeader = "Dependência Administrativa";
-      columnHeader = "Formação Docente";
-      rowField = "adm_dependency_detailed_name";
-      columnField = "initial_training_name";
-      rowIdField = "adm_dependency_detailed_id";
-      columnIdField = "initial_training_id";
-    }
-    else if (isVinculoSelected && isFormacaoDocenteSelected) {
-      crossedData = data?.result?.byVinculoAndFormacaoDocente || [];
-      rowHeader = "Vínculo Funcional";
-      columnHeader = "Formação Docente";
-      rowField = "contract_type_name";
-      columnField = "initial_training_name";
-      rowIdField = "contract_type_id";
-      columnIdField = "initial_training_id";
-    }
-    else if (isEtapaSelected && isFormacaoDocenteSelected) {
-      if (type === 'school/count') {
-        crossedData = data?.result?.byEtapaAndFormacaoDocente || [];
-        rowHeader = "Etapa";
-        columnHeader = "Formação Docente";
-        rowField = "arrangement_name";
-        columnField = "initial_training_name";
-        rowIdField = "arrangement_id";
-        columnIdField = "initial_training_id";
-      } else {
-        crossedData = data?.result?.byEtapaAndFormacaoDocente || [];
-        rowHeader = "Etapa";
-        columnHeader = "Formação Docente";
-        rowField = "education_level_mod_name";
-        columnField = "initial_training_name";
-        rowIdField = "education_level_mod_id";
-        columnIdField = "initial_training_id";
-      }
-    }
-    // Criar estrutura de dados para a tabela
-    const uniqueRows = new Map();
-    const uniqueColumns = new Map();
-    const cellValues = new Map();
+    const crossedData = data?.result?.[config.dataKey] || [];
 
-    // Processar os dados cruzados
-    crossedData.forEach(item => {
-      const rowId = item[rowIdField];
-      const columnId = item[columnIdField];
-      const rowName = item[rowField];
-      const columnName = item[columnField];
-      const total = item.total;
-
-      uniqueRows.set(rowId, rowName);
-      uniqueColumns.set(columnId, columnName);
-      cellValues.set(`${rowId}-${columnId}`, total);
-    });
-
-    // Ordenar as linhas e colunas por ID numericamente
-    const sortedUniqueRows = new Map([...uniqueRows.entries()].sort((a, b) => {
-      const numA = parseInt(a[0], 10);
-      const numB = parseInt(b[0], 10);
-      return numA - numB;
-    }));
-
-    const sortedUniqueColumns = new Map([...uniqueColumns.entries()].sort((a, b) => {
-      const numA = parseInt(a[0], 10);
-      const numB = parseInt(b[0], 10);
-      return numA - numB;
-    }));
-
-    // Calcular totais das linhas
-    const rowTotals = new Map();
-    sortedUniqueRows.forEach((_, rowId) => {
-      const total = Array.from(sortedUniqueColumns.keys())
-        .reduce((sum, colId) => Number(sum) + Number(cellValues.get(`${rowId}-${colId}`) || 0), 0);
-      rowTotals.set(rowId, total);
-    });
-
-    // Calcular totais das colunas
-    const columnTotals = new Map();
-    sortedUniqueColumns.forEach((_, colId) => {
-      const total = Array.from(sortedUniqueRows.keys())
-        .reduce((sum, rowId) => Number(sum) + Number(cellValues.get(`${rowId}-${colId}`) || 0), 0);
-      columnTotals.set(colId, total);
-    });
+    // Processamento de dados cruzados
+    const { uniqueRows, uniqueColumns, cellValues, rowTotals, columnTotals } = processCrossTableData(
+      crossedData,
+      config.rowIdField,
+      config.columnIdField,
+      config.rowField,
+      config.columnField
+    );
 
     return (
-      <ThemeProvider theme={theme}>
-        <Paper sx={{ padding: 2, backgroundColor: theme.palette.background.default }}>
-          <TableContainer component={Paper} sx={{ maxWidth: '100%', overflowX: 'auto' }}>
-            <Table sx={{ minWidth: 650 }} aria-label="combined table">
-              <TableHead>
-                <TableRow>
-                  <BoldTableCell>{rowHeader}</BoldTableCell>
-                  {Array.from(sortedUniqueColumns.entries()).map(([id, name]) => (
-                    <BoldTableCell key={id}>{name}</BoldTableCell>
-                  ))}
-                  {type !== 'liquid_enrollment_ratio' && type !== 'gloss_enrollment_ratio' && <BoldTableCell>Total</BoldTableCell>}
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {Array.from(sortedUniqueRows.entries())
-                  .slice(type === 'school/count' && isEtapaSelected ? page * rowsPerPage : 0,
-                        type === 'school/count' && isEtapaSelected ? page * rowsPerPage + rowsPerPage : undefined)
-                  .map(([rowId, rowName]) => (
-                    <TableRow key={rowId}>
-                      <CenteredTableCell>{rowName}</CenteredTableCell>
-                      {Array.from(sortedUniqueColumns.keys()).map(columnId => (
-                        <CenteredTableCell key={columnId}>
-                          {type === 'liquid_enrollment_ratio' || type === 'gloss_enrollment_ratio'
-                            ? `${Number(cellValues.get(`${rowId}-${columnId}`) || 0).toFixed(2)}%`
-                            : cellValues.get(`${rowId}-${columnId}`) || 0}
-                        </CenteredTableCell>
-                      ))}
-                      {type !== 'liquid_enrollment_ratio' && type !== 'gloss_enrollment_ratio' &&
-                        <CenteredTableCell>{rowTotals.get(rowId)}</CenteredTableCell>
-                      }
-                    </TableRow>
-                  ))}
-                {type !== 'liquid_enrollment_ratio' && type !== 'gloss_enrollment_ratio' && (
-                  <TableRow>
-                    <BoldTableCell>Total</BoldTableCell>
-                    {Array.from(sortedUniqueColumns.keys()).map(columnId => (
-                      <BoldTableCell key={columnId}>
-                        {columnTotals.get(columnId)}
-                      </BoldTableCell>
-                    ))}
-                    <BoldTableCell>
-                      {Array.from(rowTotals.values()).reduce((sum, total) => Number(sum) + Number(total || 0), 0)}
-                    </BoldTableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
-          {type === 'school/count' && isEtapaSelected && (
-            <TablePagination
-              component="div"
-              count={sortedUniqueRows.size}
+      <Paper sx={{ padding: 2, backgroundColor: theme.palette.background.default }}>
+        <CrossTable
+          rowHeader={config.rowHeader}
+          uniqueRows={uniqueRows}
+          uniqueColumns={uniqueColumns}
+          cellValues={cellValues}
+          rowTotals={rowTotals}
+          columnTotals={columnTotals}
+          type={type}
+          isEtapaSelected={isEtapaSelected}
+          page={page}
+          rowsPerPage={rowsPerPage}
+          handleChangePage={handleChangePage}
+          handleChangeRowsPerPage={handleChangeRowsPerPage}
+        />
+        {type === 'school/count' && isEtapaSelected && (
+          <p>{ETAPA_ESCOLA_NOTE}</p>
+        )}
+      </Paper>
+    );
+  };
+
+  // Renderização de tabela simples
+  const renderSimpleTable = (filterType) => {
+    let headers, tableData, sortField, formatTotal, usePagination = false, note = null;
+
+    switch (filterType) {
+      case 'etapa':
+      if (type === 'school/count') {
+          headers = HEADERS.etapa.school;
+          usePagination = true;
+          note = ETAPA_ESCOLA_NOTE;
+      } else if (type === 'liquid_enrollment_ratio' || type === 'gloss_enrollment_ratio') {
+          headers = HEADERS.etapa.short;
+          formatTotal = true;
+      } else {
+          headers = HEADERS.etapa.standard;
+        }
+        tableData = data.result;
+        break;
+
+      case 'localidade':
+        headers = HEADERS.localidade;
+        tableData = data.result;
+        break;
+
+      case 'dependencia':
+        headers = HEADERS.dependencia;
+        tableData = data.result;
+        sortField = 'adm_dependency_detailed_id';
+        formatTotal = isRatioType(type);
+        break;
+
+      case 'vinculo':
+        headers = HEADERS.vinculo;
+        tableData = data.result;
+        sortField = 'contract_type_id';
+        formatTotal = isRatioType(type);
+        break;
+
+      case 'formacaoDocente':
+        headers = HEADERS.formacaoDocente;
+        tableData = data.result;
+        sortField = 'initial_training_id';
+        formatTotal = isRatioType(type);
+        break;
+
+      case 'faixaEtaria':
+        headers = HEADERS.faixaEtaria;
+        tableData = data.result;
+        sortField = 'age_range_id';
+        formatTotal = true;
+        break;
+
+      default:
+        return null;
+    }
+
+    return (
+      <Paper sx={{ backgroundColor: theme.palette.background.default, marginBottom: 2 }}>
+        {usePagination ? (
+          <PaginatedTable
+            headers={headers}
+            data={tableData}
               page={page}
-              onPageChange={handleChangePage}
               rowsPerPage={rowsPerPage}
-              onRowsPerPageChange={handleChangeRowsPerPage}
-              rowsPerPageOptions={[5, 10, 25, 50]}
-              labelRowsPerPage="Linhas por página:"
-              labelDisplayedRows={({ from, to, count }) =>
-                `${from}-${to} de ${count !== -1 ? count : `mais de ${to}`}`
-              }
+            handleChangePage={handleChangePage}
+            handleChangeRowsPerPage={handleChangeRowsPerPage}
+            formatTotal={formatTotal}
+            sortField={sortField}
+            note={note}
+          />
+        ) : (
+          <BasicTable
+            headers={headers}
+            data={tableData}
+            formatTotal={formatTotal}
+            sortField={sortField}
             />
           )}
         </Paper>
-      </ThemeProvider>
     );
-  }
+  };
 
+  // Determinar qual tipo de tabela renderizar
+  const hasCrossFilters = (
+    (isEtapaSelected && isLocalidadeSelected) ||
+    (isEtapaSelected && isDependenciaSelected) ||
+    (isLocalidadeSelected && isDependenciaSelected) ||
+    (isEtapaSelected && isVinculoSelected) ||
+    (isLocalidadeSelected && isVinculoSelected) ||
+    (isDependenciaSelected && isVinculoSelected) ||
+    (isEtapaSelected && isFormacaoDocenteSelected) ||
+    (isLocalidadeSelected && isFormacaoDocenteSelected) ||
+    (isDependenciaSelected && isFormacaoDocenteSelected) ||
+    (isVinculoSelected && isFormacaoDocenteSelected)
+  );
+
+  const hasNoFilters = !isEtapaSelected && !isLocalidadeSelected && !isDependenciaSelected &&
+                       !isVinculoSelected && !isFormacaoDocenteSelected && !isFaixaEtariaSelected;
+
+  // Renderização principal
   return (
     <ThemeProvider theme={theme}>
       <div>
-        {isHistorical && (
-          renderHistoricalTable()
-        )}
-        {/* Primeira tabela */}
-        {!isEtapaSelected && !isLocalidadeSelected && !isDependenciaSelected && !isHistorical && !isVinculoSelected && !isFormacaoDocenteSelected && !isFaixaEtariaSelected && tableDataArray.map((tableData, tableIndex) => (
-          <Paper
-            key={tableIndex}
-            sx={{
-              backgroundColor: theme.palette.background.default,
-              marginBottom: 2
-            }}
-          >
-            <TableContainer component={Paper} sx={{ maxWidth: '100%', overflowX: 'auto' }}>
-              <Table sx={{ minWidth: 650 }} aria-label="simple table">
-                <StyledTableHead>
-                  <TableRow>
-                    {headers.map(header => (
-                      <BoldTableCell key={header}>
-                        {headerDisplayNames[header] || header}
-                      </BoldTableCell>
-                    ))}
-                  </TableRow>
-                </StyledTableHead>
-                <TableBody>
-                  {tableData.map((item, index) => (
-                    <TableRow key={index}>
-                      {headers.map(header => (
-                        <CenteredTableCell key={header}>
-                          {item[header]?.toString() || ''}
-                        </CenteredTableCell>
-                      ))}
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </Paper>
-        ))}
+        {/* Tabela histórica */}
+        {isHistorical && renderHistoricalTable()}
 
-        {/* Segunda tabela para município */}
-        {!isEtapaSelected && !isLocalidadeSelected && !isDependenciaSelected && !isVinculoSelected && !isFormacaoDocenteSelected && !isFaixaEtariaSelected && municipioDataArray.length > 0 && // Verifica se há dados
-          <Paper
-            sx={{
-              backgroundColor: theme.palette.background.default,
-              marginBottom: 2
-            }}
-          >
-            <TableContainer component={Paper} sx={{ maxWidth: '100%', overflowX: 'auto' }}>
-              <Table sx={{ minWidth: 650 }} aria-label="municipio table">
-                <StyledTableHead>
-                  <TableRow>
-                    {municipioHeaders.map(header => (
-                      <BoldTableCell key={header}>
-                        {municipioHeaderDisplayNames[header] || header}
-                      </BoldTableCell>
-                    ))}
-                  </TableRow>
-                </StyledTableHead>
-                <TableBody>
-                  {municipioDataArray.map((item, index) => (
-                    <TableRow key={index}>
-                      {municipioHeaders.map(header => (
-                        <CenteredTableCell key={header}>
-                          {item[header]?.toString() || ''}
-                        </CenteredTableCell>
-                      ))}
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </Paper>
-        }
+        {/* Tabela cruzada */}
+        {!isHistorical && hasCrossFilters && renderCrossTable()}
 
-        {/* Nova tabela para etapa */}
-        {isEtapaSelected && !isHistorical && type !== 'school/count' && type !== 'liquid_enrollment_ratio' && type !== 'gloss_enrollment_ratio' && (
-          <Paper
-            sx={{
-              backgroundColor: theme.palette.background.default,
-              marginBottom: 2
-            }}
-          >
-            <TableContainer component={Paper} sx={{ maxWidth: '100%', overflowX: 'auto' }}>
-              <Table sx={{ minWidth: 650 }} aria-label="etapa table">
-                <StyledTableHead>
-                  <TableRow>
-                    {etapaHeaders.map(header => (
-                      <BoldTableCell key={header}>
-                        {etapaHeaderDisplayNames[header] || header}
-                      </BoldTableCell>
-                    ))}
-                  </TableRow>
-                </StyledTableHead>
-                <TableBody>
-                  {data.result.map((item, index) => (
-                    <TableRow key={index}>
-                      {etapaHeaders.map(header => (
-                        <CenteredTableCell key={header}>
-                          {item[header]?.toString() || ''}
-                        </CenteredTableCell>
-                      ))}
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
+        {/* Tabela simples (sem filtros) */}
+        {!isHistorical && hasNoFilters && (
+          <>
+            {/* Tabela de dados gerais */}
+            {tableDataArray.map((tableData, index) => (
+              <Paper key={index} sx={{ backgroundColor: theme.palette.background.default, marginBottom: 2 }}>
+                <BasicTable
+                  headers={HEADERS.default}
+                  data={tableData}
+                  formatTotal={isRatioType(type)}
+                />
+          </Paper>
+            ))}
+
+            {/* Tabela de municípios */}
+            {municipioDataArray.length > 0 && (
+              <Paper sx={{ backgroundColor: theme.palette.background.default, marginBottom: 2 }}>
+                <BasicTable
+                  headers={HEADERS.municipio}
+                  data={municipioDataArray}
+                />
           </Paper>
         )}
-
-        {isEtapaSelected && !isHistorical && (type === 'liquid_enrollment_ratio' || type === 'gloss_enrollment_ratio') && (
-          <Paper
-            sx={{
-              backgroundColor: theme.palette.background.default,
-              marginBottom: 2
-            }}
-          >
-            <TableContainer component={Paper} sx={{ maxWidth: '100%', overflowX: 'auto' }}>
-              <Table sx={{ minWidth: 650 }} aria-label="etapa table">
-                <StyledTableHead>
-                  <TableRow>
-                    {etapaShortHeaders.map(header => (
-                      <BoldTableCell key={header}>
-                        {etapaShortHeaderDisplayNames[header] || header}
-                      </BoldTableCell>
-                    ))}
-                  </TableRow>
-                </StyledTableHead>
-                <TableBody>
-                  {data.result.map((item, index) => (
-                    <TableRow key={index}>
-                      {etapaShortHeaders.map(header => (
-                        <CenteredTableCell key={header}>
-                          {header === 'total'
-                            ? `${Number(item[header]).toFixed(2)}%`
-                            : item[header]?.toString() || ''}
-                        </CenteredTableCell>
-                      ))}
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </Paper>
+          </>
         )}
 
-
-
-        {isEtapaSelected && !isHistorical && type === 'school/count' && (
-          <Paper
-            sx={{
-              backgroundColor: theme.palette.background.default,
-              marginBottom: 2
-            }}
-          >
-            <TableContainer component={Paper} sx={{ maxWidth: '100%', overflowX: 'auto' }}>
-              <Table sx={{ minWidth: 650 }} aria-label="etapa table">
-                <StyledTableHead>
-                  <TableRow>
-                    {etapaEscolaHeaders.map(header => (
-                      <BoldTableCell key={header}>
-                        {etapaEscolaHeaderDisplayNames[header] || header}
-                      </BoldTableCell>
-                    ))}
-                  </TableRow>
-                </StyledTableHead>
-                <TableBody>
-                  {data.result
-                    .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                    .map((item, index) => (
-                      <TableRow key={index}>
-                        {etapaEscolaHeaders.map(header => (
-                          <CenteredTableCell key={header}>
-                            {item[header]?.toString() || ''}
-                          </CenteredTableCell>
-                        ))}
-                      </TableRow>
-                    ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-            <TablePagination
-              component="div"
-              count={data.result.length}
-              page={page}
-              onPageChange={handleChangePage}
-              rowsPerPage={rowsPerPage}
-              onRowsPerPageChange={handleChangeRowsPerPage}
-              rowsPerPageOptions={[5, 10, 25, 50]}
-              labelRowsPerPage="Linhas por página:"
-              labelDisplayedRows={({ from, to, count }) =>
-                `${from}-${to} de ${count !== -1 ? count : `mais de ${to}`}`
-              }
-            />
-            <p>Nota: Ao selecionar etapa e modalidade de oferta ao montar sua consulta, temos os seguintes significados das abreviações: CRE – creche; PRE - pré-escola; EF-AI - Ensino Fundamental - Anos Iniciais; EF-AF - Ensino Fundamental - Anos Finais; MULTIETAPA - Ed. Infantil Unificada/Multietapa/Multissérie/Correção fluxo; EM - Ensino Médio; EJA - Educação de Jovens e Adultos; PROF - Educação Profissional; EE - Educação Especial Exclusivo.</p>
-          </Paper>
-        )}
-
-        {isLocalidadeSelected && !isHistorical && (
-          <Paper
-            sx={{
-              backgroundColor: theme.palette.background.default,
-              marginBottom: 2
-            }}
-          >
-            <TableContainer component={Paper} sx={{ maxWidth: '100%', overflowX: 'auto' }}>
-              <Table sx={{ minWidth: 650 }} aria-label="localidade table">
-                <StyledTableHead>
-                  <TableRow>
-                    {localidadeHeaders.map(header => (
-                      <BoldTableCell key={header}>
-                        {localidadeHeaderDisplayNames[header] || header}
-                      </BoldTableCell>
-                    ))}
-                  </TableRow>
-                </StyledTableHead>
-                <TableBody>
-                  {data.result.map((item, index) => (
-                    <TableRow key={index}>
-                      {localidadeHeaders.map(header => (
-                        <CenteredTableCell key={header}>
-                          {item[header]?.toString() || ''}
-                        </CenteredTableCell>
-                      ))}
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </Paper>
-        )}
-
-        {isDependenciaSelected && !isHistorical && (
-          <Paper
-            sx={{
-              backgroundColor: theme.palette.background.default,
-              marginBottom: 2
-            }}
-          >
-            <TableContainer component={Paper} sx={{ maxWidth: '100%', overflowX: 'auto' }}>
-              <Table sx={{ minWidth: 650 }} aria-label="dependencia table">
-                <StyledTableHead>
-                  <TableRow>
-                    {dependenciaHeaders.map(header => (
-                      <BoldTableCell key={header}>
-                        {dependenciaHeaderDisplayNames[header] || header}
-                      </BoldTableCell>
-                    ))}
-                  </TableRow>
-                </StyledTableHead>
-                <TableBody>
-                  {[...data.result]
-                    .sort((a, b) => Number(a.adm_dependency_detailed_id) - Number(b.adm_dependency_detailed_id))
-                    .map((item, index) => (
-                      <TableRow key={index}>
-                        {dependenciaHeaders.map(header => (
-                          <CenteredTableCell key={header}>
-                            {header === 'total' && (type === 'liquid_enrollment_ratio' || type === 'gloss_enrollment_ratio' || type === 'rate_school_new')
-                              ? `${Number(item[header]).toFixed(2)}%`
-                              : item[header]?.toString() || ''}
-                          </CenteredTableCell>
-                        ))}
-                      </TableRow>
-                    ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </Paper>
-        )}
-        {isVinculoSelected && !isHistorical && (
-          <Paper
-            sx={{
-              backgroundColor: theme.palette.background.default,
-              marginBottom: 2
-            }}
-          >
-            <TableContainer component={Paper} sx={{ maxWidth: '100%', overflowX: 'auto' }}>
-              <Table sx={{ minWidth: 650 }} aria-label="vinculo table">
-                <StyledTableHead>
-                  <TableRow>
-                    {vinculoHeaders.map(header => (
-                      <BoldTableCell key={header}>
-                        {vinculoHeaderDisplayNames[header] || header}
-                      </BoldTableCell>
-                    ))}
-                  </TableRow>
-                </StyledTableHead>
-                <TableBody>
-                  {[...data.result]
-                    .sort((a, b) => Number(a.contract_type_id) - Number(b.contract_type_id))
-                    .map((item, index) => (
-                      <TableRow key={index}>
-                        {vinculoHeaders.map(header => (
-                          <CenteredTableCell key={header}>
-                            {header === 'total' && (type === 'liquid_enrollment_ratio' || type === 'gloss_enrollment_ratio' || type === 'rate_school_new')
-                              ? `${Number(item[header]).toFixed(2)}%`
-                              : item[header]?.toString() || ''}
-                          </CenteredTableCell>
-                        ))}
-                      </TableRow>
-                    ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </Paper>
-        )}
-
-        {isFormacaoDocenteSelected && !isHistorical && (
-          <Paper
-            sx={{
-              backgroundColor: theme.palette.background.default,
-              marginBottom: 2
-            }}
-          >
-            <TableContainer component={Paper} sx={{ maxWidth: '100%', overflowX: 'auto' }}>
-              <Table sx={{ minWidth: 650 }} aria-label="formacaoDocente table">
-                <StyledTableHead>
-                  <TableRow>
-                    {formacaoDocenteHeaders.map(header => (
-                      <BoldTableCell key={header}>
-                        {formacaoDocenteHeaderDisplayNames[header] || header}
-                      </BoldTableCell>
-                    ))}
-                  </TableRow>
-                </StyledTableHead>
-                <TableBody>
-                  {[...data.result]
-                    .sort((a, b) => Number(a.initial_training_id) - Number(b.initial_training_id))
-                    .map((item, index) => (
-                      <TableRow key={index}>
-                        {formacaoDocenteHeaders.map(header => (
-                          <CenteredTableCell key={header}>
-                            {header === 'total' && (type === 'liquid_enrollment_ratio' || type === 'gloss_enrollment_ratio' || type === 'rate_school_new')
-                              ? `${Number(item[header]).toFixed(2)}%`
-                              : item[header]?.toString() || ''}
-                          </CenteredTableCell>
-                        ))}
-                      </TableRow>
-                    ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </Paper>
-        )}
-        {isFaixaEtariaSelected && !isHistorical && (
-          <Paper
-            sx={{
-              backgroundColor: theme.palette.background.default,
-              marginBottom: 2
-            }}
-          >
-            <TableContainer component={Paper} sx={{ maxWidth: '100%', overflowX: 'auto' }}>
-              <Table sx={{ minWidth: 650 }} aria-label="faixaEtaria table">
-                <StyledTableHead>
-                  <TableRow>
-                    {faixaEtariaHeaders.map(header => (
-                      <BoldTableCell key={header}>
-                        {faixaEtariaHeaderDisplayNames[header] || header}
-                      </BoldTableCell>
-                    ))}
-                  </TableRow>
-                </StyledTableHead>
-                <TableBody>
-                  {[...data.result]
-                    .sort((a, b) => Number(a.age_range_id) - Number(b.age_range_id))
-                    .map((item, index) => (
-                      <TableRow key={index}>
-                        {faixaEtariaHeaders.map(header => (
-                          <CenteredTableCell key={header}>
-                            {header === 'total'
-                              ? `${Number(item[header]).toFixed(2)}%`
-                              : item[header]?.toString() || ''}
-                          </CenteredTableCell>
-                        ))}
-                      </TableRow>
-                    ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </Paper>
+        {/* Tabelas simples com filtros individuais */}
+        {!isHistorical && !hasCrossFilters && (
+          <>
+            {isEtapaSelected && renderSimpleTable('etapa')}
+            {isLocalidadeSelected && renderSimpleTable('localidade')}
+            {isDependenciaSelected && renderSimpleTable('dependencia')}
+            {isVinculoSelected && renderSimpleTable('vinculo')}
+            {isFormacaoDocenteSelected && renderSimpleTable('formacaoDocente')}
+            {isFaixaEtariaSelected && renderSimpleTable('faixaEtaria')}
+          </>
         )}
       </div>
     </ThemeProvider>

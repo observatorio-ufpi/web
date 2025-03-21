@@ -397,7 +397,7 @@ function ParentComponent() {
               menuPortalTarget={document.body}
               isClearable
               placeholder="Território de Desenvolvimento"
-              isDisabled={type === 'out_of_school' || type === 'liquid_enrollment_ratio'}
+              isDisabled={type === 'out_of_school' || type === 'liquid_enrollment_ratio' || type === 'gloss_enrollment_ratio' || type === 'rate_school_new'}
             />
           </div>
           <div className="select-container filter-item">
