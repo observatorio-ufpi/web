@@ -1,13 +1,22 @@
 // Função principal para processar resultados da API
 export function processResults(allResults, selectedFilters, type, year) {
   // Extrair informações dos filtros selecionados
-  const isEtapaSelected = selectedFilters.some((filter) => filter.value === "etapa");
-  const isLocalidadeSelected = selectedFilters.some((filter) => filter.value === "localidade");
-  const isDependenciaSelected = selectedFilters.some((filter) => filter.value === "dependencia");
-  const isVinculoSelected = selectedFilters.some((filter) => filter.value === "vinculo");
-  const isFormacaoDocenteSelected = selectedFilters.some((filter) => filter.value === "formacaoDocente");
-  const isFaixaEtariaSelected = selectedFilters.some((filter) => filter.value === "faixaEtaria");
+  let isEtapaSelected = false;
+  let isLocalidadeSelected = false;
+  let isDependenciaSelected = false;
+  let isVinculoSelected = false;
+  let isFormacaoDocenteSelected = false;
+  let isFaixaEtariaSelected = false;
 
+  
+  if (selectedFilters) {
+    isEtapaSelected = selectedFilters.some((filter) => filter.value === "etapa");
+    isLocalidadeSelected = selectedFilters.some((filter) => filter.value === "localidade");
+    isDependenciaSelected = selectedFilters.some((filter) => filter.value === "dependencia");
+    isVinculoSelected = selectedFilters.some((filter) => filter.value === "vinculo");
+    isFormacaoDocenteSelected = selectedFilters.some((filter) => filter.value === "formacaoDocente");
+    isFaixaEtariaSelected = selectedFilters.some((filter) => filter.value === "faixaEtaria");
+  }
   // Inicializar objetos para armazenar totais
   const totalByEtapa = {};
   const totalByLocalidade = {};

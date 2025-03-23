@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { processResults as processApiResults } from "../../../services/dataProcessors";
+import { processResults as processApiResults } from "../../../../services/dataProcessors";
 
 function ApiContainer({
   type,
@@ -227,6 +227,8 @@ function ApiContainer({
             };
 
             onDataFetched(summedResults);
+          } else if (citiesList.length === 0 && (territory || faixaPopulacional || aglomerado || gerencia)) {
+            onDataFetched({ finalResult: [], allResults: [] });
           } else {
             if(type === 'enrollment') {
               // Buscar dados antigos (até 2020)

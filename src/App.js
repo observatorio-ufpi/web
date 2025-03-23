@@ -9,10 +9,12 @@ import Home from "./components/navigation/Home";
 import RevenueTableContainer from "./components/pages/education/financial/municipality/tables/RevenueTableContainer";
 import StateRevenueTableContainer from "./components/pages/education/financial/state/StateRevenueTableContainer";
 import FinancialDataSelection from "./components/navigation/FinancialDataSelection";
+import EducationSelection from "./components/navigation/EducationSelection";
 import ChartContainer from "./components/pages/education/financial/municipality/indicators/ChartContainer";
 import Navbar from "./components/common/Navbar";
 import Footer from "./components/common/Footer";
-import ParentComponent from "./components/pages/education/ParentComponent";
+import ParentComponent from "./components/pages/education/basic/ParentComponent";
+import FilterComponent from "./components/pages/education/higher/FilterComponent";
 import "./App.css";
 
 // Componente para determinar qual tipo de layout usar
@@ -21,7 +23,7 @@ const AppContent = () => {
   const path = location.pathname;
 
   // Páginas que devem usar o layout de navegação centralizada
-  const isNavigationPage = path === "/" || path === "/dados-financeiros";
+  const isNavigationPage = path === "/" || path === "/dados-financeiros" || path === "/dados-educacionais";
 
   // Renderiza o conteúdo com base no tipo de página
   if (isNavigationPage) {
@@ -32,6 +34,10 @@ const AppContent = () => {
           <Route
             path="/dados-financeiros"
             element={<FinancialDataSelection />}
+          />
+          <Route
+            path="/dados-educacionais"
+            element={<EducationSelection />}
           />
         </Routes>
       </div>
@@ -44,7 +50,8 @@ const AppContent = () => {
           <Route path="/municipios" element={<RevenueTableContainer />} />
           <Route path="/estado" element={<StateRevenueTableContainer />} />
           <Route path="/indicadores" element={<ChartContainer />} />
-          <Route path="/dados-educacionais" element={<ParentComponent />} />
+          <Route path="/dados-educacionais/basica" element={<ParentComponent />} />
+          <Route path="/dados-educacionais/superior" element={<FilterComponent />} />
         </Routes>
       </main>
     );
