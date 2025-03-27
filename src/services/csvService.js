@@ -10,6 +10,7 @@ import tabela8CSV from "../files/tabela8_estado - Página1.csv";
 import tabela9CSV from "../files/tabela9_estado - Página1.csv";
 import tabela10CSV from "../files/tabela10_estado - Página1.csv";
 import tabela11CSV from "../files/tabela11_estado - Página1.csv";
+import tabela12CSV from "../files/tabela_complementar_estado - Página1.csv"
 
 // Mapeamento de tabelas do estado para arquivos CSV
 export const stateTableFiles = {
@@ -24,22 +25,24 @@ export const stateTableFiles = {
   tabela9: tabela9CSV,
   tabela10: tabela10CSV,
   tabela11: tabela11CSV,
+  tabela12: tabela12CSV
 };
 
 // Mapeamento de nomes de tabelas
 export const stateTableNames = {
-  tabela1: "Impostos Próprios do Estado",
-  tabela2: "Receita de transferências constitucionais e legais do Estado",
-  tabela3: "Receita Líquida de Impostos do Estado",
-  tabela4: "Receitas adicionais da educação no Estado",
-  tabela5: "Composição do Fundef/Fundeb no Estado",
-  tabela6: "Composição da complementação do Fundef/Fundeb do Estado",
-  tabela7: "Limite constitucional em MDE no Estado",
+  tabela1: "Impostos Próprios do Piauí",
+  tabela2: "Receita líquida de impostos próprios do Piauí",
+  tabela3: "Receita de transferências constitucionais recebidas pelo Piauí",
+  tabela4: "Receita líquida resultante de impostos do Piauí",
+  tabela5: "Receitas adicionais para o financiamento do ensino no Piauí",
+  tabela6: "Composição do Fundeb no Piauí",
+  tabela7: "Composição da complementação do Fundeb no Piauí",
   tabela8:
-    "Despesas com profissionais da educação básica com o Fundef/Fundeb do Estado",
-  tabela9: "Despesas em MDE por área de atuação do Estado",
-  tabela10: "Receita Potencial Mínima vinculada à Educação Básica do Estado",
-  tabela11: "Protocolo Complementar do Estado",
+    "Limite constitucional em MDE no Piauí ",
+  tabela9: "Despesas com profissionais da educação básica com o Fundeb no Piauí",
+  tabela10: "Despesas em MDE por área de atuação no Piauí",
+  tabela11: " Receita Potencial Mínima vinculada à Educação Básica (RPEB)",
+  tabela12: "Protocolo Complementar"
 };
 
 // Função para carregar o conteúdo do CSV

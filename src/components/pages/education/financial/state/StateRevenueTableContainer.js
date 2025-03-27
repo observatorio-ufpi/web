@@ -65,16 +65,17 @@ const StateRevenueTableContainer = () => {
               <label htmlFor="tableSelect" className="select-label">Tipo de Tabela do Estado:</label>
               <select id="tableSelect" value={selectedTable} onChange={handleTableChange} className="select-box">
                 <option value="tabela1">Impostos Próprios</option>
-                <option value="tabela2">Receita de transferências constitucionais e legais</option>
-                <option value="tabela3">Receita Líquida de Impostos</option>
-                <option value="tabela4">Receitas adicionais da educação</option>
-                <option value="tabela5">Composição do Fundef/Fundeb</option>
-                <option value="tabela6">Composição da complementação do Fundef/Fundeb</option>
-                <option value="tabela7">Limite constitucional em MDE</option>
-                <option value="tabela8">Despesas com profissionais da educação básica do Fundef/Fundeb</option>
-                <option value="tabela9">Despesas em MDE por área de atuação</option>
-                <option value="tabela10">Receita Potencial Mínima vinculada à Educação Básica</option>
-                <option value="tabela11">Protocolo Complementar</option>
+                <option value="tabela2">Receita líquida de impostos próprios do Piauí</option>
+                <option value="tabela3">Receita de transferências constitucionais e legais</option>
+                <option value="tabela4">Receita Líquida de Impostos</option>
+                <option value="tabela5">Receitas adicionais da educação</option>
+                <option value="tabela6">Composição do Fundef/Fundeb</option>
+                <option value="tabela7">Composição da complementação do Fundef/Fundeb</option>
+                <option value="tabela8">Limite constitucional em MDE</option>
+                <option value="tabela9">Despesas com profissionais da educação básica do Fundef/Fundeb</option>
+                <option value="tabela10">Despesas em MDE por área de atuação</option>
+                <option value="tabela11">Receita Potencial Mínima vinculada à Educação Básica</option>
+                <option value="tabela12">Protocolo Complementar</option>
               </select>
             </div>
           </div>
