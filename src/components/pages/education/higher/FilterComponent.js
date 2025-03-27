@@ -1,15 +1,14 @@
-import { Button } from '@mui/material'; // Import the new component
-import React, { useEffect, useMemo, useState } from 'react';
-import Select from 'react-select'; // Import react-select
-import '../../../style/RevenueTableContainer.css'; // Importar o CSS para reutilizar estilos
-import '../../../style/TableFilters.css';
-import { FaixaPopulacional, municipios, Regioes } from '../../../utils/citiesMapping';
-import ApiContainer from './ApiComponent';
-import ApiDataTable from './apiDataTable';
+import React, { useState, useEffect, useMemo } from 'react';
+import Select from 'react-select';
+import { Button } from '@mui/material';
+import '../../../../style/RevenueTableContainer.css';
+import '../../../../style/TableFilters.css';
+import { FaixaPopulacional, municipios, Regioes } from '../../../../utils/citiesMapping';
+import ApiHigherContainer from './ApiHigherComponent';
+import DataTable from './DataTable';
 
-function ParentComponent() {
-  const [type, setType] = useState('enrollment');
-  const [filteredType, setFilteredType] = useState('enrollment');
+function FilterComponent() {
+  const [type, setType] = useState('university/count');
   const [isHistorical, setIsHistorical] = useState(false);
   const [city, setCity] = useState('');
   const [territory, setTerritory] = useState('');
@@ -21,36 +20,20 @@ function ParentComponent() {
   const [isLoading, setIsLoading] = useState(false);
   const [title, setTitle] = useState('');
   const [selectedFilters, setSelectedFilters] = useState([]);
-  const [isEtapaSelected, setIsEtapaSelected] = useState(false);
-  const [isLocalidadeSelected, setIsLocalidadeSelected] = useState(false);
-  const [isDependenciaSelected, setIsDependenciaSelected] = useState(false);
-  const [isVinculoSelected, setIsVinculoSelected] = useState(false);
-  const [isFormacaoDocenteSelected, setIsFormacaoDocenteSelected] = useState(false);
-  const [isFaixaEtariaSelected, setIsFaixaEtariaSelected] = useState(false);
   const [displayHistorical, setDisplayHistorical] = useState(false);
 
+  
   const yearLimits = useMemo(() => ({
-    enrollment: { min: 2007, max: 2023 },
-    'school/count': { min: 2007, max: 2023 },
-    class: { min: 2007, max: 2023 },
-    teacher: { min: 2007, max: 2020 },
-    auxiliar: { min: 2007, max: 2020 },
-    employees: { min: 2007, max: 2023 },
-    out_of_school: { min: 2007, max: 2015 },
-    liquid_enrollment_ratio: { min: 2007, max: 2015 },
-    gloss_enrollment_ratio: { min: 2007, max: 2015 },
-    rate_school_new: { min: 2019, max: 2023 }
+    'university/count': { min: 2010, max: 2022 },
+    'university_enrollment': { min: 2011, max: 2019 },
+    'university_teacher': { min: 2010, max: 2019 },
+    'course_count': { min: 2011, max: 2019 }
   }), []);
 
-  // Função para obter os limites de anos
   const getYearLimits = useMemo(() => {
-    if (type === 'teacher' && selectedFilters.some(filter => filter.value === 'formacaoDocente')) {
-      return { min: 2012, max: 2020 };
-    }
-    return yearLimits[type] || { min: 2007, max: 2022 };
-  }, [type, selectedFilters, yearLimits]);
+    return yearLimits[type] || { min: 2010, max: 2022 };
+  }, [type, yearLimits]);
 
-  // Usar getYearLimits para yearOptions
   const yearOptions = useMemo(() => {
     return Array.from(
       { length: getYearLimits.max - getYearLimits.min + 1 },
@@ -61,60 +44,26 @@ function ParentComponent() {
     }));
   }, [getYearLimits]);
 
-  const [startYear, setStartYear] = useState(yearLimits.enrollment.min);
-  const [endYear, setEndYear] = useState(yearLimits.enrollment.max);
-  const [year, setYear] = useState(yearLimits.enrollment.max);
+  const [startYear, setStartYear] = useState(yearLimits['university/count'].min);
+  const [endYear, setEndYear] = useState(yearLimits['university/count'].max);
+  const [year, setYear] = useState(yearLimits['university/count'].max);
 
-  // Atualizar os anos quando os limites mudarem
   useEffect(() => {
     setYear(getYearLimits.max);
     setStartYear(getYearLimits.min);
     setEndYear(getYearLimits.max);
   }, [getYearLimits]);
 
-  // Adicionar este useEffect para limpar filtros desabilitados quando o tipo muda
-  useEffect(() => {
-    // Limpar filtros que não se aplicam ao tipo selecionado
-    if (type === 'out_of_school' || type === 'liquid_enrollment_ratio' ||
-        type === 'gloss_enrollment_ratio' || type === 'rate_school_new') {
-      // Limpar filtros geográficos para tipos que só funcionam a nível estadual
-      setCity('');
-      setTerritory('');
-      setFaixaPopulacional('');
-      setAglomerado('');
-      setGerencia('');
-    }
-
-    // Ajustar filtros específicos para cada tipo
-    if (type === 'liquid_enrollment_ratio' || type === 'gloss_enrollment_ratio') {
-      // Garantir que etapa esteja selecionada
-      const etapaFilter = { value: 'etapa', label: 'Etapa de Ensino (Obrigatório)' };
-      if (!selectedFilters.some(filter => filter.value === 'etapa')) {
-        setSelectedFilters([etapaFilter]);
-      }
-    } else if (type === 'rate_school_new') {
-      // Garantir que faixa etária esteja selecionada
-      const faixaEtariaFilter = { value: 'faixaEtaria', label: 'Faixa Etária (Obrigatório)' };
-      if (!selectedFilters.some(filter => filter.value === 'faixaEtaria')) {
-        setSelectedFilters([faixaEtariaFilter]);
-      }
-    }
-  }, [type, selectedFilters]);
-
   const handleFilterClick = () => {
     setIsLoading(true);
     setError(null);
     setData(null);
-    // Limpar o título antes de definir um novo
     setTitle('');
 
     setIsHistorical(displayHistorical);
-    setFilteredType(type);
 
-    // Improved title generation logic
     const yearDisplay = displayHistorical ? `${startYear}-${endYear}` : year;
 
-    // Get the city name if a city is selected
     let locationName = "Piauí";
     if (city) {
       const selectedCity = municipios[city];
@@ -123,7 +72,6 @@ function ParentComponent() {
       }
     }
 
-    // Adicionar informações sobre os filtros selecionados
     let filterInfo = [];
 
     // Adicionar território se selecionado
@@ -145,47 +93,21 @@ function ParentComponent() {
     if (gerencia) {
       filterInfo.push(`Gerência: ${gerencia}`);
     }
-
-    // Adicionar filtros adicionais selecionados
-    if (selectedFilters.length > 0) {
-      const filterNames = selectedFilters.map(filter => {
-        switch(filter.value) {
-          case 'etapa': return 'Etapa de Ensino';
-          case 'localidade': return 'Localidade';
-          case 'dependencia': return 'Dependência Administrativa';
-          case 'vinculo': return 'Vínculo Funcional';
-          case 'formacaoDocente': return 'Formação Docente';
-          case 'faixaEtaria': return 'Faixa Etária';
-          default: return filter.value;
-        }
-      });
-      filterInfo.push(`Filtros: ${filterNames.join(', ')}`);
-    }
-
-    // Construir o título completo
+    
     let fullTitle = `${titleMapping[type]} - ${locationName} (${yearDisplay})`;
 
-    // Adicionar informações de filtro se houver
     if (filterInfo.length > 0) {
       fullTitle += ` | ${filterInfo.join(' | ')}`;
     }
 
     setTitle(type ? fullTitle : '');
-
-    setIsEtapaSelected(selectedFilters.some(filter => filter.value === 'etapa'));
-    setIsLocalidadeSelected(selectedFilters.some(filter => filter.value === 'localidade'));
-    setIsDependenciaSelected(selectedFilters.some(filter => filter.value === 'dependencia'));
-    setIsVinculoSelected(selectedFilters.some(filter => filter.value === 'vinculo'));
-    setIsFormacaoDocenteSelected(selectedFilters.some(filter => filter.value === 'formacaoDocente'));
-    setIsFaixaEtariaSelected(selectedFilters.some(filter => filter.value === 'faixaEtaria'));
   };
 
   const handleClearFilters = () => {
     setDisplayHistorical(false);
     setIsHistorical(false);
-    setType('enrollment');
-    setFilteredType('enrollment');
-    const limits = yearLimits['enrollment']; // usando enrollment pois é o tipo padrão
+    setType('university/count');
+    const limits = yearLimits['university/count'];
     setStartYear(limits.min);
     setEndYear(limits.max);
     setYear(limits.max);
@@ -198,12 +120,16 @@ function ParentComponent() {
     setError(null);
     setTitle('');
     setSelectedFilters([]);
-    setIsEtapaSelected(false);
-    setIsLocalidadeSelected(false);
-    setIsDependenciaSelected(false);
-    setIsVinculoSelected(false);
-    setIsFormacaoDocenteSelected(false);
-    setIsFaixaEtariaSelected(false);
+  };
+
+  const filterOptions = [
+  ];
+
+  const titleMapping = {
+    "university/count": "Número de intituições de ensino superior",
+    "university_enrollment": "Número de matrículas",
+    "university_teacher": "Número de professores",
+    "course_count": "Número de cursos"
   };
 
   const filteredCities = Object.entries(municipios).filter(([key, {
@@ -222,19 +148,6 @@ function ParentComponent() {
     return matchesTerritory && matchesFaixaPopulacional && matchesAglomerado && matchesGerencia;
   });
 
-  const titleMapping = {
-    enrollment: "Número de matrículas",
-    "school/count": "Número de escolas",
-    class: "Número de turmas",
-    teacher: "Número de docentes",
-    auxiliar: "Número de auxiliares docentes",
-    employees: "Número de funcionários",
-    out_of_school: "Número de alunos fora da escola",
-    liquid_enrollment_ratio: "Taxa de matrículas líquidas",
-    gloss_enrollment_ratio: "Taxa de matrículas brutas",
-    rate_school_new: "Taxa de atendimento educacional"
-  };
-
   const typeOptions = Object.entries(titleMapping).map(([key, label]) => ({
     value: key,
     label: label,
@@ -251,18 +164,18 @@ function ParentComponent() {
   }));
 
   const gerenciaOptions = [...new Set(Object.values(municipios).map(m => m.gerencia))]
-    .flatMap(gerencia => gerencia.split(',').map(g => g.trim()))  // Separa os valores por vírgula
-    .filter(Boolean)  // Remove valores vazios
-    .sort((a, b) => parseInt(a) - parseInt(b))  // Ordenação numérica
+    .flatMap(gerencia => gerencia.split(',').map(g => g.trim()))
+    .filter(Boolean)
+    .sort((a, b) => parseInt(a) - parseInt(b))
     .map(gerencia => ({
       value: gerencia,
       label: 'Gerencia ' + gerencia.padStart(2, '0'),
     }));
 
   const aglomeradoOptions = [...new Set(Object.values(municipios).map(m => m.aglomerado))]
-    .flatMap(aglomerado => aglomerado.split(',').map(a => a.trim()))  // Separa os valores por vírgula
-    .filter(Boolean)  // Remove valores vazios
-    .sort((a, b) => parseInt(a) - parseInt(b))  // Ordenação numérica
+    .flatMap(aglomerado => aglomerado.split(',').map(a => a.trim()))
+    .filter(Boolean)
+    .sort((a, b) => parseInt(a) - parseInt(b))
     .map(aglomerado => ({
       value: aglomerado,
       label: 'Aglomerado ' + aglomerado.padStart(2, '0'),
@@ -276,23 +189,6 @@ function ParentComponent() {
   const customStyles = {
     menuPortal: (base) => ({ ...base, zIndex: 9999 }),
   };
-
-  const filterOptions = type === 'out_of_school'
-    ? [{ value: 'localidade', label: 'Localidade' }]
-    : type === 'liquid_enrollment_ratio' || type === 'gloss_enrollment_ratio'
-    ? [
-        { value: 'localidade', label: 'Localidade' },
-        { value: 'etapa', label: 'Etapa (Obrigatório)' }
-      ]
-    : type === 'rate_school_new'
-    ? [{ value: 'faixaEtaria', label: 'Faixa Etária (Obrigatório)' }]
-    : [
-        { value: 'localidade', label: 'Localidade' },
-        ...(type !== 'employees' ? [{ value: 'etapa', label: 'Etapa' }] : []),
-        { value: 'dependencia', label: 'Dependência Administrativa' },
-        ...(type === 'teacher' ? [{ value: 'vinculo', label: 'Vínculo Funcional' }] : []),
-        ...(type === 'teacher' ? [{ value: 'formacaoDocente', label: 'Formação Docente' }] : []),
-      ];
 
   return (
     <div className="app-container">
@@ -397,7 +293,6 @@ function ParentComponent() {
               menuPortalTarget={document.body}
               isClearable
               placeholder="Território de Desenvolvimento"
-              isDisabled={type === 'out_of_school' || type === 'liquid_enrollment_ratio'}
             />
           </div>
           <div className="select-container filter-item">
@@ -414,7 +309,6 @@ function ParentComponent() {
               menuPortalTarget={document.body}
               isClearable
               placeholder="Faixa Populacional"
-              isDisabled={type === 'out_of_school' || type === 'liquid_enrollment_ratio' || type === 'gloss_enrollment_ratio' || type === 'rate_school_new'}
             />
           </div>
           <div className="select-container filter-item">
@@ -428,7 +322,6 @@ function ParentComponent() {
               menuPortalTarget={document.body}
               isClearable
               placeholder="Aglomerado"
-              isDisabled={type === 'out_of_school' || type === 'liquid_enrollment_ratio' || type === 'gloss_enrollment_ratio' || type === 'rate_school_new'}
             />
           </div>
           <div className="select-container filter-item">
@@ -442,7 +335,6 @@ function ParentComponent() {
               menuPortalTarget={document.body}
               isClearable
               placeholder="Gerencia"
-              isDisabled={type === 'out_of_school' || type === 'liquid_enrollment_ratio' || type === 'gloss_enrollment_ratio' || type === 'rate_school_new'}
             />
           </div>
           <div className="select-container filter-item">
@@ -456,7 +348,6 @@ function ParentComponent() {
               menuPortalTarget={document.body}
               isClearable
               placeholder="Cidade"
-              isDisabled={type === 'out_of_school' || type === 'liquid_enrollment_ratio' || type === 'gloss_enrollment_ratio' || type === 'rate_school_new'}
             />
           </div>
         </div>
@@ -465,18 +356,8 @@ function ParentComponent() {
             <Select
               id="multiFilterSelect"
               value={selectedFilters}
-              onChange={(newValue, actionMeta) => {
-                if (type === 'liquid_enrollment_ratio' || type === 'gloss_enrollment_ratio') {
-                  const etapaFilter = { value: 'etapa', label: 'Etapa de Ensino (Obrigatório)' };
-
-                  if (newValue.length === 0) {
-                    setSelectedFilters([etapaFilter]);
-                  } else if (!newValue.some(filter => filter.value === 'etapa')) {
-                    setSelectedFilters([etapaFilter, ...newValue.slice(-1)]);
-                  } else {
-                    setSelectedFilters(newValue.slice(-2));
-                  }
-                } else if (displayHistorical) {
+              onChange={(newValue) => {
+                if (displayHistorical) {
                   setSelectedFilters(newValue.slice(-1));
                 } else if (newValue.length <= 2) {
                   setSelectedFilters(newValue);
@@ -493,22 +374,6 @@ function ParentComponent() {
             />
           </div>
         </div>
-        {(type === 'out_of_school' || type === 'liquid_enrollment_ratio' || type === 'gloss_enrollment_ratio' || type === 'rate_school_new') && (
-          <div className="info-message" style={{
-            width: '100%',
-            color: '#666',
-            fontSize: '0.85em',
-            marginTop: '5px',
-            marginBottom: '10px',
-            maxWidth: '100%'
-          }}>
-            {type === 'out_of_school'
-              ? 'Para população fora da escola, os dados estão disponíveis apenas para consulta consolidada do estado do Piauí.'
-              : type === 'rate_school_new'
-              ? <span>Para taxa de atendimento educacional, os dados estão disponíveis apenas para consulta consolidada do estado do Piauí <span style={{ color: '#ff6b6b' }}>e é obrigatório selecionar faixa etaria para consulta</span>.</span>
-              : <span>Para taxa de matrículas {type === 'liquid_enrollment_ratio' ? 'líquidas' : 'brutas'}, os dados estão disponíveis apenas para consulta consolidada do estado do Piauí <span style={{ color: '#ff6b6b' }}>e é obrigatório selecionar etapa para consulta</span>.</span>}
-          </div>
-        )}
         <div className="filter-button-container">
           <Button
             variant="contained"
@@ -556,7 +421,7 @@ function ParentComponent() {
           <h2>{title}</h2>
         </div>
       ) : null}
-      <ApiContainer
+      <ApiHigherContainer
         type={type}
         year={year}
         isHistorical={isHistorical}
@@ -572,25 +437,16 @@ function ParentComponent() {
         onError={setError}
         onLoading={setIsLoading}
         triggerFetch={isLoading}
-        selectedFilters={selectedFilters}
       />
       {!isLoading && !error && data && title ? (
-        <ApiDataTable
+        <DataTable
           data={data.finalResult ? data.finalResult : data}
           municipioData={data.allResults && data.allResults.length > 0 ? data.allResults : []}
-          isEtapaSelected={isEtapaSelected}
-          isLocalidadeSelected={isLocalidadeSelected}
-          isDependenciaSelected={isDependenciaSelected}
-          isVinculoSelected={isVinculoSelected}
-          isFaixaEtariaSelected={isFaixaEtariaSelected}
           isHistorical={isHistorical}
-          type={filteredType}
-          isFormacaoDocenteSelected={isFormacaoDocenteSelected}
-          year={year}
         />
       ) : null}
     </div>
   );
 }
 
-export default ParentComponent;
+export default FilterComponent;
