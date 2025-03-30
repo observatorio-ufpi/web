@@ -7,6 +7,10 @@ export function processResults(allResults, selectedFilters, type, year) {
   let isVinculoSelected = false;
   let isFormacaoDocenteSelected = false;
   let isFaixaEtariaSelected = false;
+  
+  //educacao superior
+  let isModalidadeSelected = false;
+  let isRegimeSelected = false;
 
   
   if (selectedFilters) {
@@ -16,6 +20,8 @@ export function processResults(allResults, selectedFilters, type, year) {
     isVinculoSelected = selectedFilters.some((filter) => filter.value === "vinculo");
     isFormacaoDocenteSelected = selectedFilters.some((filter) => filter.value === "formacaoDocente");
     isFaixaEtariaSelected = selectedFilters.some((filter) => filter.value === "faixaEtaria");
+    isModalidadeSelected = selectedFilters.some((filter) => filter.value === "modalidade");
+    isRegimeSelected = selectedFilters.some((filter) => filter.value === "regimeDeTrabalho");
   }
   // Inicializar objetos para armazenar totais
   const totalByEtapa = {};
@@ -24,6 +30,8 @@ export function processResults(allResults, selectedFilters, type, year) {
   const totalByVinculo = {};
   const totalByFormacaoDocente = {};
   const totalByFaixaEtaria = {};
+  const totalByModalidade = {};
+  const totalByRegime = {};
   const crossedData = {};
   let totalSum = 0;
 
@@ -84,6 +92,12 @@ export function processResults(allResults, selectedFilters, type, year) {
         else if (isFaixaEtariaSelected) {
           processFaixaEtariaTotal(totalByFaixaEtaria, item);
         }
+        else if (isModalidadeSelected) {
+          processModalidadeTotal(totalByModalidade, item);
+        }
+        else if (isRegimeSelected) {
+          processRegimeTotal(totalByRegime, item);
+        }
         else {
           totalSum += item.total;
         }
@@ -95,8 +109,8 @@ export function processResults(allResults, selectedFilters, type, year) {
   return getFormattedResult(
     isEtapaSelected, isLocalidadeSelected, isDependenciaSelected,
     isVinculoSelected, isFormacaoDocenteSelected, isFaixaEtariaSelected,
-    crossedData, totalByEtapa, totalByLocalidade, totalByDependencia,
-    totalByVinculo, totalByFormacaoDocente, totalByFaixaEtaria,
+    isModalidadeSelected, isRegimeSelected, crossedData, totalByEtapa, totalByLocalidade, totalByDependencia,
+    totalByVinculo, totalByFormacaoDocente, totalByFaixaEtaria, totalByModalidade, totalByRegime,
     totalSum, type
   );
 }
@@ -430,12 +444,32 @@ function processFaixaEtariaTotal(totalByFaixaEtaria, item) {
   totalByFaixaEtaria[item.age_range_id].total += item.total;
 }
 
+function processModalidadeTotal(totalByModalidade, item) {
+  if (!totalByModalidade[item.upper_education_mod_id]) {
+    totalByModalidade[item.upper_education_mod_id] = {
+      total: 0,
+      name: item.upper_education_mod_name
+    };
+  }
+  totalByModalidade[item.upper_education_mod_id].total += item.total;
+}
+
+function processRegimeTotal(totalByRegime, item) {
+  if (!totalByRegime[item.work_regime_id]) {
+    totalByRegime[item.work_regime_id] = {
+      total: 0,
+      name: item.work_regime_name
+    };
+  }
+  totalByRegime[item.work_regime_id].total += item.total;
+}
+
 // Função para formatar o resultado final
 function getFormattedResult(
   isEtapaSelected, isLocalidadeSelected, isDependenciaSelected,
   isVinculoSelected, isFormacaoDocenteSelected, isFaixaEtariaSelected,
-  crossedData, totalByEtapa, totalByLocalidade, totalByDependencia,
-  totalByVinculo, totalByFormacaoDocente, totalByFaixaEtaria,
+  isModalidadeSelected, isRegimeSelected, crossedData, totalByEtapa, totalByLocalidade, totalByDependencia,
+  totalByVinculo, totalByFormacaoDocente, totalByFaixaEtaria, totalByModalidade, totalByRegime,
   totalSum, type
 ) {
   if (isLocalidadeSelected && isDependenciaSelected) {
@@ -542,6 +576,26 @@ function getFormattedResult(
       result: Object.entries(totalByFaixaEtaria).map(([id, { total, name }]) => ({
         age_range_id: id,
         age_range_name: name,
+        total
+      }))
+    };
+  }
+
+  if (isModalidadeSelected) {
+    return {
+      result: Object.entries(totalByModalidade).map(([id, { total, name }]) => ({
+        upper_education_mod_id: id,
+        upper_education_mod_name: name,
+        total
+      }))
+    };
+  }
+
+  if (isRegimeSelected) {
+    return {
+      result: Object.entries(totalByRegime).map(([id, { total, name }]) => ({
+        work_regime_id: id,
+        work_regime_name: name,
         total
       }))
     };

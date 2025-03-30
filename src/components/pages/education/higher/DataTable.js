@@ -4,7 +4,6 @@ import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
 import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
-import TablePagination from '@mui/material/TablePagination';
 import TableRow from '@mui/material/TableRow';
 import { ThemeProvider, createTheme, styled } from '@mui/material/styles';
 import React from 'react';
@@ -48,11 +47,15 @@ const theme = createTheme({
     default: ['total'],
 
     municipio: ['cityName', 'total'],
+    modalidade: ['upper_education_mod_name', 'total'],
+    regimeDeTrabalho: ['work_regime_name', 'total']
   };
 
   const HEADER_DISPLAY_NAMES = {
     total: 'Total',
     cityName: 'Município',
+    upper_education_mod_name: 'Modalidade',
+    work_regime_name: 'Regime de Trabalho'
   };
 
   const hasNoData = (data, tableDataArray, municipioDataArray) => {
@@ -98,7 +101,9 @@ const theme = createTheme({
 const DataTable = ({
   data,
   municipioData,
-  isHistorical
+  isHistorical,
+  isModalidadeSelected,
+  isRegimeSelected
 }) => {
 
   const tableDataArray = [data?.result || []];
@@ -121,6 +126,20 @@ const DataTable = ({
   const renderHistoricalTable = () => {
     // Determinar quais colunas extras precisamos baseado nos filtros
     const getExtraColumns = () => {
+      if (isModalidadeSelected) {
+        return {
+          id: 'upper_education_mod_id',
+          name: 'upper_education_mod_name',
+          label: 'Modalidade'
+        };
+      }
+      if (isRegimeSelected) {
+        return {
+          id: 'work_regime_id',
+          name: 'work_regime_name',
+          label: 'Regime de Trabalho'
+        };
+      }
       return null;
     };
 
@@ -160,9 +179,101 @@ const DataTable = ({
         </Paper>
       );
     }
+
+    // Para dados históricos com filtros
+    const categoryYearMap = new Map();
+    const years = new Set();
+    const categories = new Set();
+    const categoryIds = new Map();
+
+    // Primeiro passo: organizar os dados
+    data.result.forEach(item => {
+      const year = item.year;
+      const categoryName = item[extraColumn.name];
+      const categoryId = item[extraColumn.id];
+      years.add(year);
+      categories.add(categoryName);
+      categoryIds.set(categoryName, categoryId);
+
+      if (!categoryYearMap.has(categoryName)) {
+        categoryYearMap.set(categoryName, new Map());
+      }
+      categoryYearMap.get(categoryName).set(year, (categoryYearMap.get(categoryName).get(year) || 0) + Number(item.total || 0));
+    });
+
+    const sortedYears = [...years].sort((a, b) => a - b);
+    const sortedCategories = [...categories].sort((a, b) => {
+      return Number(categoryIds.get(a)) - Number(categoryIds.get(b));
+    });
+
+    return (
+      <Paper sx={{ padding: 2, backgroundColor: theme.palette.background.default }}>
+        <TableContainer component={Paper} sx={{ maxWidth: '100%', overflowX: 'auto' }}>
+          <Table sx={{ minWidth: 650 }} aria-label="historical table">
+            <StyledTableHead>
+              <TableRow>
+                <BoldTableCell>{extraColumn.label}</BoldTableCell>
+                {sortedYears.map(year => (
+                  <BoldTableCell key={year}>{year}</BoldTableCell>
+                ))}
+              </TableRow>
+            </StyledTableHead>
+            <TableBody>
+              {sortedCategories.map(category => {
+                const yearMap = categoryYearMap.get(category);
+
+                return (
+                  <TableRow key={category}>
+                    <CenteredTableCell>{category}</CenteredTableCell>
+                    {sortedYears.map(year => (
+                      <CenteredTableCell key={year}>
+                        {yearMap.get(year) || 0}
+                      </CenteredTableCell>
+                    ))}
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Paper>
+    );
   };
 
-  const hasNoFilters = true;
+  const renderSimpleTable = (filterType) => {
+    let headers, tableData, sortField, formatTotal, usePagination = false, note = null;
+
+    switch (filterType) {
+      case 'modalidade':
+        headers = HEADERS.modalidade;
+        tableData = data.result;
+        sortField = 'upper_education_mod_id';
+        break;
+      case 'regimeDeTrabalho':
+        headers = HEADERS.regimeDeTrabalho;
+        tableData = data.result;
+        sortField = 'work_regime_id';
+        break;
+      default:
+        return null;
+    }
+
+    return (
+      <Paper sx={{ padding: 2, backgroundColor: theme.palette.background.default }}>
+        <BasicTable
+          headers={headers}
+          data={tableData}
+          sortField={sortField}
+          formatTotal={formatTotal}
+          usePagination={usePagination}
+          note={note}
+        />
+      </Paper>
+    );
+  };
+
+  const hasNoFilters = !isModalidadeSelected && !isRegimeSelected;
+  const hasCrossFilters = false;
 
   return (
     <ThemeProvider theme={theme}>
@@ -191,6 +302,14 @@ const DataTable = ({
                 />
           </Paper>
         )}
+          </>
+        )}
+
+        {/* Tabelas simples com filtros individuais */}
+        {!isHistorical && !hasCrossFilters && (
+          <>
+            {isModalidadeSelected && renderSimpleTable('modalidade')}
+            {isRegimeSelected && renderSimpleTable('regimeDeTrabalho')}
           </>
         )}
       </div>

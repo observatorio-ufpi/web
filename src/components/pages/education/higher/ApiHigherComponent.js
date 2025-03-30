@@ -23,6 +23,9 @@ function ApiHigherContainer({
   useEffect(() => {
     if (!triggerFetch) return;
 
+    const isModalidadeSelected = Array.isArray(selectedFilters) && selectedFilters.some((filter) => filter.value === "modalidade");
+    const isRegimeSelected = Array.isArray(selectedFilters) && selectedFilters.some((filter) => filter.value === "regimeDeTrabalho");
+
     const buildFilter = (cityId = null) => {
         const yearFilter = isHistorical
           ? `min_year:"${startYear}",max_year:"${endYear}"`
@@ -31,8 +34,25 @@ function ApiHigherContainer({
         return `${yearFilter},state:"${state}"${cityId ? `,city:"${cityId}"` : ""}`;
     };
 
-    const buildUrl = (filter) => {
-      return `https://simcaq.c3sl.ufpr.br/api/v1/${type}?filter=${encodeURIComponent(filter)}`;
+    const buildUrl = (filter, forceEndpoint = null) => {
+      const selectedDims = [];
+
+      if (isModalidadeSelected) {
+        selectedDims.push("upper_education_mod");
+      }
+
+      if (isRegimeSelected) {
+        selectedDims.push("work_regime");
+      }
+
+      let endpoint = forceEndpoint || type;
+      if (!forceEndpoint && type === 'course_count' && year >= 2020) {
+        endpoint = 'course_aggregate';
+      }
+
+      const dims = selectedDims.length > 0 ? `dims=${selectedDims.join(",")}` : "";
+
+      return `https://simcaq.c3sl.ufpr.br/api/v1/${endpoint}?${dims}&filter=${encodeURIComponent(filter)}`;
     };
 
     const fetchCityData = async (cityId, cityName) => {
@@ -60,7 +80,30 @@ function ApiHigherContainer({
               // Busca dados históricos para múltiplas cidades
               const allResults = await Promise.all(
                 citiesList.map(async ([cityId, cityInfo]) => {
-                    return fetchCityData(cityId, cityInfo.nomeMunicipio);
+                  if (type === 'course_count') {
+                    // Buscar dados antigos (até 2019)
+                    const oldFilter = buildFilter(cityId);
+                    const oldUrl = buildUrl(oldFilter, 'course_count');
+                    const oldResponse = await fetch(oldUrl);
+                    const oldData = await oldResponse.json();
+  
+                    // Buscar dados novos (2020 em diante)
+                    const newFilter = buildFilter(cityId);
+                    const newUrl = buildUrl(newFilter, 'course_aggregate');
+                    const newResponse = await fetch(newUrl);
+                    const newData = await newResponse.json();
+
+                    return {
+                      cityName: cityInfo.nomeMunicipio,
+                      result: [
+                        ...oldData.result.filter(item => item.year <= 2019),
+                        ...newData.result.filter(item => item.year >= 2020)
+                      ].sort((a, b) => a.year - b.year)
+                    };
+                  }
+                  else {
+                    return fetchCityData(cityId, cityInfo.nomeMunicipio); 
+                  }
                 })
               );
   
@@ -70,7 +113,13 @@ function ApiHigherContainer({
               allResults.forEach(cityResult => {
                   cityResult.result.forEach(item => {
                       // Verificar se já existe um item com o mesmo ano
-                      const existingItem = allUniqueData.find(existing => existing.year === item.year);
+                      const existingItem = allUniqueData.find(existing => {
+                        if (existing.year !== item.year) return false;
+
+                        if (isModalidadeSelected && item.upper_education_mod_id !== existing.upper_education_mod_id) return false;
+                        if (isRegimeSelected && item.work_regime_id !== existing.work_regime_id) return false;
+                        return true;
+                      });
               
                       if (!existingItem) {
                           // Se não existe, adiciona à lista
@@ -81,7 +130,12 @@ function ApiHigherContainer({
               
               allUniqueData.forEach(uniqueItem => {
                   allResults.forEach(cityResult => {
-                      const matchingItem = cityResult.result.find(item => item.year === uniqueItem.year);
+                      const matchingItem = cityResult.result.find(item => {
+                        if (item.year !== uniqueItem.year) return false;
+                        if (isModalidadeSelected && item.upper_education_mod_id !== uniqueItem.upper_education_mod_id) return false;
+                        if (isRegimeSelected && item.work_regime_id !== uniqueItem.work_regime_id) return false;
+                        return true;
+                      });
               
                       if (matchingItem) {
                           uniqueItem.total += Number(matchingItem.total);
@@ -98,16 +152,39 @@ function ApiHigherContainer({
             } else if (citiesList.length === 0 && (territory || faixaPopulacional || aglomerado || gerencia)){
                 onDataFetched({ finalResult: [], allResults: [] });
             } else {
-                // Busca histórica original para cidade/estado único
-                const filter = buildFilter(city);
-                const url = buildUrl(filter);
-                const response = await fetch(url);
+                if (type === 'course_count'){
+                    // Buscar dados antigos (até 2019)
+                    const oldFilter = buildFilter(city);
+                    const oldUrl = buildUrl(oldFilter, 'course_count');
+                    const oldResponse = await fetch(oldUrl);
+                    const oldData = await oldResponse.json();
   
-                if (!response.ok) throw new Error(`Erro HTTP! Status: ${response.status}`);
-  
-                const result = await response.json();
-                console.log("Result:", result);
-                onDataFetched(result);
+                    // Buscar dados novos (2020 em diante)
+                    const newFilter = buildFilter(city);
+                    const newUrl = buildUrl(newFilter, 'course_aggregate');
+                    const newResponse = await fetch(newUrl);
+                    const newData = await newResponse.json();
+
+                    const combinedResults = {
+                      result: [
+                        ...oldData.result.filter(item => item.year <= 2019),
+                        ...newData.result.filter(item => item.year >= 2020)
+                      ].sort((a, b) => a.year - b.year)
+                    };
+                    console.log("Combined Results:", combinedResults);
+                    onDataFetched(combinedResults);
+                } else {
+                  // Busca histórica original para cidade/estado único
+                  const filter = buildFilter(city);
+                  const url = buildUrl(filter);
+                  const response = await fetch(url);
+    
+                  if (!response.ok) throw new Error(`Erro HTTP! Status: ${response.status}`);
+    
+                  const result = await response.json();
+                  console.log("Result:", result);
+                  onDataFetched(result);
+                }
             }
             return;
           }
