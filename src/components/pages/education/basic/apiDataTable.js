@@ -8,6 +8,7 @@ import TablePagination from '@mui/material/TablePagination';
 import TableRow from '@mui/material/TableRow';
 import { ThemeProvider, createTheme, styled } from '@mui/material/styles';
 import React from 'react';
+import TableExport from '../../../common/TableExport';
 
 // ==========================================
 // TEMA E ESTILOS
@@ -455,13 +456,13 @@ const hasNoData = (data, tableDataArray, municipioDataArray) => {
 // ==========================================
 
 // Componente de tabela básica
-const BasicTable = ({ headers, data, formatTotal = false, sortField = null }) => {
+const BasicTable = ({ headers, data, formatTotal = false, sortField = null, ref }) => {
   const sortedData = sortField
     ? [...data].sort((a, b) => Number(a[sortField]) - Number(b[sortField]))
     : data;
 
   return (
-    <TableContainer component={Paper} sx={{ maxWidth: '100%', overflowX: 'auto' }}>
+    <TableContainer sx={{ maxWidth: '100%', overflowX: 'auto', border: '2px solid #ccc', borderRadius: '4px' }} ref={ref}>
       <Table sx={{ minWidth: 650 }} aria-label="data table">
         <StyledTableHead>
           <TableRow>
@@ -473,17 +474,30 @@ const BasicTable = ({ headers, data, formatTotal = false, sortField = null }) =>
           </TableRow>
         </StyledTableHead>
         <TableBody>
-          {sortedData.map((item, index) => (
-            <TableRow key={index}>
-              {headers.map(header => (
-                <CenteredTableCell key={header}>
-                  {header === 'total' && formatTotal
-                    ? `${Number(item[header] || 0).toFixed(2)}%`
-                    : item[header]?.toString() || ''}
-                </CenteredTableCell>
-              ))}
-            </TableRow>
-          ))}
+          {sortedData.map((item, index) => {
+            // Verifica se o item atual é a linha de Total
+            const isTotal = item.cityName === 'Total';
+            
+            return (
+              <TableRow key={index}>
+                {headers.map(header => (
+                  <TableCell 
+                    key={header} 
+                    align="center"
+                    sx={{ 
+                      fontWeight: isTotal ? 'bold' : 'normal',
+                      textAlign: 'center',
+                      verticalAlign: 'middle'
+                    }}
+                  >
+                    {header === 'total' && formatTotal
+                      ? `${Number(item[header] || 0).toFixed(2)}%`
+                      : item[header]?.toString() || ''}
+                  </TableCell>
+                ))}
+              </TableRow>
+            );
+          })}
         </TableBody>
       </Table>
     </TableContainer>
@@ -500,7 +514,8 @@ const PaginatedTable = ({
   handleChangeRowsPerPage,
   formatTotal = false,
   sortField = null,
-  note = null
+  note = null,
+  ref
 }) => {
   const sortedData = sortField
     ? [...data].sort((a, b) => Number(a[sortField]) - Number(b[sortField]))
@@ -508,7 +523,7 @@ const PaginatedTable = ({
 
   return (
     <>
-      <TableContainer component={Paper} sx={{ maxWidth: '100%', overflowX: 'auto' }}>
+      <TableContainer sx={{ maxWidth: '100%', overflowX: 'auto', border: '2px solid #ccc', borderRadius: '4px' }} ref={ref}>
         <Table sx={{ minWidth: 650 }} aria-label="paginated table">
           <StyledTableHead>
             <TableRow>
@@ -567,15 +582,16 @@ const CrossTable = ({
   page,
   rowsPerPage,
   handleChangePage,
-  handleChangeRowsPerPage
+  handleChangeRowsPerPage,
+  ref
 }) => {
   const showTotals = !isRatioType(type);
 
   return (
     <>
-      <TableContainer component={Paper} sx={{ maxWidth: '100%', overflowX: 'auto' }}>
+      <TableContainer sx={{ maxWidth: '100%', overflowX: 'auto', border: '2px solid #ccc', borderRadius: '4px' }} ref={ref}>
         <Table sx={{ minWidth: 650 }} aria-label="combined table">
-          <TableHead>
+          <StyledTableHead>
             <TableRow>
               <BoldTableCell>{rowHeader}</BoldTableCell>
               {Array.from(uniqueColumns.entries()).map(([id, name]) => (
@@ -583,7 +599,7 @@ const CrossTable = ({
               ))}
               {showTotals && <BoldTableCell>Total</BoldTableCell>}
             </TableRow>
-          </TableHead>
+          </StyledTableHead>
           <TableBody>
             {Array.from(uniqueRows.entries())
               .slice(type === 'school/count' && isEtapaSelected ? page * rowsPerPage : 0,
@@ -612,13 +628,28 @@ const CrossTable = ({
                   </BoldTableCell>
                 ))}
                 <BoldTableCell>
-                  {Array.from(rowTotals.values()).reduce((sum, total) => Number(sum) + Number(total || 0), 0)}
+                  {Array.from(columnTotals.values()).reduce((sum, val) => sum + val, 0)}
                 </BoldTableCell>
               </TableRow>
             )}
           </TableBody>
         </Table>
       </TableContainer>
+      <TableExport 
+        data={Array.from(uniqueRows.entries()).map(([rowId, rowName]) => {
+          const rowData = { [rowHeader]: rowName };
+          Array.from(uniqueColumns.entries()).forEach(([colId, colName]) => {
+            rowData[colName] = cellValues.get(`${rowId}-${colId}`) || 0;
+          });
+          rowData.Total = rowTotals.get(rowId) || 0;
+          return rowData;
+        })}
+        headers={[rowHeader, ...Array.from(uniqueColumns.values()), 'Total']}
+        headerDisplayNames={{ [rowHeader]: rowHeader, Total: 'Total' }}
+        fileName="dados_cruzados"
+        tableTitle="Dados Cruzados"
+        tableRef={ref}
+      />
       {type === 'school/count' && isEtapaSelected && (
         <TablePagination
           component="div"
@@ -649,10 +680,26 @@ const ApiDataTable = ({
   type,
   isFormacaoDocenteSelected,
   isFaixaEtariaSelected,
-  year
+  year,
+  title = ''
 }) => {
+  // Estados para paginação
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
+
+  // Referências para as tabelas
+  const tableRefs = {
+    historical: React.useRef(null),
+    default: React.useRef(null),
+    municipio: React.useRef(null),
+    etapa: React.useRef(null),
+    localidade: React.useRef(null),
+    dependencia: React.useRef(null),
+    vinculo: React.useRef(null),
+    formacaoDocente: React.useRef(null),
+    faixaEtaria: React.useRef(null),
+    cross: React.useRef(null)
+  };
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
@@ -674,9 +721,9 @@ const ApiDataTable = ({
   if (hasNoData(data, tableDataArray, municipioDataArray)) {
     return (
       <ThemeProvider theme={theme}>
-        <Paper sx={{ padding: 2, backgroundColor: theme.palette.background.default }}>
+        <div>
           Nenhum dado disponível
-        </Paper>
+        </div>
       </ThemeProvider>
     );
   }
@@ -755,9 +802,36 @@ const ApiDataTable = ({
 
       const sortedYears = [...yearMap.keys()].sort((a, b) => a - b);
 
+      // Preparar dados para exportação
+      const exportData = [];
+      sortedYears.forEach(year => {
+        const row = { year };
+        if (isEtapaSelected) {
+          getEtapaConfig().categories.forEach(category => {
+            row[category.name] = categoryYearMap.get(category.name)?.get(year) || 0;
+          });
+        } else {
+          row.total = yearMap.get(year) || 0;
+        }
+        exportData.push(row);
+      });
+
+      // Preparar headers para exportação
+      let exportHeaders, headerDisplayNames;
+      if (isEtapaSelected) {
+        exportHeaders = ['year', ...getEtapaConfig().categories.map(c => c.name)];
+        headerDisplayNames = { year: 'Ano' };
+        getEtapaConfig().categories.forEach(c => {
+          headerDisplayNames[c.name] = c.name;
+        });
+      } else {
+        exportHeaders = ['year', 'total'];
+        headerDisplayNames = { year: 'Ano', total: 'Total' };
+      }
+
       return (
-        <Paper sx={{ padding: 2, backgroundColor: theme.palette.background.default }}>
-          <TableContainer component={Paper} sx={{ maxWidth: '100%', overflowX: 'auto' }}>
+        <div>
+          <TableContainer sx={{ maxWidth: '100%', overflowX: 'auto', border: '2px solid #ccc', borderRadius: '4px' }} ref={tableRefs.historical}>
             <Table sx={{ minWidth: 650 }} aria-label="historical table">
               <StyledTableHead>
                 <TableRow>
@@ -779,7 +853,15 @@ const ApiDataTable = ({
               </TableBody>
             </Table>
           </TableContainer>
-        </Paper>
+          <TableExport 
+            data={exportData}
+            headers={exportHeaders}
+            headerDisplayNames={headerDisplayNames}
+            fileName="dados_historicos"
+            tableTitle={title || "Dados Históricos"}
+            tableRef={tableRefs.historical}
+          />
+        </div>
       );
     }
 
@@ -806,13 +888,31 @@ const ApiDataTable = ({
 
     // Converter Set para Array e ordenar
     const sortedYears = [...years].sort((a, b) => a - b);
+
     const sortedCategories = [...categories].sort((a, b) => {
       return Number(categoryIds.get(a)) - Number(categoryIds.get(b));
     });
 
+    // Preparar dados para exportação
+    const exportData = [];
+    sortedCategories.forEach(category => {
+      const row = { [extraColumn.label]: category };
+      sortedYears.forEach(year => {
+        row[year] = categoryYearMap.get(category)?.get(year) || 0;
+      });
+      exportData.push(row);
+    });
+
+    // Preparar headers para exportação
+    const exportHeaders = [extraColumn.label, ...sortedYears];
+    const headerDisplayNames = { [extraColumn.label]: extraColumn.label };
+    sortedYears.forEach(year => {
+      headerDisplayNames[year] = year;
+    });
+
     return (
-      <Paper sx={{ padding: 2, backgroundColor: theme.palette.background.default }}>
-        <TableContainer component={Paper} sx={{ maxWidth: '100%', overflowX: 'auto' }}>
+      <div>
+        <TableContainer sx={{ maxWidth: '100%', overflowX: 'auto', border: '2px solid #ccc', borderRadius: '4px' }} ref={tableRefs.historical}>
           <Table sx={{ minWidth: 650 }} aria-label="historical table">
             <StyledTableHead>
               <TableRow>
@@ -822,241 +922,423 @@ const ApiDataTable = ({
                 ))}
               </TableRow>
             </StyledTableHead>
-            <TableBody>
-              {sortedCategories
-                .slice(type === 'school/count' && isEtapaSelected ? page * rowsPerPage : 0,
-                      type === 'school/count' && isEtapaSelected ? page * rowsPerPage + rowsPerPage : undefined)
-                .map(category => {
-                  const yearMap = categoryYearMap.get(category);
+          <TableBody>
+            {sortedCategories
+              .slice(type === 'school/count' && isEtapaSelected ? page * rowsPerPage : 0,
+                    type === 'school/count' && isEtapaSelected ? page * rowsPerPage + rowsPerPage : undefined)
+              .map(category => {
+                const yearMap = categoryYearMap.get(category);
 
-                  return (
-                    <TableRow key={category}>
-                      <CenteredTableCell>{category}</CenteredTableCell>
-                      {sortedYears.map(year => (
-                        <CenteredTableCell key={year}>
-                          {isRatioType(type)
-                            ? `${Number(yearMap.get(year) || 0).toFixed(2)}%`
-                            : yearMap.get(year) || 0}
-                        </CenteredTableCell>
-                      ))}
-                    </TableRow>
-                  );
-                })}
-            </TableBody>
-          </Table>
-        </TableContainer>
-        {type === 'school/count' && isEtapaSelected && (
-          <TablePagination
-            component="div"
-            count={sortedCategories.length}
-            page={page}
-            onPageChange={handleChangePage}
-            rowsPerPage={rowsPerPage}
-            onRowsPerPageChange={handleChangeRowsPerPage}
-            rowsPerPageOptions={[5, 10, 25, 50]}
-            labelRowsPerPage="Linhas por página:"
-            labelDisplayedRows={({ from, to, count }) =>
-              `${from}-${to} de ${count !== -1 ? count : `mais de ${to}`}`
-            }
-          />
-        )}
-        {type === 'school/count' && isEtapaSelected && (
-          <p>{ETAPA_ESCOLA_NOTE}</p>
-        )}
-      </Paper>
-    );
-  };
-
-  // Renderização de tabela cruzada
-  const renderCrossTable = () => {
-    const filters = { isEtapaSelected, isLocalidadeSelected, isDependenciaSelected, isVinculoSelected, isFormacaoDocenteSelected };
-    const config = getCrossTableConfig(filters, type, year);
-
-    if (!config) return null;
-
-    const crossedData = data?.result?.[config.dataKey] || [];
-
-    // Processamento de dados cruzados
-    const { uniqueRows, uniqueColumns, cellValues, rowTotals, columnTotals } = processCrossTableData(
-      crossedData,
-      config.rowIdField,
-      config.columnIdField,
-      config.rowField,
-      config.columnField
-    );
-
-    return (
-      <Paper sx={{ padding: 2, backgroundColor: theme.palette.background.default }}>
-        <CrossTable
-          rowHeader={config.rowHeader}
-          uniqueRows={uniqueRows}
-          uniqueColumns={uniqueColumns}
-          cellValues={cellValues}
-          rowTotals={rowTotals}
-          columnTotals={columnTotals}
-          type={type}
-          isEtapaSelected={isEtapaSelected}
+                return (
+                  <TableRow key={category}>
+                    <CenteredTableCell>{category}</CenteredTableCell>
+                    {sortedYears.map(year => (
+                      <CenteredTableCell key={year}>
+                        {isRatioType(type)
+                          ? `${Number(yearMap.get(year) || 0).toFixed(2)}%`
+                          : yearMap.get(year) || 0}
+                      </CenteredTableCell>
+                    ))}
+                  </TableRow>
+                );
+              })}
+          </TableBody>
+        </Table>
+      </TableContainer>
+      
+      {type === 'school/count' && isEtapaSelected && (
+        <TablePagination
+          component="div"
+          count={sortedCategories.length}
           page={page}
+          onPageChange={handleChangePage}
           rowsPerPage={rowsPerPage}
-          handleChangePage={handleChangePage}
-          handleChangeRowsPerPage={handleChangeRowsPerPage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+          rowsPerPageOptions={[5, 10, 25, 50]}
+          labelRowsPerPage="Linhas por página:"
+          labelDisplayedRows={({ from, to, count }) =>
+            `${from}-${to} de ${count !== -1 ? count : `mais de ${to}`}`
+          }
         />
-        {type === 'school/count' && isEtapaSelected && (
-          <p>{ETAPA_ESCOLA_NOTE}</p>
-        )}
-      </Paper>
-    );
-  };
+      )}
+      {type === 'school/count' && isEtapaSelected && (
+        <p>{ETAPA_ESCOLA_NOTE}</p>
+      )}
+      <TableExport 
+        data={exportData}
+        headers={exportHeaders}
+        headerDisplayNames={headerDisplayNames}
+        fileName="dados_historicos"
+        tableTitle={title || "Dados Históricos"}
+        tableRef={tableRefs.historical}
+      />
+    </div>
+  );
+};
 
-  // Renderização de tabela simples
-  const renderSimpleTable = (filterType) => {
-    let headers, tableData, sortField, formatTotal, usePagination = false, note = null;
+// Renderização de tabela cruzada
+const renderCrossTable = () => {
+  const filters = { isEtapaSelected, isLocalidadeSelected, isDependenciaSelected, isVinculoSelected, isFormacaoDocenteSelected };
+  const config = getCrossTableConfig(filters, type, year);
 
-    switch (filterType) {
-      case 'etapa':
-      if (type === 'school/count') {
-          headers = HEADERS.etapa.school;
-          usePagination = true;
-          note = ETAPA_ESCOLA_NOTE;
-      } else if (type === 'liquid_enrollment_ratio' || type === 'gloss_enrollment_ratio') {
-          headers = HEADERS.etapa.short;
-          formatTotal = true;
-      } else {
-          headers = HEADERS.etapa.standard;
-        }
-        tableData = data.result;
-        break;
+  if (!config) return null;
 
-      case 'localidade':
-        headers = HEADERS.localidade;
-        tableData = data.result;
-        break;
+  const crossedData = data?.result?.[config.dataKey] || [];
 
-      case 'dependencia':
-        headers = HEADERS.dependencia;
-        tableData = data.result;
-        sortField = 'adm_dependency_detailed_id';
-        formatTotal = isRatioType(type);
-        break;
-
-      case 'vinculo':
-        headers = HEADERS.vinculo;
-        tableData = data.result;
-        sortField = 'contract_type_id';
-        formatTotal = isRatioType(type);
-        break;
-
-      case 'formacaoDocente':
-        headers = HEADERS.formacaoDocente;
-        tableData = data.result;
-        sortField = 'initial_training_id';
-        formatTotal = isRatioType(type);
-        break;
-
-      case 'faixaEtaria':
-        headers = HEADERS.faixaEtaria;
-        tableData = data.result;
-        sortField = 'age_range_id';
-        formatTotal = true;
-        break;
-
-      default:
-        return null;
-    }
-
-    return (
-      <Paper sx={{ backgroundColor: theme.palette.background.default, marginBottom: 2 }}>
-        {usePagination ? (
-          <PaginatedTable
-            headers={headers}
-            data={tableData}
-              page={page}
-              rowsPerPage={rowsPerPage}
-            handleChangePage={handleChangePage}
-            handleChangeRowsPerPage={handleChangeRowsPerPage}
-            formatTotal={formatTotal}
-            sortField={sortField}
-            note={note}
-          />
-        ) : (
-          <BasicTable
-            headers={headers}
-            data={tableData}
-            formatTotal={formatTotal}
-            sortField={sortField}
-            />
-          )}
-        </Paper>
-    );
-  };
-
-  // Determinar qual tipo de tabela renderizar
-  const hasCrossFilters = (
-    (isEtapaSelected && isLocalidadeSelected) ||
-    (isEtapaSelected && isDependenciaSelected) ||
-    (isLocalidadeSelected && isDependenciaSelected) ||
-    (isEtapaSelected && isVinculoSelected) ||
-    (isLocalidadeSelected && isVinculoSelected) ||
-    (isDependenciaSelected && isVinculoSelected) ||
-    (isEtapaSelected && isFormacaoDocenteSelected) ||
-    (isLocalidadeSelected && isFormacaoDocenteSelected) ||
-    (isDependenciaSelected && isFormacaoDocenteSelected) ||
-    (isVinculoSelected && isFormacaoDocenteSelected)
+  // Processamento de dados cruzados
+  const { uniqueRows, uniqueColumns, cellValues, rowTotals, columnTotals } = processCrossTableData(
+    crossedData,
+    config.rowIdField,
+    config.columnIdField,
+    config.rowField,
+    config.columnField
   );
 
-  const hasNoFilters = !isEtapaSelected && !isLocalidadeSelected && !isDependenciaSelected &&
-                       !isVinculoSelected && !isFormacaoDocenteSelected && !isFaixaEtariaSelected;
+  // Preparar dados para exportação
+  const exportData = [];
+  Array.from(uniqueRows.entries()).forEach(([rowId, rowName]) => {
+    const rowData = { [config.rowHeader]: rowName };
+    Array.from(uniqueColumns.entries()).forEach(([colId, colName]) => {
+      rowData[colName] = cellValues.get(`${rowId}-${colId}`) || 0;
+    });
+    rowData.Total = rowTotals.get(rowId) || 0;
+    exportData.push(rowData);
+  });
 
-  // Renderização principal
+  // Adicionar linha de total
+  const totalRow = { [config.rowHeader]: 'Total' };
+  Array.from(uniqueColumns.entries()).forEach(([colId, colName]) => {
+    totalRow[colName] = columnTotals.get(colId) || 0;
+  });
+  totalRow.Total = Array.from(columnTotals.values()).reduce((sum, val) => sum + val, 0);
+  exportData.push(totalRow);
+
+  // Preparar headers para exportação
+  const exportHeaders = [config.rowHeader, ...Array.from(uniqueColumns.values()), 'Total'];
+  const headerDisplayNames = { [config.rowHeader]: config.rowHeader, Total: 'Total' };
+  Array.from(uniqueColumns.values()).forEach(col => {
+    headerDisplayNames[col] = col;
+  });
+
   return (
-    <ThemeProvider theme={theme}>
-      <div>
-        {/* Tabela histórica */}
-        {isHistorical && renderHistoricalTable()}
-
-        {/* Tabela cruzada */}
-        {!isHistorical && hasCrossFilters && renderCrossTable()}
-
-        {/* Tabela simples (sem filtros) */}
-        {!isHistorical && hasNoFilters && (
-          <>
-            {/* Tabela de dados gerais */}
-            {tableDataArray.map((tableData, index) => (
-              <Paper key={index} sx={{ backgroundColor: theme.palette.background.default, marginBottom: 2 }}>
-                <BasicTable
-                  headers={HEADERS.default}
-                  data={tableData}
-                  formatTotal={isRatioType(type)}
-                />
-          </Paper>
-            ))}
-
-            {/* Tabela de municípios */}
-            {municipioDataArray.length > 0 && (
-              <Paper sx={{ backgroundColor: theme.palette.background.default, marginBottom: 2 }}>
-                <BasicTable
-                  headers={HEADERS.municipio}
-                  data={municipioDataArray}
-                />
-          </Paper>
-        )}
-          </>
-        )}
-
-        {/* Tabelas simples com filtros individuais */}
-        {!isHistorical && !hasCrossFilters && (
-          <>
-            {isEtapaSelected && renderSimpleTable('etapa')}
-            {isLocalidadeSelected && renderSimpleTable('localidade')}
-            {isDependenciaSelected && renderSimpleTable('dependencia')}
-            {isVinculoSelected && renderSimpleTable('vinculo')}
-            {isFormacaoDocenteSelected && renderSimpleTable('formacaoDocente')}
-            {isFaixaEtariaSelected && renderSimpleTable('faixaEtaria')}
-          </>
-        )}
-      </div>
-    </ThemeProvider>
+    <div>
+      <TableContainer sx={{ maxWidth: '100%', overflowX: 'auto', border: '2px solid #ccc', borderRadius: '4px' }} ref={tableRefs.cross}>
+        <Table sx={{ minWidth: 650 }} aria-label="combined table">
+          <StyledTableHead>
+            <TableRow>
+              <BoldTableCell>{config.rowHeader}</BoldTableCell>
+              {Array.from(uniqueColumns.entries()).map(([id, name]) => (
+                <BoldTableCell key={id}>{name}</BoldTableCell>
+              ))}
+              <BoldTableCell>Total</BoldTableCell>
+            </TableRow>
+          </StyledTableHead>
+          <TableBody>
+            {Array.from(uniqueRows.entries())
+              .slice(type === 'school/count' && isEtapaSelected ? page * rowsPerPage : 0,
+                    type === 'school/count' && isEtapaSelected ? page * rowsPerPage + rowsPerPage : undefined)
+              .map(([rowId, rowName]) => (
+                <TableRow key={rowId}>
+                  <CenteredTableCell>{rowName}</CenteredTableCell>
+                  {Array.from(uniqueColumns.keys()).map(columnId => (
+                    <CenteredTableCell key={columnId}>
+                      {isRatioType(type)
+                        ? `${Number(cellValues.get(`${rowId}-${columnId}`) || 0).toFixed(2)}%`
+                        : cellValues.get(`${rowId}-${columnId}`) || 0}
+                    </CenteredTableCell>
+                  ))}
+                  <CenteredTableCell>{rowTotals.get(rowId)}</CenteredTableCell>
+                </TableRow>
+              ))}
+            <TableRow>
+              <BoldTableCell>Total</BoldTableCell>
+              {Array.from(uniqueColumns.keys()).map(columnId => (
+                <BoldTableCell key={columnId}>
+                  {columnTotals.get(columnId)}
+                </BoldTableCell>
+              ))}
+              <BoldTableCell>
+                {Array.from(columnTotals.values()).reduce((sum, val) => sum + val, 0)}
+              </BoldTableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      </TableContainer>
+      <TableExport 
+        data={exportData}
+        headers={exportHeaders}
+        headerDisplayNames={headerDisplayNames}
+        fileName="dados_cruzados"
+        tableTitle={title || "Dados Cruzados"}
+        tableRef={tableRefs.cross}
+      />
+      {type === 'school/count' && isEtapaSelected && (
+        <TablePagination
+          component="div"
+          count={uniqueRows.size}
+          page={page}
+          onPageChange={handleChangePage}
+          rowsPerPage={rowsPerPage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+          rowsPerPageOptions={[5, 10, 25, 50]}
+          labelRowsPerPage="Linhas por página:"
+          labelDisplayedRows={({ from, to, count }) =>
+            `${from}-${to} de ${count !== -1 ? count : `mais de ${to}`}`
+          }
+        />
+      )}
+    </div>
   );
+};
+
+// Renderização de tabela simples
+const renderSimpleTable = (filterType) => {
+  let headers, tableData, sortField, formatTotal, usePagination = false, note = null;
+
+  switch (filterType) {
+    case 'etapa':
+    if (type === 'school/count') {
+        headers = HEADERS.etapa.school;
+        usePagination = true;
+        note = ETAPA_ESCOLA_NOTE;
+    } else if (type === 'liquid_enrollment_ratio' || type === 'gloss_enrollment_ratio') {
+        headers = HEADERS.etapa.short;
+        formatTotal = true;
+    } else {
+        headers = HEADERS.etapa.standard;
+      }
+      tableData = data.result;
+      break;
+
+    case 'localidade':
+      headers = HEADERS.localidade;
+      tableData = data.result;
+      break;
+
+    case 'dependencia':
+      headers = HEADERS.dependencia;
+      tableData = data.result;
+      sortField = 'adm_dependency_detailed_id';
+      formatTotal = isRatioType(type);
+      break;
+
+    case 'vinculo':
+      headers = HEADERS.vinculo;
+      tableData = data.result;
+      sortField = 'contract_type_id';
+      formatTotal = isRatioType(type);
+      break;
+
+    case 'formacaoDocente':
+      headers = HEADERS.formacaoDocente;
+      tableData = data.result;
+      sortField = 'initial_training_id';
+      formatTotal = isRatioType(type);
+      break;
+
+    case 'faixaEtaria':
+      headers = HEADERS.faixaEtaria;
+      tableData = data.result;
+      sortField = 'age_range_id';
+      formatTotal = true;
+      break;
+
+    default:
+      return null;
+  }
+
+  // Preparar dados para exportação
+  const exportData = tableData.map(item => {
+    const row = {};
+    headers.forEach(header => {
+      row[header] = item[header];
+    });
+    return row;
+  });
+
+  // Preparar headers para exportação
+  const exportHeaders = headers;
+  const headerDisplayNames = {};
+  headers.forEach(header => {
+    headerDisplayNames[header] = HEADER_DISPLAY_NAMES[header] || header;
+  });
+
+  return (
+    <div>
+      <TableContainer sx={{ maxWidth: '100%', overflowX: 'auto', border: '2px solid #ccc', borderRadius: '4px' }} ref={tableRefs[filterType]}>
+        <Table sx={{ minWidth: 650 }} aria-label="simple table">
+          <StyledTableHead>
+            <TableRow>
+              {headers.map(header => (
+                <BoldTableCell key={header}>
+                  {HEADER_DISPLAY_NAMES[header] || header}
+                </BoldTableCell>
+              ))}
+            </TableRow>
+          </StyledTableHead>
+          <TableBody>
+            {tableData
+              .slice(type === 'school/count' && isEtapaSelected ? page * rowsPerPage : 0,
+                    type === 'school/count' && isEtapaSelected ? page * rowsPerPage + rowsPerPage : undefined)
+              .map((item, index) => (
+                <TableRow key={index}>
+                  {headers.map(header => (
+                    <CenteredTableCell key={header}>
+                      {header === 'total' && formatTotal
+                        ? `${Number(item[header] || 0).toFixed(2)}%`
+                        : item[header]?.toString() || ''}
+                    </CenteredTableCell>
+                  ))}
+                </TableRow>
+              ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+      <TableExport 
+        data={exportData}
+        headers={exportHeaders}
+        headerDisplayNames={headerDisplayNames}
+        fileName={`dados_por_${filterType}`}
+        tableTitle={title || getTableTitle(filterType)}
+        tableRef={tableRefs[filterType]}
+      />
+      {usePagination && (
+        <TablePagination
+          component="div"
+          count={tableData.length}
+          page={page}
+          onPageChange={handleChangePage}
+          rowsPerPage={rowsPerPage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+          rowsPerPageOptions={[5, 10, 25, 50]}
+          labelRowsPerPage="Linhas por página:"
+          labelDisplayedRows={({ from, to, count }) =>
+            `${from}-${to} de ${count !== -1 ? count : `mais de ${to}`}`
+          }
+        />
+      )}
+      {note && <p>{note}</p>}
+    </div>
+  );
+};
+
+// Função para obter título legível para cada tipo de filtro
+const getTableTitle = (filterType) => {
+  switch (filterType) {
+    case 'etapa':
+      return 'Dados por Etapa';
+    case 'localidade':
+      return 'Dados por Localidade';
+    case 'dependencia':
+      return 'Dados por Dependência Administrativa';
+    case 'vinculo':
+      return 'Dados por Vínculo Funcional';
+    case 'formacaoDocente':
+      return 'Dados por Formação Docente';
+    case 'faixaEtaria':
+      return 'Dados por Faixa Etária';
+    default:
+      return `Dados por ${filterType}`;
+  }
+};
+
+// Determinar qual tipo de tabela renderizar
+const hasCrossFilters = (
+  (isEtapaSelected && isLocalidadeSelected) ||
+  (isEtapaSelected && isDependenciaSelected) ||
+  (isLocalidadeSelected && isDependenciaSelected) ||
+  (isEtapaSelected && isVinculoSelected) ||
+  (isLocalidadeSelected && isVinculoSelected) ||
+  (isDependenciaSelected && isVinculoSelected) ||
+  (isEtapaSelected && isFormacaoDocenteSelected) ||
+  (isLocalidadeSelected && isFormacaoDocenteSelected) ||
+  (isDependenciaSelected && isFormacaoDocenteSelected) ||
+  (isVinculoSelected && isFormacaoDocenteSelected)
+);
+
+const hasNoFilters = !isEtapaSelected && !isLocalidadeSelected && !isDependenciaSelected &&
+                   !isVinculoSelected && !isFormacaoDocenteSelected && !isFaixaEtariaSelected;
+
+// Renderização principal
+return (
+  <ThemeProvider theme={theme}>
+    <div>
+      {/* Tabela histórica */}
+      {isHistorical && renderHistoricalTable()}
+
+      {/* Tabela cruzada */}
+      {!isHistorical && hasCrossFilters && renderCrossTable()}
+
+      {/* Tabela simples (sem filtros) */}
+      {!isHistorical && hasNoFilters && (
+        <>
+          {/* Tabela de dados gerais */}
+          {municipioDataArray.length === 0 && tableDataArray.map((tableData, index) => (
+            <div key={index}>
+              <BasicTable
+                headers={HEADERS.default}
+                data={tableData}
+                formatTotal={isRatioType(type)}
+                ref={tableRefs.default}
+              />
+              <TableExport 
+                data={tableData}
+                headers={HEADERS.default}
+                headerDisplayNames={HEADER_DISPLAY_NAMES}
+                fileName="dados_gerais"
+                tableTitle={title || "Dados Gerais"}
+                tableRef={tableRefs.default}
+              />
+            </div>
+          ))}
+
+          {/* Tabela de municípios */}
+          {municipioDataArray.length > 0 && (
+            <div>
+              <BasicTable
+                headers={HEADERS.municipio}
+                data={[
+                  ...municipioDataArray,
+                  {
+                    cityName: 'Total',
+                    total: municipioDataArray.reduce((sum, item) => sum + item.total, 0),
+                  },
+                ]}
+                ref={tableRefs.municipio}
+              />
+              <TableExport 
+                data={[
+                  ...municipioDataArray,
+                  {
+                    cityName: 'Total',
+                    total: municipioDataArray.reduce((sum, item) => sum + item.total, 0),
+                  },
+                ]}
+                headers={HEADERS.municipio}
+                headerDisplayNames={HEADER_DISPLAY_NAMES}
+                fileName="dados_por_municipio"
+                tableTitle={title || "Dados por Município"}
+                tableRef={tableRefs.municipio}
+              />
+            </div>
+          )}
+        </>
+      )}
+      
+      {/* Tabelas simples com filtros individuais */}
+      {!isHistorical && !hasCrossFilters && (
+        <>
+          {isEtapaSelected && renderSimpleTable('etapa')}
+          {isLocalidadeSelected && renderSimpleTable('localidade')}
+          {isDependenciaSelected && renderSimpleTable('dependencia')}
+          {isVinculoSelected && renderSimpleTable('vinculo')}
+          {isFormacaoDocenteSelected && renderSimpleTable('formacaoDocente')}
+          {isFaixaEtariaSelected && renderSimpleTable('faixaEtaria')}
+        </>
+      )}
+    </div>
+  </ThemeProvider>
+);
 };
 
 export default ApiDataTable;

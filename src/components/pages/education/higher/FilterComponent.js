@@ -426,8 +426,8 @@ function FilterComponent() {
       {error && (
         <div className="error-message">
           <p>{error}</p>
-        </div>
-      )}
+            </div>
+          )}
 
       {!isLoading && !error && !data && (
         <div className="info-message">
@@ -465,6 +465,7 @@ function FilterComponent() {
           isHistorical={isHistorical}
           isModalidadeSelected={isModalidadeSelected}
           isRegimeSelected={isRegimeSelected}
+          title={title}
         />
       ) : null}
     </div>

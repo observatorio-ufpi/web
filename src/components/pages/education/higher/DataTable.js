@@ -7,6 +7,7 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import { ThemeProvider, createTheme, styled } from '@mui/material/styles';
 import React from 'react';
+import TableExport from '../../../common/TableExport';
 
 // ==========================================
 // TEMA E ESTILOS
@@ -63,13 +64,13 @@ const theme = createTheme({
     municipioDataArray.every(arr => !Array.isArray(arr) || arr.length === 0);
   };
 
-  const BasicTable = ({ headers, data, formatTotal = false, sortField = null }) => {
+  const BasicTable = ({ headers, data, formatTotal = false, sortField = null, ref }) => {
     const sortedData = sortField
       ? [...data].sort((a, b) => Number(a[sortField]) - Number(b[sortField]))
       : data;
   
     return (
-      <TableContainer component={Paper} sx={{ maxWidth: '100%', overflowX: 'auto' }}>
+      <TableContainer sx={{ maxWidth: '100%', overflowX: 'auto', border: '2px solid #ccc', borderRadius: '4px' }} ref={ref}>
         <Table sx={{ minWidth: 650 }} aria-label="data table">
           <StyledTableHead>
             <TableRow>
@@ -81,17 +82,30 @@ const theme = createTheme({
             </TableRow>
           </StyledTableHead>
           <TableBody>
-            {sortedData.map((item, index) => (
-              <TableRow key={index}>
-                {headers.map(header => (
-                  <CenteredTableCell key={header}>
-                    {header === 'total' && formatTotal
-                      ? `${Number(item[header] || 0).toFixed(2)}%`
-                      : item[header]?.toString() || ''}
-                  </CenteredTableCell>
-                ))}
-              </TableRow>
-            ))}
+            {sortedData.map((item, index) => {
+              // Verifica se o item atual é a linha de Total
+              const isTotal = item.cityName === 'Total' || item.nome === 'Total';
+              
+              return (
+                <TableRow key={index}>
+                  {headers.map(header => (
+                    <TableCell 
+                      key={header} 
+                      align="center"
+                      sx={{ 
+                        fontWeight: isTotal ? 'bold' : 'normal',
+                        textAlign: 'center',
+                        verticalAlign: 'middle'
+                      }}
+                    >
+                      {header === 'total' && formatTotal
+                        ? `${Number(item[header] || 0).toFixed(2)}%`
+                        : item[header]?.toString() || ''}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </TableContainer>
@@ -103,8 +117,18 @@ const DataTable = ({
   municipioData,
   isHistorical,
   isModalidadeSelected,
-  isRegimeSelected
+  isRegimeSelected,
+  title = ''
 }) => {
+
+  // Referências para as tabelas
+  const tableRefs = {
+    historical: React.useRef(null),
+    default: React.useRef(null),
+    municipio: React.useRef(null),
+    modalidade: React.useRef(null),
+    regimeDeTrabalho: React.useRef(null)
+  };
 
   const tableDataArray = [data?.result || []];
   const municipioDataArray = municipioData?.map(m => ({
@@ -115,9 +139,9 @@ const DataTable = ({
   if (hasNoData(data, tableDataArray, municipioDataArray)) {
     return (
       <ThemeProvider theme={theme}>
-        <Paper sx={{ padding: 2, backgroundColor: theme.palette.background.default }}>
+        <div>
           Nenhum dado disponível
-        </Paper>
+        </div>
       </ThemeProvider>
     );
   }
@@ -154,9 +178,12 @@ const DataTable = ({
 
       const sortedYears = [...yearMap.keys()].sort((a, b) => a - b);
 
+      // Preparar dados para exportação
+      const exportData = sortedYears.map(year => ({ year, total: yearMap.get(year) }));
+
       return (
-        <Paper sx={{ padding: 2, backgroundColor: theme.palette.background.default }}>
-          <TableContainer component={Paper} sx={{ maxWidth: '100%', overflowX: 'auto' }}>
+        <div>
+          <TableContainer sx={{ maxWidth: '100%', overflowX: 'auto', border: '2px solid #ccc', borderRadius: '4px' }} ref={tableRefs.historical}>
             <Table sx={{ minWidth: 650 }} aria-label="historical table">
               <StyledTableHead>
                 <TableRow>
@@ -176,7 +203,15 @@ const DataTable = ({
               </TableBody>
             </Table>
           </TableContainer>
-        </Paper>
+          <TableExport 
+            data={exportData}
+            headers={['year', 'total']}
+            headerDisplayNames={{ year: 'Ano', total: 'Total' }}
+            fileName="dados_historicos"
+            tableTitle={title || "Dados Históricos"}
+            tableRef={tableRefs.historical}
+          />
+        </div>
       );
     }
 
@@ -206,9 +241,27 @@ const DataTable = ({
       return Number(categoryIds.get(a)) - Number(categoryIds.get(b));
     });
 
+    // Preparar dados para exportação
+    const exportData = [];
+    sortedCategories.forEach(category => {
+      const yearMap = categoryYearMap.get(category);
+      const row = { [extraColumn.label]: category };
+      sortedYears.forEach(year => {
+        row[year] = yearMap.get(year) || 0;
+      });
+      exportData.push(row);
+    });
+
+    // Preparar headers para exportação
+    const exportHeaders = [extraColumn.label, ...sortedYears.map(year => year.toString())];
+    const headerDisplayNames = { [extraColumn.label]: extraColumn.label };
+    sortedYears.forEach(year => {
+      headerDisplayNames[year] = year.toString();
+    });
+
     return (
-      <Paper sx={{ padding: 2, backgroundColor: theme.palette.background.default }}>
-        <TableContainer component={Paper} sx={{ maxWidth: '100%', overflowX: 'auto' }}>
+      <div>
+        <TableContainer sx={{ maxWidth: '100%', overflowX: 'auto', border: '2px solid #ccc', borderRadius: '4px' }} ref={tableRefs.historical}>
           <Table sx={{ minWidth: 650 }} aria-label="historical table">
             <StyledTableHead>
               <TableRow>
@@ -236,7 +289,15 @@ const DataTable = ({
             </TableBody>
           </Table>
         </TableContainer>
-      </Paper>
+        <TableExport 
+          data={exportData}
+          headers={exportHeaders}
+          headerDisplayNames={headerDisplayNames}
+          fileName={`dados_historicos_por_${extraColumn.label.toLowerCase()}`}
+          tableTitle={title || `Dados Históricos por ${extraColumn.label}`}
+          tableRef={tableRefs.historical}
+        />
+      </div>
     );
   };
 
@@ -259,7 +320,7 @@ const DataTable = ({
     }
 
     return (
-      <Paper sx={{ padding: 2, backgroundColor: theme.palette.background.default }}>
+      <div>
         <BasicTable
           headers={headers}
           data={tableData}
@@ -267,8 +328,17 @@ const DataTable = ({
           formatTotal={formatTotal}
           usePagination={usePagination}
           note={note}
+          ref={tableRefs[filterType]}
         />
-      </Paper>
+        <TableExport 
+          data={tableData}
+          headers={headers}
+          headerDisplayNames={HEADER_DISPLAY_NAMES}
+          fileName={`dados_por_${filterType}`}
+          tableTitle={title || `Dados por ${filterType === 'modalidade' ? 'Modalidade' : 'Regime de Trabalho'}`}
+          tableRef={tableRefs[filterType]}
+        />
+      </div>
     );
   };
 
@@ -284,24 +354,55 @@ const DataTable = ({
         {/* Tabela simples (sem filtros) */}
         {!isHistorical && hasNoFilters && (
           <>
-            {/* Tabela de dados gerais */}
-            {tableDataArray.map((tableData, index) => (
-              <Paper key={index} sx={{ backgroundColor: theme.palette.background.default, marginBottom: 2 }}>
+            {/* Tabela de dados gerais, apenas se não houver dados de municípios */}
+            {municipioDataArray.length === 0 && tableDataArray.map((tableData, index) => (
+              <div key={index}>
                 <BasicTable
                   headers={HEADERS.default}
                   data={tableData}
+                  ref={tableRefs.default}
                 />
-          </Paper>
+                <TableExport 
+                  data={tableData}
+                  headers={HEADERS.default}
+                  headerDisplayNames={HEADER_DISPLAY_NAMES}
+                  fileName="dados_gerais"
+                  tableTitle={title || "Dados Gerais"}
+                  tableRef={tableRefs.default}
+                />
+              </div>
             ))}
             {/* Tabela de municípios */}
             {municipioDataArray.length > 0 && (
-              <Paper sx={{ backgroundColor: theme.palette.background.default, marginBottom: 2 }}>
+              <div>
                 <BasicTable
                   headers={HEADERS.municipio}
-                  data={municipioDataArray}
+                  data={[
+                    ...municipioDataArray,
+                    {
+                      cityName: 'Total', 
+                      total: municipioDataArray.reduce((sum, item) => sum + item.total, 0),
+                    },
+                  ]}
+                  ref={tableRefs.municipio}
                 />
-          </Paper>
-        )}
+                <TableExport 
+                  data={[
+                    ...municipioDataArray,
+                    {
+                      cityName: 'Total',
+                      total: municipioDataArray.reduce((sum, item) => sum + item.total, 0),
+                    },
+                  ]}
+                  headers={HEADERS.municipio}
+                  headerDisplayNames={HEADER_DISPLAY_NAMES}
+                  fileName="dados_por_municipio"
+                  tableTitle={title || "Dados por Município"}
+                  tableRef={tableRefs.municipio}
+                />
+              </div>
+            )}
+
           </>
         )}
 
