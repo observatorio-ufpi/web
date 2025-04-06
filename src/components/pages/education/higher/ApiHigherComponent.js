@@ -25,6 +25,9 @@ function ApiHigherContainer({
 
     const isModalidadeSelected = Array.isArray(selectedFilters) && selectedFilters.some((filter) => filter.value === "modalidade");
     const isRegimeSelected = Array.isArray(selectedFilters) && selectedFilters.some((filter) => filter.value === "regimeDeTrabalho");
+    const isCategoriaAdministrativaSelected = Array.isArray(selectedFilters) && selectedFilters.some((filter) => filter.value === "categoriaAdministrativa");
+    const isFaixaEtariaSuperiorSelected = Array.isArray(selectedFilters) && selectedFilters.some((filter) => filter.value === "faixaEtariaSuperior");
+    const isGrauAcademicoSelected = Array.isArray(selectedFilters) && selectedFilters.some((filter) => filter.value === "grauAcademico");
 
     const buildFilter = (cityId = null) => {
         const yearFilter = isHistorical
@@ -43,6 +46,18 @@ function ApiHigherContainer({
 
       if (isRegimeSelected) {
         selectedDims.push("work_regime");
+      }
+
+      if (isCategoriaAdministrativaSelected) {
+        selectedDims.push("upper_adm_dependency");
+      }
+
+      if (isFaixaEtariaSuperiorSelected) {
+        selectedDims.push("age_student_code");
+      }
+
+      if (isGrauAcademicoSelected) {
+        selectedDims.push("academic_level");
       }
 
       let endpoint = forceEndpoint || type;

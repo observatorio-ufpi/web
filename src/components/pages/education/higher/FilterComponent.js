@@ -23,6 +23,9 @@ function FilterComponent() {
   const [displayHistorical, setDisplayHistorical] = useState(false);
   const [isModalidadeSelected, setIsModalidadeSelected] = useState(false);
   const [isRegimeSelected, setIsRegimeSelected] = useState(false);
+  const [isCategoriaAdministrativaSelected, setIsCategoriaAdministrativaSelected] = useState(false);
+  const [isFaixaEtariaSuperiorSelected, setIsFaixaEtariaSuperiorSelected] = useState(false);
+  const [isGrauAcademicoSelected, setIsGrauAcademicoSelected] = useState(false);
 
   
   const yearLimits = useMemo(() => ({
@@ -101,6 +104,9 @@ function FilterComponent() {
         switch(filter.value) {
           case 'modalidade': return 'Modalidade';
           case 'regimeDeTrabalho': return 'Regime de Trabalho';
+          case 'categoriaAdministrativa': return 'Categoria Administrativa';
+          case 'faixaEtariaSuperior': return 'Faixa Etária';
+          case 'grauAcademico': return 'Grau Acadêmico';
           default: return filter.value;
         }
       });
@@ -117,6 +123,9 @@ function FilterComponent() {
 
     setIsModalidadeSelected(selectedFilters.some(filter => filter.value === 'modalidade'));
     setIsRegimeSelected(selectedFilters.some(filter => filter.value === 'regimeDeTrabalho'));
+    setIsCategoriaAdministrativaSelected(selectedFilters.some(filter => filter.value === 'categoriaAdministrativa'));
+    setIsFaixaEtariaSuperiorSelected(selectedFilters.some(filter => filter.value === 'faixaEtariaSuperior'));
+    setIsGrauAcademicoSelected(selectedFilters.some(filter => filter.value === 'grauAcademico'));
   };
 
   const handleClearFilters = () => {
@@ -138,11 +147,14 @@ function FilterComponent() {
     setSelectedFilters([]);
   };
 
-  const filterOptions = type === 'university_enrollment' || type === 'course_count'
-    ? [{ value: 'modalidade', label: 'Modalidade' }]
+  const filterOptions = type === 'university_enrollment'
+    ? [{ value: 'modalidade', label: 'Modalidade' }, { value: 'categoriaAdministrativa', label: 'Categoria Administrativa' }, { value: 'faixaEtariaSuperior', label: 'Faixa Etária' },
+       { value: 'grauAcademico', label: 'Grau Acadêmico'}]
     : type === 'university_teacher'
-    ? [{ value: 'regimeDeTrabalho', label: 'Regime de Trabalho' }]
-    : [];
+    ? [{ value: 'regimeDeTrabalho', label: 'Regime de Trabalho' }, { value: 'categoriaAdministrativa', label: 'Categoria Administrativa' }]
+    : type === 'course_count'
+    ?[{ value: 'modalidade', label: 'Modalidade' }, { value: 'categoriaAdministrativa', label: 'Categoria Administrativa' }, { value: 'grauAcademico', label: 'Grau Acadêmico'}]
+    : [{ value: 'categoriaAdministrativa', label: 'Categoria Administrativa' }];
 
   const titleMapping = {
     "university/count": "Número de intituições de ensino superior",
@@ -465,6 +477,9 @@ function FilterComponent() {
           isHistorical={isHistorical}
           isModalidadeSelected={isModalidadeSelected}
           isRegimeSelected={isRegimeSelected}
+          isCategoriaAdministrativaSelected={isCategoriaAdministrativaSelected}
+          isFaixaEtariaSuperiorSelected={isFaixaEtariaSuperiorSelected}
+          isGrauAcademicoSelected={isGrauAcademicoSelected}
           title={title}
         />
       ) : null}
