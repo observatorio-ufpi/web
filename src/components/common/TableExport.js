@@ -1,10 +1,11 @@
-import React from 'react';
-import { Button, ButtonGroup, Tooltip } from '@mui/material';
+import { Button, Tooltip } from '@mui/material';
+import { saveAs } from 'file-saver';
+import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import React from 'react';
+import { FaFileExcel, FaFilePdf } from 'react-icons/fa';
 import * as XLSX from 'xlsx';
-import { saveAs } from 'file-saver';
-import { FaFilePdf, FaFileExcel } from 'react-icons/fa';
 
 /**
  * Componente para exportar tabelas para PDF e Excel
@@ -14,18 +15,20 @@ import { FaFilePdf, FaFileExcel } from 'react-icons/fa';
  * @param {Object} props.headerDisplayNames - Mapeamento de nomes de cabeçalhos para exibição
  * @param {string} props.fileName - Nome do arquivo para download (sem extensão)
  * @param {string} props.tableTitle - Título da tabela (opcional)
+ * @param {React.RefObject} props.chartRef - Referência para o gráfico (opcional)
  */
-const TableExport = ({ 
-  data, 
-  headers, 
-  headerDisplayNames, 
+const TableExport = ({
+  data,
+  headers,
+  headerDisplayNames,
   fileName = 'tabela_exportada',
   tableTitle = '',
+  chartRef
 }) => {
   // Função para gerar um nome de arquivo baseado no título
   const generateFileName = () => {
     if (!tableTitle) return fileName;
-    
+
     // Converter o título para um formato adequado para nome de arquivo
     // Remover caracteres especiais, substituir espaços por underscores e limitar o tamanho
     const sanitizedTitle = tableTitle
@@ -35,7 +38,7 @@ const TableExport = ({
       .replace(/\s+/g, '_')            // Substitui espaços por underscores
       .toLowerCase()
       .substring(0, 100);              // Limita o tamanho para evitar nomes muito longos
-    
+
     return sanitizedTitle || fileName;
   };
 
@@ -48,7 +51,7 @@ const TableExport = ({
 
     try {
       const pdf = new jsPDF('l', 'pt', 'a4');
-      
+
       // Adicionar título se fornecido
       if (tableTitle) {
         pdf.setFontSize(16);
@@ -57,7 +60,7 @@ const TableExport = ({
 
       // Preparar dados para o autoTable
       const displayHeaders = headers.map(header => headerDisplayNames[header] || header);
-      
+
       // Criar dados para a tabela
       const tableRows = [];
       data.forEach(row => {
@@ -88,6 +91,25 @@ const TableExport = ({
         headStyles: { fillColor: [204, 204, 204], textColor: [0, 0, 0], fontStyle: 'bold', halign: 'center' },
         bodyStyles: { valign: 'middle' }
       });
+
+      // Adicionar o gráfico em uma nova página se existir
+      if (chartRef?.current) {
+        pdf.addPage();
+        const canvas = await html2canvas(chartRef.current);
+        const imgData = canvas.toDataURL('image/png');
+
+        // Calcular dimensões para o gráfico
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        const imgWidth = pageWidth - 80; // 40px de margem em cada lado
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+        // Centralizar o gráfico na página
+        const x = 40;
+        const y = (pageHeight - imgHeight) / 2;
+
+        pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
+      }
 
       pdf.save(`${generateFileName()}.pdf`);
     } catch (error) {
@@ -130,19 +152,19 @@ const TableExport = ({
   };
 
   return (
-    <div style={{ 
-      display: 'flex', 
-      justifyContent: 'flex-start', 
+    <div style={{
+      display: 'flex',
+      justifyContent: 'flex-start',
       gap: '12px',
-      margin: '16px 0 0 0'  
+      margin: '16px 0 0 0'
     }}>
       <Tooltip title="Exportar para PDF">
-        <Button 
+        <Button
           variant="contained"
-          sx={{ 
-            backgroundColor: '#f44336', 
-            '&:hover': { 
-              backgroundColor: '#d32f2f' 
+          sx={{
+            backgroundColor: '#f44336',
+            '&:hover': {
+              backgroundColor: '#d32f2f'
             },
             padding: '8px 16px',
             minWidth: '120px',
@@ -156,12 +178,12 @@ const TableExport = ({
         </Button>
       </Tooltip>
       <Tooltip title="Exportar para Excel">
-        <Button 
+        <Button
           variant="contained"
-          sx={{ 
-            backgroundColor: '#4caf50', 
-            '&:hover': { 
-              backgroundColor: '#388e3c' 
+          sx={{
+            backgroundColor: '#4caf50',
+            '&:hover': {
+              backgroundColor: '#388e3c'
             },
             padding: '8px 16px',
             minWidth: '120px',
