@@ -21,13 +21,18 @@ function FilterComponent() {
   const [title, setTitle] = useState('');
   const [selectedFilters, setSelectedFilters] = useState([]);
   const [displayHistorical, setDisplayHistorical] = useState(false);
+  const [isModalidadeSelected, setIsModalidadeSelected] = useState(false);
+  const [isRegimeSelected, setIsRegimeSelected] = useState(false);
+  const [isCategoriaAdministrativaSelected, setIsCategoriaAdministrativaSelected] = useState(false);
+  const [isFaixaEtariaSuperiorSelected, setIsFaixaEtariaSuperiorSelected] = useState(false);
+  const [isGrauAcademicoSelected, setIsGrauAcademicoSelected] = useState(false);
 
   
   const yearLimits = useMemo(() => ({
     'university/count': { min: 2010, max: 2022 },
     'university_enrollment': { min: 2011, max: 2019 },
     'university_teacher': { min: 2010, max: 2019 },
-    'course_count': { min: 2011, max: 2019 }
+    'course_count': { min: 2011, max: 2022 }
   }), []);
 
   const getYearLimits = useMemo(() => {
@@ -93,6 +98,20 @@ function FilterComponent() {
     if (gerencia) {
       filterInfo.push(`Gerência: ${gerencia}`);
     }
+
+    if (selectedFilters.length > 0) {
+      const filterNames = selectedFilters.map(filter => {
+        switch(filter.value) {
+          case 'modalidade': return 'Modalidade';
+          case 'regimeDeTrabalho': return 'Regime de Trabalho';
+          case 'categoriaAdministrativa': return 'Categoria Administrativa';
+          case 'faixaEtariaSuperior': return 'Faixa Etária';
+          case 'grauAcademico': return 'Grau Acadêmico';
+          default: return filter.value;
+        }
+      });
+      filterInfo.push(`Filtros: ${filterNames.join(', ')}`);
+    }
     
     let fullTitle = `${titleMapping[type]} - ${locationName} (${yearDisplay})`;
 
@@ -101,6 +120,12 @@ function FilterComponent() {
     }
 
     setTitle(type ? fullTitle : '');
+
+    setIsModalidadeSelected(selectedFilters.some(filter => filter.value === 'modalidade'));
+    setIsRegimeSelected(selectedFilters.some(filter => filter.value === 'regimeDeTrabalho'));
+    setIsCategoriaAdministrativaSelected(selectedFilters.some(filter => filter.value === 'categoriaAdministrativa'));
+    setIsFaixaEtariaSuperiorSelected(selectedFilters.some(filter => filter.value === 'faixaEtariaSuperior'));
+    setIsGrauAcademicoSelected(selectedFilters.some(filter => filter.value === 'grauAcademico'));
   };
 
   const handleClearFilters = () => {
@@ -122,13 +147,19 @@ function FilterComponent() {
     setSelectedFilters([]);
   };
 
-  const filterOptions = [
-  ];
+  const filterOptions = type === 'university_enrollment'
+    ? [{ value: 'modalidade', label: 'Modalidade' }, { value: 'categoriaAdministrativa', label: 'Categoria Administrativa' }, { value: 'faixaEtariaSuperior', label: 'Faixa Etária' },
+       { value: 'grauAcademico', label: 'Grau Acadêmico'}]
+    : type === 'university_teacher'
+    ? [{ value: 'regimeDeTrabalho', label: 'Regime de Trabalho' }, { value: 'categoriaAdministrativa', label: 'Categoria Administrativa' }]
+    : type === 'course_count'
+    ?[{ value: 'modalidade', label: 'Modalidade' }, { value: 'categoriaAdministrativa', label: 'Categoria Administrativa' }, { value: 'grauAcademico', label: 'Grau Acadêmico'}]
+    : [{ value: 'categoriaAdministrativa', label: 'Categoria Administrativa' }];
 
   const titleMapping = {
     "university/count": "Número de intituições de ensino superior",
     "university_enrollment": "Número de matrículas",
-    "university_teacher": "Número de professores",
+    "university_teacher": "Número de docentes",
     "course_count": "Número de cursos"
   };
 
@@ -407,8 +438,8 @@ function FilterComponent() {
       {error && (
         <div className="error-message">
           <p>{error}</p>
-        </div>
-      )}
+            </div>
+          )}
 
       {!isLoading && !error && !data && (
         <div className="info-message">
@@ -437,12 +468,19 @@ function FilterComponent() {
         onError={setError}
         onLoading={setIsLoading}
         triggerFetch={isLoading}
+        selectedFilters={selectedFilters}
       />
       {!isLoading && !error && data && title ? (
         <DataTable
           data={data.finalResult ? data.finalResult : data}
           municipioData={data.allResults && data.allResults.length > 0 ? data.allResults : []}
           isHistorical={isHistorical}
+          isModalidadeSelected={isModalidadeSelected}
+          isRegimeSelected={isRegimeSelected}
+          isCategoriaAdministrativaSelected={isCategoriaAdministrativaSelected}
+          isFaixaEtariaSuperiorSelected={isFaixaEtariaSuperiorSelected}
+          isGrauAcademicoSelected={isGrauAcademicoSelected}
+          title={title}
         />
       ) : null}
     </div>

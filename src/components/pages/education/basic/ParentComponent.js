@@ -8,6 +8,19 @@ import ApiContainer from './ApiComponent';
 import ApiDataTable from './apiDataTable';
 
 function ParentComponent() {
+  const yearLimits = useMemo(() => ({
+    enrollment: { min: 2007, max: 2023 },
+    'school/count': { min: 2007, max: 2023 },
+    class: { min: 2007, max: 2023 },
+    teacher: { min: 2007, max: 2020 },
+    auxiliar: { min: 2007, max: 2020 },
+    employees: { min: 2007, max: 2023 },
+    out_of_school: { min: 2007, max: 2015 },
+    liquid_enrollment_ratio: { min: 2007, max: 2015 },
+    gloss_enrollment_ratio: { min: 2007, max: 2015 },
+    rate_school_new: { min: 2019, max: 2023 }
+  }), []);
+
   const [type, setType] = useState('enrollment');
   const [filteredType, setFilteredType] = useState('enrollment');
   const [isHistorical, setIsHistorical] = useState(false);
@@ -28,19 +41,10 @@ function ParentComponent() {
   const [isFormacaoDocenteSelected, setIsFormacaoDocenteSelected] = useState(false);
   const [isFaixaEtariaSelected, setIsFaixaEtariaSelected] = useState(false);
   const [displayHistorical, setDisplayHistorical] = useState(false);
-
-  const yearLimits = useMemo(() => ({
-    enrollment: { min: 2007, max: 2023 },
-    'school/count': { min: 2007, max: 2023 },
-    class: { min: 2007, max: 2023 },
-    teacher: { min: 2007, max: 2020 },
-    auxiliar: { min: 2007, max: 2020 },
-    employees: { min: 2007, max: 2023 },
-    out_of_school: { min: 2007, max: 2015 },
-    liquid_enrollment_ratio: { min: 2007, max: 2015 },
-    gloss_enrollment_ratio: { min: 2007, max: 2015 },
-    rate_school_new: { min: 2019, max: 2023 }
-  }), []);
+  const [year, setYear] = useState(yearLimits.enrollment.max);
+  const [filteredYear, setFilteredYear] = useState(null);
+  const [startYear, setStartYear] = useState(yearLimits.enrollment.min);
+  const [endYear, setEndYear] = useState(yearLimits.enrollment.max);
 
   // Função para obter os limites de anos
   const getYearLimits = useMemo(() => {
@@ -60,10 +64,6 @@ function ParentComponent() {
       label: year.toString(),
     }));
   }, [getYearLimits]);
-
-  const [startYear, setStartYear] = useState(yearLimits.enrollment.min);
-  const [endYear, setEndYear] = useState(yearLimits.enrollment.max);
-  const [year, setYear] = useState(yearLimits.enrollment.max);
 
   // Atualizar os anos quando os limites mudarem
   useEffect(() => {
@@ -110,6 +110,7 @@ function ParentComponent() {
 
     setIsHistorical(displayHistorical);
     setFilteredType(type);
+    setFilteredYear(year);
 
     // Improved title generation logic
     const yearDisplay = displayHistorical ? `${startYear}-${endYear}` : year;
@@ -189,6 +190,7 @@ function ParentComponent() {
     setStartYear(limits.min);
     setEndYear(limits.max);
     setYear(limits.max);
+    setFilteredYear(null);
     setCity('');
     setTerritory('');
     setFaixaPopulacional('');
@@ -557,8 +559,8 @@ function ParentComponent() {
         </div>
       ) : null}
       <ApiContainer
-        type={type}
-        year={year}
+        type={filteredType}
+        year={filteredYear || year}
         isHistorical={isHistorical}
         startYear={startYear}
         endYear={endYear}
@@ -586,7 +588,8 @@ function ParentComponent() {
           isHistorical={isHistorical}
           type={filteredType}
           isFormacaoDocenteSelected={isFormacaoDocenteSelected}
-          year={year}
+          year={filteredYear || year}
+          title={title} // Passando o título para o ApiDataTable
         />
       ) : null}
     </div>
