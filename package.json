@@ -26,7 +26,9 @@
     "react-select": "^5.8.0",
     "recharts": "^2.15.2",
     "web-vitals": "^2.1.4",
-    "xlsx": "^0.18.5"
+    "xlsx": "^0.18.5",
+    "@mui/x-date-pickers": "^6.19.4",
+    "date-fns": "^2.30.0"
   },
   "scripts": {
     "start": "react-scripts start",
