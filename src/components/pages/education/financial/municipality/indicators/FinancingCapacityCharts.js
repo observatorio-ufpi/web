@@ -14,7 +14,7 @@ const FinancingCapacityCharts = ({ data }) => {
         key="composicao_rpeb_financiamento"
         indicatorType="composicao_rpeb_financiamento"
         processDataFunction={processRpebFinancingCapacity}
-        title=""
+        title="Receita Potencial mínima vinculada para a Educação Básica (RPEb) [R$]"
         data={data.composicaoRpebFinanciamento}
       />
 
@@ -22,7 +22,7 @@ const FinancingCapacityCharts = ({ data }) => {
         key="composicao_fundeb_financiamento"
         indicatorType="composicao_fundeb_financiamento"
         processDataFunction={processFundebFinancingCapacity}
-        title="Receita Potencial mínima vinculada para a Educação Básica (RPEb) [R$]"
+        title="Participação do Fundeb na composição da receita para educação"
         data={data.composicaoFundebFinanciamento}
       />
     </div>

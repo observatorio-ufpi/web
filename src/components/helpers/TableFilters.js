@@ -16,8 +16,20 @@ const FilterComponent = ({
   territorioDeDesenvolvimentoMunicipio,
   faixaPopulacionalMunicipio,
   aglomeradoMunicipio,
-  gerenciaRegionalMunicipio
+  gerenciaRegionalMunicipio,
+  anoInicial,
+  anoFinal,
 }) => {
+  const [filters, setFilters] = useState({
+    nomeMunicipio: selectedMunicipio || '',
+    territorioDeDesenvolvimentoMunicipio: territorioDeDesenvolvimentoMunicipio || '',
+    faixaPopulacionalMunicipio: faixaPopulacionalMunicipio || '',
+    aglomeradoMunicipio: aglomeradoMunicipio || '',
+    gerenciaRegionalMunicipio: gerenciaRegionalMunicipio || '',
+    anoInicial: 2006, // Ano inicial padrão
+    anoFinal: new Date().getFullYear(), // Ano atual como padrão
+  });
+
   // Converter os valores recebidos para o formato do react-select
   const [selectedMunicipioState, setSelectedMunicipio] = useState(
     selectedMunicipio ?
@@ -39,6 +51,12 @@ const FilterComponent = ({
   const [gerenciaState, setGerenciaRegionalMunicipio] = useState(
     gerenciaRegionalMunicipio ? { value: gerenciaRegionalMunicipio, label: `Gerência ${gerenciaRegionalMunicipio}` } : null
   );
+  const [anoInicialState, setAnoInicial] = useState(
+    filters.anoInicial ? { value: filters.anoInicial, label: filters.anoInicial } : null
+  );
+  const [anoFinalState, setAnoFinal] = useState(
+    filters.anoFinal ? { value: filters.anoFinal, label: filters.anoFinal } : null
+  );
 
   useEffect(() => {
     setSelectedMunicipio(
@@ -53,7 +71,9 @@ const FilterComponent = ({
     setFaixaPopulacionalMunicipio(faixaPopulacionalMunicipio ? { value: faixaPopulacionalMunicipio, label: FaixaPopulacional[faixaPopulacionalMunicipio] } : null);
     setAglomeradoMunicipio(aglomeradoMunicipio ? { value: aglomeradoMunicipio, label: `Aglomerado ${aglomeradoMunicipio}` } : null);
     setGerenciaRegionalMunicipio(gerenciaRegionalMunicipio ? { value: gerenciaRegionalMunicipio, label: `Gerência ${gerenciaRegionalMunicipio}` } : null);
-  }, [selectedMunicipio, territorioDeDesenvolvimentoMunicipio, faixaPopulacionalMunicipio, aglomeradoMunicipio, gerenciaRegionalMunicipio]);
+    setAnoInicial(anoInicial ? { value: anoInicial, label: anoInicial } : null);
+    setAnoFinal(anoFinal ? { value: anoFinal, label: anoFinal } : null);
+  }, [selectedMunicipio, territorioDeDesenvolvimentoMunicipio, faixaPopulacionalMunicipio, aglomeradoMunicipio, gerenciaRegionalMunicipio, anoInicial, anoFinal]);
 
   const handleSearch = () => {
     onFilterChange({
@@ -79,6 +99,11 @@ const FilterComponent = ({
   const gerenciaOptions = [...new Set(Object.values(municipios).map(m => m.gerencia))].map(gerencia => ({
     value: gerencia,
     label: `Gerência ${gerencia}`,
+  }));
+
+  const anoOptions = Array.from({ length: new Date().getFullYear() - 2006 }, (_, i) => ({
+    value: 2006 + i,
+    label: 2006 + i,
   }));
 
   return (
@@ -131,17 +156,33 @@ const FilterComponent = ({
           placeholder="Gerência"
           isClearable
         />
+
+        <Select
+          className="filter-item"
+          value={anoInicialState}
+          onChange={setAnoInicial}
+          options={anoOptions}
+          placeholder="Ano Inicial"
+          isClearable
+        />
+
+        <Select
+          className="filter-item"
+          value={anoFinalState}
+          onChange={setAnoFinal}
+          options={anoOptions}
+          placeholder="Ano Final"
+          isClearable
+        />
       </div>
-      <div className="filter-button-container">
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={handleSearch}
-          className="filter-button"
-        >
-          Filtrar
-        </Button>
-      </div>
+
+      <Button
+        variant="contained"
+        onClick={handleSearch}
+        sx={{ alignSelf: 'flex-end' }}
+      >
+        Filtrar
+      </Button>
     </div>
   );
 };

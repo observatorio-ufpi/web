@@ -37,9 +37,9 @@ import {
   standardizedTypeMunicipalFundebFundefComposition,
   standardizedTypeOwnRevenues,
 } from "../../../../../../utils/tablesMapping";
-import RevenueTable from "./RevenueTable";
-import FilterComponent from "../../../../../helpers/TableFilters";
 import CustomPagination from "../../../../../helpers/CustomPagination";
+import FilterComponent from "../../../../../helpers/TableFilters";
+import RevenueTable from "./RevenueTable";
 
 class App extends Component {
   constructor(props) {
@@ -58,6 +58,15 @@ class App extends Component {
       page: 1,
       limit: 1,
       totalPages: 1,
+      filters: {
+        nomeMunicipio: '',
+        territorioDeDesenvolvimentoMunicipio: '',
+        faixaPopulacionalMunicipio: '',
+        aglomeradoMunicipio: '',
+        gerenciaRegionalMunicipio: '',
+        anoInicial: 2013,
+        anoFinal: new Date().getFullYear(),
+      },
     };
   }
 
@@ -99,6 +108,8 @@ class App extends Component {
       faixaPopulacionalMunicipio,
       aglomeradoMunicipio,
       gerenciaRegionalMunicipio,
+      anoInicial,
+      anoFinal,
       page,
       limit,
     } = this.state;
@@ -109,6 +120,8 @@ class App extends Component {
       faixaPopulacionalMunicipio,
       aglomeradoMunicipio,
       gerenciaRegionalMunicipio,
+      anoInicial,
+      anoFinal,
       page,
       limit,
     })
@@ -147,12 +160,14 @@ class App extends Component {
         faixaPopulacionalMunicipio: filters.faixaPopulacionalMunicipio,
         aglomeradoMunicipio: filters.aglomeradoMunicipio,
         gerenciaRegionalMunicipio: filters.gerenciaRegionalMunicipio,
+        anoInicial: filters.anoInicial,
+        anoFinal: filters.anoFinal,
         loading: true,
         page: 1,
       },
       () => {
         this.fetchTableData();
-      }
+      },
     );
   };
 

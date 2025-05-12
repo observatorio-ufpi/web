@@ -109,45 +109,43 @@ const endpoints = {
 };
 
 export const fetchData = async (table, groupType, filters) => {
-  const endpoint = `${endpoints[table]}/${groupType}`;
-  const params = new URLSearchParams();
-
-  if (filters.selectedMunicipio)
-    params.append("nomeMunicipio", filters.selectedMunicipio);
-  if (filters.territorioDeDesenvolvimentoMunicipio)
-    params.append(
-      "territorioDeDesenvolvimentoMunicipio",
-      filters.territorioDeDesenvolvimentoMunicipio
-    );
-  if (filters.faixaPopulacionalMunicipio)
-    params.append(
-      "faixaPopulacionalMunicipio",
-      filters.faixaPopulacionalMunicipio
-    );
-  if (filters.aglomeradoMunicipio)
-    params.append("aglomeradoMunicipio", filters.aglomeradoMunicipio);
-  if (filters.gerenciaRegionalMunicipio)
-    params.append(
-      "gerenciaRegionalMunicipio",
-      filters.gerenciaRegionalMunicipio
-    );
-
-  // Add pagination parameters
-  if (filters.page) params.append("page", filters.page);
-  if (filters.limit) params.append("limit", filters.limit);
-
-  const url = `${endpoint}?${params.toString()}`;
-
   try {
-    const response = await fetch(url);
-    if (!response.ok) throw new Error("Failed to fetch data");
-    const data = await response.json();
+    const queryParams = new URLSearchParams({
+      ...(filters.nomeMunicipio && { nomeMunicipio: filters.nomeMunicipio }),
+      ...(filters.territorioDeDesenvolvimentoMunicipio && {
+        territorioDeDesenvolvimentoMunicipio:
+          filters.territorioDeDesenvolvimentoMunicipio,
+      }),
+      ...(filters.faixaPopulacionalMunicipio && {
+        faixaPopulacionalMunicipio: filters.faixaPopulacionalMunicipio,
+      }),
+      ...(filters.aglomeradoMunicipio && {
+        aglomeradoMunicipio: filters.aglomeradoMunicipio,
+      }),
+      ...(filters.gerenciaRegionalMunicipio && {
+        gerenciaRegionalMunicipio: filters.gerenciaRegionalMunicipio,
+      }),
+      ...(filters.anoInicial && { anoInicial: filters.anoInicial }),
+      ...(filters.anoFinal && { anoFinal: filters.anoFinal }),
+    });
 
-    // Return both data and pagination info if available, otherwise wrap data
-    return data.pagination
-      ? data
-      : { data, pagination: { total: 0, page: 1, limit: 10, totalPages: 1 } };
+    const response = await fetch(
+      `${endpoints[table]}/${groupType}?${queryParams}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      },
+    );
+
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+
+    return await response.json();
   } catch (error) {
+    console.error('Error fetching data:', error);
     throw error;
   }
 };
