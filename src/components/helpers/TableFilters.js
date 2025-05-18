@@ -20,6 +20,9 @@ const FilterComponent = ({
   anoInicial,
   anoFinal,
 }) => {
+  // Referência para o portal dos menus dropdown
+  const menuPortalTarget = typeof document !== 'undefined' ? document.body : null;
+
   const [filters, setFilters] = useState({
     nomeMunicipio: selectedMunicipio || '',
     territorioDeDesenvolvimentoMunicipio: territorioDeDesenvolvimentoMunicipio || '',
@@ -82,6 +85,8 @@ const FilterComponent = ({
       faixaPopulacionalMunicipio: faixaState ? faixaState.value : null,
       aglomeradoMunicipio: aglomeradoState ? aglomeradoState.value : null,
       gerenciaRegionalMunicipio: gerenciaState ? gerenciaState.value : null,
+      anoInicial: anoInicialState ? anoInicialState.value : null,
+      anoFinal: anoFinalState ? anoFinalState.value : null,
       loading: true,
     });
   };
@@ -108,81 +113,109 @@ const FilterComponent = ({
 
   return (
     <div className="filter-container">
-      <div className="filter-form">
-        <Select
-          className="filter-item"
-          value={selectedMunicipioState}
-          onChange={setSelectedMunicipio}
-          options={municipioOptions}
-          placeholder="Município"
-          isClearable
-          isSearchable
-        />
+      <div className="filter-grid">
+        <div className="filter-item filter-municipio">
+          <Select
+            value={selectedMunicipioState}
+            onChange={setSelectedMunicipio}
+            options={municipioOptions}
+            placeholder="Município"
+            isClearable
+            isSearchable
+            menuPlacement="bottom"
+            menuPortalTarget={menuPortalTarget}
+          />
+        </div>
 
-        <Select
-          className="filter-item filter-item-territorio"
-          value={territorioState}
-          onChange={setTerritorioDeDesenvolvimentoMunicipio}
-          options={Object.keys(Regioes).map(key => ({ value: key, label: Regioes[key] }))}
-          placeholder="Território de Desenvolvimento"
-          isClearable
-          isSearchable
-        />
+        <div className="filter-item filter-territorio">
+          <Select
+            value={territorioState}
+            onChange={setTerritorioDeDesenvolvimentoMunicipio}
+            options={Object.keys(Regioes).map(key => ({ value: key, label: Regioes[key] }))}
+            placeholder="Território de Desenvolvimento"
+            isClearable
+            isSearchable
+            menuPlacement="bottom"
+            menuPortalTarget={menuPortalTarget}
+          />
+        </div>
 
-        <Select
-          className="filter-item"
-          value={faixaState}
-          onChange={setFaixaPopulacionalMunicipio}
-          options={Object.keys(FaixaPopulacional).map(key => ({ value: key, label: FaixaPopulacional[key] }))}
-          placeholder="Faixa Populacional"
-          isClearable
-          isSearchable
-        />
+        <div className="filter-item filter-faixa">
+          <Select
+            value={faixaState}
+            onChange={setFaixaPopulacionalMunicipio}
+            options={Object.keys(FaixaPopulacional).map(key => ({ value: key, label: FaixaPopulacional[key] }))}
+            placeholder="Faixa Populacional"
+            isClearable
+            isSearchable
+            menuPlacement="bottom"
+            menuPortalTarget={menuPortalTarget}
+          />
+        </div>
 
-        <Select
-          className="filter-item"
-          value={aglomeradoState}
-          onChange={setAglomeradoMunicipio}
-          options={aglomeradoOptions}
-          placeholder="Aglomerado"
-          isClearable
-        />
+        <div className="filter-item filter-aglomerado">
+          <Select
+            value={aglomeradoState}
+            onChange={setAglomeradoMunicipio}
+            options={aglomeradoOptions}
+            placeholder="Aglomerado"
+            isClearable
+            menuPlacement="bottom"
+            menuPortalTarget={menuPortalTarget}
+          />
+        </div>
 
-        <Select
-          className="filter-item"
-          value={gerenciaState}
-          onChange={setGerenciaRegionalMunicipio}
-          options={gerenciaOptions}
-          placeholder="Gerência"
-          isClearable
-        />
+        <div className="filter-item filter-gerencia">
+          <Select
+            value={gerenciaState}
+            onChange={setGerenciaRegionalMunicipio}
+            options={gerenciaOptions}
+            placeholder="Gerência"
+            isClearable
+            menuPlacement="bottom"
+            menuPortalTarget={menuPortalTarget}
+          />
+        </div>
 
-        <Select
-          className="filter-item"
-          value={anoInicialState}
-          onChange={setAnoInicial}
-          options={anoOptions}
-          placeholder="Ano Inicial"
-          isClearable
-        />
+        <div className="filter-item filter-ano-inicial">
+          <Select
+            value={anoInicialState}
+            onChange={setAnoInicial}
+            options={anoOptions}
+            placeholder="Ano Inicial"
+            isClearable
+            menuPlacement="bottom"
+            menuPortalTarget={menuPortalTarget}
+          />
+        </div>
 
-        <Select
-          className="filter-item"
-          value={anoFinalState}
-          onChange={setAnoFinal}
-          options={anoOptions}
-          placeholder="Ano Final"
-          isClearable
-        />
+        <div className="filter-item filter-ano-final">
+          <Select
+            value={anoFinalState}
+            onChange={setAnoFinal}
+            options={anoOptions}
+            placeholder="Ano Final"
+            isClearable
+            menuPlacement="bottom"
+            menuPortalTarget={menuPortalTarget}
+          />
+        </div>
+
+        <div className="filter-button-container">
+          <Button
+            variant="contained"
+            onClick={handleSearch}
+            className="filter-button"
+            sx={{
+              minWidth: { xs: '100%', sm: '100%', md: 'auto' },
+              padding: { xs: '6px 20px', sm: '6px 20px', md: '6px 16px' },
+              marginTop: { xs: '5px', sm: '0' },
+            }}
+          >
+            Filtrar
+          </Button>
+        </div>
       </div>
-
-      <Button
-        variant="contained"
-        onClick={handleSearch}
-        sx={{ alignSelf: 'flex-end' }}
-      >
-        Filtrar
-      </Button>
     </div>
   );
 };

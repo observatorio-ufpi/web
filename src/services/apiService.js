@@ -127,6 +127,8 @@ export const fetchData = async (table, groupType, filters) => {
       }),
       ...(filters.anoInicial && { anoInicial: filters.anoInicial }),
       ...(filters.anoFinal && { anoFinal: filters.anoFinal }),
+      ...(filters.page && { page: filters.page }),
+      ...(filters.limit && { limit: filters.limit }),
     });
 
     const response = await fetch(

@@ -64,7 +64,7 @@ class App extends Component {
         faixaPopulacionalMunicipio: '',
         aglomeradoMunicipio: '',
         gerenciaRegionalMunicipio: '',
-        anoInicial: 2013,
+        anoInicial: 2006,
         anoFinal: new Date().getFullYear(),
       },
     };
@@ -443,6 +443,8 @@ class App extends Component {
               faixaPopulacionalMunicipio={this.state.faixaPopulacionalMunicipio}
               aglomeradoMunicipio={this.state.aglomeradoMunicipio}
               gerenciaRegionalMunicipio={this.state.gerenciaRegionalMunicipio}
+              anoInicial={this.state.anoInicial}
+              anoFinal={this.state.anoFinal}
             />
           </div>
 
