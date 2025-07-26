@@ -15,6 +15,7 @@ import Navbar from "./components/common/Navbar";
 import Footer from "./components/common/Footer";
 import ParentComponent from "./components/pages/education/basic/ParentComponent";
 import FilterComponent from "./components/pages/education/higher/FilterComponent";
+import FiltrosRateComponent from "./components/pages/education/rate/FiltrosRateComponent";
 import "./App.css";
 
 // Componente para determinar qual tipo de layout usar
@@ -52,6 +53,7 @@ const AppContent = () => {
           <Route path="/indicadores" element={<ChartContainer />} />
           <Route path="/dados-educacionais/basica" element={<ParentComponent />} />
           <Route path="/dados-educacionais/superior" element={<FilterComponent />} />
+          <Route path="/dados-educacionais/taxas" element={<FiltrosRateComponent />} />
         </Routes>
       </main>
     );

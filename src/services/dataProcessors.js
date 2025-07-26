@@ -1,5 +1,5 @@
 // Função principal para processar resultados da API
-export function processResults(allResults, selectedFilters, type, year) {
+export function processResults(allResults, selectedFilters) {
   // Extrair informações dos filtros selecionados
   let isEtapaSelected = false;
   let isLocalidadeSelected = false;
@@ -8,7 +8,7 @@ export function processResults(allResults, selectedFilters, type, year) {
   let isFormacaoDocenteSelected = false;
   let isFaixaEtariaSelected = false;
 
-  
+
   //educacao superior
   let isModalidadeSelected = false;
   let isRegimeSelected = false;
@@ -16,7 +16,7 @@ export function processResults(allResults, selectedFilters, type, year) {
   let isFaixaEtariaSuperiorSelected = false;
   let isGrauAcademicoSelected = false;
 
-  
+
   if (selectedFilters) {
     isEtapaSelected = selectedFilters.some((filter) => filter.value === "etapa");
     isLocalidadeSelected = selectedFilters.some((filter) => filter.value === "localidade");
@@ -57,13 +57,13 @@ export function processResults(allResults, selectedFilters, type, year) {
           processCrossedLocalidadeDependencia(crossedData, item);
         }
         else if (isEtapaSelected && isDependenciaSelected) {
-          processCrossedEtapaDependencia(crossedData, item, type, year);
+          processCrossedEtapaDependencia(crossedData, item);
         }
         else if (isEtapaSelected && isLocalidadeSelected) {
-          processCrossedEtapaLocalidade(crossedData, item, type, year);
+          processCrossedEtapaLocalidade(crossedData, item);
         }
         else if (isEtapaSelected && isVinculoSelected) {
-          processCrossedEtapaVinculo(crossedData, item, type);
+          processCrossedEtapaVinculo(crossedData, item);
         }
         else if (isLocalidadeSelected && isVinculoSelected) {
           processCrossedLocalidadeVinculo(crossedData, item);
@@ -72,7 +72,7 @@ export function processResults(allResults, selectedFilters, type, year) {
           processCrossedDependenciaVinculo(crossedData, item);
         }
         else if (isEtapaSelected && isFormacaoDocenteSelected) {
-          processCrossedEtapaFormacaoDocente(crossedData, item, type);
+          processCrossedEtapaFormacaoDocente(crossedData, item);
         }
         else if (isLocalidadeSelected && isFormacaoDocenteSelected) {
           processCrossedLocalidadeFormacaoDocente(crossedData, item);
@@ -106,7 +106,7 @@ export function processResults(allResults, selectedFilters, type, year) {
         }
         // Processar totais individuais para filtros únicos
         else if (isEtapaSelected) {
-          processEtapaTotal(totalByEtapa, item, type, year);
+          processEtapaTotal(totalByEtapa, item);
         }
         else if (isLocalidadeSelected) {
           processLocalidadeTotal(totalByLocalidade, item);
@@ -151,7 +151,7 @@ export function processResults(allResults, selectedFilters, type, year) {
     isVinculoSelected, isFormacaoDocenteSelected, isFaixaEtariaSelected,
     isModalidadeSelected, isRegimeSelected, isCategoriaAdministrativaSelected, isFaixaEtariaSuperiorSelected, isGrauAcademicoSelected, crossedData, totalByEtapa, totalByLocalidade, totalByDependencia,
     totalByVinculo, totalByFormacaoDocente, totalByFaixaEtaria, totalByModalidade, totalByRegime, totalByCategoriaAdministrativa, totalByFaixaEtariaSuperior, totalByGrauAcademico,
-    totalSum, type
+    totalSum
   );
 }
 
@@ -170,130 +170,46 @@ function processCrossedLocalidadeDependencia(crossedData, item) {
   crossedData[crossKey].total += item.total;
 }
 
-function processCrossedEtapaDependencia(crossedData, item, type, year) {
-  if (type === 'school/count') {
-    const crossKey = `${item.arrangement_id}-${item.adm_dependency_detailed_id}`;
-    if (!crossedData[crossKey]) {
-      crossedData[crossKey] = {
-        arrangement_id: item.arrangement_id,
-        arrangement_name: item.arrangement_name,
-        adm_dependency_detailed_id: item.adm_dependency_detailed_id,
-        adm_dependency_detailed_name: item.adm_dependency_detailed_name,
-        total: 0
-      };
-    }
-    crossedData[crossKey].total += item.total;
-  } else if (type === 'enrollment' && year >= 2021) {
-    if (item.education_level_mod_agg_id === 11) {
-      return; // Pula este item e continua com o próximo
-    }
-    const crossKey = `${item.education_level_mod_agg_id}-${item.adm_dependency_detailed_id}`;
-    if (!crossedData[crossKey]) {
-      crossedData[crossKey] = {
-        education_level_mod_agg_id: item.education_level_mod_agg_id,
-        education_level_mod_agg_name: item.education_level_mod_agg_name,
-        adm_dependency_detailed_id: item.adm_dependency_detailed_id,
-        adm_dependency_detailed_name: item.adm_dependency_detailed_name,
-        total: 0
-      };
-    }
-    crossedData[crossKey].total += item.total;
-  } else {
-    const crossKey = `${item.education_level_mod_id}-${item.adm_dependency_detailed_id}`;
-    if (!crossedData[crossKey]) {
-      crossedData[crossKey] = {
-        education_level_mod_id: item.education_level_mod_id,
-        education_level_mod_name: item.education_level_mod_name,
-        adm_dependency_detailed_id: item.adm_dependency_detailed_id,
-        adm_dependency_detailed_name: item.adm_dependency_detailed_name,
-        total: 0
-      };
-    }
-    crossedData[crossKey].total += item.total;
+function processCrossedEtapaDependencia(crossedData, item) {
+  const crossKey = `${item.education_level_mod_id}-${item.adm_dependency_detailed_id}`;
+  if (!crossedData[crossKey]) {
+    crossedData[crossKey] = {
+      education_level_mod_id: item.education_level_mod_id,
+      education_level_mod_name: item.education_level_mod_name,
+      adm_dependency_detailed_id: item.adm_dependency_detailed_id,
+      adm_dependency_detailed_name: item.adm_dependency_detailed_name,
+      total: 0
+    };
   }
+  crossedData[crossKey].total += item.total;
 }
 
-function processCrossedEtapaLocalidade(crossedData, item, type, year) {
-  if (type === 'school/count') {
-    const crossKey = `${item.arrangement_id}-${item.location_id}`;
-    if (!crossedData[crossKey]) {
-      crossedData[crossKey] = {
-        arrangement_id: item.arrangement_id,
-        arrangement_name: item.arrangement_name,
-        location_id: item.location_id,
-        location_name: item.location_name,
-        total: 0
-      };
-    }
-    crossedData[crossKey].total += item.total;
-  } else if (type === 'liquid_enrollment_ratio' || type === 'gloss_enrollment_ratio') {
-    const crossKey = `${item.education_level_short_id}-${item.location_id}`;
-    if (!crossedData[crossKey]) {
-      crossedData[crossKey] = {
-        education_level_short_id: item.education_level_short_id,
-        education_level_short_name: item.education_level_short_name,
-        location_id: item.location_id,
-        location_name: item.location_name,
-        total: 0
-      };
-    }
-    crossedData[crossKey].total += item.total;
-  } else if (type === 'enrollment' && year >= 2021) {
-    if (item.education_level_mod_agg_id === 11) {
-      return; // Pula este item e continua com o próximo
-    }
-    const crossKey = `${item.education_level_mod_agg_id}-${item.location_id}`;
-    if (!crossedData[crossKey]) {
-      crossedData[crossKey] = {
-        education_level_mod_agg_id: item.education_level_mod_agg_id,
-        education_level_mod_agg_name: item.education_level_mod_agg_name,
-        location_id: item.location_id,
-        location_name: item.location_name,
-        total: 0
-      };
-    }
-    crossedData[crossKey].total += item.total;
-  } else {
-    const crossKey = `${item.education_level_mod_id}-${item.location_id}`;
-    if (!crossedData[crossKey]) {
-      crossedData[crossKey] = {
-        education_level_mod_id: item.education_level_mod_id,
-        education_level_mod_name: item.education_level_mod_name,
-        location_id: item.location_id,
-        location_name: item.location_name,
-        total: 0
-      };
-    }
-    crossedData[crossKey].total += item.total;
+function processCrossedEtapaLocalidade(crossedData, item) {
+  const crossKey = `${item.education_level_mod_id}-${item.location_id}`;
+  if (!crossedData[crossKey]) {
+    crossedData[crossKey] = {
+      education_level_mod_id: item.education_level_mod_id,
+      education_level_mod_name: item.education_level_mod_name,
+      location_id: item.location_id,
+      location_name: item.location_name,
+      total: 0
+    };
   }
+  crossedData[crossKey].total += item.total;
 }
 
-function processCrossedEtapaVinculo(crossedData, item, type) {
-  if (type === 'school/count') {
-    const crossKey = `${item.arrangement_id}-${item.contract_type_id}`;
-    if (!crossedData[crossKey]) {
-      crossedData[crossKey] = {
-        arrangement_id: item.arrangement_id,
-        arrangement_name: item.arrangement_name,
-        contract_type_id: item.contract_type_id,
-        contract_type_name: item.contract_type_name,
-        total: 0
-      };
-    }
-    crossedData[crossKey].total += item.total;
-  } else {
-    const crossKey = `${item.education_level_mod_id}-${item.contract_type_id}`;
-    if (!crossedData[crossKey]) {
-      crossedData[crossKey] = {
-        education_level_mod_id: item.education_level_mod_id,
-        education_level_mod_name: item.education_level_mod_name,
-        contract_type_id: item.contract_type_id,
-        contract_type_name: item.contract_type_name,
-        total: 0
-      };
-    }
-    crossedData[crossKey].total += item.total;
+function processCrossedEtapaVinculo(crossedData, item) {
+  const crossKey = `${item.education_level_mod_id}-${item.contract_type_id}`;
+  if (!crossedData[crossKey]) {
+    crossedData[crossKey] = {
+      education_level_mod_id: item.education_level_mod_id,
+      education_level_mod_name: item.education_level_mod_name,
+      contract_type_id: item.contract_type_id,
+      contract_type_name: item.contract_type_name,
+      total: 0
+    };
   }
+  crossedData[crossKey].total += item.total;
 }
 
 function processCrossedLocalidadeVinculo(crossedData, item) {
@@ -324,32 +240,18 @@ function processCrossedDependenciaVinculo(crossedData, item) {
   crossedData[crossKey].total += item.total;
 }
 
-function processCrossedEtapaFormacaoDocente(crossedData, item, type) {
-  if (type === 'school/count') {
-    const crossKey = `${item.arrangement_id}-${item.initial_training_id}`;
-    if (!crossedData[crossKey]) {
-      crossedData[crossKey] = {
-        arrangement_id: item.arrangement_id,
-        arrangement_name: item.arrangement_name,
-        initial_training_id: item.initial_training_id,
-        initial_training_name: item.initial_training_name,
-        total: 0
-      };
-    }
-    crossedData[crossKey].total += item.total;
-  } else {
-    const crossKey = `${item.education_level_mod_id}-${item.initial_training_id}`;
-    if (!crossedData[crossKey]) {
-      crossedData[crossKey] = {
-        education_level_mod_id: item.education_level_mod_id,
-        education_level_mod_name: item.education_level_mod_name,
-        initial_training_id: item.initial_training_id,
-        initial_training_name: item.initial_training_name,
-        total: 0
-      };
-    }
-    crossedData[crossKey].total += item.total;
+function processCrossedEtapaFormacaoDocente(crossedData, item) {
+  const crossKey = `${item.education_level_mod_id}-${item.initial_training_id}`;
+  if (!crossedData[crossKey]) {
+    crossedData[crossKey] = {
+      education_level_mod_id: item.education_level_mod_id,
+      education_level_mod_name: item.education_level_mod_name,
+      initial_training_id: item.initial_training_id,
+      initial_training_name: item.initial_training_name,
+      total: 0
+    };
   }
+  crossedData[crossKey].total += item.total;
 }
 
 function processCrossedLocalidadeFormacaoDocente(crossedData, item) {
@@ -493,43 +395,14 @@ function processCrossedCategotiaRegimeDeTrabalho(crossedData, item) {
 }
 
 // Funções auxiliares para processamento de totais individuais
-function processEtapaTotal(totalByEtapa, item, type, year) {
-  if (type === 'school/count') {
-    if (!totalByEtapa[item.arrangement_id]) {
-      totalByEtapa[item.arrangement_id] = {
-        total: 0,
-        name: item.arrangement_name
-      };
-    }
-    totalByEtapa[item.arrangement_id].total += item.total;
-  } else if (type === 'liquid_enrollment_ratio' || type === 'gloss_enrollment_ratio') {
-    if (!totalByEtapa[item.education_level_short_id]) {
-      totalByEtapa[item.education_level_short_id] = {
-        total: 0,
-        name: item.education_level_short_name
-      };
-    }
-    totalByEtapa[item.education_level_short_id].total += item.total;
-  } else if (type === 'enrollment' && year >= 2021) {
-    if (item.education_level_mod_agg_id === 11) {
-      return; // Pula este item e continua com o próximo
-    }
-    if (!totalByEtapa[item.education_level_mod_agg_id]) {
-      totalByEtapa[item.education_level_mod_agg_id] = {
-        total: 0,
-        name: item.education_level_mod_agg_name
-      };
-    }
-    totalByEtapa[item.education_level_mod_agg_id].total += item.total;
-  } else {
-    if (!totalByEtapa[item.education_level_mod_id]) {
-      totalByEtapa[item.education_level_mod_id] = {
-        total: 0,
-        name: item.education_level_mod_name
-      };
-    }
-    totalByEtapa[item.education_level_mod_id].total += item.total;
+function processEtapaTotal(totalByEtapa, item) {
+  if (!totalByEtapa[item.education_level_mod_id]) {
+    totalByEtapa[item.education_level_mod_id] = {
+      total: 0,
+      name: item.education_level_mod_name
+    };
   }
+  totalByEtapa[item.education_level_mod_id].total += item.total;
 }
 
 function processLocalidadeTotal(totalByLocalidade, item) {
@@ -638,7 +511,7 @@ function getFormattedResult(
   isVinculoSelected, isFormacaoDocenteSelected, isFaixaEtariaSelected,
   isModalidadeSelected, isRegimeSelected, isCategoriaAdministrativaSelected, isFaixaEtariaSuperiorSelected, isGrauAcademicoSelected, crossedData, totalByEtapa, totalByLocalidade, totalByDependencia,
   totalByVinculo, totalByFormacaoDocente, totalByFaixaEtaria, totalByModalidade, totalByRegime, totalByCategoriaAdministrativa, totalByFaixaEtariaSuperior, totalByGrauAcademico,
-  totalSum, type
+  totalSum
 ) {
   if (isLocalidadeSelected && isDependenciaSelected) {
     return { result: { byLocalidadeAndDependencia: Object.values(crossedData) } };
@@ -693,31 +566,13 @@ function getFormattedResult(
   }
 
   if (isEtapaSelected) {
-    if (type === 'school/count') {
-      return {
-        result: Object.entries(totalByEtapa).map(([id, { total, name }]) => ({
-          arrangement_id: id,
-          arrangement_name: name,
-          total
-        }))
-      };
-    } else if (type === 'liquid_enrollment_ratio' || type === 'gloss_enrollment_ratio') {
-      return {
-        result: Object.entries(totalByEtapa).map(([id, { total, name }]) => ({
-          education_level_short_id: id,
-          education_level_short_name: name,
-          total
-        }))
-      };
-    } else {
-      return {
-        result: Object.entries(totalByEtapa).map(([id, { total, name }]) => ({
-          education_level_mod_id: id,
-          education_level_mod_name: name,
-          total
-        }))
-      };
-    }
+    return {
+      result: Object.entries(totalByEtapa).map(([id, { total, name }]) => ({
+        education_level_mod_id: id,
+        education_level_mod_name: name,
+        total
+      }))
+    };
   }
 
   if (isLocalidadeSelected) {

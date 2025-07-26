@@ -63,11 +63,7 @@ const HEADERS = {
   municipio: ['cityName', 'total'],
 
   // Cabeçalhos para etapa
-  etapa: {
-    standard: ['education_level_mod_name', 'total'],
-    school: ['arrangement_name', 'total'],
-    short: ['education_level_short_name', 'total']
-  },
+  etapa: ['education_level_mod_name', 'total'],
 
   // Cabeçalhos para localidade
   localidade: ['location_name', 'total'],
@@ -90,8 +86,6 @@ const HEADER_DISPLAY_NAMES = {
   total: 'Total',
   cityName: 'Município',
   education_level_mod_name: 'Etapa',
-  arrangement_name: 'Etapa',
-  education_level_short_name: 'Etapa',
   location_name: 'Localidade',
   adm_dependency_detailed_name: 'Dependência Administrativa',
   contract_type_name: 'Vínculo Funcional',
@@ -104,63 +98,24 @@ const CROSS_TABLE_CONFIGS = {
   // Etapa x Localidade
   etapaLocalidade: {
     dataKey: 'byEtapaAndLocalidade',
-    configs: {
-      standard: {
-        rowField: 'education_level_mod_name',
-        rowIdField: 'education_level_mod_id',
-        columnField: 'location_name',
-        columnIdField: 'location_id',
-        rowHeader: 'Etapa'
-      },
-      school: {
-        rowField: 'arrangement_name',
-        rowIdField: 'arrangement_id',
-        columnField: 'location_name',
-        columnIdField: 'location_id',
-        rowHeader: 'Etapa'
-      },
-      short: {
-        rowField: 'education_level_short_name',
-        rowIdField: 'education_level_short_id',
-        columnField: 'location_name',
-        columnIdField: 'location_id',
-        rowHeader: 'Etapa'
-      },
-      agg: {
-        rowField: 'education_level_mod_agg_name',
-        rowIdField: 'education_level_mod_agg_id',
-        columnField: 'location_name',
-        columnIdField: 'location_id',
-        rowHeader: 'Etapa'
-      }
+    config: {
+      rowField: 'education_level_mod_name',
+      rowIdField: 'education_level_mod_id',
+      columnField: 'location_name',
+      columnIdField: 'location_id',
+      rowHeader: 'Etapa'
     }
   },
 
   // Etapa x Dependência
   etapaDependencia: {
     dataKey: 'byEtapaAndDependencia',
-    configs: {
-      standard: {
-        rowField: 'education_level_mod_name',
-        rowIdField: 'education_level_mod_id',
-        columnField: 'adm_dependency_detailed_name',
-        columnIdField: 'adm_dependency_detailed_id',
-        rowHeader: 'Etapa'
-      },
-      school: {
-        rowField: 'arrangement_name',
-        rowIdField: 'arrangement_id',
-        columnField: 'adm_dependency_detailed_name',
-        columnIdField: 'adm_dependency_detailed_id',
-        rowHeader: 'Etapa'
-      },
-      agg: {
-        rowField: 'education_level_mod_agg_name',
-        rowIdField: 'education_level_mod_agg_id',
-        columnField: 'adm_dependency_detailed_name',
-        columnIdField: 'adm_dependency_detailed_id',
-        rowHeader: 'Etapa'
-      }
+    config: {
+      rowField: 'education_level_mod_name',
+      rowIdField: 'education_level_mod_id',
+      columnField: 'adm_dependency_detailed_name',
+      columnIdField: 'adm_dependency_detailed_id',
+      rowHeader: 'Etapa'
     }
   },
 
@@ -179,21 +134,12 @@ const CROSS_TABLE_CONFIGS = {
   // Etapa x Vínculo
   etapaVinculo: {
     dataKey: 'byEtapaAndVinculo',
-    configs: {
-      standard: {
-        rowField: 'education_level_mod_name',
-        rowIdField: 'education_level_mod_id',
-        columnField: 'contract_type_name',
-        columnIdField: 'contract_type_id',
-        rowHeader: 'Etapa'
-      },
-      school: {
-        rowField: 'arrangement_name',
-        rowIdField: 'arrangement_id',
-        columnField: 'contract_type_name',
-        columnIdField: 'contract_type_id',
-        rowHeader: 'Etapa'
-      }
+    config: {
+      rowField: 'education_level_mod_name',
+      rowIdField: 'education_level_mod_id',
+      columnField: 'contract_type_name',
+      columnIdField: 'contract_type_id',
+      rowHeader: 'Etapa'
     }
   },
 
@@ -260,21 +206,12 @@ const CROSS_TABLE_CONFIGS = {
   // Etapa x Formação Docente
   etapaFormacaoDocente: {
     dataKey: 'byEtapaAndFormacaoDocente',
-    configs: {
-      standard: {
-        rowField: 'education_level_mod_name',
-        rowIdField: 'education_level_mod_id',
-        columnField: 'initial_training_name',
-        columnIdField: 'initial_training_id',
-        rowHeader: 'Etapa'
-      },
-      school: {
-        rowField: 'arrangement_name',
-        rowIdField: 'arrangement_id',
-        columnField: 'initial_training_name',
-        columnIdField: 'initial_training_id',
-        rowHeader: 'Etapa'
-      }
+    config: {
+      rowField: 'education_level_mod_name',
+      rowIdField: 'education_level_mod_id',
+      columnField: 'initial_training_name',
+      columnIdField: 'initial_training_id',
+      rowHeader: 'Etapa'
     }
   }
 };
@@ -286,35 +223,22 @@ const CROSS_TABLE_CONFIGS = {
 // Verifica se o tipo de dados deve ser formatado como porcentagem
 const isRatioType = (type) => RATIO_TYPES.includes(type);
 
-// Obtém a configuração de etapa com base no tipo e ano
-const getEtapaConfig = (type, year) => {
-  if (type === 'school/count') {
-    return 'school';
-  } else if (type === 'liquid_enrollment_ratio' || type === 'gloss_enrollment_ratio') {
-    return 'short';
-  } else if (type === 'enrollment' && year >= 2021) {
-    return 'agg';
-  }
-  return 'standard';
-};
 
 // Obtém a configuração para tabela cruzada com base nos filtros selecionados
 const getCrossTableConfig = (filters, type, year) => {
   const { isEtapaSelected, isLocalidadeSelected, isDependenciaSelected, isVinculoSelected, isFormacaoDocenteSelected } = filters;
 
   if (isEtapaSelected && isLocalidadeSelected) {
-    const etapaType = getEtapaConfig(type, year);
     return {
       dataKey: CROSS_TABLE_CONFIGS.etapaLocalidade.dataKey,
-      ...CROSS_TABLE_CONFIGS.etapaLocalidade.configs[etapaType]
+      ...CROSS_TABLE_CONFIGS.etapaLocalidade.config
     };
   }
 
   if (isEtapaSelected && isDependenciaSelected) {
-    const etapaType = getEtapaConfig(type, year);
     return {
       dataKey: CROSS_TABLE_CONFIGS.etapaDependencia.dataKey,
-      ...CROSS_TABLE_CONFIGS.etapaDependencia.configs[etapaType]
+      ...CROSS_TABLE_CONFIGS.etapaDependencia.config
     };
   }
 
@@ -326,10 +250,9 @@ const getCrossTableConfig = (filters, type, year) => {
   }
 
   if (isEtapaSelected && isVinculoSelected) {
-    const etapaType = type === 'school/count' ? 'school' : 'standard';
     return {
       dataKey: CROSS_TABLE_CONFIGS.etapaVinculo.dataKey,
-      ...CROSS_TABLE_CONFIGS.etapaVinculo.configs[etapaType]
+      ...CROSS_TABLE_CONFIGS.etapaVinculo.config
     };
   }
 
@@ -369,10 +292,9 @@ const getCrossTableConfig = (filters, type, year) => {
   }
 
   if (isEtapaSelected && isFormacaoDocenteSelected) {
-    const etapaType = type === 'school/count' ? 'school' : 'standard';
     return {
       dataKey: CROSS_TABLE_CONFIGS.etapaFormacaoDocente.dataKey,
-      ...CROSS_TABLE_CONFIGS.etapaFormacaoDocente.configs[etapaType]
+      ...CROSS_TABLE_CONFIGS.etapaFormacaoDocente.config
     };
   }
 
@@ -734,25 +656,11 @@ const ApiDataTable = ({
     // Determinar quais colunas extras precisamos baseado nos filtros
     const getExtraColumns = () => {
       if (isEtapaSelected) {
-        if (type === 'school/count') {
-          return {
-            id: 'arrangement_id',
-            name: 'arrangement_name',
-            label: 'Etapa'
-          };
-        } else if (type === 'liquid_enrollment_ratio' || type === 'gloss_enrollment_ratio') {
-          return {
-            id: 'education_level_short_id',
-            name: 'education_level_short_name',
-            label: 'Etapa'
-          };
-        } else {
-          return {
-            id: 'education_level_mod_id',
-            name: 'education_level_mod_name',
-            label: 'Etapa'
-          };
-        }
+        return {
+          id: 'education_level_mod_id',
+          name: 'education_level_mod_name',
+          label: 'Etapa'
+        };
       }
       if (isLocalidadeSelected) {
         return {
@@ -807,28 +715,14 @@ const ApiDataTable = ({
       const exportData = [];
       sortedYears.forEach(year => {
         const row = { year };
-        if (isEtapaSelected) {
-          getEtapaConfig().categories.forEach(category => {
-            row[category.name] = categoryYearMap.get(category.name)?.get(year) || 0;
-          });
-        } else {
-          row.total = yearMap.get(year) || 0;
-        }
+        row.total = yearMap.get(year) || 0;
         exportData.push(row);
       });
 
       // Preparar headers para exportação
       let exportHeaders, headerDisplayNames;
-      if (isEtapaSelected) {
-        exportHeaders = ['year', ...getEtapaConfig().categories.map(c => c.name)];
-        headerDisplayNames = { year: 'Ano' };
-        getEtapaConfig().categories.forEach(c => {
-          headerDisplayNames[c.name] = c.name;
-        });
-      } else {
-        exportHeaders = ['year', 'total'];
-        headerDisplayNames = { year: 'Ano', total: 'Total' };
-      }
+      exportHeaders = ['year', 'total'];
+      headerDisplayNames = { year: 'Ano', total: 'Total' };
 
       return (
         <div>
@@ -1113,16 +1007,7 @@ const ApiDataTable = ({
 
     switch (filterType) {
       case 'etapa':
-      if (type === 'school/count') {
-          headers = HEADERS.etapa.school;
-          usePagination = true;
-          note = ETAPA_ESCOLA_NOTE;
-      } else if (type === 'liquid_enrollment_ratio' || type === 'gloss_enrollment_ratio') {
-          headers = HEADERS.etapa.short;
-          formatTotal = true;
-      } else {
-          headers = HEADERS.etapa.standard;
-        }
+        headers = HEADERS.etapa;
         tableData = data.result;
         break;
 
