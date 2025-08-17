@@ -49,7 +49,7 @@ const CenteredTableCell = styled(TableCell)(({ theme }) => ({
 // ==========================================
 
 // Tipos de dados que usam formatação de porcentagem
-const RATIO_TYPES = ['liquid_enrollment_ratio', 'gloss_enrollment_ratio', 'rate_school_new', 'pop_out_school'];
+const RATIO_TYPES = ['liquid_enrollment_ratio', 'gloss_enrollment_ratio', 'rate_school_new', 'pop_out_school', 'iliteracy_rate', 'superior_education_conclusion_tax', 'basic_education_conclusion', 'adjusted_liquid_frequency'];
 
 // Configurações de cabeçalhos para diferentes tipos de tabelas
 const HEADERS = {
@@ -63,7 +63,10 @@ const HEADERS = {
   localidade: ['location_name', 'total'],
 
   // Cabeçalhos para faixa etária
-  faixaEtaria: ['age_range_name', 'total']
+  faixaEtaria: ['age_range_name', 'total'],
+
+  // Cabeçalhos para nível de instrução
+  instruction_level: ['instruction_level_name', 'total']
 };
 
 // Nomes de exibição para cabeçalhos
@@ -71,7 +74,59 @@ const HEADER_DISPLAY_NAMES = {
   total: 'Total',
   education_level_mod_name: 'Etapa',
   location_name: 'Localidade',
-  age_range_name: 'Faixa Etária'
+  age_range_name: 'Faixa Etária',
+  instruction_level_name: 'Nível de Instrução'
+};
+
+// Configurações para tabelas cruzadas
+const CROSS_TABLE_CONFIGS = {
+  // Localidade x Faixa Etária
+  localidadeFaixaEtaria: {
+    dataKey: 'result',
+    config: {
+      rowField: 'location_name',
+      rowIdField: 'location_id',
+      columnField: 'age_range_name',
+      columnIdField: 'age_range_id',
+      rowHeader: 'Localidade'
+    }
+  },
+
+  // Faixa Etária x Localidade
+  faixaEtariaLocalidade: {
+    dataKey: 'result',
+    config: {
+      rowField: 'age_range_name',
+      rowIdField: 'age_range_id',
+      columnField: 'location_name',
+      columnIdField: 'location_id',
+      rowHeader: 'Faixa Etária'
+    }
+  },
+
+  // Nível de Instrução x Localidade
+  instructionLevelLocalidade: {
+    dataKey: 'result',
+    config: {
+      rowField: 'instruction_level_name',
+      rowIdField: 'instruction_level_id',
+      columnField: 'location_name',
+      columnIdField: 'location_id',
+      rowHeader: 'Nível de Instrução'
+    }
+  },
+
+  // Nível de Instrução x Faixa Etária
+  instructionLevelFaixaEtaria: {
+    dataKey: 'result',
+    config: {
+      rowField: 'instruction_level_name',
+      rowIdField: 'instruction_level_id',
+      columnField: 'age_range_name',
+      columnIdField: 'age_range_id',
+      rowHeader: 'Nível de Instrução'
+    }
+  },
 };
 
 // ==========================================
@@ -83,7 +138,109 @@ const isRatioType = (type) => RATIO_TYPES.includes(type);
 
 // Verifica se os dados estão vazios
 const hasNoData = (data) => {
-  return !Array.isArray(data?.result) || data.result.length === 0;
+  console.log('TableRateComponent - Dados recebidos:', data);
+
+  // Verificar se data existe
+  if (!data) {
+    console.log('TableRateComponent - Data é null/undefined');
+    return true;
+  }
+
+  // Verificar se data.result existe e é um array
+  if (!Array.isArray(data.result)) {
+    console.log('TableRateComponent - data.result não é um array:', data.result);
+    return true;
+  }
+
+  // Verificar se o array está vazio
+  if (data.result.length === 0) {
+    console.log('TableRateComponent - data.result está vazio');
+    return true;
+  }
+
+  console.log('TableRateComponent - Dados válidos encontrados:', data.result.length, 'itens');
+  return false;
+};
+
+// Obtém a configuração para tabela cruzada com base nos filtros selecionados
+const getCrossTableConfig = (filters, type, year) => {
+  const { isLocalidadeSelected, isFaixaEtariaSelected, isInstructionLevelSelected } = filters;
+
+  if (isLocalidadeSelected && isFaixaEtariaSelected) {
+    return {
+      dataKey: CROSS_TABLE_CONFIGS.localidadeFaixaEtaria.dataKey,
+      ...CROSS_TABLE_CONFIGS.localidadeFaixaEtaria.config
+    };
+  }
+
+  if (isInstructionLevelSelected && isLocalidadeSelected) {
+    return {
+      dataKey: CROSS_TABLE_CONFIGS.instructionLevelLocalidade.dataKey,
+      ...CROSS_TABLE_CONFIGS.instructionLevelLocalidade.config
+    };
+  }
+
+  if (isInstructionLevelSelected && isFaixaEtariaSelected) {
+    return {
+      dataKey: CROSS_TABLE_CONFIGS.instructionLevelFaixaEtaria.dataKey,
+      ...CROSS_TABLE_CONFIGS.instructionLevelFaixaEtaria.config
+    };
+  }
+
+  return null;
+};
+
+// Processa dados para tabela cruzada
+const processCrossTableData = (data, rowIdField, columnIdField, rowField, columnField) => {
+  const uniqueRows = new Map();
+  const uniqueColumns = new Map();
+  const cellValues = new Map();
+
+  // Processar os dados
+  data.forEach(item => {
+    const rowId = item[rowIdField];
+    const columnId = item[columnIdField];
+    const rowName = item[rowField];
+    const columnName = item[columnField];
+    const total = item.total;
+
+    uniqueRows.set(rowId, rowName);
+    uniqueColumns.set(columnId, columnName);
+    cellValues.set(`${rowId}-${columnId}`, total);
+  });
+
+  // Ordenar linhas e colunas por ID numericamente
+  const sortedUniqueRows = new Map([...uniqueRows.entries()].sort((a, b) => {
+    return parseInt(a[0], 10) - parseInt(b[0], 10);
+  }));
+
+  const sortedUniqueColumns = new Map([...uniqueColumns.entries()].sort((a, b) => {
+    return parseInt(a[0], 10) - parseInt(b[0], 10);
+  }));
+
+  // Calcular totais das linhas
+  const rowTotals = new Map();
+  sortedUniqueRows.forEach((_, rowId) => {
+    const total = Array.from(sortedUniqueColumns.keys())
+      .reduce((sum, colId) => Number(sum) + Number(cellValues.get(`${rowId}-${colId}`) || 0), 0);
+    rowTotals.set(rowId, total);
+  });
+
+  // Calcular totais das colunas
+  const columnTotals = new Map();
+  sortedUniqueColumns.forEach((_, colId) => {
+    const total = Array.from(sortedUniqueRows.keys())
+      .reduce((sum, rowId) => Number(sum) + Number(cellValues.get(`${rowId}-${colId}`) || 0), 0);
+    columnTotals.set(colId, total);
+  });
+
+  return {
+    uniqueRows: sortedUniqueRows,
+    uniqueColumns: sortedUniqueColumns,
+    cellValues,
+    rowTotals,
+    columnTotals
+  };
 };
 
 // ==========================================
@@ -187,6 +344,87 @@ const PaginatedTable = ({
   );
 };
 
+// Componente para tabela cruzada
+const CrossTable = ({
+  rowHeader,
+  uniqueRows,
+  uniqueColumns,
+  cellValues,
+  rowTotals,
+  columnTotals,
+  type,
+  page,
+  rowsPerPage,
+  handleChangePage,
+  handleChangeRowsPerPage,
+  ref
+}) => {
+  const showTotals = !isRatioType(type);
+
+  return (
+    <>
+      <TableContainer sx={{ maxWidth: '100%', overflowX: 'auto', border: '2px solid #ccc', borderRadius: '4px' }} ref={ref}>
+        <Table sx={{ minWidth: 650 }} aria-label="combined table">
+          <StyledTableHead>
+            <TableRow>
+              <BoldTableCell>{rowHeader}</BoldTableCell>
+              {Array.from(uniqueColumns.entries()).map(([id, name]) => (
+                <BoldTableCell key={id}>{name}</BoldTableCell>
+              ))}
+              {showTotals && <BoldTableCell>Total</BoldTableCell>}
+            </TableRow>
+          </StyledTableHead>
+          <TableBody>
+            {Array.from(uniqueRows.entries()).map(([rowId, rowName]) => (
+              <TableRow key={rowId}>
+                <CenteredTableCell>{rowName}</CenteredTableCell>
+                {Array.from(uniqueColumns.keys()).map(columnId => (
+                  <CenteredTableCell key={columnId}>
+                    {isRatioType(type)
+                      ? `${Number(cellValues.get(`${rowId}-${columnId}`) || 0).toFixed(2)}%`
+                      : cellValues.get(`${rowId}-${columnId}`) || 0}
+                  </CenteredTableCell>
+                ))}
+                {showTotals &&
+                  <CenteredTableCell>{rowTotals.get(rowId)}</CenteredTableCell>
+                }
+              </TableRow>
+            ))}
+            {showTotals && (
+              <TableRow>
+                <BoldTableCell>Total</BoldTableCell>
+                {Array.from(uniqueColumns.keys()).map(columnId => (
+                  <BoldTableCell key={columnId}>
+                    {columnTotals.get(columnId)}
+                  </BoldTableCell>
+                ))}
+                <BoldTableCell>
+                  {Array.from(columnTotals.values()).reduce((sum, val) => sum + val, 0)}
+                </BoldTableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
+      <TableExport
+        data={Array.from(uniqueRows.entries()).map(([rowId, rowName]) => {
+          const rowData = { [rowHeader]: rowName };
+          Array.from(uniqueColumns.entries()).forEach(([colId, colName]) => {
+            rowData[colName] = cellValues.get(`${rowId}-${colId}`) || 0;
+          });
+          rowData.Total = rowTotals.get(rowId) || 0;
+          return rowData;
+        })}
+        headers={[rowHeader, ...Array.from(uniqueColumns.values()), 'Total']}
+        headerDisplayNames={{ [rowHeader]: rowHeader, Total: 'Total' }}
+        fileName="dados_cruzados"
+        tableTitle="Dados Cruzados"
+        tableRef={ref}
+      />
+    </>
+  );
+};
+
 const TableRateComponent = ({
   data,
   isEtapaSelected,
@@ -195,6 +433,7 @@ const TableRateComponent = ({
   type,
   isFaixaEtariaSelected,
   year,
+  isInstructionLevelSelected,
   title = ''
 }) => {
   // Estados para paginação
@@ -208,7 +447,8 @@ const TableRateComponent = ({
     default: React.useRef(null),
     etapa: React.useRef(null),
     localidade: React.useRef(null),
-    faixaEtaria: React.useRef(null)
+    faixaEtaria: React.useRef(null),
+    cross: React.useRef(null)
   };
 
   const handleChangePage = (event, newPage) => {
@@ -254,6 +494,13 @@ const TableRateComponent = ({
           id: 'age_range_id',
           name: 'age_range_name',
           label: 'Faixa Etária'
+        };
+      }
+      if (isInstructionLevelSelected) {
+        return {
+          id: 'instruction_level_id',
+          name: 'instruction_level_name',
+          label: 'Nível de Instrução'
         };
       }
       return null;
@@ -402,6 +649,7 @@ const TableRateComponent = ({
             isEtapaSelected={isEtapaSelected}
             isLocalidadeSelected={isLocalidadeSelected}
             isFaixaEtariaSelected={isFaixaEtariaSelected}
+            isInstructionLevelSelected={isInstructionLevelSelected}
           />
         </div>
         <div style={{ marginTop: '1rem' }}>
@@ -440,6 +688,12 @@ const TableRateComponent = ({
         headers = HEADERS.faixaEtaria;
         tableData = data.result;
         formatTotal = true;
+        break;
+
+      case 'instruction_level':
+        headers = HEADERS.instruction_level;
+        tableData = data.result;
+        formatTotal = isRatioType(type);
         break;
 
       default:
@@ -511,13 +765,80 @@ const TableRateComponent = ({
         return 'Dados por Localidade';
       case 'faixaEtaria':
         return 'Dados por Faixa Etária';
+      case 'instruction_level':
+        return 'Dados por Nível de Instrução';
       default:
         return `Dados por ${filterType}`;
     }
   };
 
+  // Renderização de tabela cruzada
+  const renderCrossTable = () => {
+    const filters = { isLocalidadeSelected, isFaixaEtariaSelected, isInstructionLevelSelected };
+    const config = getCrossTableConfig(filters, type, year);
+
+    if (!config) return null;
+
+    const crossedData = data?.result || [];
+
+    // Processamento de dados cruzados
+    const { uniqueRows, uniqueColumns, cellValues, rowTotals, columnTotals } = processCrossTableData(
+      crossedData,
+      config.rowIdField,
+      config.columnIdField,
+      config.rowField,
+      config.columnField
+    );
+
+    // Preparar dados para exportação
+    const exportData = [];
+    Array.from(uniqueRows.entries()).forEach(([rowId, rowName]) => {
+      const rowData = { [config.rowHeader]: rowName };
+      Array.from(uniqueColumns.entries()).forEach(([colId, colName]) => {
+        rowData[colName] = cellValues.get(`${rowId}-${colId}`) || 0;
+      });
+      rowData.Total = rowTotals.get(rowId) || 0;
+      exportData.push(rowData);
+    });
+
+    // Adicionar linha de total
+    const totalRow = { [config.rowHeader]: 'Total' };
+    Array.from(uniqueColumns.entries()).forEach(([colId, colName]) => {
+      totalRow[colName] = columnTotals.get(colId) || 0;
+    });
+    totalRow.Total = Array.from(columnTotals.values()).reduce((sum, val) => sum + val, 0);
+    exportData.push(totalRow);
+
+    // Preparar headers para exportação
+    const exportHeaders = [config.rowHeader, ...Array.from(uniqueColumns.values()), 'Total'];
+    const headerDisplayNames = { [config.rowHeader]: config.rowHeader, Total: 'Total' };
+    Array.from(uniqueColumns.values()).forEach(col => {
+      headerDisplayNames[col] = col;
+    });
+
+    return (
+      <div>
+        <CrossTable
+          rowHeader={config.rowHeader}
+          uniqueRows={uniqueRows}
+          uniqueColumns={uniqueColumns}
+          cellValues={cellValues}
+          rowTotals={rowTotals}
+          columnTotals={columnTotals}
+          type={type}
+          page={page}
+          rowsPerPage={rowsPerPage}
+          handleChangePage={handleChangePage}
+          handleChangeRowsPerPage={handleChangeRowsPerPage}
+          ref={tableRefs.cross}
+        />
+      </div>
+    );
+  };
+
   // Determinar qual tipo de tabela renderizar
-  const hasNoFilters = !isEtapaSelected && !isLocalidadeSelected && !isFaixaEtariaSelected;
+  const hasCrossFilters = (isLocalidadeSelected && isFaixaEtariaSelected) || (isInstructionLevelSelected && isLocalidadeSelected) || (isInstructionLevelSelected && isFaixaEtariaSelected);
+  const hasNoFilters = !isEtapaSelected && !isLocalidadeSelected && !isFaixaEtariaSelected && !isInstructionLevelSelected;
 
   // Renderização principal
   return (
@@ -528,6 +849,9 @@ const TableRateComponent = ({
             {renderHistoricalTable()}
           </div>
         )}
+
+        {/* Tabela cruzada */}
+        {!isHistorical && hasCrossFilters && renderCrossTable()}
 
         {/* Tabela simples (sem filtros) */}
         {!isHistorical && hasNoFilters && (
@@ -550,11 +874,12 @@ const TableRateComponent = ({
         )}
 
         {/* Tabelas simples com filtros individuais */}
-        {!isHistorical && !hasNoFilters && (
+        {!isHistorical && !hasCrossFilters && !hasNoFilters && (
           <>
             {isEtapaSelected && renderSimpleTable('etapa')}
             {isLocalidadeSelected && renderSimpleTable('localidade')}
             {isFaixaEtariaSelected && renderSimpleTable('faixaEtaria')}
+            {isInstructionLevelSelected && renderSimpleTable('instruction_level')}
           </>
         )}
       </div>

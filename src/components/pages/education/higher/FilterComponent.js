@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import Select from 'react-select';
 import { Button } from '@mui/material';
+import React, { useEffect, useMemo, useState } from 'react';
+import Select from 'react-select';
 import '../../../../style/RevenueTableContainer.css';
 import '../../../../style/TableFilters.css';
 import { FaixaPopulacional, municipios, Regioes } from '../../../../utils/citiesMapping';
@@ -23,20 +23,21 @@ function FilterComponent() {
   const [displayHistorical, setDisplayHistorical] = useState(false);
   const [isModalidadeSelected, setIsModalidadeSelected] = useState(false);
   const [isRegimeSelected, setIsRegimeSelected] = useState(false);
+  const [isFormacaoDocenteSelected, setIsFormacaoDocenteSelected] = useState(false);
   const [isCategoriaAdministrativaSelected, setIsCategoriaAdministrativaSelected] = useState(false);
   const [isFaixaEtariaSuperiorSelected, setIsFaixaEtariaSuperiorSelected] = useState(false);
-  const [isGrauAcademicoSelected, setIsGrauAcademicoSelected] = useState(false);
+  const [isOrganizacaoAcademicaSelected, setIsOrganizacaoAcademicaSelected] = useState(false);
 
-  
+
   const yearLimits = useMemo(() => ({
-    'university/count': { min: 2010, max: 2022 },
-    'university_enrollment': { min: 2011, max: 2019 },
-    'university_teacher': { min: 2010, max: 2019 },
-    'course_count': { min: 2011, max: 2022 }
+    'university/count': { min: 2020, max: 2023 },
+    'university_enrollment': { min: 2020, max: 2023 },
+    'university_teacher': { min: 2020, max: 2023 },
+    'course_count': { min: 2020, max: 2023 }
   }), []);
 
   const getYearLimits = useMemo(() => {
-    return yearLimits[type] || { min: 2010, max: 2022 };
+    return yearLimits[type] || { min: 2000, max: 2023 };
   }, [type, yearLimits]);
 
   const yearOptions = useMemo(() => {
@@ -104,15 +105,16 @@ function FilterComponent() {
         switch(filter.value) {
           case 'modalidade': return 'Modalidade';
           case 'regimeDeTrabalho': return 'Regime de Trabalho';
+          case 'formacaoDocente': return 'Formação Docente';
           case 'categoriaAdministrativa': return 'Categoria Administrativa';
           case 'faixaEtariaSuperior': return 'Faixa Etária';
-          case 'grauAcademico': return 'Grau Acadêmico';
+          case 'organizacaoAcademica': return 'Organização Acadêmica';
           default: return filter.value;
         }
       });
       filterInfo.push(`Filtros: ${filterNames.join(', ')}`);
     }
-    
+
     let fullTitle = `${titleMapping[type]} - ${locationName} (${yearDisplay})`;
 
     if (filterInfo.length > 0) {
@@ -123,9 +125,10 @@ function FilterComponent() {
 
     setIsModalidadeSelected(selectedFilters.some(filter => filter.value === 'modalidade'));
     setIsRegimeSelected(selectedFilters.some(filter => filter.value === 'regimeDeTrabalho'));
+    setIsFormacaoDocenteSelected(selectedFilters.some(filter => filter.value === 'formacaoDocente'));
     setIsCategoriaAdministrativaSelected(selectedFilters.some(filter => filter.value === 'categoriaAdministrativa'));
     setIsFaixaEtariaSuperiorSelected(selectedFilters.some(filter => filter.value === 'faixaEtariaSuperior'));
-    setIsGrauAcademicoSelected(selectedFilters.some(filter => filter.value === 'grauAcademico'));
+    setIsOrganizacaoAcademicaSelected(selectedFilters.some(filter => filter.value === 'organizacaoAcademica'));
   };
 
   const handleClearFilters = () => {
@@ -149,12 +152,12 @@ function FilterComponent() {
 
   const filterOptions = type === 'university_enrollment'
     ? [{ value: 'modalidade', label: 'Modalidade' }, { value: 'categoriaAdministrativa', label: 'Categoria Administrativa' }, { value: 'faixaEtariaSuperior', label: 'Faixa Etária' },
-       { value: 'grauAcademico', label: 'Grau Acadêmico'}]
+       { value: 'organizacaoAcademica', label: 'Organização Acadêmica'}]
     : type === 'university_teacher'
-    ? [{ value: 'regimeDeTrabalho', label: 'Regime de Trabalho' }, { value: 'categoriaAdministrativa', label: 'Categoria Administrativa' }]
+    ? [{ value: 'regimeDeTrabalho', label: 'Regime de Trabalho' }, { value: 'formacaoDocente', label: 'Formação Docente' }, { value: 'categoriaAdministrativa', label: 'Categoria Administrativa' }, { value: 'organizacaoAcademica', label: 'Organização Acadêmica'}]
     : type === 'course_count'
-    ?[{ value: 'modalidade', label: 'Modalidade' }, { value: 'categoriaAdministrativa', label: 'Categoria Administrativa' }, { value: 'grauAcademico', label: 'Grau Acadêmico'}]
-    : [{ value: 'categoriaAdministrativa', label: 'Categoria Administrativa' }];
+    ?[{ value: 'modalidade', label: 'Modalidade' }, { value: 'categoriaAdministrativa', label: 'Categoria Administrativa' }, { value: 'organizacaoAcademica', label: 'Organização Acadêmica'}]
+    : [{ value: 'categoriaAdministrativa', label: 'Categoria Administrativa' }, { value: 'organizacaoAcademica', label: 'Organização Acadêmica'}];
 
   const titleMapping = {
     "university/count": "Número de intituições de ensino superior",
@@ -233,6 +236,10 @@ function FilterComponent() {
               onChange={(selectedOption) => {
                 setType(selectedOption.value);
                 setSelectedFilters([]);
+                // Se mudou para docentes, garantir que não há filtros selecionados
+                if (selectedOption.value === 'university_teacher') {
+                  setSelectedFilters([]);
+                }
               }}
               options={typeOptions}
               className="select-box"
@@ -251,6 +258,10 @@ function FilterComponent() {
                   onChange={(e) => {
                     setDisplayHistorical(e.target.checked);
                     setSelectedFilters([]);
+                    // Se é docentes e mudou para série histórica, garantir apenas um filtro
+                    if (type === 'university_teacher') {
+                      setSelectedFilters([]);
+                    }
                   }}
                 />
                 Série Histórica
@@ -388,6 +399,29 @@ function FilterComponent() {
               id="multiFilterSelect"
               value={selectedFilters}
               onChange={(newValue) => {
+                // Para docentes (university_teacher), permitir apenas um filtro por vez
+                if (type === 'university_teacher') {
+                  setSelectedFilters(newValue.slice(-1)); // Manter apenas o último selecionado
+                  return;
+                }
+
+                // Validação para impedir combinação de regime + formação docente (para outros tipos)
+                const hasRegime = newValue.some(filter => filter.value === 'regimeDeTrabalho');
+                const hasFormacao = newValue.some(filter => filter.value === 'formacaoDocente');
+
+                if (hasRegime && hasFormacao) {
+                  // Se está tentando adicionar os dois, manter apenas o último selecionado
+                  const lastSelected = newValue[newValue.length - 1];
+                  if (lastSelected.value === 'regimeDeTrabalho') {
+                    // Removeu formação docente, manter regime
+                    setSelectedFilters(newValue.filter(f => f.value !== 'formacaoDocente'));
+                  } else {
+                    // Removeu regime, manter formação docente
+                    setSelectedFilters(newValue.filter(f => f.value !== 'regimeDeTrabalho'));
+                  }
+                  return;
+                }
+
                 if (displayHistorical) {
                   setSelectedFilters(newValue.slice(-1));
                 } else if (newValue.length <= 2) {
@@ -401,7 +435,13 @@ function FilterComponent() {
               styles={customStyles}
               menuPortalTarget={document.body}
               isMulti
-              placeholder={displayHistorical ? "Selecione 1 filtro" : "Selecione até 2 filtros"}
+              placeholder={
+                type === 'university_teacher'
+                  ? "Selecione 1 filtro (docentes)"
+                  : displayHistorical
+                    ? "Selecione 1 filtro"
+                    : "Selecione até 2 filtros"
+              }
             />
           </div>
         </div>
@@ -477,9 +517,10 @@ function FilterComponent() {
           isHistorical={isHistorical}
           isModalidadeSelected={isModalidadeSelected}
           isRegimeSelected={isRegimeSelected}
+          isFormacaoDocenteSelected={isFormacaoDocenteSelected}
           isCategoriaAdministrativaSelected={isCategoriaAdministrativaSelected}
           isFaixaEtariaSuperiorSelected={isFaixaEtariaSuperiorSelected}
-          isGrauAcademicoSelected={isGrauAcademicoSelected}
+          isOrganizacaoAcademicaSelected={isOrganizacaoAcademicaSelected}
           title={title}
         />
       ) : null}

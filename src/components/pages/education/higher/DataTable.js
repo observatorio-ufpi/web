@@ -22,11 +22,11 @@ const theme = createTheme({
       fontSize: 14,
     },
   });
-  
+
   const StyledTableHead = styled(TableHead)(({ theme }) => ({
     backgroundColor: theme.palette.background.tableHeader,
   }));
-  
+
   const BoldTableCell = styled(TableCell)(({ theme }) => ({
     fontWeight: 'bold',
     minWidth: '8rem',
@@ -36,12 +36,12 @@ const theme = createTheme({
       minWidth: '6rem',
     },
   }));
-  
+
   const CenteredTableCell = styled(TableCell)(({ theme }) => ({
     textAlign: 'center',
     verticalAlign: 'middle',
   }));
-  
+
   const HEADERS = {
     // Cabeçalhos padrão
     default: ['total'],
@@ -49,9 +49,10 @@ const theme = createTheme({
     municipio: ['cityName', 'total'],
     modalidade: ['upper_education_mod_name', 'total'],
     regimeDeTrabalho: ['work_regime_name', 'total'],
+    formacaoDocente: ['initial_training_name', 'total'],
     categoriaAdministrativa: ['upper_adm_dependency_name', 'total'],
     faixaEtariaSuperior: ['age_student_code_name', 'total'],
-    grauAcademico: ['academic_level_name', 'total']
+    organizacaoAcademica: ['academic_level_name', 'total']
   };
 
   const HEADER_DISPLAY_NAMES = {
@@ -59,9 +60,10 @@ const theme = createTheme({
     cityName: 'Município',
     upper_education_mod_name: 'Modalidade',
     work_regime_name: 'Regime de Trabalho',
+    initial_training_name: 'Formação Docente',
     upper_adm_dependency_name: 'Categoria Administrativa',
     age_student_code_name: 'Faixa Etária',
-    academic_level_name: 'Grau Acadêmico'
+    academic_level_name: 'Organização Acadêmica'
   };
 
   const CROSS_TABLE_CONFIGS = {
@@ -75,8 +77,8 @@ const theme = createTheme({
         rowHeader: 'Modalidade'
       }
     },
-    modalidadeGrauAcademico: {
-      dataKey: 'byModalidadeAndGrauAcademico',
+    modalidadeOrganizacaoAcademica: {
+      dataKey: 'byModalidadeAndOrganizacaoAcademica',
       configs: {
         rowField: 'upper_education_mod_name',
         rowIdField: 'upper_education_mod_id',
@@ -105,8 +107,8 @@ const theme = createTheme({
         rowHeader: 'Categoria Administrativa'
       }
     },
-    categoriaAdministrativaGrauAcademico: {
-      dataKey: 'byCategoriaAdministrativaAndGrauAcademico',
+    categoriaAdministrativaOrganizacaoAcademica: {
+      dataKey: 'byCategoriaAdministrativaAndOrganizacaoAcademica',
       configs: {
         rowField: 'upper_adm_dependency_name',
         rowIdField: 'upper_adm_dependency_id',
@@ -115,14 +117,14 @@ const theme = createTheme({
         rowHeader: 'Categoria Administrativa'
       }
     },
-    grauAcademicoFaixaEtariaSuperior: {
-      dataKey: 'byGrauAcademicoAndFaixaEtariaSuperior',
+    organizacaoAcademicaFaixaEtariaSuperior: {
+      dataKey: 'byOrganizacaoAcademicaAndFaixaEtariaSuperior',
       configs: {
         rowField: 'academic_level_name',
         rowIdField: 'academic_level_id',
         columnField: 'age_student_code_name',
         columnIdField: 'age_student_code_id',
-        rowHeader: 'Grau Acadêmico'
+        rowHeader: 'Organização Acadêmica'
       }
     },
     categoriaAdministrativaRegime: {
@@ -134,39 +136,81 @@ const theme = createTheme({
         columnIdField: 'work_regime_id',
         rowHeader: 'Categoria Administrativa'
       }
+    },
+    categoriaAdministrativaFormacaoDocente: {
+      dataKey: 'byCategoriaAdministrativaAndFormacaoDocente',
+      configs: {
+        rowField: 'upper_adm_dependency_name',
+        rowIdField: 'upper_adm_dependency_id',
+        columnField: 'initial_training_name',
+        columnIdField: 'initial_training_id',
+        rowHeader: 'Categoria Administrativa'
+      }
+    },
+    organizacaoAcademicaRegime: {
+      dataKey: 'byOrganizacaoAcademicaAndRegime',
+      configs: {
+        rowField: 'academic_level_name',
+        rowIdField: 'academic_level_id',
+        columnField: 'work_regime_name',
+        columnIdField: 'work_regime_id',
+        rowHeader: 'Organização Acadêmica'
+      }
+    },
+    organizacaoAcademicaFormacaoDocente: {
+      dataKey: 'byOrganizacaoAcademicaAndFormacaoDocente',
+      configs: {
+        rowField: 'academic_level_name',
+        rowIdField: 'academic_level_id',
+        columnField: 'initial_training_name',
+        columnIdField: 'initial_training_id',
+        rowHeader: 'Organização Acadêmica'
+      }
     }
   };
 
   const getCrossTableConfig = (filters) => {
-    const { isModalidadeSelected, isRegimeSelected, isCategoriaAdministrativaSelected, isFaixaEtariaSuperiorSelected, isGrauAcademicoSelected } = filters;
+    const { isModalidadeSelected, isRegimeSelected, isFormacaoDocenteSelected, isCategoriaAdministrativaSelected, isFaixaEtariaSuperiorSelected, isOrganizacaoAcademicaSelected } = filters;
 
     if (isModalidadeSelected && isFaixaEtariaSuperiorSelected) {
-      return {dataKey: CROSS_TABLE_CONFIGS.modalidadeFaixaEtariaSuperior.dataKey, 
+      return {dataKey: CROSS_TABLE_CONFIGS.modalidadeFaixaEtariaSuperior.dataKey,
         ...CROSS_TABLE_CONFIGS.modalidadeFaixaEtariaSuperior.configs}
     }
-    if (isModalidadeSelected && isGrauAcademicoSelected) {
-      return {dataKey: CROSS_TABLE_CONFIGS.modalidadeGrauAcademico.dataKey, 
-        ...CROSS_TABLE_CONFIGS.modalidadeGrauAcademico.configs}
+    if (isModalidadeSelected && isOrganizacaoAcademicaSelected) {
+      return {dataKey: CROSS_TABLE_CONFIGS.modalidadeOrganizacaoAcademica.dataKey,
+        ...CROSS_TABLE_CONFIGS.modalidadeOrganizacaoAcademica.configs}
     }
     if (isModalidadeSelected && isCategoriaAdministrativaSelected) {
-      return {dataKey: CROSS_TABLE_CONFIGS.modalidadeCategoriaAdministrativa.dataKey, 
+      return {dataKey: CROSS_TABLE_CONFIGS.modalidadeCategoriaAdministrativa.dataKey,
         ...CROSS_TABLE_CONFIGS.modalidadeCategoriaAdministrativa.configs}
     }
     if (isCategoriaAdministrativaSelected && isFaixaEtariaSuperiorSelected) {
-      return {dataKey: CROSS_TABLE_CONFIGS.categoriaAdministrativaFaixaEtariaSuperior.dataKey, 
+      return {dataKey: CROSS_TABLE_CONFIGS.categoriaAdministrativaFaixaEtariaSuperior.dataKey,
         ...CROSS_TABLE_CONFIGS.categoriaAdministrativaFaixaEtariaSuperior.configs}
     }
-    if (isCategoriaAdministrativaSelected && isGrauAcademicoSelected) {
-      return {dataKey: CROSS_TABLE_CONFIGS.categoriaAdministrativaGrauAcademico.dataKey, 
-        ...CROSS_TABLE_CONFIGS.categoriaAdministrativaGrauAcademico.configs}
+    if (isCategoriaAdministrativaSelected && isOrganizacaoAcademicaSelected) {
+      return {dataKey: CROSS_TABLE_CONFIGS.categoriaAdministrativaOrganizacaoAcademica.dataKey,
+        ...CROSS_TABLE_CONFIGS.categoriaAdministrativaOrganizacaoAcademica.configs}
     }
-    if (isGrauAcademicoSelected && isFaixaEtariaSuperiorSelected) {
-      return {dataKey: CROSS_TABLE_CONFIGS.grauAcademicoFaixaEtariaSuperior.dataKey, 
-        ...CROSS_TABLE_CONFIGS.grauAcademicoFaixaEtariaSuperior.configs}
+    if (isOrganizacaoAcademicaSelected && isFaixaEtariaSuperiorSelected) {
+      return {dataKey: CROSS_TABLE_CONFIGS.organizacaoAcademicaFaixaEtariaSuperior.dataKey,
+        ...CROSS_TABLE_CONFIGS.organizacaoAcademicaFaixaEtariaSuperior.configs}
     }
     if (isCategoriaAdministrativaSelected && isRegimeSelected) {
-      return {dataKey: CROSS_TABLE_CONFIGS.categoriaAdministrativaRegime.dataKey, 
+      return {dataKey: CROSS_TABLE_CONFIGS.categoriaAdministrativaRegime.dataKey,
         ...CROSS_TABLE_CONFIGS.categoriaAdministrativaRegime.configs}
+    }
+    if (isCategoriaAdministrativaSelected && isFormacaoDocenteSelected) {
+      return {dataKey: CROSS_TABLE_CONFIGS.categoriaAdministrativaFormacaoDocente.dataKey,
+        ...CROSS_TABLE_CONFIGS.categoriaAdministrativaFormacaoDocente.configs}
+    }
+    if (isOrganizacaoAcademicaSelected && isRegimeSelected) {
+      return {dataKey: CROSS_TABLE_CONFIGS.organizacaoAcademicaRegime.dataKey,
+        ...CROSS_TABLE_CONFIGS.organizacaoAcademicaRegime.configs}
+    }
+    if (isOrganizacaoAcademicaSelected && isFormacaoDocenteSelected) {
+      return {dataKey: CROSS_TABLE_CONFIGS.organizacaoAcademicaFormacaoDocente.dataKey,
+        ...CROSS_TABLE_CONFIGS.organizacaoAcademicaFormacaoDocente.configs}
     }
 
     return null;
@@ -228,12 +272,15 @@ const processCrossTableData = (data, rowIdField, columnIdField, rowField, column
   const hasNoData = (data, tableDataArray, municipioDataArray) => {
     const noFilterData = !Array.isArray(data?.result) || data.result.length === 0;
     const noCrossData = !data?.result?.byModalidadeAndFaixaEtariaSuperior?.length &&
-                        !data?.result?.byModalidadeAndGrauAcademico?.length &&
+                        !data?.result?.byModalidadeAndOrganizacaoAcademica?.length &&
                         !data?.result?.byModalidadeAndCategoriaAdministrativa?.length &&
                         !data?.result?.byCategoriaAdministrativaAndFaixaEtariaSuperior?.length &&
-                        !data?.result?.byCategoriaAdministrativaAndGrauAcademico?.length &&
-                        !data?.result?.byGrauAcademicoAndFaixaEtariaSuperior?.length &&
-                        !data?.result?.byCategoriaAdministrativaAndRegime?.length;
+                        !data?.result?.byCategoriaAdministrativaAndOrganizacaoAcademica?.length &&
+                        !data?.result?.byOrganizacaoAcademicaAndFaixaEtariaSuperior?.length &&
+                        !data?.result?.byCategoriaAdministrativaAndRegime?.length &&
+                        !data?.result?.byCategoriaAdministrativaAndFormacaoDocente?.length &&
+                        !data?.result?.byOrganizacaoAcademicaAndRegime?.length &&
+                        !data?.result?.byOrganizacaoAcademicaAndFormacaoDocente?.length;
 
     return noFilterData && noCrossData &&
            tableDataArray.every(arr => !Array.isArray(arr) || arr.length === 0) &&
@@ -244,7 +291,7 @@ const processCrossTableData = (data, rowIdField, columnIdField, rowField, column
     const sortedData = sortField
       ? [...data].sort((a, b) => Number(a[sortField]) - Number(b[sortField]))
       : data;
-  
+
     return (
       <TableContainer sx={{ maxWidth: '100%', overflowX: 'auto', border: '2px solid #ccc', borderRadius: '4px' }} ref={ref}>
         <Table sx={{ minWidth: 650 }} aria-label="data table">
@@ -261,14 +308,14 @@ const processCrossTableData = (data, rowIdField, columnIdField, rowField, column
             {sortedData.map((item, index) => {
               // Verifica se o item atual é a linha de Total
               const isTotal = item.cityName === 'Total' || item.nome === 'Total';
-              
+
               return (
                 <TableRow key={index}>
                   {headers.map(header => (
-                    <TableCell 
-                      key={header} 
+                    <TableCell
+                      key={header}
                       align="center"
-                      sx={{ 
+                      sx={{
                         fontWeight: isTotal ? 'bold' : 'normal',
                         textAlign: 'center',
                         verticalAlign: 'middle'
@@ -294,9 +341,10 @@ const DataTable = ({
   isHistorical,
   isModalidadeSelected,
   isRegimeSelected,
+  isFormacaoDocenteSelected,
   isCategoriaAdministrativaSelected,
   isFaixaEtariaSuperiorSelected,
-  isGrauAcademicoSelected,
+  isOrganizacaoAcademicaSelected,
   title = ''
 }) => {
 
@@ -307,9 +355,10 @@ const DataTable = ({
     municipio: React.useRef(null),
     modalidade: React.useRef(null),
     regimeDeTrabalho: React.useRef(null),
+    formacaoDocente: React.useRef(null),
     categoriaAdministrativa: React.useRef(null),
     faixaEtariaSuperior: React.useRef(null),
-    grauAcademico: React.useRef(null),
+    organizacaoAcademica: React.useRef(null),
     cross: React.useRef(null)
   };
 
@@ -347,6 +396,13 @@ const DataTable = ({
           label: 'Regime de Trabalho'
         };
       }
+      if (isFormacaoDocenteSelected) {
+        return {
+          id: 'initial_training_id',
+          name: 'initial_training_name',
+          label: 'Formação Docente'
+        };
+      }
       if (isCategoriaAdministrativaSelected) {
         return {
           id: 'upper_adm_dependency_id',
@@ -361,11 +417,11 @@ const DataTable = ({
           label: 'Faixa Etária'
         };
       }
-      if (isGrauAcademicoSelected) {
+      if (isOrganizacaoAcademicaSelected) {
         return {
           id: 'academic_level',
           name: 'academic_level_name',
-          label: 'Grau Acadêmico'
+          label: 'Organização Acadêmica'
         };
       }
       return null;
@@ -407,7 +463,7 @@ const DataTable = ({
               </TableBody>
             </Table>
           </TableContainer>
-          <TableExport 
+          <TableExport
             data={exportData}
             headers={['year', 'total']}
             headerDisplayNames={{ year: 'Ano', total: 'Total' }}
@@ -493,7 +549,7 @@ const DataTable = ({
             </TableBody>
           </Table>
         </TableContainer>
-        <TableExport 
+        <TableExport
           data={exportData}
           headers={exportHeaders}
           headerDisplayNames={headerDisplayNames}
@@ -508,7 +564,7 @@ const DataTable = ({
 
   // Renderização de tabela cruzada
 const renderCrossTable = () => {
-  const filters = { isModalidadeSelected, isRegimeSelected, isCategoriaAdministrativaSelected, isFaixaEtariaSuperiorSelected, isGrauAcademicoSelected };
+  const filters = { isModalidadeSelected, isRegimeSelected, isCategoriaAdministrativaSelected, isFaixaEtariaSuperiorSelected, isOrganizacaoAcademicaSelected };
   const config = getCrossTableConfig(filters);
 
   if (!config) return null;
@@ -590,7 +646,7 @@ const renderCrossTable = () => {
           </TableBody>
         </Table>
       </TableContainer>
-      <TableExport 
+      <TableExport
         data={exportData}
         headers={exportHeaders}
         headerDisplayNames={headerDisplayNames}
@@ -616,6 +672,11 @@ const renderCrossTable = () => {
         tableData = data.result;
         sortField = 'work_regime_id';
         break;
+      case 'formacaoDocente':
+        headers = HEADERS.formacaoDocente;
+        tableData = data.result;
+        sortField = 'initial_training_id';
+        break;
       case 'categoriaAdministrativa':
         headers = HEADERS.categoriaAdministrativa;
         tableData = data.result;
@@ -626,8 +687,8 @@ const renderCrossTable = () => {
         tableData = data.result;
         sortField = 'age_student_code';
         break;
-      case 'grauAcademico':
-        headers = HEADERS.grauAcademico;
+      case 'organizacaoAcademica':
+        headers = HEADERS.organizacaoAcademica;
         tableData = data.result;
         sortField = 'academic_level';
         break;
@@ -646,27 +707,30 @@ const renderCrossTable = () => {
           note={note}
           ref={tableRefs[filterType]}
         />
-        <TableExport 
+        <TableExport
           data={tableData}
           headers={headers}
           headerDisplayNames={HEADER_DISPLAY_NAMES}
           fileName={`dados_por_${filterType}`}
-          tableTitle={title || `Dados por ${filterType === 'modalidade' ? 'Modalidade' : filterType === 'regimeDeTrabalho' ? 'Regime de Trabalho' : 'Categoria Administrativa'}`}
+          tableTitle={title || `Dados por ${filterType === 'modalidade' ? 'Modalidade' : filterType === 'regimeDeTrabalho' ? 'Regime de Trabalho' : filterType === 'formacaoDocente' ? 'Formação Docente' : filterType === 'categoriaAdministrativa' ? 'Categoria Administrativa' : filterType === 'faixaEtariaSuperior' ? 'Faixa Etária' : filterType === 'organizacaoAcademica' ? 'Organização Acadêmica' : filterType}`}
           tableRef={tableRefs[filterType]}
         />
       </div>
     );
   };
 
-  const hasNoFilters = !isModalidadeSelected && !isRegimeSelected && !isCategoriaAdministrativaSelected && !isFaixaEtariaSuperiorSelected && !isGrauAcademicoSelected;
+  const hasNoFilters = !isModalidadeSelected && !isRegimeSelected && !isFormacaoDocenteSelected && !isCategoriaAdministrativaSelected && !isFaixaEtariaSuperiorSelected && !isOrganizacaoAcademicaSelected;
   const hasCrossFilters = (
     (isModalidadeSelected && isFaixaEtariaSuperiorSelected) ||
-    (isModalidadeSelected && isGrauAcademicoSelected) ||
+    (isModalidadeSelected && isOrganizacaoAcademicaSelected) ||
     (isModalidadeSelected && isCategoriaAdministrativaSelected) ||
     (isCategoriaAdministrativaSelected && isFaixaEtariaSuperiorSelected) ||
-    (isCategoriaAdministrativaSelected && isGrauAcademicoSelected) ||
-    (isGrauAcademicoSelected && isFaixaEtariaSuperiorSelected) ||
-    (isCategoriaAdministrativaSelected && isRegimeSelected)
+    (isCategoriaAdministrativaSelected && isOrganizacaoAcademicaSelected) ||
+    (isOrganizacaoAcademicaSelected && isFaixaEtariaSuperiorSelected) ||
+    (isCategoriaAdministrativaSelected && isRegimeSelected) ||
+    (isCategoriaAdministrativaSelected && isFormacaoDocenteSelected) ||
+    (isOrganizacaoAcademicaSelected && isRegimeSelected) ||
+    (isOrganizacaoAcademicaSelected && isFormacaoDocenteSelected)
   );
 
   return (
@@ -689,7 +753,7 @@ const renderCrossTable = () => {
                   data={tableData}
                   ref={tableRefs.default}
                 />
-                <TableExport 
+                <TableExport
                   data={tableData}
                   headers={HEADERS.default}
                   headerDisplayNames={HEADER_DISPLAY_NAMES}
@@ -707,13 +771,13 @@ const renderCrossTable = () => {
                   data={[
                     ...municipioDataArray,
                     {
-                      cityName: 'Total', 
+                      cityName: 'Total',
                       total: municipioDataArray.reduce((sum, item) => sum + item.total, 0),
                     },
                   ]}
                   ref={tableRefs.municipio}
                 />
-                <TableExport 
+                <TableExport
                   data={[
                     ...municipioDataArray,
                     {
@@ -738,9 +802,10 @@ const renderCrossTable = () => {
           <>
             {isModalidadeSelected && renderSimpleTable('modalidade')}
             {isRegimeSelected && renderSimpleTable('regimeDeTrabalho')}
+            {isFormacaoDocenteSelected && renderSimpleTable('formacaoDocente')}
             {isCategoriaAdministrativaSelected && renderSimpleTable('categoriaAdministrativa')}
             {isFaixaEtariaSuperiorSelected && renderSimpleTable('faixaEtariaSuperior')}
-            {isGrauAcademicoSelected && renderSimpleTable('grauAcademico')}
+            {isOrganizacaoAcademicaSelected && renderSimpleTable('organizacaoAcademica')}
           </>
         )}
       </div>

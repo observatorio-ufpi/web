@@ -9,13 +9,15 @@ import TableRateComponent from './TableRateComponent';
 function FiltrosRateComponent() {
   const yearLimits = useMemo(() => ({
     pop_out_school: { min: 2019, max: 2023 },
-    liquid_enrollment_ratio: { min: 2007, max: 2015 },
-    gloss_enrollment_ratio: { min: 2007, max: 2015 },
-    rate_school_new: { min: 2019, max: 2023 }
+    adjusted_liquid_frequency: { min: 2019, max: 2023 },
+    iliteracy_rate: { min: 2019, max: 2023 },
+    superior_education_conclusion_tax: { min: 2019, max: 2023 },
+    basic_education_conclusion: { min: 2019, max: 2023 },
+    instruction_level: { min: 2016, max: 2023 }
   }), []);
 
-  const [type, setType] = useState('liquid_enrollment_ratio');
-  const [filteredType, setFilteredType] = useState('liquid_enrollment_ratio');
+  const [type, setType] = useState('pop_out_school');
+  const [filteredType, setFilteredType] = useState('pop_out_school');
   const [isHistorical, setIsHistorical] = useState(false);
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
@@ -25,22 +27,31 @@ function FiltrosRateComponent() {
   const [isEtapaSelected, setIsEtapaSelected] = useState(false);
   const [isLocalidadeSelected, setIsLocalidadeSelected] = useState(false);
   const [isFaixaEtariaSelected, setIsFaixaEtariaSelected] = useState(false);
+  const [isInstructionLevelSelected, setIsInstructionLevelSelected] = useState(false);
   const [displayHistorical, setDisplayHistorical] = useState(false);
-  const [year, setYear] = useState(yearLimits.liquid_enrollment_ratio.max);
+  const [year, setYear] = useState(yearLimits.pop_out_school.max);
   const [filteredYear, setFilteredYear] = useState(null);
-  const [startYear, setStartYear] = useState(yearLimits.liquid_enrollment_ratio.min);
-  const [endYear, setEndYear] = useState(yearLimits.liquid_enrollment_ratio.max);
+  const [startYear, setStartYear] = useState(yearLimits.pop_out_school.min);
+  const [endYear, setEndYear] = useState(yearLimits.pop_out_school.max);
 
   // Função para obter os limites de anos
   const getYearLimits = useMemo(() => {
-    return yearLimits[type] || { min: 2007, max: 2015 };
+    return yearLimits[type] || { min: 2019, max: 2023 };
   }, [type, yearLimits]);
 
   // Usar getYearLimits para yearOptions
   const yearOptions = useMemo(() => {
-    if (type === 'pop_out_school') {
-      // Para pop_out_school, apenas os anos específicos disponíveis
+    if (type === 'pop_out_school' || type === 'adjusted_liquid_frequency' ||
+        type === 'iliteracy_rate' || type === 'superior_education_conclusion_tax' ||
+        type === 'basic_education_conclusion') {
+      // Para todos os tipos, apenas os anos específicos disponíveis
       return [2019, 2022, 2023].map((year) => ({
+        value: year,
+        label: year.toString(),
+      }));
+    } else if (type === 'instruction_level') {
+      // Para instruction_level, apenas os anos específicos disponíveis
+      return [2016, 2017, 2018, 2019, 2022, 2023].map((year) => ({
         value: year,
         label: year.toString(),
       }));
@@ -57,9 +68,15 @@ function FiltrosRateComponent() {
 
   // Atualizar os anos quando os limites mudarem
   useEffect(() => {
-    if (type === 'pop_out_school') {
+    if (type === 'pop_out_school' || type === 'adjusted_liquid_frequency' ||
+        type === 'iliteracy_rate' || type === 'superior_education_conclusion_tax' ||
+        type === 'basic_education_conclusion') {
       setYear(2023); // Ano mais recente disponível
       setStartYear(2019);
+      setEndYear(2023);
+    } else if (type === 'instruction_level') {
+      setYear(2023); // Ano mais recente disponível
+      setStartYear(2016);
       setEndYear(2023);
     } else {
       setYear(getYearLimits.max);
@@ -71,25 +88,20 @@ function FiltrosRateComponent() {
   // Adicionar este useEffect para ajustar filtros específicos para cada tipo
   useEffect(() => {
     // Ajustar filtros específicos para cada tipo
-    if (type === 'liquid_enrollment_ratio' || type === 'gloss_enrollment_ratio') {
-      // Garantir que etapa esteja selecionada
-      const etapaFilter = { value: 'etapa', label: 'Etapa de Ensino (Obrigatório)' };
-      if (!selectedFilters.some(filter => filter.value === 'etapa')) {
-        setSelectedFilters([etapaFilter]);
-      }
-    } else if (type === 'rate_school_new') {
+    if (type === 'pop_out_school' || type === 'adjusted_liquid_frequency') {
       // Garantir que faixa etária esteja selecionada
       const faixaEtariaFilter = { value: 'faixaEtaria', label: 'Faixa Etária (Obrigatório)' };
       if (!selectedFilters.some(filter => filter.value === 'faixaEtaria')) {
         setSelectedFilters([faixaEtariaFilter]);
       }
-    } else if (type === 'pop_out_school') {
-      // Garantir que faixa etária esteja selecionada
-      const faixaEtariaFilter = { value: 'faixaEtaria', label: 'Faixa Etária (Obrigatório)' };
-      if (!selectedFilters.some(filter => filter.value === 'faixaEtaria')) {
-        setSelectedFilters([faixaEtariaFilter]);
+    } else if (type === 'instruction_level') {
+      // Garantir que nível de instrução esteja selecionado
+      const instructionLevelFilter = { value: 'instruction_level', label: 'Nível de Instrução (Obrigatório)' };
+      if (!selectedFilters.some(filter => filter.value === 'instruction_level')) {
+        setSelectedFilters([instructionLevelFilter]);
       }
     }
+    // Para os outros novos tipos, não há filtros obrigatórios
   }, [type, selectedFilters]);
 
   const handleFilterClick = () => {
@@ -119,6 +131,7 @@ function FiltrosRateComponent() {
           case 'etapa': return 'Etapa de Ensino';
           case 'localidade': return 'Localidade';
           case 'faixaEtaria': return 'Faixa Etária';
+          case 'instruction_level': return 'Nível de Instrução';
           default: return filter.value;
         }
       });
@@ -138,14 +151,15 @@ function FiltrosRateComponent() {
     setIsEtapaSelected(selectedFilters.some(filter => filter.value === 'etapa'));
     setIsLocalidadeSelected(selectedFilters.some(filter => filter.value === 'localidade'));
     setIsFaixaEtariaSelected(selectedFilters.some(filter => filter.value === 'faixaEtaria'));
+    setIsInstructionLevelSelected(selectedFilters.some(filter => filter.value === 'instruction_level'));
   };
 
   const handleClearFilters = () => {
     setDisplayHistorical(false);
     setIsHistorical(false);
-    setType('liquid_enrollment_ratio');
-    setFilteredType('liquid_enrollment_ratio');
-    const limits = yearLimits['liquid_enrollment_ratio'];
+    setType('pop_out_school');
+    setFilteredType('pop_out_school');
+    const limits = yearLimits['pop_out_school'];
     setStartYear(limits.min);
     setEndYear(limits.max);
     setYear(limits.max);
@@ -157,13 +171,16 @@ function FiltrosRateComponent() {
     setIsEtapaSelected(false);
     setIsLocalidadeSelected(false);
     setIsFaixaEtariaSelected(false);
+    setIsInstructionLevelSelected(false);
   };
 
   const titleMapping = {
     pop_out_school: "Número de alunos fora da escola",
-    liquid_enrollment_ratio: "Taxa de matrículas líquidas",
-    gloss_enrollment_ratio: "Taxa de matrículas brutas",
-    rate_school_new: "Taxa de atendimento educacional"
+    adjusted_liquid_frequency: "Frequência líquida ajustada",
+    iliteracy_rate: "Taxa de analfabetismo",
+    superior_education_conclusion_tax: "Taxa de conclusão do ensino superior",
+    basic_education_conclusion: "Taxa de conclusão do ensino básico",
+    instruction_level: "Nível de instrução"
   };
 
   const typeOptions = Object.entries(titleMapping).map(([key, label]) => ({
@@ -175,15 +192,19 @@ function FiltrosRateComponent() {
     menuPortal: (base) => ({ ...base, zIndex: 9999 }),
   };
 
-  const filterOptions = type === 'pop_out_school'
+  const filterOptions = type === 'pop_out_school' || type === 'adjusted_liquid_frequency'
     ? [{ value: 'faixaEtaria', label: 'Faixa Etária (Obrigatório)' }]
-    : type === 'liquid_enrollment_ratio' || type === 'gloss_enrollment_ratio'
+    : type === 'iliteracy_rate' || type === 'superior_education_conclusion_tax' || type === 'basic_education_conclusion'
     ? [
         { value: 'localidade', label: 'Localidade' },
-        { value: 'etapa', label: 'Etapa (Obrigatório)' }
+        { value: 'faixaEtaria', label: 'Faixa Etária' }
       ]
-    : type === 'rate_school_new'
-    ? [{ value: 'faixaEtaria', label: 'Faixa Etária (Obrigatório)' }]
+    : type === 'instruction_level'
+    ? [
+        { value: 'instruction_level', label: 'Nível de Instrução (Obrigatório)' },
+        { value: 'localidade', label: 'Localidade' },
+        { value: 'faixaEtaria', label: 'Faixa Etária' }
+      ]
     : [];
 
   return (
@@ -280,13 +301,21 @@ function FiltrosRateComponent() {
               id="multiFilterSelect"
               value={selectedFilters}
               onChange={(newValue, actionMeta) => {
-                if (type === 'liquid_enrollment_ratio' || type === 'gloss_enrollment_ratio') {
-                  const etapaFilter = { value: 'etapa', label: 'Etapa de Ensino (Obrigatório)' };
+                if (type === 'instruction_level') {
+                  // Para instruction_level, garantir que instruction_level esteja sempre selecionado
+                  const instructionLevelFilter = { value: 'instruction_level', label: 'Nível de Instrução (Obrigatório)' };
 
                   if (newValue.length === 0) {
-                    setSelectedFilters([etapaFilter]);
-                  } else if (!newValue.some(filter => filter.value === 'etapa')) {
-                    setSelectedFilters([etapaFilter, ...newValue.slice(-1)]);
+                    setSelectedFilters([instructionLevelFilter]);
+                  } else if (!newValue.some(filter => filter.value === 'instruction_level')) {
+                    setSelectedFilters([instructionLevelFilter, ...newValue.slice(-1)]);
+                  } else {
+                    setSelectedFilters(newValue.slice(-3)); // Máximo 3 filtros
+                  }
+                } else if (type === 'iliteracy_rate' || type === 'superior_education_conclusion_tax' || type === 'basic_education_conclusion') {
+                  // Para os novos tipos, permitir até 2 filtros sem obrigatoriedade
+                  if (newValue.length <= 2) {
+                    setSelectedFilters(newValue);
                   } else {
                     setSelectedFilters(newValue.slice(-2));
                   }
@@ -318,9 +347,17 @@ function FiltrosRateComponent() {
         }}>
           {type === 'pop_out_school'
             ? <span>Para população fora da escola, os dados estão disponíveis apenas para consulta consolidada do estado do Piauí <span style={{ color: '#ff6b6b' }}>e é obrigatório selecionar faixa etaria para consulta</span>.</span>
-            : type === 'rate_school_new'
-            ? <span>Para taxa de atendimento educacional, os dados estão disponíveis apenas para consulta consolidada do estado do Piauí <span style={{ color: '#ff6b6b' }}>e é obrigatório selecionar faixa etaria para consulta</span>.</span>
-            : <span>Para taxa de matrículas {type === 'liquid_enrollment_ratio' ? 'líquidas' : 'brutas'}, os dados estão disponíveis apenas para consulta consolidada do estado do Piauí <span style={{ color: '#ff6b6b' }}>e é obrigatório selecionar etapa para consulta</span>.</span>}
+            : type === 'adjusted_liquid_frequency'
+            ? <span>Para frequência líquida ajustada, os dados estão disponíveis apenas para consulta consolidada do estado do Piauí <span style={{ color: '#ff6b6b' }}>e é obrigatório selecionar faixa etaria para consulta</span>.</span>
+            : type === 'iliteracy_rate'
+            ? <span>Para taxa de analfabetismo, os dados estão disponíveis apenas para consulta consolidada do estado do Piauí. Você pode selecionar faixa etária e/ou localidade como filtros opcionais.</span>
+            : type === 'superior_education_conclusion_tax'
+            ? <span>Para taxa de conclusão do ensino superior, os dados estão disponíveis apenas para consulta consolidada do estado do Piauí. Você pode selecionar faixa etária e/ou localidade como filtros opcionais.</span>
+            : type === 'basic_education_conclusion'
+            ? <span>Para taxa de conclusão do ensino básico, os dados estão disponíveis apenas para consulta consolidada do estado do Piauí. Você pode selecionar faixa etária e/ou localidade como filtros opcionais.</span>
+            : type === 'instruction_level'
+            ? <span>Para nível de instrução, os dados estão disponíveis apenas para consulta consolidada do estado do Piauí <span style={{ color: '#ff6b6b' }}>e é obrigatório selecionar nível de instrução para consulta</span>. Você pode combinar com localidade e/ou faixa etária.</span>
+            : <span>Selecione um tipo para ver as informações específicas.</span>}
         </div>
 
         <div className="filter-button-container">
@@ -390,6 +427,7 @@ function FiltrosRateComponent() {
           isEtapaSelected={isEtapaSelected}
           isLocalidadeSelected={isLocalidadeSelected}
           isFaixaEtariaSelected={isFaixaEtariaSelected}
+          isInstructionLevelSelected={isInstructionLevelSelected}
           isHistorical={isHistorical}
           type={filteredType}
           year={filteredYear || year}
