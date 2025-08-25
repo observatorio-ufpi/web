@@ -24,7 +24,9 @@
   transition:
     transform 0.3s ease,
     box-shadow 0.3s ease;
-  border-radius: 8px;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
 }
 
 .selection-card:hover {
@@ -38,6 +40,8 @@
   align-items: center;
   text-align: center;
   padding: 2rem;
+  flex: 1;
+  justify-content: space-between;
 }
 
 .card-icon {

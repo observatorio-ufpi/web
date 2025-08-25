@@ -13,7 +13,6 @@ import { ThemeProvider, createTheme, styled } from "@mui/material/styles";
 import React from "react";
 import * as XLSX from "xlsx";
 import { municipios } from "../../../../../../utils/municipios.mapping";
-import "../../../../../../style/Buttons.css";
 
 const theme = createTheme({
   palette: {
@@ -121,78 +120,47 @@ const RevenueTable = ({
 
   const downloadPDF = () => {
     const doc = new jsPDF();
-
-    // Configurar título
-    doc.setFontSize(16);
-    doc.text(tableName, 14, 15);
-    doc.setFontSize(12);
-    doc.text(
-      `${groupType === "municipio" ? "Município" : "Ano"}: ${groupType === "municipio" ? municipios[keyTable]?.nomeMunicipio : keyTable}`,
-      14,
-      25
-    );
-
-    // Função para capitalizar texto
-    const capitalizeText = (text) => {
-      if (!text) return "";
-      return text
-        .split(" ")
-        .map(
-          (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
-        )
-        .join(" ");
-    };
-
-    // Preparar cabeçalho e dados como no Excel
     const headers = [
       groupType === "ano" ? "Municipio" : "Ano",
-      ...Object.keys(tableMapping),
+      ...types,
     ];
 
-    // Preparar dados para a tabela
-    const tableData = rows.map((row) => [
-      groupType === "ano" ? municipios[row]?.nomeMunicipio : row,
-      ...types.map((type) =>
-        typeToRowToValue[type] && typeToRowToValue[type][row] !== undefined
-          ? typeToRowToValue[type][row].toLocaleString("pt-BR", {
+    const dataForTable = rows.map((row) => {
+      return [
+        groupType === "ano"
+          ? `${municipios[row]?.nomeMunicipio}`
+          : `${row}`,
+        ...types.map((type) => {
+          if (
+            typeToRowToValue[type] &&
+            typeToRowToValue[type][row] !== undefined
+          ) {
+            return typeToRowToValue[type][row].toLocaleString("pt-BR", {
               style: "currency",
               currency: "BRL",
-            })
-          : "-"
-      ),
-    ]);
+            });
+          } else {
+            return "-";
+          }
+        }),
+      ];
+    });
 
-    // Gerar tabela
     doc.autoTable({
       head: [headers],
-      body: tableData,
-      startY: 35,
+      body: dataForTable,
+      startY: 20,
       styles: {
         fontSize: 8,
-        cellPadding: 3,
-        overflow: "linebreak",
-      },
-      columnStyles: {
-        0: {
-          halign: "left",
-        },
-        ...Array(types.length)
-          .fill()
-          .reduce(
-            (acc, _, i) => ({
-              ...acc,
-              [i + 1]: {
-                halign: "right",
-              },
-            }),
-            {}
-          ),
+        cellPadding: 2,
       },
       headStyles: {
-        fillColor: [0, 76, 199],
-        halign: "center",
-        fontSize: 9,
+        fillColor: [66, 66, 66],
+        textColor: 255,
         fontStyle: "bold",
+      },
+      alternateRowStyles: {
+        fillColor: [245, 245, 245],
       },
       theme: "grid",
       didDrawPage: function (data) {
@@ -272,7 +240,22 @@ const RevenueTable = ({
             color="success"
             onClick={downloadExcel}
             startIcon={<FaFileExcel />}
-            className="action-button"
+            sx={{
+              minWidth: '120px',
+              '@media (max-width: 600px)': {
+                minWidth: '40px',
+                padding: '6px !important',
+                '& .MuiButton-startIcon': {
+                  margin: 0,
+                },
+                '& .button-text': {
+                  display: 'none',
+                },
+                '& svg': {
+                  fontSize: '20px',
+                },
+              },
+            }}
           >
             <span className="button-text">Excel</span>
           </Button>
@@ -281,7 +264,22 @@ const RevenueTable = ({
             color="error"
             onClick={downloadPDF}
             startIcon={<FaFilePdf />}
-            className="action-button"
+            sx={{
+              minWidth: '120px',
+              '@media (max-width: 600px)': {
+                minWidth: '40px',
+                padding: '6px !important',
+                '& .MuiButton-startIcon': {
+                  margin: 0,
+                },
+                '& .button-text': {
+                  display: 'none',
+                },
+                '& svg': {
+                  fontSize: '20px',
+                },
+              },
+            }}
           >
             <span className="button-text">PDF</span>
           </Button>

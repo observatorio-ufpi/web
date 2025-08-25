@@ -1,31 +1,17 @@
-// Importações diretas dos arquivos CSV
-import tabela1CSV from "../files/tabela1_estado - Página1.csv";
-import tabela2CSV from "../files/tabela2_estado - Página1.csv";
-import tabela3CSV from "../files/tabela3_estado - Página1.csv";
-import tabela4CSV from "../files/tabela4_estado - Página1.csv";
-import tabela5CSV from "../files/tabela5_estado - Página1.csv";
-import tabela6CSV from "../files/tabela6_estado - Página1.csv";
-import tabela7CSV from "../files/tabela7_estado - Página1.csv";
-import tabela8CSV from "../files/tabela8_estado - Página1.csv";
-import tabela9CSV from "../files/tabela9_estado - Página1.csv";
-import tabela10CSV from "../files/tabela10_estado - Página1.csv";
-import tabela11CSV from "../files/tabela11_estado - Página1.csv";
-import tabela12CSV from "../files/tabela_complementar_estado - Página1.csv"
-
 // Mapeamento de tabelas do estado para arquivos CSV
 export const stateTableFiles = {
-  tabela1: tabela1CSV,
-  tabela2: tabela2CSV,
-  tabela3: tabela3CSV,
-  tabela4: tabela4CSV,
-  tabela5: tabela5CSV,
-  tabela6: tabela6CSV,
-  tabela7: tabela7CSV,
-  tabela8: tabela8CSV,
-  tabela9: tabela9CSV,
-  tabela10: tabela10CSV,
-  tabela11: tabela11CSV,
-  tabela12: tabela12CSV
+  tabela1: "/src/files/tabela1_estado - Página1.csv",
+  tabela2: "/src/files/tabela2_estado - Página1.csv",
+  tabela3: "/src/files/tabela3_estado - Página1.csv",
+  tabela4: "/src/files/tabela4_estado - Página1.csv",
+  tabela5: "/src/files/tabela5_estado - Página1.csv",
+  tabela6: "/src/files/tabela6_estado - Página1.csv",
+  tabela7: "/src/files/tabela7_estado - Página1.csv",
+  tabela8: "/src/files/tabela8_estado - Página1.csv",
+  tabela9: "/src/files/tabela9_estado - Página1.csv",
+  tabela10: "/src/files/tabela10_estado - Página1.csv",
+  tabela11: "/src/files/tabela11_estado - Página1.csv",
+  tabela12: "/src/files/tabela_complementar_estado - Página1.csv"
 };
 
 // Mapeamento de nomes de tabelas
@@ -48,16 +34,16 @@ export const stateTableNames = {
 // Função para carregar o conteúdo do CSV
 export const loadCSVFile = async (tableKey) => {
   try {
-    // Obter o arquivo CSV correspondente
-    const csvFile = stateTableFiles[tableKey];
+    // Obter o caminho do arquivo CSV correspondente
+    const csvPath = stateTableFiles[tableKey];
     
     // Verificar se o arquivo existe
-    if (!csvFile) {
+    if (!csvPath) {
       throw new Error(`Arquivo CSV não encontrado para a tabela: ${tableKey}`);
     }
     
     // Fazer uma requisição para obter o conteúdo do arquivo
-    const response = await fetch(csvFile);
+    const response = await fetch(csvPath);
     if (!response.ok) {
       throw new Error(`Erro ao carregar o arquivo CSV: ${response.statusText}`);
     }

@@ -38,9 +38,7 @@
 }
 
 .filters-section {
-  background-color: #f8f9fa;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  border-radius: 16px;
   padding: 15px;
   margin-bottom: 20px;
   overflow-x: hidden;
@@ -67,7 +65,6 @@
 .select-label {
   font-size: 14px;
   font-weight: 500;
-  color: #333;
 }
 
 .select-box {
@@ -102,12 +99,11 @@
   justify-content: center;
   align-items: center;
   height: 100vh; /* Ajuste a altura conforme necessário */
-  background-color: #f0f0f0; /* Cor de fundo opcional */
 }
 
 .loading-spinner {
   border: 8px solid #f3f3f3; /* Cor do fundo do spinner */
-  border-top: 8px solid #3498db; /* Cor da parte superior do spinner */
+  border-top: 8px solid #6750A4; /* Cor MD3 Primary */
   border-radius: 50%;
   width: 50px; /* Ajuste o tamanho do spinner conforme necessário */
   height: 50px;
@@ -141,21 +137,18 @@
 .table-header h2 {
   margin: 0;
   font-size: 1.25rem;
-  color: #333;
   font-weight: 500;
 }
 
 .table-header-label {
-  color: #666;
   font-weight: normal;
   font-size: 1rem;
 }
 
 .mui-table-container {
-  border-radius: 0 0 8px 8px;
+  border-radius: 0 0 16px 16px;
   overflow: hidden;
   box-shadow: none;
-  border: 1px solid #e0e0e0;
   border-top: none;
 }
 

@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import "../../../../../../style/Chart.css";
 import BarChart from "./BarChart";
 import * as XLSX from "xlsx";
 import { FaFileExcel, FaDownload } from "react-icons/fa";
@@ -9,6 +8,7 @@ import Switch from "@mui/material/Switch";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { Box, Typography, CircularProgress } from "@mui/material";
 import ptBR from "date-fns/locale/pt-BR";
 import {
   fetchIPCAData,
@@ -128,17 +128,22 @@ const ChartComponent = ({
   };
 
   return (
-    <div className="indicators-container">
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "20px",
-        }}
-      >
-        <h3>{title}</h3>
-        <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
+    <Box sx={{
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'flex-start',
+      padding: '10px',
+      margin: '20px',
+    }}>
+      <Box sx={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: '20px',
+        width: '100%',
+      }}>
+        <Typography variant="h6" component="h3">{title}</Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
           <FormControlLabel
             control={
               <Switch
@@ -148,6 +153,7 @@ const ChartComponent = ({
               />
             }
             label="Correção Monetária"
+            sx={{ marginRight: 0 }}
           />
           {useMonetaryCorrection && (
             <LocalizationProvider
@@ -163,42 +169,43 @@ const ChartComponent = ({
               />
             </LocalizationProvider>
           )}
-        </div>
-      </div>
+        </Box>
+      </Box>
       {loading ? (
-        <div className="loading-container">
-          <div className="loading-spinner"></div>
-        </div>
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', height: '200px' }}>
+          <CircularProgress />
+        </Box>
       ) : (
         <>
           <BarChart chartData={chartData} title={title} />
-          <div
-            style={{
-              display: "flex",
-              flexWrap: "wrap",
-              marginTop: "100px",
-              gap: "5px",
-              fontSize: "13px",
-            }}
-          >
+          <Box sx={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            marginTop: '100px',
+            gap: '5px',
+            fontSize: '13px',
+            justifyContent: 'center',
+          }}>
             {Object.values(municipalityColors).map((municipio, index) => (
-              <div key={index} className="indicator-item">
-                <span
-                  style={{
-                    width: "15px",
-                    height: "15px",
-                    backgroundColor: municipio.color,
-                    display: "inline-block",
-                    marginRight: "5px",
-                  }}
-                ></span>
-                <span>{municipio.name}</span>
-              </div>
+              <Box key={index} sx={{
+                display: 'flex',
+                alignItems: 'center',
+                marginBottom: '5px',
+              }}>
+                <Box sx={{
+                  width: '15px',
+                  height: '15px',
+                  backgroundColor: municipio.color,
+                  marginRight: '5px',
+                  borderRadius: '2px',
+                }} />
+                <Typography variant="body2">{municipio.name}</Typography>
+              </Box>
             ))}
-          </div>
+          </Box>
         </>
       )}
-    </div>
+    </Box>
   );
 };
 

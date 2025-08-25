@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import "../../../../../../App.css";
-import { fetchData } from "../../../../../../services/apiService";
+import { fetchData } from "../../../../../../services/apiService.jsx";
 import "../../../../../../style/ChartPagination.css";
 import {
   processBasicEducationData,
@@ -17,104 +17,104 @@ import FilterComponent from "../../../../../helpers/TableFilters";
 
 const endpoints = {
   // Existing endpoints
-  ownRevenues: process.env.REACT_APP_API_PUBLIC_URL + "/researches/mot-revenue",
+  ownRevenues: import.meta.env.VITE_API_PUBLIC_URL + "/researches/mot-revenue",
   constitutionalTransfersRevenue:
-    process.env.REACT_APP_API_PUBLIC_URL + "/researches/ct-revenue",
+    import.meta.env.VITE_API_PUBLIC_URL + "/researches/ct-revenue",
   municipalTaxesRevenues:
-    process.env.REACT_APP_API_PUBLIC_URL + "/researches/mt-revenue",
+    import.meta.env.VITE_API_PUBLIC_URL + "/researches/mt-revenue",
   additionalEducationRevenue:
-    process.env.REACT_APP_API_PUBLIC_URL +
+    import.meta.env.VITE_API_PUBLIC_URL +
     "/researches/addtional-education-revenue",
   municipalFundebFundefComposition:
-    process.env.REACT_APP_API_PUBLIC_URL + "/researches/mfc-revenue",
+    import.meta.env.VITE_API_PUBLIC_URL + "/researches/mfc-revenue",
   complementationFundebFundef:
-    process.env.REACT_APP_API_PUBLIC_URL + "/researches/cf-revenue",
+    import.meta.env.VITE_API_PUBLIC_URL + "/researches/cf-revenue",
   areasActivityExpense:
-    process.env.REACT_APP_API_PUBLIC_URL + "/researches/areas-activity-expense",
+    import.meta.env.VITE_API_PUBLIC_URL + "/researches/areas-activity-expense",
   basicEducationMinimalPotential:
-    process.env.REACT_APP_API_PUBLIC_URL +
+    import.meta.env.VITE_API_PUBLIC_URL +
     "/researches/basic-education-minimal-potential-revenue",
   constitutionalLimitMde:
-    process.env.REACT_APP_API_PUBLIC_URL + "/researches/mc-limit-revenue",
+    import.meta.env.VITE_API_PUBLIC_URL + "/researches/mc-limit-revenue",
   expensesBasicEducationFundeb:
-    process.env.REACT_APP_API_PUBLIC_URL +
+    import.meta.env.VITE_API_PUBLIC_URL +
     "/researches/basic-education-expense",
   complementaryProtocol:
-    process.env.REACT_APP_API_PUBLIC_URL + "/researches/complementary-protocol",
+    import.meta.env.VITE_API_PUBLIC_URL + "/researches/complementary-protocol",
   allTables:
-    process.env.REACT_APP_API_PUBLIC_URL + "/researches/all-revenues-expenses",
+    import.meta.env.VITE_API_PUBLIC_URL + "/researches/all-revenues-expenses",
 
   // New revenue composition endpoints
   "iptu-composition":
-    process.env.REACT_APP_API_PUBLIC_URL + "/revenue-composition/iptu",
+    import.meta.env.VITE_API_PUBLIC_URL + "/revenue-composition/iptu",
   "iss-composition":
-    process.env.REACT_APP_API_PUBLIC_URL + "/revenue-composition/iss",
+    import.meta.env.VITE_API_PUBLIC_URL + "/revenue-composition/iss",
   "itbi-composition":
-    process.env.REACT_APP_API_PUBLIC_URL + "/revenue-composition/itbi",
+    import.meta.env.VITE_API_PUBLIC_URL + "/revenue-composition/itbi",
   "irrf-composition":
-    process.env.REACT_APP_API_PUBLIC_URL + "/revenue-composition/irrf",
+    import.meta.env.VITE_API_PUBLIC_URL + "/revenue-composition/irrf",
   "ipva-composition":
-    process.env.REACT_APP_API_PUBLIC_URL +
+    import.meta.env.VITE_API_PUBLIC_URL +
     "/revenue-composition/cota-parte-ipva",
   "icms-composition":
-    process.env.REACT_APP_API_PUBLIC_URL +
+    import.meta.env.VITE_API_PUBLIC_URL +
     "/revenue-composition/cota-parte-icms",
   "fpm-composition":
-    process.env.REACT_APP_API_PUBLIC_URL + "/revenue-composition/fpm",
+    import.meta.env.VITE_API_PUBLIC_URL + "/revenue-composition/fpm",
   "cota-parte-iof-ouro":
-    process.env.REACT_APP_API_PUBLIC_URL +
+    import.meta.env.VITE_API_PUBLIC_URL +
     "/revenue-composition/cota-parte-iof-ouro",
   "outras-transferencias":
-    process.env.REACT_APP_API_PUBLIC_URL +
+    import.meta.env.VITE_API_PUBLIC_URL +
     "/revenue-composition/outras-transferencias",
   "icms-desoneracao":
-    process.env.REACT_APP_API_PUBLIC_URL +
+    import.meta.env.VITE_API_PUBLIC_URL +
     "/revenue-composition/icms-desoneracao",
   "cota-parte-ipi":
-    process.env.REACT_APP_API_PUBLIC_URL +
+    import.meta.env.VITE_API_PUBLIC_URL +
     "/revenue-composition/cota-parte-ipi",
   "cota-parte-itr":
-    process.env.REACT_APP_API_PUBLIC_URL +
+    import.meta.env.VITE_API_PUBLIC_URL +
     "/revenue-composition/cota-parte-itr",
   "participacao-receita-impostos-proprios":
-    process.env.REACT_APP_API_PUBLIC_URL +
+    import.meta.env.VITE_API_PUBLIC_URL +
     "/revenue-composition/participacao-receita-impostos-proprios",
   "participacao-transferencias":
-    process.env.REACT_APP_API_PUBLIC_URL +
+    import.meta.env.VITE_API_PUBLIC_URL +
     "/revenue-composition/participacao-transferencias",
   "razao-impostos-transferencias":
-    process.env.REACT_APP_API_PUBLIC_URL +
+    import.meta.env.VITE_API_PUBLIC_URL +
     "/revenue-composition/razao-impostos-transferencias",
   "razao-transferencias-impostos":
-    process.env.REACT_APP_API_PUBLIC_URL +
+    import.meta.env.VITE_API_PUBLIC_URL +
     "/revenue-composition/razao-transferencias-impostos",
   "participacao-fundeb":
-    process.env.REACT_APP_API_PUBLIC_URL +
+    import.meta.env.VITE_API_PUBLIC_URL +
     "/revenue-composition/participacao-fundeb",
 
   fundeb_participation_mde:
-    process.env.REACT_APP_API_PUBLIC_URL +
+    import.meta.env.VITE_API_PUBLIC_URL +
     "/rpeb-composition/fundeb_participation_mde",
   resultado_liquido_fundeb:
-    process.env.REACT_APP_API_PUBLIC_URL +
+    import.meta.env.VITE_API_PUBLIC_URL +
     "/rpeb-composition/resultado_liquido_fundeb",
   participacao_complementacao_uniao:
-    process.env.REACT_APP_API_PUBLIC_URL +
+    import.meta.env.VITE_API_PUBLIC_URL +
     "/rpeb-composition/participacao_complementacao_uniao",
   mde_total_expense:
-    process.env.REACT_APP_API_PUBLIC_URL +
+    import.meta.env.VITE_API_PUBLIC_URL +
     "/education-expense-composition/mde_total_expense",
   mde_pessoal_ativo:
-    process.env.REACT_APP_API_PUBLIC_URL +
+    import.meta.env.VITE_API_PUBLIC_URL +
     "/education-expense-composition/mde_pessoal_ativo",
   mde_pessoal_inativo:
-    process.env.REACT_APP_API_PUBLIC_URL +
+    import.meta.env.VITE_API_PUBLIC_URL +
     "/education-expense-composition/mde_pessoal_inativo",
   mde_capital:
-    process.env.REACT_APP_API_PUBLIC_URL +
+    import.meta.env.VITE_API_PUBLIC_URL +
     "/education-expense-composition/mde_capital",
   mde_transferencias_instituicoes_privadas:
-    process.env.REACT_APP_API_PUBLIC_URL +
+    import.meta.env.VITE_API_PUBLIC_URL +
     "/education-expense-composition/mde_transferencias_instituicoes_privadas",
 };
 
@@ -123,7 +123,7 @@ class App extends Component {
     super(props);
     this.state = {
       apiData: null,
-      loading: true,
+      loading: false, // Mudado para false inicialmente
       error: null,
       selectedTable: "constitutionalLimitMde",
       selectedMunicipio: null,
@@ -135,11 +135,13 @@ class App extends Component {
       page: 1,
       limit: 10,
       totalPages: 1,
+      hasInitialLoad: false, // Nova flag para controlar se já fez o primeiro carregamento
     };
   }
 
   componentDidMount() {
-    this.fetchTableData();
+    // Não carrega dados automaticamente, apenas mostra os filtros
+    // this.fetchTableData();
   }
 
   fetchTableData = () => {
@@ -689,6 +691,8 @@ class App extends Component {
         faixaPopulacionalMunicipio: filters.faixaPopulacionalMunicipio,
         aglomeradoMunicipio: filters.aglomeradoMunicipio,
         gerenciaRegionalMunicipio: filters.gerenciaRegionalMunicipio,
+        loading: true,
+        hasInitialLoad: true, // Marca que já fez o primeiro carregamento
       },
       this.fetchTableData
     );
@@ -718,17 +722,19 @@ class App extends Component {
   render() {
     const { apiData, loading, error, selectedTable, groupType } = this.state;
 
-    if (loading) {
-      return (
-        <div className="loading-container">
-          <div className="loading-spinner"></div>
-        </div>
-      );
-    }
+    // Remover o loading que esconde toda a tela
+    // if (loading && this.state.hasInitialLoad) {
+    //   return (
+    //     <div className="loading-container">
+    //       <div className="loading-spinner"></div>
+    //     </div>
+    //   );
+    // }
 
-    if (error) {
-      return <div>Error: {error}</div>;
-    }
+    // Remover o tratamento de erro que esconde toda a tela
+    // if (error) {
+    //   return <div>Error: {error}</div>;
+    // }
 
     return (
       <div>
@@ -800,63 +806,99 @@ class App extends Component {
 
           <hr className="divider" />
 
-          {loading && (
-            <div className="loading-container">
-              <div className="loading-spinner"></div>
-            </div>
-          )}
+          {/* Área de dados - sempre visível */}
+          <div className="data-section">
+            {loading && (
+              <div className="loading-container">
+                <div className="loading-spinner"></div>
+              </div>
+            )}
 
-          {apiData && (
-            <>
-              {selectedTable === "expensesBasicEducationFundeb" && (
-                <ChartComponent
-                  key={selectedTable + JSON.stringify(apiData)}
-                  indicatorType={selectedTable}
-                  processDataFunction={processBasicEducationData}
-                  title="% do Fundeb nos profissionais de educação básica"
-                  data={apiData}
+            {!loading && error && (
+              <div style={{ 
+                textAlign: 'center', 
+                padding: '40px 20px',
+                color: '#d9534f',
+                fontSize: '18px'
+              }}>
+                <p>Falha ao carregar os dados. Por favor, tente novamente mais tarde.</p>
+              </div>
+            )}
+
+            {!loading && !error && !apiData && !this.state.hasInitialLoad && (
+              <div style={{ 
+                textAlign: 'center', 
+                padding: '40px 20px',
+                color: '#666',
+                fontSize: '18px'
+              }}>
+                <p>Selecione os filtros desejados e clique em "Filtrar" para carregar os dados.</p>
+              </div>
+            )}
+
+            {!loading && !error && !apiData && this.state.hasInitialLoad && (
+              <div style={{ 
+                textAlign: 'center', 
+                padding: '40px 20px',
+                color: '#d9534f',
+                fontSize: '18px'
+              }}>
+                <p>Nenhum dado encontrado com os filtros selecionados.</p>
+              </div>
+            )}
+
+            {!loading && !error && apiData && (
+              <>
+                {selectedTable === "expensesBasicEducationFundeb" && (
+                  <ChartComponent
+                    key={selectedTable + JSON.stringify(apiData)}
+                    indicatorType={selectedTable}
+                    processDataFunction={processBasicEducationData}
+                    title="% do Fundeb nos profissionais de educação básica"
+                    data={apiData}
+                  />
+                )}
+
+                {selectedTable === "constitutionalLimitMde" && (
+                  <ChartComponent
+                    key={selectedTable + JSON.stringify(apiData)}
+                    indicatorType={selectedTable}
+                    processDataFunction={processMDEData}
+                    title="% Aplicado em MDE por Município"
+                    data={apiData}
+                  />
+                )}
+
+                {selectedTable === "revenueComposition" && (
+                  <RevenueCompositionCharts data={apiData} />
+                )}
+
+                {selectedTable === "financingCapacity" && (
+                  <FinancingCapacityCharts data={apiData} />
+                )}
+
+                {selectedTable === "resourcesApplicationControl" && (
+                  <ResourcesApplicationControlCharts data={apiData} />
+                )}
+
+                {selectedTable === "rpebComposition" && (
+                  <RpebCompositionCharts data={apiData} />
+                )}
+
+                {selectedTable === "educationExpenseComposition" && (
+                  <EducationExpenseCompositionCharts data={apiData} />
+                )}
+
+                <CustomPagination
+                  page={this.state.page}
+                  totalPages={this.state.totalPages}
+                  limit={this.state.limit}
+                  onPageChange={this.handlePageChange}
+                  onLimitChange={this.handleLimitChange}
                 />
-              )}
-
-              {selectedTable === "constitutionalLimitMde" && (
-                <ChartComponent
-                  key={selectedTable + JSON.stringify(apiData)}
-                  indicatorType={selectedTable}
-                  processDataFunction={processMDEData}
-                  title="% Aplicado em MDE por Município"
-                  data={apiData}
-                />
-              )}
-
-              {selectedTable === "revenueComposition" && (
-                <RevenueCompositionCharts data={apiData} />
-              )}
-
-              {selectedTable === "financingCapacity" && (
-                <FinancingCapacityCharts data={apiData} />
-              )}
-
-              {selectedTable === "resourcesApplicationControl" && (
-                <ResourcesApplicationControlCharts data={apiData} />
-              )}
-
-              {selectedTable === "rpebComposition" && (
-                <RpebCompositionCharts data={apiData} />
-              )}
-
-              {selectedTable === "educationExpenseComposition" && (
-                <EducationExpenseCompositionCharts data={apiData} />
-              )}
-
-              <CustomPagination
-                page={this.state.page}
-                totalPages={this.state.totalPages}
-                limit={this.state.limit}
-                onPageChange={this.handlePageChange}
-                onLimitChange={this.handleLimitChange}
-              />
-            </>
-          )}
+              </>
+            )}
+          </div>
         </div>
       </div>
     );

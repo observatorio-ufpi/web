@@ -7,19 +7,20 @@ import {
 } from "react-router-dom";
 import { ThemeProvider } from '@mui/material/styles';
 import { CssBaseline } from '@mui/material';
-import Home from "./components/navigation/Home";
-import RevenueTableContainer from "./components/pages/education/financial/municipality/tables/RevenueTableContainer";
-import StateRevenueTableContainer from "./components/pages/education/financial/state/StateRevenueTableContainer";
-import FinancialDataSelection from "./components/navigation/FinancialDataSelection";
-import EducationSelection from "./components/navigation/EducationSelection";
-import ChartContainer from "./components/pages/education/financial/municipality/indicators/ChartContainer";
-import Navbar from "./components/common/Navbar";
-import Footer from "./components/common/Footer";
-import ParentComponent from "./components/pages/education/basic/ParentComponent";
-import FilterComponent from "./components/pages/education/higher/FilterComponent";
-import FiltrosRateComponent from "./components/pages/education/rate/FiltrosRateComponent";
-import theme from "./theme/muiTheme";
+import Home from "./components/navigation/Home.jsx";
+import RevenueTableContainer from "./components/pages/education/financial/municipality/tables/RevenueTableContainer.jsx";
+import StateRevenueTableContainer from "./components/pages/education/financial/state/StateRevenueTableContainer.jsx";
+import FinancialDataSelection from "./components/navigation/FinancialDataSelection.jsx";
+import EducationSelection from "./components/navigation/EducationSelection.jsx";
+import Navbar from "./components/common/Navbar.jsx";
+import Footer from "./components/common/Footer.jsx";
+import ParentComponent from "./components/pages/education/basic/ParentComponent.jsx";
+import FilterComponent from "./components/pages/education/higher/FilterComponent.jsx";
+import FiltrosRateComponent from "./components/pages/education/rate/FiltrosRateComponent.jsx";
+import ChartContainer from "./components/pages/education/financial/municipality/indicators/ChartContainer.jsx";
+import theme from "./theme/muiTheme.jsx";
 import "./App.css";
+import { Typography } from '@mui/material';
 
 // Componente para determinar qual tipo de layout usar
 const AppContent = () => {

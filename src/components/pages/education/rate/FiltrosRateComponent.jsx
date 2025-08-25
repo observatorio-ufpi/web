@@ -1,10 +1,11 @@
-import { Button } from '@mui/material';
+import { Button, Typography, Box } from '@mui/material';
 import React, { useEffect, useMemo, useState } from 'react';
+import { useTheme } from '@mui/material/styles';
 import Select from 'react-select';
 import '../../../../style/RevenueTableContainer.css';
 import '../../../../style/TableFilters.css';
-import ApiRateContainer from './ApiRateComponent';
-import TableRateComponent from './TableRateComponent';
+import ApiRateContainer from './ApiRateComponent.jsx';
+import TableRateComponent from './TableRateComponent.jsx';
 
 function FiltrosRateComponent() {
   const yearLimits = useMemo(() => ({
@@ -207,6 +208,8 @@ function FiltrosRateComponent() {
       ]
     : [];
 
+  const theme = useTheme();
+
   return (
     <div className="app-container">
       <div className="filters-section">
@@ -337,9 +340,9 @@ function FiltrosRateComponent() {
           </div>
         </div>
 
-        <div className="info-message" style={{
+        <Box sx={{ 
           width: '100%',
-          color: '#666',
+          color: theme.palette.text.secondary,
           fontSize: '0.85em',
           marginTop: '5px',
           marginBottom: '10px',
@@ -358,7 +361,7 @@ function FiltrosRateComponent() {
             : type === 'instruction_level'
             ? <span>Para nível de instrução, os dados estão disponíveis apenas para consulta consolidada do estado do Piauí <span style={{ color: '#ff6b6b' }}>e é obrigatório selecionar nível de instrução para consulta</span>. Você pode combinar com localidade e/ou faixa etária.</span>
             : <span>Selecione um tipo para ver as informações específicas.</span>}
-        </div>
+        </Box>
 
         <div className="filter-button-container">
           <Button
@@ -386,8 +389,8 @@ function FiltrosRateComponent() {
       </div>
 
       {isLoading && (
-        <div className="loading-message">
-          <p>Carregando dados...</p>
+        <div className="loading-container">
+          <div className="loading-spinner"></div>
         </div>
       )}
       {error && (
@@ -397,9 +400,19 @@ function FiltrosRateComponent() {
       )}
 
       {!isLoading && !error && !data && (
-        <div className="info-message">
-          <p>Por favor, selecione os filtros desejados e clique em "Filtrar" para montar uma consulta.</p>
-        </div>
+        <Typography 
+          variant="body1" 
+          sx={{ 
+            textAlign: 'center',
+            fontSize: '18px',
+            fontWeight: 'bold',
+            margin: '20px auto',
+            maxWidth: '400px',
+            color: theme.palette.primary.main
+          }}
+        >
+          Por favor, selecione os filtros desejados e clique em "Filtrar" para montar uma consulta.
+        </Typography>
       )}
 
       {!isLoading && !error && data && title ? (

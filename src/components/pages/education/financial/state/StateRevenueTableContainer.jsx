@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { loadCSVFile, stateTableNames } from '../../../../../services/csvService';
-import StateRevenueTable from './StateRevenueTable';
+import { loadCSVFile, stateTableNames } from '../../../../../services/csvService.jsx';
+import StateRevenueTable from './StateRevenueTable.jsx';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import '../../../../../style/RevenueTableContainer.css';
 
@@ -53,7 +53,18 @@ const StateRevenueTableContainer = () => {
   }
 
   if (error) {
-    return <div>Erro: {error}</div>;
+    return (
+      <div className="app-container">
+        <div style={{ 
+          textAlign: 'center', 
+          padding: '40px 20px',
+          color: '#d9534f',
+          fontSize: '18px'
+        }}>
+          <p>Falha ao carregar os dados. Por favor, tente novamente mais tarde.</p>
+        </div>
+      </div>
+    );
   }
 
   return (

@@ -9,9 +9,10 @@ import IconButton from "@mui/material/IconButton";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import { FaHome, FaChartLine, FaGraduationCap, FaBars } from "react-icons/fa";
-import "../../style/Navbar.css";
+import { useTheme } from "@mui/material/styles";
 
 const Navbar = () => {
+  const theme = useTheme();
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
 
@@ -24,10 +25,25 @@ const Navbar = () => {
   };
 
   return (
-    <AppBar position="static" className="navbar">
+    <AppBar 
+      position="static" 
+      sx={{
+        backgroundColor: theme.palette.surface.main,
+        color: theme.palette.surface.onSurface,
+        boxShadow: '0px 1px 3px 1px rgba(0, 0, 0, 0.15), 0px 1px 2px 0px rgba(0, 0, 0, 0.30)',
+      }}
+    >
       <Toolbar>
-        <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-          <Link to="/" className="logo-link">
+        <Typography 
+          variant="h6" 
+          component="div" 
+          sx={{ 
+            flexGrow: 1,
+            color: theme.palette.primary.main,
+            fontWeight: 600,
+          }}
+        >
+          <Link to="/" style={{ color: 'inherit', textDecoration: 'none' }}>
             Observatório de Dados
           </Link>
         </Typography>
@@ -35,29 +51,56 @@ const Navbar = () => {
         {/* Menu para telas grandes */}
         <Box sx={{ display: { xs: "none", md: "flex" } }}>
           <Button
-            color="inherit"
             component={Link}
             to="/"
             startIcon={<FaHome />}
-            className="nav-button"
+            sx={{
+              color: theme.palette.primary.main,
+              marginLeft: 1,
+              '&:hover': {
+                backgroundColor: theme.palette.primary.light + '20',
+              },
+              '@media (max-width: 600px)': {
+                fontSize: '0.8rem',
+                padding: '6px 8px',
+              },
+            }}
           >
             Início
           </Button>
           <Button
-            color="inherit"
             component={Link}
             to="/dados-financeiros"
             startIcon={<FaChartLine />}
-            className="nav-button"
+            sx={{
+              color: theme.palette.primary.main,
+              marginLeft: 1,
+              '&:hover': {
+                backgroundColor: theme.palette.primary.light + '20',
+              },
+              '@media (max-width: 600px)': {
+                fontSize: '0.8rem',
+                padding: '6px 8px',
+              },
+            }}
           >
             Dados Financeiros
           </Button>
           <Button
-            color="inherit"
             component={Link}
             to="/dados-educacionais"
             startIcon={<FaGraduationCap />}
-            className="nav-button"
+            sx={{
+              color: theme.palette.primary.main,
+              marginLeft: 1,
+              '&:hover': {
+                backgroundColor: theme.palette.primary.light + '20',
+              },
+              '@media (max-width: 600px)': {
+                fontSize: '0.8rem',
+                padding: '6px 8px',
+              },
+            }}
           >
             Dados Educacionais
           </Button>
@@ -68,9 +111,14 @@ const Navbar = () => {
           <IconButton
             size="large"
             edge="end"
-            color="inherit"
             aria-label="menu"
             onClick={handleClick}
+            sx={{
+              color: theme.palette.primary.main,
+              '&:hover': {
+                backgroundColor: theme.palette.primary.light + '20',
+              },
+            }}
           >
             <FaBars />
           </IconButton>
@@ -90,21 +138,21 @@ const Navbar = () => {
             onClose={handleClose}
           >
             <MenuItem onClick={handleClose} component={Link} to="/">
-              <FaHome className="menu-icon" /> Início
+              <FaHome style={{ marginRight: '8px' }} /> Início
             </MenuItem>
             <MenuItem
               onClick={handleClose}
               component={Link}
               to="/dados-financeiros"
             >
-              <FaChartLine className="menu-icon" /> Dados Financeiros
+              <FaChartLine style={{ marginRight: '8px' }} /> Dados Financeiros
             </MenuItem>
             <MenuItem
               onClick={handleClose}
               component={Link}
               to="/dados-educacionais"
             >
-              <FaGraduationCap className="menu-icon" /> Dados Educacionais
+              <FaGraduationCap style={{ marginRight: '8px' }} /> Dados Educacionais
             </MenuItem>
           </Menu>
         </Box>

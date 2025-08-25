@@ -1,13 +1,4 @@
-.navbar {
-  background-color: #1976d2;
-}
-
-.logo-link {
-  text-decoration: none;
-  color: white;
-  font-weight: bold;
-}
-
+/* Estilos específicos do Navbar que não são cobertos pelo tema MD3 */
 .nav-button {
   margin-left: 8px;
 }

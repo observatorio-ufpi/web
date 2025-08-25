@@ -1,7 +1,6 @@
-import { Button } from '@mui/material';
+import { Button, Grid, Box } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 import Select from 'react-select';
-import '../../style/TableFilters.css';
 import { FaixaPopulacional, municipios, Regioes } from '../../utils/municipios.mapping';
 
 const findMunicipioCodigo = (nomeMunicipio) => {
@@ -101,20 +100,31 @@ const FilterComponent = ({
     label: `Aglomerado ${aglomerado}`,
   }));
 
-  const gerenciaOptions = [...new Set(Object.values(municipios).map(m => m.gerencia))].map(gerencia => ({
+  const gerenciaOptions = [...new Set(Object.values(municipios).map(m => m.gerenciaRegional))].map(gerencia => ({
     value: gerencia,
     label: `Gerência ${gerencia}`,
   }));
 
-  const anoOptions = Array.from({ length: new Date().getFullYear() - 2006 }, (_, i) => ({
-    value: 2006 + i,
-    label: 2006 + i,
+  const anoOptions = Array.from({ length: 18 }, (_, i) => 2006 + i).map(ano => ({
+    value: ano,
+    label: ano,
   }));
 
   return (
-    <div className="filter-container">
-      <div className="filter-grid">
-        <div className="filter-item filter-municipio">
+    <Box sx={{ margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
+      <Grid 
+        container 
+        spacing={2} 
+        sx={{ 
+          marginTop: 2,
+          display: 'grid',
+          gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' },
+          gridTemplateRows: 'auto auto auto',
+          gap: 2,
+        }}
+      >
+        {/* Município - Primeira coluna, primeira linha */}
+        <Grid item sx={{ gridColumn: 1, gridRow: 1 }}>
           <Select
             value={selectedMunicipioState}
             onChange={setSelectedMunicipio}
@@ -124,10 +134,29 @@ const FilterComponent = ({
             isSearchable
             menuPlacement="bottom"
             menuPortalTarget={menuPortalTarget}
+            styles={{
+              control: (base) => ({
+                ...base,
+                minHeight: '40px',
+              }),
+              placeholder: (base) => ({
+                ...base,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }),
+              singleValue: (base) => ({
+                ...base,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }),
+            }}
           />
-        </div>
+        </Grid>
 
-        <div className="filter-item filter-territorio">
+        {/* Território - Segunda e terceira colunas, primeira linha */}
+        <Grid item sx={{ gridColumn: { xs: 1, md: '2 / span 2' }, gridRow: 1 }}>
           <Select
             value={territorioState}
             onChange={setTerritorioDeDesenvolvimentoMunicipio}
@@ -137,10 +166,29 @@ const FilterComponent = ({
             isSearchable
             menuPlacement="bottom"
             menuPortalTarget={menuPortalTarget}
+            styles={{
+              control: (base) => ({
+                ...base,
+                minHeight: '40px',
+              }),
+              placeholder: (base) => ({
+                ...base,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }),
+              singleValue: (base) => ({
+                ...base,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }),
+            }}
           />
-        </div>
+        </Grid>
 
-        <div className="filter-item filter-faixa">
+        {/* Faixa Populacional - Primeira coluna, segunda linha */}
+        <Grid item sx={{ gridColumn: 1, gridRow: 2 }}>
           <Select
             value={faixaState}
             onChange={setFaixaPopulacionalMunicipio}
@@ -150,10 +198,29 @@ const FilterComponent = ({
             isSearchable
             menuPlacement="bottom"
             menuPortalTarget={menuPortalTarget}
+            styles={{
+              control: (base) => ({
+                ...base,
+                minHeight: '40px',
+              }),
+              placeholder: (base) => ({
+                ...base,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }),
+              singleValue: (base) => ({
+                ...base,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }),
+            }}
           />
-        </div>
+        </Grid>
 
-        <div className="filter-item filter-aglomerado">
+        {/* Aglomerado - Segunda coluna, segunda linha */}
+        <Grid item sx={{ gridColumn: 2, gridRow: 2 }}>
           <Select
             value={aglomeradoState}
             onChange={setAglomeradoMunicipio}
@@ -162,10 +229,29 @@ const FilterComponent = ({
             isClearable
             menuPlacement="bottom"
             menuPortalTarget={menuPortalTarget}
+            styles={{
+              control: (base) => ({
+                ...base,
+                minHeight: '40px',
+              }),
+              placeholder: (base) => ({
+                ...base,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }),
+              singleValue: (base) => ({
+                ...base,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }),
+            }}
           />
-        </div>
+        </Grid>
 
-        <div className="filter-item filter-gerencia">
+        {/* Gerência - Terceira coluna, segunda linha */}
+        <Grid item sx={{ gridColumn: 3, gridRow: 2 }}>
           <Select
             value={gerenciaState}
             onChange={setGerenciaRegionalMunicipio}
@@ -174,10 +260,29 @@ const FilterComponent = ({
             isClearable
             menuPlacement="bottom"
             menuPortalTarget={menuPortalTarget}
+            styles={{
+              control: (base) => ({
+                ...base,
+                minHeight: '40px',
+              }),
+              placeholder: (base) => ({
+                ...base,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }),
+              singleValue: (base) => ({
+                ...base,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }),
+            }}
           />
-        </div>
+        </Grid>
 
-        <div className="filter-item filter-ano-inicial">
+        {/* Ano Inicial - Primeira coluna, terceira linha */}
+        <Grid item sx={{ gridColumn: 1, gridRow: 3 }}>
           <Select
             value={anoInicialState}
             onChange={setAnoInicial}
@@ -186,10 +291,29 @@ const FilterComponent = ({
             isClearable
             menuPlacement="bottom"
             menuPortalTarget={menuPortalTarget}
+            styles={{
+              control: (base) => ({
+                ...base,
+                minHeight: '40px',
+              }),
+              placeholder: (base) => ({
+                ...base,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }),
+              singleValue: (base) => ({
+                ...base,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }),
+            }}
           />
-        </div>
+        </Grid>
 
-        <div className="filter-item filter-ano-final">
+        {/* Ano Final - Segunda coluna, terceira linha */}
+        <Grid item sx={{ gridColumn: 2, gridRow: 3 }}>
           <Select
             value={anoFinalState}
             onChange={setAnoFinal}
@@ -198,15 +322,40 @@ const FilterComponent = ({
             isClearable
             menuPlacement="bottom"
             menuPortalTarget={menuPortalTarget}
+            styles={{
+              control: (base) => ({
+                ...base,
+                minHeight: '40px',
+              }),
+              placeholder: (base) => ({
+                ...base,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }),
+              singleValue: (base) => ({
+                ...base,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }),
+            }}
           />
-        </div>
+        </Grid>
 
-        <div className="filter-button-container">
+        {/* Botão Filtrar - Terceira coluna, terceira linha */}
+        <Grid item sx={{ 
+          gridColumn: 3, 
+          gridRow: 3, 
+          display: 'flex', 
+          justifyContent: 'flex-end', 
+          alignItems: 'flex-end' 
+        }}>
           <Button
             variant="contained"
             onClick={handleSearch}
-            className="filter-button"
             sx={{
+              minWidth: '120px',
               minWidth: { xs: '100%', sm: '100%', md: 'auto' },
               padding: { xs: '6px 20px', sm: '6px 20px', md: '6px 16px' },
               marginTop: { xs: '5px', sm: '0' },
@@ -214,9 +363,9 @@ const FilterComponent = ({
           >
             Filtrar
           </Button>
-        </div>
-      </div>
-    </div>
+        </Grid>
+      </Grid>
+    </Box>
   );
 };
 
