@@ -1,55 +1,62 @@
 import React from 'react';
-import { Typography, Container, Box, Link } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
+import { Link } from 'react-router-dom';
+import { FaFacebook, FaInstagram, FaYoutube } from 'react-icons/fa';
 
 const Footer = () => {
-  const theme = useTheme();
-  const currentYear = new Date().getFullYear();
-  
   return (
-    <Box 
-      component="footer" 
-      sx={{
-        backgroundColor: theme.palette.surface.variant,
-        borderTop: `1px solid ${theme.palette.divider}`,
-        padding: '16px 0',
-      }}
-    >
-      <Container maxWidth="lg">
-        <Typography 
-          variant="body2" 
-          align="center"
-          sx={{
-            color: theme.palette.text.secondary,
-          }}
-        >
-          © {currentYear} Observatório de Dados Educacionais e Financeiros do Piauí
-        </Typography>
-        <Typography 
-          variant="body2" 
-          align="center" 
-          sx={{ 
-            marginTop: 1,
-            color: theme.palette.text.secondary,
-          }}
-        >
-          Desenvolvido por{' '}
-          <Link 
-            href="https://www.ufpi.br/" 
-            target="_blank" 
-            rel="noopener"
-            sx={{
-              color: theme.palette.primary.main,
-              '&:hover': {
-                color: theme.palette.primary.dark,
-              },
-            }}
-          >
-            UFPI
-          </Link>
-        </Typography>
-      </Container>
-    </Box>
+    <footer className="border-t border-gray-200 py-12" style={{ backgroundColor: 'var(--background-color)' }}>
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          {/* Coluna 1: Redes sociais */}
+          <div>
+            <div className="flex space-x-4 mb-6">
+              <FaFacebook className="text-purple-600 text-2xl cursor-pointer hover:text-purple-700 transition-colors" />
+              <FaInstagram className="text-purple-600 text-2xl cursor-pointer hover:text-purple-700 transition-colors" />
+              <FaYoutube className="text-purple-600 text-2xl cursor-pointer hover:text-purple-700 transition-colors" />
+            </div>
+            <p className="text-gray-600">email@email.com</p>
+          </div>
+
+          {/* Coluna 2: Desenvolvimento */}
+          <div>
+            <h3 className="font-bold text-lg mb-4">Desenvolvimento</h3>
+            <div className="mb-4">
+              <img
+                src="/images/logos/nuppege.png"
+                alt="nuppege"
+                className="h-8"
+              />
+            </div>
+          </div>
+
+          {/* Coluna 3: Apoio */}
+          <div>
+            <h3 className="font-bold text-lg mb-4">Apoio</h3>
+            <div className="mb-4">
+              <img
+                src="/images/logos/fapepi.png"
+                alt="FAPEPI"
+                className="h-16 md:h-20"
+              />
+            </div>
+          </div>
+
+          {/* Coluna 4: Conheça */}
+          <div>
+            <h3 className="font-bold text-lg mb-4">Conheça</h3>
+            <ul className="space-y-2">
+              <li><a href="#" className="text-gray-600 hover:text-gray-900 transition-colors">quem somos</a></li>
+              <li><a href="#" className="text-gray-600 hover:text-gray-900 transition-colors">o que fazemos</a></li>
+              <li><a href="#" className="text-gray-600 hover:text-gray-900 transition-colors">repositório</a></li>
+            </ul>
+          </div>
+        </div>
+
+        <div className="border-t border-gray-200 mt-8 pt-8 text-center text-gray-600">
+          <p>©2025 Observatório da política educacional piauiense, Nuppege. Desenvolvido por <a href="https://www.ufpi.br" target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:text-purple-900 transition-colors">UFPI</a></p>
+        </div>
+      </div>
+    </footer>
   );
 };
 

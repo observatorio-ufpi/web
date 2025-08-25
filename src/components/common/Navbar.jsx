@@ -1,163 +1,80 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import AppBar from "@mui/material/AppBar";
-import Toolbar from "@mui/material/Toolbar";
-import Typography from "@mui/material/Typography";
-import Button from "@mui/material/Button";
-import Box from "@mui/material/Box";
-import IconButton from "@mui/material/IconButton";
-import Menu from "@mui/material/Menu";
-import MenuItem from "@mui/material/MenuItem";
-import { FaHome, FaChartLine, FaGraduationCap, FaBars } from "react-icons/fa";
-import { useTheme } from "@mui/material/styles";
+import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
 
 const Navbar = () => {
-  const theme = useTheme();
-  const [anchorEl, setAnchorEl] = useState(null);
-  const open = Boolean(anchorEl);
+  const location = useLocation();
 
-  const handleClick = (event) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleClose = () => {
-    setAnchorEl(null);
+  const isActive = (path) => {
+    if (path === '/') {
+      return location.pathname === '/';
+    }
+    return location.pathname.startsWith(path);
   };
 
   return (
-    <AppBar 
-      position="static" 
-      sx={{
-        backgroundColor: theme.palette.surface.main,
-        color: theme.palette.surface.onSurface,
-        boxShadow: '0px 1px 3px 1px rgba(0, 0, 0, 0.15), 0px 1px 2px 0px rgba(0, 0, 0, 0.30)',
-      }}
-    >
-      <Toolbar>
-        <Typography 
-          variant="h6" 
-          component="div" 
-          sx={{ 
-            flexGrow: 1,
-            color: theme.palette.primary.main,
-            fontWeight: 600,
-          }}
-        >
-          <Link to="/" style={{ color: 'inherit', textDecoration: 'none' }}>
-            Observatório de Dados
-          </Link>
-        </Typography>
-
-        {/* Menu para telas grandes */}
-        <Box sx={{ display: { xs: "none", md: "flex" } }}>
-          <Button
-            component={Link}
-            to="/"
-            startIcon={<FaHome />}
-            sx={{
-              color: theme.palette.primary.main,
-              marginLeft: 1,
-              '&:hover': {
-                backgroundColor: theme.palette.primary.light + '20',
-              },
-              '@media (max-width: 600px)': {
-                fontSize: '0.8rem',
-                padding: '6px 8px',
-              },
-            }}
-          >
-            Início
-          </Button>
-          <Button
-            component={Link}
-            to="/dados-financeiros"
-            startIcon={<FaChartLine />}
-            sx={{
-              color: theme.palette.primary.main,
-              marginLeft: 1,
-              '&:hover': {
-                backgroundColor: theme.palette.primary.light + '20',
-              },
-              '@media (max-width: 600px)': {
-                fontSize: '0.8rem',
-                padding: '6px 8px',
-              },
-            }}
-          >
-            Dados Financeiros
-          </Button>
-          <Button
-            component={Link}
-            to="/dados-educacionais"
-            startIcon={<FaGraduationCap />}
-            sx={{
-              color: theme.palette.primary.main,
-              marginLeft: 1,
-              '&:hover': {
-                backgroundColor: theme.palette.primary.light + '20',
-              },
-              '@media (max-width: 600px)': {
-                fontSize: '0.8rem',
-                padding: '6px 8px',
-              },
-            }}
-          >
-            Dados Educacionais
-          </Button>
-        </Box>
-
-        {/* Menu hambúrguer para telas pequenas */}
-        <Box sx={{ display: { xs: "flex", md: "none" } }}>
-          <IconButton
-            size="large"
-            edge="end"
-            aria-label="menu"
-            onClick={handleClick}
-            sx={{
-              color: theme.palette.primary.main,
-              '&:hover': {
-                backgroundColor: theme.palette.primary.light + '20',
-              },
-            }}
-          >
-            <FaBars />
-          </IconButton>
-          <Menu
-            id="menu-appbar"
-            anchorEl={anchorEl}
-            anchorOrigin={{
-              vertical: "top",
-              horizontal: "right",
-            }}
-            keepMounted
-            transformOrigin={{
-              vertical: "top",
-              horizontal: "right",
-            }}
-            open={open}
-            onClose={handleClose}
-          >
-            <MenuItem onClick={handleClose} component={Link} to="/">
-              <FaHome style={{ marginRight: '8px' }} /> Início
-            </MenuItem>
-            <MenuItem
-              onClick={handleClose}
-              component={Link}
-              to="/dados-financeiros"
+    <>
+      {/* Header Secundário - Navegação + CTA */}
+      <header className="shadow-sm" style={{ backgroundColor: 'var(--background-color)' }}>
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            {/* Navegação Secundária */}
+            <div className="flex items-center space-x-8">
+              <nav className="flex space-x-6">
+                <a 
+                  href="/" 
+                  className={`px-3 py-1 rounded-full text-sm font-medium transition-all duration-200 ${
+                    isActive('/') 
+                      ? 'text-purple-600 bg-purple-100' 
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  homepage
+                </a>
+                <a 
+                  href="/quem-somos" 
+                  className={`px-3 py-1 rounded-full text-sm font-medium transition-all duration-200 ${
+                    isActive('/quem-somos') 
+                      ? 'text-purple-600 bg-purple-100' 
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  quem somos
+                </a>
+                <a 
+                  href="/o-que-fazemos" 
+                  className={`px-3 py-1 rounded-full text-sm font-medium transition-all duration-200 ${
+                    isActive('/o-que-fazemos') 
+                      ? 'text-purple-600 bg-purple-100' 
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  o que fazemos
+                </a>
+                <a 
+                  href="/repositorio" 
+                  className={`px-3 py-1 rounded-full text-sm font-medium transition-all duration-200 ${
+                    isActive('/repositorio') 
+                      ? 'text-purple-600 bg-purple-100' 
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  repositório
+                </a>
+              </nav>
+            </div>
+            
+            {/* Botão CTA */}
+            <Link 
+              to="/education-selection"
+              className="bg-green-400 hover:bg-green-700 text-black px-6 py-3 rounded-lg font-semibold transition-all duration-300 hover:-translate-y-1 flex items-center gap-2"
             >
-              <FaChartLine style={{ marginRight: '8px' }} /> Dados Financeiros
-            </MenuItem>
-            <MenuItem
-              onClick={handleClose}
-              component={Link}
-              to="/dados-educacionais"
-            >
-              <FaGraduationCap style={{ marginRight: '8px' }} /> Dados Educacionais
-            </MenuItem>
-          </Menu>
-        </Box>
-      </Toolbar>
-    </AppBar>
+              acessar painéis
+              <span>→</span>
+            </Link>
+          </div>
+        </div>
+      </header>
+    </>
   );
 };
 

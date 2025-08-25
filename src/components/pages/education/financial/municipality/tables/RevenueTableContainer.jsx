@@ -40,6 +40,7 @@ import {
 import CustomPagination from "../../../../../helpers/CustomPagination.jsx";
 import FilterComponent from "../../../../../helpers/TableFilters.jsx";
 import RevenueTable from "./RevenueTable.jsx";
+import { Loading } from "../../../../../ui";
 
 class App extends Component {
   constructor(props) {
@@ -457,11 +458,7 @@ class App extends Component {
 
           {/* Área de dados - sempre visível */}
           <div className="data-section">
-            {loading && (
-              <div className="loading-container">
-                <div className="loading-spinner"></div>
-              </div>
-            )}
+            {loading && <Loading />}
 
             {!loading && error && (
               <div style={{ 

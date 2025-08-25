@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+/* Variáveis CSS globais */
+:root {
+  --background-color: #F6F3F2;
+  --accent-green: #4CAF50;
+  --accent-purple: #9C27B0;
+  --accent-gray: #757575;
+}
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',

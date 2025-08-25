@@ -1,8 +1,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Card, CardContent, Typography, Grid, Button, Container } from '@mui/material';
+import { Typography, Container } from '@mui/material';
 import { FaGraduationCap, FaChartLine, FaUniversity, FaMapMarkedAlt } from 'react-icons/fa';
 import { useTheme } from '@mui/material/styles';
+import { Button, Card } from '../ui';
 
 const EducationSelection = () => {
   const theme = useTheme();
@@ -60,25 +61,8 @@ const EducationSelection = () => {
             minWidth: '250px'
           }}
         >
-          <Card sx={{ 
-            width: '100%',
-            height: '100%',
-            borderRadius: 2,
-            transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-            '&:hover': {
-              transform: 'translateY(-5px)',
-              boxShadow: '0 10px 20px rgba(0, 0, 0, 0.1)',
-            },
-          }}>
-            <CardContent sx={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              textAlign: 'center',
-              padding: 3,
-              flex: 1,
-              justifyContent: 'space-between',
-            }}>
+          <Card variant="elevated" className="h-full">
+            <Card.Content padding="large" className="flex flex-col items-center text-center justify-between">
               <FaGraduationCap 
                 style={{ 
                   color: theme.palette.primary.main,
@@ -95,22 +79,13 @@ const EducationSelection = () => {
               <Button 
                 component={Link} 
                 to="/dados-educacionais/basica" 
-                variant="contained" 
-                color="primary" 
-                size="small"
-                sx={{
-                  backgroundColor: theme.palette.primary.main,
-                  marginTop: 2,
-                  padding: '0.75rem 1.5rem',
-                  borderRadius: 1,
-                  '&:hover': {
-                    backgroundColor: theme.palette.primary.dark,
-                  },
-                }}
+                variant="primary"
+                size="medium"
+                className="mt-4"
               >
                 Acessar
               </Button>
-            </CardContent>
+            </Card.Content>
           </Card>
         </div>
         
@@ -121,25 +96,8 @@ const EducationSelection = () => {
             minWidth: '250px'
           }}
         >
-          <Card sx={{ 
-            width: '100%',
-            height: '100%',
-            borderRadius: 2,
-            transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-            '&:hover': {
-              transform: 'translateY(-5px)',
-              boxShadow: '0 10px 20px rgba(0, 0, 0, 0.1)',
-            },
-          }}>
-            <CardContent sx={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              textAlign: 'center',
-              padding: 3,
-              flex: 1,
-              justifyContent: 'space-between',
-            }}>
+          <Card variant="elevated" className="h-full">
+            <Card.Content padding="large" className="flex flex-col items-center text-center justify-between">
               <FaUniversity 
                 style={{ 
                   color: theme.palette.primary.main,
@@ -156,22 +114,13 @@ const EducationSelection = () => {
               <Button 
                 component={Link} 
                 to="/dados-educacionais/superior" 
-                variant="contained" 
-                color="primary" 
-                size="small"
-                sx={{
-                  backgroundColor: theme.palette.primary.main,
-                  marginTop: 2,
-                  padding: '0.75rem 1.5rem',
-                  borderRadius: 1,
-                  '&:hover': {
-                    backgroundColor: theme.palette.primary.dark,
-                  },
-                }}
+                variant="primary"
+                size="medium"
+                className="mt-4"
               >
                 Acessar
               </Button>
-            </CardContent>
+            </Card.Content>
           </Card>
         </div>
         
@@ -182,25 +131,8 @@ const EducationSelection = () => {
             minWidth: '250px'
           }}
         >
-          <Card sx={{ 
-            width: '100%',
-            height: '100%',
-            borderRadius: 2,
-            transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-            '&:hover': {
-              transform: 'translateY(-5px)',
-              boxShadow: '0 10px 20px rgba(0, 0, 0, 0.1)',
-            },
-          }}>
-            <CardContent sx={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              textAlign: 'center',
-              padding: 3,
-              flex: 1,
-              justifyContent: 'space-between',
-            }}>
+          <Card variant="elevated" className="h-full">
+            <Card.Content padding="large" className="flex flex-col items-center text-center justify-between">
               <FaChartLine 
                 style={{ 
                   color: theme.palette.primary.main,
@@ -216,23 +148,14 @@ const EducationSelection = () => {
               </Typography>
               <Button 
                 component={Link} 
-                to="/dados-educacionais/taxas" 
-                variant="contained" 
-                color="primary" 
-                size="small"
-                sx={{
-                  backgroundColor: theme.palette.primary.main,
-                  marginTop: 2,
-                  padding: '0.75rem 1.5rem',
-                  borderRadius: 1,
-                  '&:hover': {
-                    backgroundColor: theme.palette.primary.dark,
-                  },
-                }}
+                to="/dados-educacionais/taxa-frequencia" 
+                variant="primary"
+                size="medium"
+                className="mt-4"
               >
                 Acessar
               </Button>
-            </CardContent>
+            </Card.Content>
           </Card>
         </div>
       </div>

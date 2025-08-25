@@ -7,6 +7,7 @@ import { FaixaPopulacional, municipios, Regioes } from '../../../../utils/cities
 import ApiHigherContainer from './ApiHigherComponent.jsx';
 import DataTable from './DataTable.jsx';
 import { useTheme } from '@mui/material/styles';
+import { Loading } from "../../../ui";
 
 function FilterComponent() {
   const [type, setType] = useState('university/count');
@@ -474,9 +475,7 @@ function FilterComponent() {
       </div>
 
       {isLoading && (
-        <div className="loading-container">
-          <div className="loading-spinner"></div>
-        </div>
+        <Loading />
       )}
       {error && (
         <div className="error-message">

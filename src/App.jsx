@@ -33,7 +33,7 @@ const AppContent = () => {
   // Renderiza o conteúdo com base no tipo de página
   if (isNavigationPage) {
     return (
-      <div className="navigation-layout">
+      <div>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route
@@ -69,7 +69,7 @@ function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Router>
-        <div className="app">
+        <div>
           <Navbar />
           <AppContent />
           <Footer />

@@ -3,6 +3,7 @@ import { loadCSVFile, stateTableNames } from '../../../../../services/csvService
 import StateRevenueTable from './StateRevenueTable.jsx';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import '../../../../../style/RevenueTableContainer.css';
+import { Loading } from "../../../../ui";
 
 const theme = createTheme({
   palette: {
@@ -45,11 +46,7 @@ const StateRevenueTableContainer = () => {
   };
 
   if (loading) {
-    return (
-      <div className="loading-container">
-        <div className="loading-spinner"></div>
-      </div>
-    );
+    return <Loading />;
   }
 
   if (error) {

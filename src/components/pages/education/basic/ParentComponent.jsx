@@ -7,6 +7,7 @@ import { FaixaPopulacional, municipios, Regioes } from '../../../../utils/cities
 import ApiContainer from './ApiComponent.jsx';
 import ApiDataTable from './apiDataTable.jsx';
 import { useTheme } from '@mui/material/styles';
+import { Loading } from "../../../ui";
 
 function ParentComponent() {
   const yearLimits = useMemo(() => ({
@@ -466,9 +467,7 @@ function ParentComponent() {
       </div>
 
       {isLoading && (
-        <div className="loading-container">
-          <div className="loading-spinner"></div>
-        </div>
+        <Loading />
       )}
       {error && (
         <div className="error-message">

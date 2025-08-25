@@ -14,6 +14,7 @@ import ResourcesApplicationControlCharts from "./ResourcesApplicationControlChar
 import RevenueCompositionCharts from "./RevenueCompositionCharts";
 import RpebCompositionCharts from "./RpebCompositionCharts";
 import FilterComponent from "../../../../../helpers/TableFilters";
+import { Loading } from "../../../../../ui";
 
 const endpoints = {
   // Existing endpoints
@@ -808,11 +809,7 @@ class App extends Component {
 
           {/* Área de dados - sempre visível */}
           <div className="data-section">
-            {loading && (
-              <div className="loading-container">
-                <div className="loading-spinner"></div>
-              </div>
-            )}
+            {loading && <Loading />}
 
             {!loading && error && (
               <div style={{ 

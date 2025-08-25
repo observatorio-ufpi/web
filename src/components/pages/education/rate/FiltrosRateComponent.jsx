@@ -6,6 +6,7 @@ import '../../../../style/RevenueTableContainer.css';
 import '../../../../style/TableFilters.css';
 import ApiRateContainer from './ApiRateComponent.jsx';
 import TableRateComponent from './TableRateComponent.jsx';
+import { Loading } from "../../../ui";
 
 function FiltrosRateComponent() {
   const yearLimits = useMemo(() => ({
@@ -389,9 +390,7 @@ function FiltrosRateComponent() {
       </div>
 
       {isLoading && (
-        <div className="loading-container">
-          <div className="loading-spinner"></div>
-        </div>
+        <Loading />
       )}
       {error && (
         <div className="error-message">
