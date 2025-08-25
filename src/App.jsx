@@ -18,22 +18,26 @@ import ParentComponent from "./components/pages/education/basic/ParentComponent.
 import FilterComponent from "./components/pages/education/higher/FilterComponent.jsx";
 import FiltrosRateComponent from "./components/pages/education/rate/FiltrosRateComponent.jsx";
 import ChartContainer from "./components/pages/education/financial/municipality/indicators/ChartContainer.jsx";
+import AppLayout from "./components/layouts/AppLayout.jsx";
 import theme from "./theme/muiTheme.jsx";
 import "./App.css";
 import { Typography } from '@mui/material';
 
-// Componente para determinar qual tipo de layout usar
-const AppContent = () => {
+// Componente que renderiza o layout baseado na rota
+const AppWithLayout = () => {
   const location = useLocation();
   const path = location.pathname;
 
-  // Páginas que devem usar o layout de navegação centralizada
-  const isNavigationPage = path === "/" || path === "/dados-financeiros" || path === "/dados-educacionais";
+  // Páginas que devem usar o layout da homepage (com Navbar e Footer)
+  const isHomePage = path === "/" || path === "/dados-financeiros" || path === "/dados-educacionais";
 
-  // Renderiza o conteúdo com base no tipo de página
-  if (isNavigationPage) {
-    return (
-      <div>
+  return (
+    <div>
+      {/* Renderiza Navbar apenas para páginas da homepage */}
+      {isHomePage && <Navbar />}
+      
+      {/* Renderiza o conteúdo baseado no tipo de página */}
+      {isHomePage ? (
         <Routes>
           <Route path="/" element={<Home />} />
           <Route
@@ -45,23 +49,14 @@ const AppContent = () => {
             element={<EducationSelection />}
           />
         </Routes>
-      </div>
-    );
-  } else {
-    // Para páginas de conteúdo, use o layout normal com main-content
-    return (
-      <main className="main-content">
-        <Routes>
-          <Route path="/municipios" element={<RevenueTableContainer />} />
-          <Route path="/estado" element={<StateRevenueTableContainer />} />
-          <Route path="/indicadores" element={<ChartContainer />} />
-          <Route path="/dados-educacionais/basica" element={<ParentComponent />} />
-          <Route path="/dados-educacionais/superior" element={<FilterComponent />} />
-          <Route path="/dados-educacionais/taxas" element={<FiltrosRateComponent />} />
-        </Routes>
-      </main>
-    );
-  }
+      ) : (
+        <AppLayout />
+      )}
+      
+      {/* Renderiza Footer apenas para páginas da homepage */}
+      {isHomePage && <Footer />}
+    </div>
+  );
 };
 
 function App() {
@@ -69,11 +64,24 @@ function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Router>
-        <div>
-          <Navbar />
-          <AppContent />
-          <Footer />
-        </div>
+        <Routes>
+          {/* Layout da Homepage */}
+          <Route path="/" element={<AppWithLayout />}>
+            <Route index element={<Home />} />
+            <Route path="dados-financeiros" element={<FinancialDataSelection />} />
+            <Route path="dados-educacionais" element={<EducationSelection />} />
+          </Route>
+
+          {/* Layout da Aplicação (com Sidebar) */}
+          <Route path="/" element={<AppLayout />}>
+            <Route path="municipios" element={<RevenueTableContainer />} />
+            <Route path="estado" element={<StateRevenueTableContainer />} />
+            <Route path="indicadores" element={<ChartContainer />} />
+            <Route path="dados-educacionais/basica" element={<ParentComponent />} />
+            <Route path="dados-educacionais/superior" element={<FilterComponent />} />
+            <Route path="dados-educacionais/taxas" element={<FiltrosRateComponent />} />
+          </Route>
+        </Routes>
       </Router>
     </ThemeProvider>
   );

@@ -6,10 +6,10 @@ const Footer = () => {
   return (
     <footer className="border-t border-gray-200 py-12" style={{ backgroundColor: 'var(--background-color)' }}>
       <div className="max-w-7xl mx-auto px-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
           {/* Coluna 1: Redes sociais */}
-          <div>
-            <div className="flex space-x-4 mb-6">
+          <div className="text-center sm:text-left">
+            <div className="flex justify-center sm:justify-start space-x-4 mb-6">
               <FaFacebook className="text-purple-600 text-2xl cursor-pointer hover:text-purple-700 transition-colors" />
               <FaInstagram className="text-purple-600 text-2xl cursor-pointer hover:text-purple-700 transition-colors" />
               <FaYoutube className="text-purple-600 text-2xl cursor-pointer hover:text-purple-700 transition-colors" />
@@ -18,9 +18,9 @@ const Footer = () => {
           </div>
 
           {/* Coluna 2: Desenvolvimento */}
-          <div>
+          <div className="text-center sm:text-left">
             <h3 className="font-bold text-lg mb-4">Desenvolvimento</h3>
-            <div className="mb-4">
+            <div className="mb-4 flex justify-center sm:justify-start">
               <img
                 src="/images/logos/nuppege.png"
                 alt="nuppege"
@@ -30,9 +30,9 @@ const Footer = () => {
           </div>
 
           {/* Coluna 3: Apoio */}
-          <div>
+          <div className="text-center sm:text-left">
             <h3 className="font-bold text-lg mb-4">Apoio</h3>
-            <div className="mb-4">
+            <div className="mb-4 flex justify-center sm:justify-start">
               <img
                 src="/images/logos/fapepi.png"
                 alt="FAPEPI"
@@ -42,7 +42,7 @@ const Footer = () => {
           </div>
 
           {/* Coluna 4: Conheça */}
-          <div>
+          <div className="text-center sm:text-left">
             <h3 className="font-bold text-lg mb-4">Conheça</h3>
             <ul className="space-y-2">
               <li><a href="#" className="text-gray-600 hover:text-gray-900 transition-colors">quem somos</a></li>

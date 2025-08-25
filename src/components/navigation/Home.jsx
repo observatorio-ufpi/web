@@ -16,7 +16,7 @@ const Home = () => {
       navigate('/financial-selection');
     }
   };
-
+  
   return (
     <div className="homepage-background">
       {/* Logo Section */}
@@ -209,7 +209,7 @@ const Home = () => {
                     dados educacionais
                   </button>
                 </Card.Content>
-              </Card>
+          </Card>
 
               {/* Financiamento */}
               <Card variant="elevated" backgroundColor="var(--background-color)" className="text-center">
