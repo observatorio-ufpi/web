@@ -8,6 +8,7 @@ import {
 import { ThemeProvider } from '@mui/material/styles';
 import { CssBaseline } from '@mui/material';
 import Home from "./components/navigation/Home.jsx";
+import QuemSomos from "./components/navigation/QuemSomos.jsx";
 import RevenueTableContainer from "./components/pages/education/financial/municipality/tables/RevenueTableContainer.jsx";
 import StateRevenueTableContainer from "./components/pages/education/financial/state/StateRevenueTableContainer.jsx";
 import FinancialDataSelection from "./components/navigation/FinancialDataSelection.jsx";
@@ -29,29 +30,31 @@ const AppWithLayout = () => {
   const path = location.pathname;
 
   // Páginas que devem usar o layout da homepage (com Navbar e Footer)
-  const isHomePage = path === "/" || path === "/dados-financeiros" || path === "/dados-educacionais";
+  const isHomePage = path === "/" || path === "/dados-financeiros" || path === "/dados-educacionais" || path === "/quem-somos";
+
+  // Função para renderizar o componente correto baseado na rota
+  const renderContent = () => {
+    switch (path) {
+      case "/":
+        return <Home />;
+      case "/quem-somos":
+        return <QuemSomos />;
+      case "/dados-financeiros":
+        return <FinancialDataSelection />;
+      case "/dados-educacionais":
+        return <EducationSelection />;
+      default:
+        return <Home />;
+    }
+  };
 
   return (
     <div>
       {/* Renderiza Navbar apenas para páginas da homepage */}
       {isHomePage && <Navbar />}
       
-      {/* Renderiza o conteúdo baseado no tipo de página */}
-      {isHomePage ? (
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route
-            path="/dados-financeiros"
-            element={<FinancialDataSelection />}
-          />
-          <Route
-            path="/dados-educacionais"
-            element={<EducationSelection />}
-          />
-        </Routes>
-      ) : (
-        <AppLayout />
-      )}
+      {/* Renderiza o conteúdo baseado na rota */}
+      {renderContent()}
       
       {/* Renderiza Footer apenas para páginas da homepage */}
       {isHomePage && <Footer />}
@@ -65,14 +68,13 @@ function App() {
       <CssBaseline />
       <Router>
         <Routes>
-          {/* Layout da Homepage */}
-          <Route path="/" element={<AppWithLayout />}>
-            <Route index element={<Home />} />
-            <Route path="dados-financeiros" element={<FinancialDataSelection />} />
-            <Route path="dados-educacionais" element={<EducationSelection />} />
-          </Route>
+          {/* Layout da Homepage (com Navbar e Footer) */}
+          <Route path="/" element={<AppWithLayout />} />
+          <Route path="/quem-somos" element={<AppWithLayout />} />
+          <Route path="/dados-financeiros" element={<AppWithLayout />} />
+          <Route path="/dados-educacionais" element={<AppWithLayout />} />
 
-          {/* Layout da Aplicação (com Sidebar) */}
+          {/* Layout da Aplicação (com Sidebar) - Rotas aninhadas */}
           <Route path="/" element={<AppLayout />}>
             <Route path="municipios" element={<RevenueTableContainer />} />
             <Route path="estado" element={<StateRevenueTableContainer />} />
