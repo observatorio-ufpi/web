@@ -1,7 +1,7 @@
 import { Button, Typography, Box } from '@mui/material';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useTheme } from '@mui/material/styles';
-import Select from 'react-select';
+import { Select } from '../../../ui';
 import '../../../../style/RevenueTableContainer.css';
 import '../../../../style/TableFilters.css';
 import ApiRateContainer from './ApiRateComponent.jsx';
@@ -213,10 +213,11 @@ function FiltrosRateComponent() {
 
   return (
     <div className="app-container">
-      <div className="filters-section">
-        <div className="selects-wrapper">
-          <div className="select-container">
-            <label htmlFor="typeSelect">Tipo: </label>
+      <div className="filter-container">
+        <div className="filter-grid">
+          {/* Tipo - Primeira coluna, primeira linha */}
+          <div className="filter-municipio">
+            <label htmlFor="typeSelect" className="block text-sm font-medium text-gray-700 mb-1">Tipo:</label>
             <Select
               id="typeSelect"
               value={typeOptions.find(option => option.value === type)}
@@ -225,16 +226,15 @@ function FiltrosRateComponent() {
                 setSelectedFilters([]);
               }}
               options={typeOptions}
-              className="select-box"
-              styles={customStyles}
-              menuPortalTarget={document.body}
               placeholder="Selecione o tipo"
+              size="small"
             />
           </div>
 
-          <div className="year-selection-container">
-            <div className="historical-checkbox">
-              <label>
+          {/* Ano - Segunda e terceira colunas, primeira linha */}
+          <div className="filter-territorio">
+            <div className="flex items-center gap-4">
+              <label className="flex items-center gap-2 cursor-pointer whitespace-nowrap">
                 <input
                   type="checkbox"
                   checked={displayHistorical}
@@ -242,65 +242,59 @@ function FiltrosRateComponent() {
                     setDisplayHistorical(e.target.checked);
                     setSelectedFilters([]);
                   }}
+                  className="cursor-pointer"
                 />
-                Série Histórica
+                <span className="font-medium text-gray-700">Série Histórica</span>
               </label>
-            </div>
-
-            {displayHistorical ? (
-              <>
-                <div className="select-container">
-                  <label htmlFor="startYearSelect">Ano Inicial: </label>
+            
+              {displayHistorical ? (
+                <div className="flex gap-3 flex-1">
+                  <div className="flex-1">
+                    <label htmlFor="startYearSelect" className="block text-sm font-medium text-gray-700 mb-1">Ano Inicial:</label>
+                    <Select
+                      id="startYearSelect"
+                      value={yearOptions.find(option => option.value === startYear)}
+                      onChange={(selectedOption) => {
+                        setStartYear(selectedOption.value);
+                        if (selectedOption.value > endYear) {
+                          setEndYear(selectedOption.value);
+                        }
+                      }}
+                      options={yearOptions}
+                      placeholder="Ano Inicial"
+                      size="small"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <label htmlFor="endYearSelect" className="block text-sm font-medium text-gray-700 mb-1">Ano Final:</label>
+                    <Select
+                      id="endYearSelect"
+                      value={yearOptions.find(option => option.value === endYear)}
+                      onChange={(selectedOption) => setEndYear(selectedOption.value)}
+                      options={yearOptions.filter(option => option.value >= startYear)}
+                      placeholder="Ano Final"
+                      size="small"
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="flex-1">
+                  <label htmlFor="yearSelect" className="block text-sm font-medium text-gray-700 mb-1">Ano:</label>
                   <Select
-                    id="startYearSelect"
-                    value={yearOptions.find(option => option.value === startYear)}
-                    onChange={(selectedOption) => {
-                      setStartYear(selectedOption.value);
-                      if (selectedOption.value > endYear) {
-                        setEndYear(selectedOption.value);
-                      }
-                    }}
+                    id="yearSelect"
+                    value={yearOptions.find(option => option.value === year)}
+                    onChange={(selectedOption) => setYear(selectedOption.value)}
                     options={yearOptions}
-                    className="select-box"
-                    styles={customStyles}
-                    menuPortalTarget={document.body}
-                    placeholder="Ano Inicial"
+                    placeholder="Ano"
+                    size="small"
                   />
                 </div>
-                <div className="select-container">
-                  <label htmlFor="endYearSelect">Ano Final: </label>
-                  <Select
-                    id="endYearSelect"
-                    value={yearOptions.find(option => option.value === endYear)}
-                    onChange={(selectedOption) => setEndYear(selectedOption.value)}
-                    options={yearOptions.filter(option => option.value >= startYear)}
-                    className="select-box"
-                    styles={customStyles}
-                    menuPortalTarget={document.body}
-                    placeholder="Ano Final"
-                  />
-                </div>
-              </>
-            ) : (
-              <div className="select-container">
-                <label htmlFor="yearSelect">Ano: </label>
-                <Select
-                  id="yearSelect"
-                  value={yearOptions.find(option => option.value === year)}
-                  onChange={(selectedOption) => setYear(selectedOption.value)}
-                  options={yearOptions}
-                  className="select-box"
-                  styles={customStyles}
-                  menuPortalTarget={document.body}
-                  placeholder="Ano"
-                />
-              </div>
-            )}
+              )}
+            </div>
           </div>
-        </div>
 
-        <div className="selects-wrapper">
-          <div className="select-container">
+          {/* Filtros Múltiplos - Primeira coluna, segunda linha */}
+          <div className="filter-faixa">
             <Select
               id="multiFilterSelect"
               value={selectedFilters}
@@ -332,60 +326,64 @@ function FiltrosRateComponent() {
                 }
               }}
               options={filterOptions}
-              className="select-box"
-              styles={customStyles}
-              menuPortalTarget={document.body}
               isMulti
               placeholder={displayHistorical ? "Selecione 1 filtro" : "Selecione até 2 filtros"}
+              size="small"
             />
           </div>
-        </div>
 
-        <Box sx={{ 
-          width: '100%',
-          color: theme.palette.text.secondary,
-          fontSize: '0.85em',
-          marginTop: '5px',
-          marginBottom: '10px',
-          maxWidth: '100%'
-        }}>
-          {type === 'pop_out_school'
-            ? <span>Para população fora da escola, os dados estão disponíveis apenas para consulta consolidada do estado do Piauí <span style={{ color: '#ff6b6b' }}>e é obrigatório selecionar faixa etaria para consulta</span>.</span>
-            : type === 'adjusted_liquid_frequency'
-            ? <span>Para frequência líquida ajustada, os dados estão disponíveis apenas para consulta consolidada do estado do Piauí <span style={{ color: '#ff6b6b' }}>e é obrigatório selecionar faixa etaria para consulta</span>.</span>
-            : type === 'iliteracy_rate'
-            ? <span>Para taxa de analfabetismo, os dados estão disponíveis apenas para consulta consolidada do estado do Piauí. Você pode selecionar faixa etária e/ou localidade como filtros opcionais.</span>
-            : type === 'superior_education_conclusion_tax'
-            ? <span>Para taxa de conclusão do ensino superior, os dados estão disponíveis apenas para consulta consolidada do estado do Piauí. Você pode selecionar faixa etária e/ou localidade como filtros opcionais.</span>
-            : type === 'basic_education_conclusion'
-            ? <span>Para taxa de conclusão do ensino básico, os dados estão disponíveis apenas para consulta consolidada do estado do Piauí. Você pode selecionar faixa etária e/ou localidade como filtros opcionais.</span>
-            : type === 'instruction_level'
-            ? <span>Para nível de instrução, os dados estão disponíveis apenas para consulta consolidada do estado do Piauí <span style={{ color: '#ff6b6b' }}>e é obrigatório selecionar nível de instrução para consulta</span>. Você pode combinar com localidade e/ou faixa etária.</span>
-            : <span>Selecione um tipo para ver as informações específicas.</span>}
-        </Box>
+          {/* Instruções - Segunda e terceira colunas, segunda linha */}
+          <div className="filter-aglomerado">
+            <Box sx={{ 
+              width: '100%',
+              color: theme.palette.text.secondary,
+              fontSize: '0.85em',
+              padding: '10px',
+              backgroundColor: '#f8f9fa',
+              borderRadius: '8px',
+              border: '1px solid #e9ecef'
+            }}>
+              {type === 'pop_out_school'
+                ? <span>Para população fora da escola, os dados estão disponíveis apenas para consulta consolidada do estado do Piauí <span style={{ color: '#ff6b6b' }}>e é obrigatório selecionar faixa etaria para consulta</span>.</span>
+                : type === 'adjusted_liquid_frequency'
+                ? <span>Para frequência líquida ajustada, os dados estão disponíveis apenas para consulta consolidada do estado do Piauí <span style={{ color: '#ff6b6b' }}>e é obrigatório selecionar faixa etaria para consulta</span>.</span>
+                : type === 'iliteracy_rate'
+                ? <span>Para taxa de analfabetismo, os dados estão disponíveis apenas para consulta consolidada do estado do Piauí. Você pode selecionar faixa etária e/ou localidade como filtros opcionais.</span>
+                : type === 'superior_education_conclusion_tax'
+                ? <span>Para taxa de conclusão do ensino superior, os dados estão disponíveis apenas para consulta consolidada do estado do Piauí. Você pode selecionar faixa etária e/ou localidade como filtros opcionais.</span>
+                : type === 'basic_education_conclusion'
+                ? <span>Para taxa de conclusão do ensino básico, os dados estão disponíveis apenas para consulta consolidada do estado do Piauí. Você pode selecionar faixa etária e/ou localidade como filtros opcionais.</span>
+                : type === 'instruction_level'
+                ? <span>Para nível de instrução, os dados estão disponíveis apenas para consulta consolidada do estado do Piauí <span style={{ color: '#ff6b6b' }}>e é obrigatório selecionar nível de instrução para consulta</span>. Você pode combinar com localidade e/ou faixa etária.</span>
+                : <span>Selecione um tipo para ver as informações específicas.</span>}
+            </Box>
+          </div>
 
-        <div className="filter-button-container">
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={handleFilterClick}
-            className="filter-button"
-          >
-            Filtrar
-          </Button>
+          {/* Botões - Terceira coluna, terceira linha (mais à direita) */}
+          <div className="filter-gerencia">
+            <div className="flex gap-3 justify-end">
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handleFilterClick}
+                className="filter-button"
+              >
+                Filtrar
+              </Button>
 
-          <Button
-            style={{
-              marginLeft: '10px',
-              backgroundColor: '#f0f0f0',
-              color: '#000',
-            }}
-            variant="contained"
-            onClick={handleClearFilters}
-            className="filter-button"
-          >
-            Limpar
-          </Button>
+              <Button
+                style={{
+                  backgroundColor: '#f0f0f0',
+                  color: '#000',
+                }}
+                variant="contained"
+                onClick={handleClearFilters}
+                className="filter-button"
+              >
+                Limpar
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -410,7 +408,7 @@ function FiltrosRateComponent() {
             color: theme.palette.primary.main
           }}
         >
-          Por favor, selecione os filtros desejados e clique em "Filtrar" para montar uma consulta.
+          Selecione os filtros desejados e clique em "Filtrar" para montar uma consulta.
         </Typography>
       )}
 

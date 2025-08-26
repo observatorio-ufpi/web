@@ -1,6 +1,6 @@
 import { Button, Grid, Box } from '@mui/material';
 import React, { useEffect, useState } from 'react';
-import Select from 'react-select';
+import { Select } from '../ui';
 import { FaixaPopulacional, municipios, Regioes } from '../../utils/municipios.mapping';
 
 const findMunicipioCodigo = (nomeMunicipio) => {
@@ -130,28 +130,7 @@ const FilterComponent = ({
             onChange={setSelectedMunicipio}
             options={municipioOptions}
             placeholder="Município"
-            isClearable
-            isSearchable
-            menuPlacement="bottom"
-            menuPortalTarget={menuPortalTarget}
-            styles={{
-              control: (base) => ({
-                ...base,
-                minHeight: '40px',
-              }),
-              placeholder: (base) => ({
-                ...base,
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-              }),
-              singleValue: (base) => ({
-                ...base,
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-              }),
-            }}
+            size="small"
           />
         </Grid>
 
@@ -162,28 +141,7 @@ const FilterComponent = ({
             onChange={setTerritorioDeDesenvolvimentoMunicipio}
             options={Object.keys(Regioes).map(key => ({ value: key, label: Regioes[key] }))}
             placeholder="Território de Desenvolvimento"
-            isClearable
-            isSearchable
-            menuPlacement="bottom"
-            menuPortalTarget={menuPortalTarget}
-            styles={{
-              control: (base) => ({
-                ...base,
-                minHeight: '40px',
-              }),
-              placeholder: (base) => ({
-                ...base,
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-              }),
-              singleValue: (base) => ({
-                ...base,
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-              }),
-            }}
+            size="small"
           />
         </Grid>
 
@@ -194,28 +152,7 @@ const FilterComponent = ({
             onChange={setFaixaPopulacionalMunicipio}
             options={Object.keys(FaixaPopulacional).map(key => ({ value: key, label: FaixaPopulacional[key] }))}
             placeholder="Faixa Populacional"
-            isClearable
-            isSearchable
-            menuPlacement="bottom"
-            menuPortalTarget={menuPortalTarget}
-            styles={{
-              control: (base) => ({
-                ...base,
-                minHeight: '40px',
-              }),
-              placeholder: (base) => ({
-                ...base,
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-              }),
-              singleValue: (base) => ({
-                ...base,
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-              }),
-            }}
+            size="small"
           />
         </Grid>
 
@@ -226,27 +163,7 @@ const FilterComponent = ({
             onChange={setAglomeradoMunicipio}
             options={aglomeradoOptions}
             placeholder="Aglomerado"
-            isClearable
-            menuPlacement="bottom"
-            menuPortalTarget={menuPortalTarget}
-            styles={{
-              control: (base) => ({
-                ...base,
-                minHeight: '40px',
-              }),
-              placeholder: (base) => ({
-                ...base,
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-              }),
-              singleValue: (base) => ({
-                ...base,
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-              }),
-            }}
+            size="small"
           />
         </Grid>
 
@@ -257,27 +174,7 @@ const FilterComponent = ({
             onChange={setGerenciaRegionalMunicipio}
             options={gerenciaOptions}
             placeholder="Gerência"
-            isClearable
-            menuPlacement="bottom"
-            menuPortalTarget={menuPortalTarget}
-            styles={{
-              control: (base) => ({
-                ...base,
-                minHeight: '40px',
-              }),
-              placeholder: (base) => ({
-                ...base,
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-              }),
-              singleValue: (base) => ({
-                ...base,
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-              }),
-            }}
+            size="small"
           />
         </Grid>
 
@@ -288,27 +185,7 @@ const FilterComponent = ({
             onChange={setAnoInicial}
             options={anoOptions}
             placeholder="Ano Inicial"
-            isClearable
-            menuPlacement="bottom"
-            menuPortalTarget={menuPortalTarget}
-            styles={{
-              control: (base) => ({
-                ...base,
-                minHeight: '40px',
-              }),
-              placeholder: (base) => ({
-                ...base,
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-              }),
-              singleValue: (base) => ({
-                ...base,
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-              }),
-            }}
+            size="small"
           />
         </Grid>
 
@@ -318,28 +195,7 @@ const FilterComponent = ({
             value={anoFinalState}
             onChange={setAnoFinal}
             options={anoOptions}
-            placeholder="Ano Final"
-            isClearable
-            menuPlacement="bottom"
-            menuPortalTarget={menuPortalTarget}
-            styles={{
-              control: (base) => ({
-                ...base,
-                minHeight: '40px',
-              }),
-              placeholder: (base) => ({
-                ...base,
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-              }),
-              singleValue: (base) => ({
-                ...base,
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-              }),
-            }}
+            size="small"
           />
         </Grid>
 

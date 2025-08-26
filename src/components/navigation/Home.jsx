@@ -1,21 +1,130 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaGraduationCap, FaDollarSign, FaSearch, FaChevronDown, FaFileAlt } from 'react-icons/fa';
+import { FaSearch, FaChevronDown, FaGraduationCap, FaDollarSign, FaMapMarkedAlt, FaFileAlt } from 'react-icons/fa';
+import { Select } from '../ui';
 import { Card } from '../ui';
+import { formatNumber, formatCurrency, ibgeService } from '../../services/ibgeService';
+import { Loading } from '../ui';
+import { useIBGEData } from '../../hooks/useIBGEData';
+import { municipios } from '../../utils/citiesMapping';
 import '../../style/HomePage.css';
 
 const Home = () => {
   const navigate = useNavigate();
-  const [selectedCategory, setSelectedCategory] = useState('');
+  const { data: piauiData, loading, error, refreshData } = useIBGEData();
+  
+  // Estado para município selecionado e seus dados
+  const [selectedMunicipality, setSelectedMunicipality] = useState('22'); // 22 = Piauí
+  const [municipalityData, setMunicipalityData] = useState(null);
+  const [municipalityLoading, setMunicipalityLoading] = useState(false);
+  const [municipalityError, setMunicipalityError] = useState(null);
 
-  const handleCategorySelect = (category) => {
-    setSelectedCategory(category);
-    if (category === 'educacional') {
-      navigate('/education-selection');
-    } else if (category === 'financeiro') {
-      navigate('/financial-selection');
+  // Lista de municípios para o select (incluindo o estado)
+  const municipalitiesList = [
+    { code: '22', name: 'Piauí (Estado)' },
+    ...Object.entries(municipios).map(([code, data]) => ({
+      code,
+      name: data.nomeMunicipio
+    }))
+  ];
+
+  // Função para buscar dados do município selecionado
+  const fetchMunicipalityData = async (municipalityCode) => {
+    if (municipalityCode === '22') {
+      setMunicipalityData(null);
+      setMunicipalityError(null);
+      return;
+    }
+
+    setMunicipalityLoading(true);
+    setMunicipalityError(null);
+
+    try {
+      const [
+        areaAndPopulation,
+        pib,
+        education,
+        higherEducation,
+        postGraduation
+      ] = await Promise.allSettled([
+        ibgeService.getMunicipalityAreaAndPopulation(municipalityCode),
+        ibgeService.getMunicipalityPIB(municipalityCode),
+        ibgeService.getMunicipalityEducation(municipalityCode),
+        ibgeService.getMunicipalityHigherEducation(municipalityCode),
+        ibgeService.getMunicipalityPostGraduation(municipalityCode)
+      ]);
+
+      const processedData = {
+        population: areaAndPopulation.status === 'fulfilled'
+          ? parseInt(areaAndPopulation.value?.[1]?.V) || 0
+          : 0,
+        area: areaAndPopulation.status === 'fulfilled'
+          ? parseFloat(areaAndPopulation.value?.[2]?.V) || 0
+          : 0,
+        pib: pib.status === 'fulfilled'
+          ? parseInt(pib.value?.[1]?.V) || 0
+          : 0,
+        education: {
+          enrollments: education.status === 'fulfilled'
+            ? education.value?.data?.enrollments || 0
+            : 0,
+          schools: education.status === 'fulfilled'
+            ? education.value?.data?.schools || 0
+            : 0
+        },
+        higherEducation: {
+          enrollments: higherEducation.status === 'fulfilled'
+            ? higherEducation.value?.data?.enrollments || 0
+            : 0,
+          institutions: higherEducation.status === 'fulfilled'
+            ? higherEducation.value?.data?.institutions || 0
+            : 0,
+          enrollmentRate: higherEducation.status === 'fulfilled'
+            ? higherEducation.value?.data?.enrollmentRate || 0
+            : 0
+        },
+        postGraduation: {
+          masters: postGraduation.status === 'fulfilled'
+            ? postGraduation.value?.data?.masters || 0
+            : 0,
+          doctors: postGraduation.status === 'fulfilled'
+            ? postGraduation.value?.data?.doctors || 0
+            : 0
+        }
+      };
+
+      setMunicipalityData(processedData);
+    } catch (error) {
+      console.error('Erro ao buscar dados do município:', error);
+      setMunicipalityError('Erro ao carregar dados do município');
+    } finally {
+      setMunicipalityLoading(false);
     }
   };
+
+  // Efeito para buscar dados quando o município muda
+  useEffect(() => {
+    fetchMunicipalityData(selectedMunicipality);
+  }, [selectedMunicipality]);
+
+  const handleCategorySelect = (category) => {
+    if (category === 'educacional') {
+      navigate('/dados-educacionais/basica');
+    } else if (category === 'financeiro') {
+      navigate('/dados-financeiros/municipios');
+    }
+  };
+
+  // Função para lidar com mudança no select
+  const handleMunicipalityChange = (selectedOption) => {
+    setSelectedMunicipality(selectedOption.value);
+  };
+
+  // Dados a serem exibidos (município selecionado ou estado)
+  const displayData = selectedMunicipality === '22' ? piauiData : municipalityData;
+  const displayLoading = selectedMunicipality === '22' ? loading : municipalityLoading;
+  const displayError = selectedMunicipality === '22' ? error : municipalityError;
+  const selectedMunicipalityName = municipalitiesList.find(m => m.code === selectedMunicipality)?.name || 'Piauí';
   
   return (
     <div className="homepage-background">
@@ -115,53 +224,116 @@ const Home = () => {
               <Card.Content padding="default">
                 <div className="flex items-center">
                   <FaSearch className="text-gray-400 mr-3" />
-                  <input 
-                    type="text" 
-                    placeholder="Piauí" 
-                    className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-purple-500 outline-none transition-colors"
+                  <Select
+                    options={municipalitiesList.map(municipality => ({
+                      value: municipality.code,
+                      label: municipality.name
+                    }))}
+                    value={{ value: selectedMunicipality, label: selectedMunicipalityName }}
+                    onChange={handleMunicipalityChange}
+                    placeholder="Selecione um município"
+                    fullWidth
                   />
-                  <FaChevronDown className="text-gray-400 ml-3" />
                 </div>
               </Card.Content>
             </Card>
           </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start justify-items-center">
-            {/* Dados Gerais do Piauí */}
+            {/* Dados Gerais */}
             <div className="w-full max-w-sm">
               <Card variant="elevated" backgroundColor="var(--background-color)">
                 <Card.Content padding="small">
-                  <h3 className="text-base font-bold mb-3">Piauí - Dados Gerais</h3>
-                  <div className="space-y-1 text-left text-sm">
-                    <div className="flex justify-between">
-                      <span>População:</span>
-                      <span className="font-semibold">3.375.646</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Municípios:</span>
-                      <span className="font-semibold">224</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Área:</span>
-                      <span className="font-semibold">251.529</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>PIB (2021):</span>
-                      <span className="font-semibold">64.028.302.900</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>IDH (2010):</span>
-                      <span className="font-semibold">0,646</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Taxa de analfabetismo:</span>
-                      <span className="font-semibold">13,8%</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Taxa de escolarização:</span>
-                      <span className="font-semibold">31,2%</span>
-                    </div>
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-base font-bold">{selectedMunicipalityName} - Dados Gerais</h3>
+                    {(displayError || municipalityError) && (
+                      <button 
+                        onClick={() => selectedMunicipality === '22' ? refreshData() : fetchMunicipalityData(selectedMunicipality)}
+                        className="text-xs text-blue-600 hover:text-blue-800 underline"
+                        title="Tentar novamente"
+                      >
+                        Atualizar
+                      </button>
+                    )}
                   </div>
+                  {displayLoading ? (
+                    <div className="flex justify-center py-4">
+                      <Loading variant="spinner" size="small" />
+                    </div>
+                  ) : displayError ? (
+                    <div className="text-red-500 text-sm text-center py-2">{displayError}</div>
+                  ) : (
+                    <div className="space-y-1 text-left text-sm">
+                      <div className="flex justify-between">
+                        <span>População:</span>
+                        <span className="font-semibold">
+                          {selectedMunicipality === '22' 
+                            ? displayData?.population?.toLocaleString('pt-BR') || 'N/A'
+                            : displayData?.population?.toLocaleString('pt-BR') || 'N/A'
+                          }
+                        </span>
+                      </div>
+                      {selectedMunicipality === '22' && (
+                        <>
+                          <div className="flex justify-between">
+                            <span>Municípios:</span>
+                            <span className="font-semibold">{displayData?.municipalities}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Área:</span>
+                            <span className="font-semibold">
+                              {displayData?.area 
+                                ? displayData.area.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' km²'
+                                : 'N/A'
+                              }
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>PIB (2021):</span>
+                            <span className="font-semibold">
+                              {displayData?.pib 
+                                ? formatCurrency(displayData.pib)
+                                : 'N/A'
+                              }
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>IDH (2010):</span>
+                            <span className="font-semibold">N/A</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Taxa de analfabetismo:</span>
+                            <span className="font-semibold">
+                              {displayData?.illiteracyRate 
+                                ? `${displayData.illiteracyRate.toFixed(1)}%`
+                                : 'N/A'
+                              }
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Taxa de escolarização:</span>
+                            <span className="font-semibold">N/A</span>
+                          </div>
+                        </>
+                      )}
+                      {selectedMunicipality !== '22' && displayData?.area && (
+                        <>
+                          <div className="flex justify-between">
+                            <span>Área:</span>
+                            <span className="font-semibold">
+                              {displayData.area.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} km²
+                            </span>
+                          </div>
+                          {displayData?.pib && (
+                            <div className="flex justify-between">
+                              <span>PIB (2021):</span>
+                              <span className="font-semibold">{formatCurrency(displayData.pib)}</span>
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  )}
                 </Card.Content>
               </Card>
             </div>
@@ -180,10 +352,28 @@ const Home = () => {
               {/* Educação Básica */}
               <Card variant="elevated" backgroundColor="var(--background-color)" className="text-center">
                 <Card.Content padding="small">
-                  <div className="text-2xl font-bold text-green-600 mb-2">198.306 e 634</div>
-                  <p className="text-gray-600 mb-3 text-sm">
-                    eram os números de matrículas e escolas, respectivamente, no Piauí em 2023.
-                  </p>
+                  {displayLoading ? (
+                    <div className="flex justify-center py-4">
+                      <Loading variant="spinner" size="small" />
+                    </div>
+                  ) : displayError ? (
+                    <div className="text-red-500 text-sm text-center py-2">{displayError}</div>
+                  ) : (
+                    <>
+                      <div className="text-2xl font-bold text-green-600 mb-2">
+                        {displayData?.education?.enrollments 
+                          ? `${formatNumber(displayData.education.enrollments)} e ${displayData.education.schools}`
+                          : 'Dados não disponíveis'
+                        }
+                      </div>
+                      <p className="text-gray-600 mb-3 text-sm">
+                        {displayData?.education?.enrollments 
+                          ? `eram os números de matrículas e escolas na educação básica, respectivamente, em ${selectedMunicipalityName.toLowerCase()} em 2023.`
+                          : 'Informações sobre educação básica não estão disponíveis no momento.'
+                        }
+                      </p>
+                    </>
+                  )}
                   <button 
                     onClick={() => handleCategorySelect('educacional')}
                     className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold transition-all duration-300 hover:-translate-y-1 flex items-center gap-2 w-full justify-center text-sm"
@@ -197,10 +387,28 @@ const Home = () => {
               {/* Educação Superior */}
               <Card variant="elevated" backgroundColor="var(--background-color)" className="text-center">
                 <Card.Content padding="small">
-                  <div className="text-2xl font-bold text-green-600 mb-2">135.807 e 47</div>
-                  <p className="text-gray-600 mb-3 text-sm">
-                    eram os números de matrículas e instituições, respectivamente, no Piauí em 2023.
-                  </p>
+                  {displayLoading ? (
+                    <div className="flex justify-center py-4">
+                      <Loading variant="spinner" size="small" />
+                    </div>
+                  ) : displayError ? (
+                    <div className="text-red-500 text-sm text-center py-2">{displayError}</div>
+                  ) : (
+                    <>
+                      <div className="text-2xl font-bold text-green-600 mb-2">
+                        {displayData?.higherEducation?.enrollments 
+                          ? `${formatNumber(displayData.higherEducation.enrollments)} e ${displayData.higherEducation.institutions}`
+                          : 'Dados não disponíveis'
+                        }
+                      </div>
+                      <p className="text-gray-600 mb-2 text-sm">
+                        {displayData?.higherEducation?.enrollments 
+                          ? `eram os números de matrículas e instituições na <strong>educação superior</strong>, respectivamente, em ${selectedMunicipalityName.toLowerCase()} em 2023.`
+                          : 'Informações sobre educação superior não estão disponíveis no momento.'
+                        }
+                      </p>
+                    </>
+                  )}
                   <button 
                     onClick={() => handleCategorySelect('educacional')}
                     className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold transition-all duration-300 hover:-translate-y-1 flex items-center gap-2 w-full justify-center text-sm"

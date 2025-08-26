@@ -1,6 +1,6 @@
 import { Button, Typography } from '@mui/material';
 import React, { useEffect, useMemo, useState } from 'react';
-import Select from 'react-select';
+import { Select } from '../../../ui';
 import '../../../../style/RevenueTableContainer.css';
 import '../../../../style/TableFilters.css';
 import { FaixaPopulacional, municipios, Regioes } from '../../../../utils/citiesMapping';
@@ -230,10 +230,11 @@ function FilterComponent() {
 
   return (
     <div className="app-container">
-      <div className="filters-section">
-        <div className="selects-wrapper">
-          <div className="select-container">
-            <label htmlFor="typeSelect">Tipo: </label>
+      <div className="filter-container">
+        <div className="filter-grid">
+          {/* Tipo - Primeira coluna, primeira linha */}
+          <div className="filter-municipio">
+            <label htmlFor="typeSelect" className="block text-sm font-medium text-gray-700 mb-1">Tipo:</label>
             <Select
               id="typeSelect"
               value={typeOptions.find(option => option.value === type)}
@@ -246,16 +247,15 @@ function FilterComponent() {
                 }
               }}
               options={typeOptions}
-              className="select-box"
-              styles={customStyles}
-              menuPortalTarget={document.body}
               placeholder="Selecione o tipo"
+              size="small"
             />
           </div>
 
-          <div className="year-selection-container">
-            <div className="historical-checkbox">
-              <label>
+          {/* Ano - Segunda e terceira colunas, primeira linha */}
+          <div className="filter-territorio">
+            <div className="flex items-center gap-4">
+              <label className="flex items-center gap-2 cursor-pointer whitespace-nowrap">
                 <input
                   type="checkbox"
                   checked={displayHistorical}
@@ -267,65 +267,59 @@ function FilterComponent() {
                       setSelectedFilters([]);
                     }
                   }}
+                  className="cursor-pointer"
                 />
-                Série Histórica
+                <span className="font-medium text-gray-700">Série Histórica</span>
               </label>
-            </div>
-
-            {displayHistorical ? (
-              <>
-                <div className="select-container">
-                  <label htmlFor="startYearSelect">Ano Inicial: </label>
+            
+              {displayHistorical ? (
+                <div className="flex gap-3 flex-1">
+                  <div className="flex-1">
+                    <label htmlFor="startYearSelect" className="block text-sm font-medium text-gray-700 mb-1">Ano Inicial:</label>
+                    <Select
+                      id="startYearSelect"
+                      value={yearOptions.find(option => option.value === startYear)}
+                      onChange={(selectedOption) => {
+                        setStartYear(selectedOption.value);
+                        if (selectedOption.value > endYear) {
+                          setEndYear(selectedOption.value);
+                        }
+                      }}
+                      options={yearOptions}
+                      placeholder="Ano Inicial"
+                      size="small"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <label htmlFor="endYearSelect" className="block text-sm font-medium text-gray-700 mb-1">Ano Final:</label>
+                    <Select
+                      id="endYearSelect"
+                      value={yearOptions.find(option => option.value === endYear)}
+                      onChange={(selectedOption) => setEndYear(selectedOption.value)}
+                      options={yearOptions.filter(option => option.value >= startYear)}
+                      placeholder="Ano Final"
+                      size="small"
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="flex-1">
+                  <label htmlFor="yearSelect" className="block text-sm font-medium text-gray-700 mb-1">Ano:</label>
                   <Select
-                    id="startYearSelect"
-                    value={yearOptions.find(option => option.value === startYear)}
-                    onChange={(selectedOption) => {
-                      setStartYear(selectedOption.value);
-                      if (selectedOption.value > endYear) {
-                        setEndYear(selectedOption.value);
-                      }
-                    }}
+                    id="yearSelect"
+                    value={yearOptions.find(option => option.value === year)}
+                    onChange={(selectedOption) => setYear(selectedOption.value)}
                     options={yearOptions}
-                    className="select-box"
-                    styles={customStyles}
-                    menuPortalTarget={document.body}
-                    placeholder="Ano Inicial"
+                    placeholder="Ano"
+                    size="small"
                   />
                 </div>
-                <div className="select-container">
-                  <label htmlFor="endYearSelect">Ano Final: </label>
-                  <Select
-                    id="endYearSelect"
-                    value={yearOptions.find(option => option.value === endYear)}
-                    onChange={(selectedOption) => setEndYear(selectedOption.value)}
-                    options={yearOptions.filter(option => option.value >= startYear)}
-                    className="select-box"
-                    styles={customStyles}
-                    menuPortalTarget={document.body}
-                    placeholder="Ano Final"
-                  />
-                </div>
-              </>
-            ) : (
-              <div className="select-container">
-                <label htmlFor="yearSelect">Ano: </label>
-                <Select
-                  id="yearSelect"
-                  value={yearOptions.find(option => option.value === year)}
-                  onChange={(selectedOption) => setYear(selectedOption.value)}
-                  options={yearOptions}
-                  className="select-box"
-                  styles={customStyles}
-                  menuPortalTarget={document.body}
-                  placeholder="Ano"
-                />
-              </div>
-            )}
+              )}
+            </div>
           </div>
-        </div>
 
-        <div className="selects-wrapper filters-row">
-          <div className="select-container filter-item">
+          {/* Território - Primeira coluna, segunda linha */}
+          <div className="filter-faixa">
             <Select
               id="territorySelect"
               value={territoryOptions.find(option => option.value === territory) || null}
@@ -334,14 +328,13 @@ function FilterComponent() {
                 setCity('');
               }}
               options={territoryOptions}
-              className="select-box"
-              styles={customStyles}
-              menuPortalTarget={document.body}
-              isClearable
               placeholder="Território de Desenvolvimento"
+              size="small"
             />
           </div>
-          <div className="select-container filter-item">
+
+          {/* Faixa Populacional - Segunda coluna, segunda linha */}
+          <div className="filter-aglomerado">
             <Select
               id="faixaPopulacionalSelect"
               value={faixaPopulacionalOptions.find(option => option.value === faixaPopulacional) || null}
@@ -350,127 +343,121 @@ function FilterComponent() {
                 setCity('');
               }}
               options={faixaPopulacionalOptions}
-              className="select-box"
-              styles={customStyles}
-              menuPortalTarget={document.body}
-              isClearable
               placeholder="Faixa Populacional"
+              size="small"
             />
           </div>
-          <div className="select-container filter-item">
+
+          {/* Aglomerado - Terceira coluna, segunda linha */}
+          <div className="filter-gerencia">
             <Select
               id="aglomeradoSelect"
               value={aglomeradoOptions.find(option => option.value === aglomerado) || null}
               onChange={(selectedOption) => setAglomerado(selectedOption ? selectedOption.value : '')}
               options={aglomeradoOptions}
-              className="select-box"
-              styles={customStyles}
-              menuPortalTarget={document.body}
-              isClearable
               placeholder="Aglomerado"
+              size="small"
             />
           </div>
-          <div className="select-container filter-item">
+
+          {/* Gerência - Primeira coluna, terceira linha */}
+          <div className="filter-ano-inicial">
             <Select
               id="gerenciaSelect"
               value={gerenciaOptions.find(option => option.value === gerencia) || null}
               onChange={(selectedOption) => setGerencia(selectedOption ? selectedOption.value : '')}
               options={gerenciaOptions}
-              className="select-box"
-              styles={customStyles}
-              menuPortalTarget={document.body}
-              isClearable
               placeholder="Gerencia"
+              size="small"
             />
           </div>
-          <div className="select-container filter-item">
+
+          {/* Cidade - Segunda coluna, terceira linha */}
+          <div className="filter-ano-final">
             <Select
               id="citySelect"
               value={cityOptions.find(option => option.value === city) || null}
               onChange={(selectedOption) => setCity(selectedOption ? selectedOption.value : '')}
               options={cityOptions}
-              className="select-box"
-              styles={customStyles}
-              menuPortalTarget={document.body}
-              isClearable
               placeholder="Cidade"
+              size="small"
             />
           </div>
-        </div>
-        <div className="selects-wrapper">
-          <div className="select-container">
-            <Select
-              id="multiFilterSelect"
-              value={selectedFilters}
-              onChange={(newValue) => {
-                // Para docentes (university_teacher), permitir apenas um filtro por vez
-                if (type === 'university_teacher') {
-                  setSelectedFilters(newValue.slice(-1)); // Manter apenas o último selecionado
-                  return;
-                }
 
-                // Validação para impedir combinação de regime + formação docente (para outros tipos)
-                const hasRegime = newValue.some(filter => filter.value === 'regimeDeTrabalho');
-                const hasFormacao = newValue.some(filter => filter.value === 'formacaoDocente');
-
-                if (hasRegime && hasFormacao) {
-                  // Se está tentando adicionar os dois, manter apenas o último selecionado
-                  const lastSelected = newValue[newValue.length - 1];
-                  if (lastSelected.value === 'regimeDeTrabalho') {
-                    // Removeu formação docente, manter regime
-                    setSelectedFilters(newValue.filter(f => f.value !== 'formacaoDocente'));
-                  } else {
-                    // Removeu regime, manter formação docente
-                    setSelectedFilters(newValue.filter(f => f.value !== 'regimeDeTrabalho'));
+          {/* Filtros Múltiplos - Terceira coluna, terceira linha */}
+          <div className="filter-button-container">
+            <div className="mb-3">
+              <Select
+                id="multiFilterSelect"
+                value={selectedFilters}
+                onChange={(newValue) => {
+                  // Para docentes (university_teacher), permitir apenas um filtro por vez
+                  if (type === 'university_teacher') {
+                    setSelectedFilters(newValue.slice(-1)); // Manter apenas o último selecionado
+                    return;
                   }
-                  return;
-                }
 
-                if (displayHistorical) {
-                  setSelectedFilters(newValue.slice(-1));
-                } else if (newValue.length <= 2) {
-                  setSelectedFilters(newValue);
-                } else {
-                  setSelectedFilters(newValue.slice(-2));
+                  // Validação para impedir combinação de regime + formação docente (para outros tipos)
+                  const hasRegime = newValue.some(filter => filter.value === 'regimeDeTrabalho');
+                  const hasFormacao = newValue.some(filter => filter.value === 'formacaoDocente');
+
+                  if (hasRegime && hasFormacao) {
+                    // Se está tentando adicionar os dois, manter apenas o último selecionado
+                    const lastSelected = newValue[newValue.length - 1];
+                    if (lastSelected.value === 'regimeDeTrabalho') {
+                      // Removeu formação docente, manter regime
+                      setSelectedFilters(newValue.filter(f => f.value !== 'formacaoDocente'));
+                    } else {
+                      // Removeu regime, manter formação docente
+                      setSelectedFilters(newValue.filter(f => f.value !== 'regimeDeTrabalho'));
+                    }
+                    return;
+                  }
+
+                  if (displayHistorical) {
+                    setSelectedFilters(newValue.slice(-1));
+                  } else if (newValue.length <= 2) {
+                    setSelectedFilters(newValue);
+                  } else {
+                    setSelectedFilters(newValue.slice(-2));
+                  }
+                }}
+                options={filterOptions}
+                isMulti
+                placeholder={
+                  type === 'university_teacher'
+                    ? "Selecione 1 filtro (docentes)"
+                    : displayHistorical
+                      ? "Selecione 1 filtro"
+                      : "Selecione até 2 filtros"
                 }
-              }}
-              options={filterOptions}
-              className="select-box"
-              styles={customStyles}
-              menuPortalTarget={document.body}
-              isMulti
-              placeholder={
-                type === 'university_teacher'
-                  ? "Selecione 1 filtro (docentes)"
-                  : displayHistorical
-                    ? "Selecione 1 filtro"
-                    : "Selecione até 2 filtros"
-              }
-            />
+                size="small"
+              />
+            </div>
+            
+            <div className="flex gap-3 justify-end">
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handleFilterClick}
+                className="filter-button"
+              >
+                Filtrar
+              </Button>
+
+              <Button
+                style={{
+                  backgroundColor: '#f0f0f0',
+                  color: '#000',
+                }}
+                variant="contained"
+                onClick={handleClearFilters}
+                className="filter-button"
+              >
+                Limpar
+              </Button>
+            </div>
           </div>
-        </div>
-        <div className="filter-button-container">
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={handleFilterClick}
-            className="filter-button"
-          >
-            Filtrar
-          </Button>
-
-          <Button
-            style={{
-              marginLeft: '10px',
-              backgroundColor: '#f0f0f0',
-              color: '#000',
-            }}
-            variant="contained"
-            onClick={handleClearFilters}
-            className="filter-button"
-          >
-            Limpar
-          </Button>
         </div>
       </div>
 
@@ -495,7 +482,7 @@ function FilterComponent() {
             color: theme.palette.primary.main
           }}
         >
-          Por favor, selecione os filtros desejados e clique em "Filtrar" para montar uma consulta.
+          Selecione os filtros desejados e clique em "Filtrar" para montar uma consulta.
         </Typography>
       )}
 

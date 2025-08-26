@@ -43,16 +43,18 @@ const Sidebar = () => {
         {/* Header da Sidebar */}
         <div className="p-6 md:p-6 lg:p-6 xl:p-6 2xl:p-6 p-3 sm:p-4 md:p-6 border-b border-gray-200">
           <div className="flex items-center mb-4">
-            <img
-              src="/images/logos/logo-opepi-v2.png"
-              alt="opepi"
-              className="h-14 md:h-14 lg:h-14 xl:h-14 2xl:h-14 h-8 sm:h-10 md:h-14 w-auto mr-3"
-            />
-            <div className={`${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>
-              <p className="text-sm text-gray-600 leading-tight">
-                observatório da política educacional piauiense
-              </p>
-            </div>
+            <Link to="/" className="flex items-center">
+              <img
+                src="/images/logos/logo-opepi-v2.png"
+                alt="opepi"
+                className="h-14 md:h-14 lg:h-14 xl:h-14 2xl:h-14 h-8 sm:h-10 md:h-14 w-auto mr-3"
+              />
+              <div className={`${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>
+                <p className="text-sm text-gray-600 leading-tight">
+                  observatório da política educacional piauiense
+                </p>
+              </div>
+            </Link>
           </div>
         </div>
         
@@ -212,7 +214,7 @@ const Sidebar = () => {
             className="flex items-center text-gray-600 hover:text-gray-900 transition-colors text-sm font-medium"
           >
             <FaArrowLeft className="mr-2 flex-shrink-0" />
-            <span className={`${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>← voltar</span>
+            <span className={`${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>voltar</span>
           </button>
         </div>
       </aside>

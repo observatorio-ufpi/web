@@ -3,7 +3,7 @@ import { loadCSVFile, stateTableNames } from '../../../../../services/csvService
 import StateRevenueTable from './StateRevenueTable.jsx';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import '../../../../../style/RevenueTableContainer.css';
-import { Loading } from "../../../../ui";
+import { Loading, Select } from "../../../../ui";
 
 const theme = createTheme({
   palette: {
@@ -71,20 +71,26 @@ const StateRevenueTableContainer = () => {
           <div className="selects-wrapper">
             <div className="select-container">
               <label htmlFor="tableSelect" className="select-label">Tipo de Tabela do Estado:</label>
-              <select id="tableSelect" value={selectedTable} onChange={handleTableChange} className="select-box">
-                <option value="tabela1">Impostos Próprios</option>
-                <option value="tabela2">Receita líquida de impostos próprios do Piauí</option>
-                <option value="tabela3">Receita de transferências constitucionais e legais</option>
-                <option value="tabela4">Receita Líquida de Impostos</option>
-                <option value="tabela5">Receitas adicionais da educação</option>
-                <option value="tabela6">Composição do Fundef/Fundeb</option>
-                <option value="tabela7">Composição da complementação do Fundef/Fundeb</option>
-                <option value="tabela8">Limite constitucional em MDE</option>
-                <option value="tabela9">Despesas com profissionais da educação básica do Fundef/Fundeb</option>
-                <option value="tabela10">Despesas em MDE por área de atuação</option>
-                <option value="tabela11">Receita Potencial Mínima vinculada à Educação Básica</option>
-                <option value="tabela12">Protocolo Complementar</option>
-              </select>
+              <Select
+                value={{ value: selectedTable, label: stateTableNames[selectedTable] }}
+                onChange={(selectedOption) => setSelectedTable(selectedOption.value)}
+                options={[
+                  { value: 'tabela1', label: 'Impostos Próprios' },
+                  { value: 'tabela2', label: 'Receita líquida de impostos próprios do Piauí' },
+                  { value: 'tabela3', label: 'Receita de transferências constitucionais e legais' },
+                  { value: 'tabela4', label: 'Receita Líquida de Impostos' },
+                  { value: 'tabela5', label: 'Receitas adicionais da educação' },
+                  { value: 'tabela6', label: 'Composição do Fundef/Fundeb' },
+                  { value: 'tabela7', label: 'Composição da complementação do Fundef/Fundeb' },
+                  { value: 'tabela8', label: 'Limite constitucional em MDE' },
+                  { value: 'tabela9', label: 'Despesas com profissionais da educação básica do Fundef/Fundeb' },
+                  { value: 'tabela10', label: 'Despesas em MDE por área de atuação' },
+                  { value: 'tabela11', label: 'Receita Potencial Mínima vinculada à Educação Básica' },
+                  { value: 'tabela12', label: 'Protocolo Complementar' }
+                ]}
+                placeholder="Selecione o tipo de tabela"
+                size="small"
+              />
             </div>
           </div>
         </div>
