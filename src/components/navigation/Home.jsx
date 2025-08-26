@@ -107,6 +107,144 @@ const Home = () => {
     fetchMunicipalityData(selectedMunicipality);
   }, [selectedMunicipality]);
 
+  // Efeito para carregar o mapa interativo
+  useEffect(() => {
+    const loadInteractiveMap = async () => {
+      try {
+        const response = await fetch('/images/mapa-piaui.svg');
+        const svgText = await response.text();
+        
+        // Extrair apenas os elementos polygon do SVG
+        const parser = new DOMParser();
+        const svgDoc = parser.parseFromString(svgText, 'image/svg+xml');
+        const polygons = svgDoc.querySelectorAll('polygon');
+        
+        const municipiosContainer = document.getElementById('municipios');
+        if (municipiosContainer) {
+          municipiosContainer.innerHTML = '';
+          
+          polygons.forEach(polygon => {
+            const municipioId = polygon.getAttribute('id');
+            
+            // Extrair o nome do município de diferentes fontes possíveis
+            let municipioName = 'Município';
+            
+            // Tentar pegar do elemento title filho
+            if (polygon.querySelector('title')) {
+              municipioName = polygon.querySelector('title').textContent;
+            }
+            // Tentar pegar do atributo title direto
+            else if (polygon.getAttribute('title')) {
+              municipioName = polygon.getAttribute('title');
+            }
+            // Tentar pegar do atributo data-name se existir
+            else if (polygon.getAttribute('data-name')) {
+              municipioName = polygon.getAttribute('data-name');
+            }
+            
+            // Limpar o nome (remover ", PI" se existir)
+            municipioName = municipioName.replace(', PI', '').replace(',PI', '');
+            
+            // Criar novo elemento polygon com eventos
+            const newPolygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+            newPolygon.setAttribute('points', polygon.getAttribute('points'));
+            newPolygon.setAttribute('class', polygon.getAttribute('class'));
+            newPolygon.setAttribute('id', municipioId);
+            newPolygon.setAttribute('style', polygon.getAttribute('style'));
+            newPolygon.setAttribute('data-name', municipioName); // Guardar o nome para referência
+            
+            // Adicionar eventos de mouse
+            newPolygon.addEventListener('click', () => {
+              // Remover seleção anterior
+              document.querySelectorAll('polygon.selected').forEach(p => p.classList.remove('selected'));
+              
+              // Selecionar município atual
+              newPolygon.classList.add('selected');
+              
+              // Atualizar município selecionado
+              setSelectedMunicipality(municipioId);
+            });
+            
+            // Variável para controlar o timeout do tooltip
+            let tooltipTimeout;
+            
+            newPolygon.addEventListener('mouseenter', (e) => {
+              // Limpar timeout anterior se existir
+              if (tooltipTimeout) {
+                clearTimeout(tooltipTimeout);
+              }
+              
+              // Pequeno delay para melhorar UX
+              tooltipTimeout = setTimeout(() => {
+                const tooltip = document.getElementById('map-tooltip');
+                if (tooltip) {
+                  tooltip.textContent = municipioName;
+                  
+                  // Usar coordenadas do mouse para posicionar o tooltip
+                  const mouseX = e.clientX;
+                  const mouseY = e.clientY;
+                  
+                  // Posicionar tooltip acima do cursor
+                  let left = mouseX;
+                  let top = mouseY - 40; // 40px acima do cursor
+                  
+                  // Ajustar se tooltip sair da tela
+                  if (left < 60) { // Metade da largura mínima do tooltip
+                    left = 60;
+                  } else if (left > window.innerWidth - 60) {
+                    left = window.innerWidth - 60;
+                  }
+                  
+                  // Se não couber acima, colocar abaixo
+                  if (top < 50) {
+                    top = mouseY + 20;
+                  }
+                  
+                  tooltip.style.left = left + 'px';
+                  tooltip.style.top = top + 'px';
+                  tooltip.classList.remove('hidden');
+                }
+              }, 300); // 300ms de delay
+            });
+            
+            newPolygon.addEventListener('mouseleave', () => {
+              // Limpar timeout se existir
+              if (tooltipTimeout) {
+                clearTimeout(tooltipTimeout);
+                tooltipTimeout = null;
+              }
+              
+              const tooltip = document.getElementById('map-tooltip');
+              if (tooltip) {
+                tooltip.classList.add('hidden');
+              }
+            });
+            
+            municipiosContainer.appendChild(newPolygon);
+          });
+        }
+      } catch (error) {
+        console.error('Erro ao carregar mapa interativo:', error);
+      }
+    };
+
+    loadInteractiveMap();
+  }, []);
+
+  // Efeito para destacar município selecionado no mapa
+  useEffect(() => {
+    if (selectedMunicipality) {
+      // Remover seleção anterior
+      document.querySelectorAll('polygon.selected').forEach(p => p.classList.remove('selected'));
+      
+      // Destacar município selecionado
+      const selectedPolygon = document.getElementById(selectedMunicipality);
+      if (selectedPolygon) {
+        selectedPolygon.classList.add('selected');
+      }
+    }
+  }, [selectedMunicipality]);
+
   const handleCategorySelect = (category) => {
     if (category === 'educacional') {
       navigate('/dados-educacionais/basica');
@@ -338,13 +476,59 @@ const Home = () => {
               </Card>
             </div>
 
-            {/* Mapa do Piauí */}
+            {/* Mapa do Piauí Interativo */}
             <div className="flex items-center justify-center w-full max-w-sm">
-              <img 
-                src="/images/piaui-md.svg" 
-                alt="Mapa do Piauí" 
-                className="w-full h-auto"
-              />
+              <div className="relative w-full h-auto" style={{ position: 'relative' }}>
+                <svg 
+                  width="802" 
+                  height="1160" 
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="w-full h-auto cursor-pointer"
+                  viewBox="0 0 802 1160"
+                >
+                  <style>
+                    {`
+                      polygon {
+                        stroke: white;
+                        stroke-width: 0.1;
+                        transition: all 0.2s ease;
+                        cursor: pointer;
+                      }
+                      
+                      polygon:hover {
+                        fill: #FF5733 !important;
+                        stroke: #FF5733;
+                        stroke-width: 0.3;
+                        filter: brightness(1.1);
+                      }
+                      
+                      polygon.selected {
+                        fill: #8b5cf6 !important;
+                        stroke: #8b5cf6;
+                        stroke-width: 0.5;
+                      }
+                    `}
+                  </style>
+                  
+                  {/* Municípios serão inseridos aqui dinamicamente */}
+                  <g id="municipios">
+                    {/* O SVG será carregado dinamicamente */}
+                  </g>
+                </svg>
+                
+                {/* Tooltip */}
+                <div 
+                  id="map-tooltip"
+                  className="fixed hidden bg-white text-gray-800 text-sm px-3 py-2 rounded-lg shadow-lg pointer-events-none z-20 border-2 border-green-500"
+                  style={{
+                    minWidth: '120px',
+                    textAlign: 'center',
+                    fontSize: '14px',
+                    fontWeight: '500'
+                  }}
+                >
+                </div>
+              </div>
             </div>
 
             {/* Cards de Dados Específicos */}
