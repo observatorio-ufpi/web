@@ -3,11 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { FaSearch, FaChevronDown, FaGraduationCap, FaDollarSign, FaMapMarkedAlt, FaFileAlt } from 'react-icons/fa';
 import { Select } from '../ui';
 import { Card } from '../ui';
-import { formatNumber, formatCurrency, ibgeService } from '../../services/ibgeService';
-import { rateService } from '../../services/rateService';
+import { formatNumber, formatCurrency, ibgeService } from '../../services/ibgeService.jsx';
+import { rateService } from '../../services/rateService.jsx';
 import { Loading } from '../ui';
-import { useIBGEData } from '../../hooks/useIBGEData';
-import { municipios } from '../../utils/citiesMapping';
+import { useIBGEData } from '../../hooks/useIBGEData.jsx';
+import { municipios } from '../../utils/citiesMapping.jsx';
 import '../../style/HomePage.css';
 
 const Home = () => {
@@ -61,6 +61,13 @@ const Home = () => {
         fetch(`${import.meta.env.VITE_API_PUBLIC_URL}/higherEducation/university/count?filter=min_year:"2023",max_year:"2023",city:"${municipalityCode}"`).then(r => r.json())
       ]);
 
+      // Buscar dados financeiros do município (Receita Líquida de Impostos)
+      const financialData = await fetch(
+        `${import.meta.env.VITE_API_PUBLIC_URL}/researches/mt-revenue/municipio?nomeMunicipio=${municipalityCode}&anoInicial=2023&anoFinal=2023`
+      ).then(r => r.json()).catch(() => null);
+
+      console.log('financialData', financialData);
+
       const processedData = {
         population: areaAndPopulation.status === 'fulfilled'
           ? parseInt(areaAndPopulation.value?.[1]?.V) || 0
@@ -90,7 +97,9 @@ const Home = () => {
           institutions: higherEducationInstitutions.status === 'fulfilled' 
             ? higherEducationInstitutions.value?.result?.[0]?.total || null
             : null
-        }
+        },
+        // Dados financeiros
+        financialData: financialData
       };
 
       setMunicipalityData(processedData);
@@ -272,6 +281,7 @@ const Home = () => {
   console.log('Home - Taxa de analfabetismo:', displayData?.illiteracyRate);
   console.log('Home - Taxa de conclusão do ensino médio:', displayData?.schoolingRate);
   console.log('Home - Taxa de conclusão do ensino superior:', displayData?.higherEducationCompletionRate);
+  console.log('Home - Dados financeiros:', displayData?.financialData);
   
   return (
     <div className="homepage-background">
@@ -445,7 +455,7 @@ const Home = () => {
                             </span>
                           </div>
                           <div className="flex justify-between">
-                            <span>IDH (2024):</span>
+                            <span>IDH:</span>
                             <span className="font-semibold">0,710</span>
                           </div>
                           <div className="flex justify-between">
@@ -487,7 +497,7 @@ const Home = () => {
                           </div>
                           {displayData?.pib && (
                             <div className="flex justify-between">
-                              <span>PIB (2021):</span>
+                              <span>PIB:</span>
                               <span className="font-semibold">{formatCurrency(displayData.pib)}</span>
                             </div>
                           )}
@@ -693,10 +703,57 @@ const Home = () => {
               {/* Financiamento */}
               <Card variant="elevated" backgroundColor="var(--background-color)" className="text-center">
                 <Card.Content padding="small">
-                  <div className="text-2xl font-bold text-green-600 mb-2">R$ 5.022</div>
-                  <p className="text-gray-600 mb-3 text-sm">
-                    era a remuneração média mensal docente no Piauí em 2023.
-                  </p>
+                  {displayLoading ? (
+                    <div className="flex justify-center py-4">
+                      <Loading variant="spinner" size="small" />
+                    </div>
+                  ) : displayError ? (
+                    <div className="text-red-500 text-sm text-center py-2">{displayError}</div>
+                  ) : (
+                    <>
+                      <div className="text-2xl font-bold text-green-600 mb-2">
+                        {(() => {
+                          if (selectedMunicipality === '22') {
+                            // Para o estado, mostrar remuneração média docente
+                            return 'R$ 5.022';
+                          } else {
+                            // Para municípios, mostrar receita líquida de impostos
+                            const financialData = displayData?.financialData;
+                            if (financialData && financialData.result && financialData.result.length > 0) {
+                              // Buscar o total da receita líquida de impostos
+                              const totalRevenue = financialData.result.find(item => 
+                                item.type === 'TOTAL RECEITA LÍQUIDA DE IMPOSTOS' || 
+                                item.type === 'TOTAL_RECEITA_LIQUIDA_IMPOSTOS'
+                              );
+                              if (totalRevenue && totalRevenue.value) {
+                                return formatCurrency(totalRevenue.value);
+                              }
+                            }
+                            return 'Dados não disponíveis';
+                          }
+                        })()}
+                      </div>
+                      <p className="text-gray-600 mb-3 text-sm">
+                        {(() => {
+                          if (selectedMunicipality === '22') {
+                            return 'era a remuneração média mensal docente no Piauí em 2023.';
+                          } else {
+                            const financialData = displayData?.financialData;
+                            if (financialData && financialData.result && financialData.result.length > 0) {
+                              const totalRevenue = financialData.result.find(item => 
+                                item.type === 'TOTAL RECEITA LÍQUIDA DE IMPOSTOS' || 
+                                item.type === 'TOTAL_RECEITA_LIQUIDA_IMPOSTOS'
+                              );
+                              if (totalRevenue && totalRevenue.value) {
+                                return `era a receita líquida de impostos em ${selectedMunicipalityName.toLowerCase()} em 2023.`;
+                              }
+                            }
+                            return 'Informações sobre receita financeira não estão disponíveis no momento.';
+                          }
+                        })()}
+                      </p>
+                    </>
+                  )}
                   <button 
                     onClick={() => handleCategorySelect('financeiro')}
                     className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold transition-all duration-300 hover:-translate-y-1 flex items-center gap-2 w-full justify-center text-sm"
