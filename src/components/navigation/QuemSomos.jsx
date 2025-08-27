@@ -40,8 +40,8 @@ const QuemSomos = () => {
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                          {/* Card 1 - Análise de dados */}
-             <div className="p-8 rounded-xl shadow-lg border-2 border-green-500 hover:shadow-xl transition-all duration-300" style={{ backgroundColor: 'var(--background-color)' }}>
-              <div className="text-green-500 text-4xl mb-4 flex justify-center">
+             <div className="p-8 rounded-xl shadow-lg border-2 border-purple-500 hover:shadow-xl transition-all duration-300" style={{ backgroundColor: 'var(--background-color)' }}>
+              <div className="text-purple-500 text-4xl mb-4 flex justify-center">
                 <FaGraduationCap />
               </div>
               <h3 className="text-lg font-semibold text-gray-800">
@@ -70,8 +70,8 @@ const QuemSomos = () => {
             </div>
 
                          {/* Card 4 - Financiamento */}
-             <div className="p-8 rounded-xl shadow-lg border-2 border-purple-500 hover:shadow-xl transition-all duration-300" style={{ backgroundColor: 'var(--background-color)' }}>
-              <div className="text-purple-500 text-4xl mb-4 flex justify-center">
+             <div className="p-8 rounded-xl shadow-lg border-2 border-green-500 hover:shadow-xl transition-all duration-300" style={{ backgroundColor: 'var(--background-color)' }}>
+              <div className="text-green-500 text-4xl mb-4 flex justify-center">
                 <FaDollarSign />
               </div>
               <h3 className="text-lg font-semibold text-gray-800">
