@@ -77,7 +77,7 @@ function ApiContainer({
       }
 
       //return `https://simcaq.c3sl.ufpr.br/api/v1/${endpoint}?${dims}&filter=${encodeURIComponent(filter)}`;
-      return `http://localhost:3003/basicEducation/${endpoint}?${dims}&filter=${encodeURIComponent(filter)}`;
+      return `${import.meta.env.VITE_API_PUBLIC_URL}/basicEducation/${endpoint}?${dims}&filter=${encodeURIComponent(filter)}`;
     };
 
     const fetchCityData = async (cityId, cityName) => {

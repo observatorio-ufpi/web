@@ -74,7 +74,7 @@ function ApiHigherContainer({
         finalEndpoint = `${endpoint}/timeseries`;
       }
 
-      return `http://localhost:3003/higherEducation/${finalEndpoint}?${dims}&filter=${encodeURIComponent(filter)}`;
+      return `${import.meta.env.VITE_API_PUBLIC_URL}/higherEducation/${finalEndpoint}?${dims}&filter=${encodeURIComponent(filter)}`;
     };
 
     const fetchCityData = async (cityId, cityName) => {
