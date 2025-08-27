@@ -16,7 +16,7 @@ import HistoricalChart from '../HistoricalChart';
 const theme = createTheme({
   palette: {
     background: {
-      default: '#f0f0f0',
+      default: '#ffffff',
       tableHeader: '#cccccc',
     },
   },
@@ -385,7 +385,7 @@ const BasicTable = ({ headers, data, formatTotal = false, sortField = null, ref 
 
   return (
     <TableContainer sx={{ maxWidth: '100%', overflowX: 'auto', border: '2px solid #ccc', borderRadius: '4px' }} ref={ref}>
-      <Table sx={{ minWidth: 650 }} aria-label="data table">
+      <Table sx={{ minWidth: 650 }} aria-label="data table" style={{ backgroundColor: theme.palette.background.default }}>
         <StyledTableHead>
           <TableRow>
             {headers.map(header => (
@@ -446,7 +446,7 @@ const PaginatedTable = ({
   return (
     <>
       <TableContainer sx={{ maxWidth: '100%', overflowX: 'auto', border: '2px solid #ccc', borderRadius: '4px' }} ref={ref}>
-        <Table sx={{ minWidth: 650 }} aria-label="paginated table">
+        <Table sx={{ minWidth: 650 }} aria-label="paginated table" style={{ backgroundColor: theme.palette.background.default }}>
           <StyledTableHead>
             <TableRow>
               {headers.map(header => (
@@ -512,7 +512,7 @@ const CrossTable = ({
   return (
     <>
       <TableContainer sx={{ maxWidth: '100%', overflowX: 'auto', border: '2px solid #ccc', borderRadius: '4px' }} ref={ref}>
-        <Table sx={{ minWidth: 650 }} aria-label="combined table">
+        <Table sx={{ minWidth: 650 }} aria-label="combined table" style={{ backgroundColor: theme.palette.background.default }}>
           <StyledTableHead>
             <TableRow>
               <BoldTableCell>{rowHeader}</BoldTableCell>
@@ -727,7 +727,7 @@ const ApiDataTable = ({
       return (
         <div>
           <TableContainer sx={{ maxWidth: '100%', overflowX: 'auto', border: '2px solid #ccc', borderRadius: '4px' }} ref={tableRefs.historical}>
-            <Table sx={{ minWidth: 650 }} aria-label="historical table">
+            <Table sx={{ minWidth: 650 }} aria-label="historical table" style={{ backgroundColor: theme.palette.background.default }}>
               <StyledTableHead>
                 <TableRow>
                   {sortedYears.map(year => (
@@ -808,7 +808,7 @@ const ApiDataTable = ({
     return (
       <div>
         <TableContainer sx={{ maxWidth: '100%', overflowX: 'auto', border: '2px solid #ccc', borderRadius: '4px' }} ref={tableRefs.historical}>
-          <Table sx={{ minWidth: 650 }} aria-label="historical table">
+          <Table sx={{ minWidth: 650 }} aria-label="historical table" style={{ backgroundColor: theme.palette.background.default }}>
             <StyledTableHead>
               <TableRow>
                 <BoldTableCell>{extraColumn.label}</BoldTableCell>
@@ -933,7 +933,7 @@ const ApiDataTable = ({
     return (
       <div>
         <TableContainer sx={{ maxWidth: '100%', overflowX: 'auto', border: '2px solid #ccc', borderRadius: '4px' }} ref={tableRefs.cross}>
-          <Table sx={{ minWidth: 650 }} aria-label="combined table">
+          <Table sx={{ minWidth: 650 }} aria-label="combined table" style={{ backgroundColor: theme.palette.background.default }}>
             <StyledTableHead>
               <TableRow>
                 <BoldTableCell>{config.rowHeader}</BoldTableCell>
@@ -1067,7 +1067,7 @@ const ApiDataTable = ({
     return (
       <div>
         <TableContainer sx={{ maxWidth: '100%', overflowX: 'auto', border: '2px solid #ccc', borderRadius: '4px' }} ref={tableRefs[filterType]}>
-          <Table sx={{ minWidth: 650 }} aria-label="simple table">
+          <Table sx={{ minWidth: 650 }} aria-label="simple table" style={{ backgroundColor: theme.palette.background.default }}>
             <StyledTableHead>
               <TableRow>
                 {headers.map(header => (

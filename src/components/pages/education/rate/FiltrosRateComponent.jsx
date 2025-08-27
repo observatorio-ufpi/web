@@ -387,6 +387,8 @@ function FiltrosRateComponent() {
         </div>
       </div>
 
+      <hr className="divider" />
+
       {isLoading && (
         <Loading />
       )}

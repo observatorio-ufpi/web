@@ -461,6 +461,8 @@ function FilterComponent() {
         </div>
       </div>
 
+      <hr className="divider" />
+
       {isLoading && (
         <Loading />
       )}
