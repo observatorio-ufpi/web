@@ -103,14 +103,14 @@ const CustomPagination = ({ page, totalPages, limit, onPageChange, onLimitChange
                 color: '#666',
                 borderColor: '#e0e0e0',
                 '&:hover': {
-                  backgroundColor: 'rgba(33, 150, 243, 0.1)',
-                  borderColor: '#2196f3'
+                  backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                  borderColor: '#8b5cf6'
                 },
                 '&.Mui-selected': {
-                  backgroundColor: '#2196f3',
+                  backgroundColor: '#8b5cf6',
                   color: 'white',
                   '&:hover': {
-                    backgroundColor: '#1976d2'
+                    backgroundColor: '#7c3aed'
                   }
                 }
               },

@@ -158,42 +158,56 @@ const TableExport = ({
       gap: '12px',
       margin: '16px 0 0 0'
     }}>
-      <Tooltip title="Exportar para PDF">
-        <Button
-          variant="contained"
-          sx={{
-            backgroundColor: '#f44336',
-            '&:hover': {
-              backgroundColor: '#d32f2f'
-            },
-            padding: '8px 16px',
-            minWidth: '120px',
-            borderRadius: '8px',
-            boxShadow: '0 2px 5px rgba(0,0,0,0.15)'
-          }}
-          onClick={exportToPDF}
-          startIcon={<FaFilePdf size={18} />}
-        >
-          <span style={{ fontWeight: 500 }}>PDF</span>
-        </Button>
-      </Tooltip>
       <Tooltip title="Exportar para Excel">
         <Button
           variant="contained"
-          sx={{
-            backgroundColor: '#4caf50',
-            '&:hover': {
-              backgroundColor: '#388e3c'
-            },
-            padding: '8px 16px',
-            minWidth: '120px',
-            borderRadius: '8px',
-            boxShadow: '0 2px 5px rgba(0,0,0,0.15)'
-          }}
+          color="success"
           onClick={exportToExcel}
           startIcon={<FaFileExcel size={18} />}
+          sx={{
+            minWidth: '120px',
+            '@media (max-width: 600px)': {
+              minWidth: '40px',
+              padding: '6px !important',
+              '& .MuiButton-startIcon': {
+                margin: 0,
+              },
+              '& .button-text': {
+                display: 'none',
+              },
+              '& svg': {
+                fontSize: '20px',
+              },
+            },
+          }}
         >
-          <span style={{ fontWeight: 500 }}>Excel</span>
+          <span className="button-text" style={{ fontWeight: 500 }}>Excel</span>
+        </Button>
+      </Tooltip>
+      <Tooltip title="Exportar para PDF">
+        <Button
+          variant="contained"
+          color="error"
+          onClick={exportToPDF}
+          startIcon={<FaFilePdf size={18} />}
+          sx={{
+            minWidth: '120px',
+            '@media (max-width: 600px)': {
+              minWidth: '40px',
+              padding: '6px !important',
+              '& .MuiButton-startIcon': {
+                margin: 0,
+              },
+              '& .button-text': {
+                display: 'none',
+              },
+              '& svg': {
+                fontSize: '20px',
+              },
+            },
+          }}
+        >
+          <span className="button-text" style={{ fontWeight: 500 }}>PDF</span>
         </Button>
       </Tooltip>
     </div>

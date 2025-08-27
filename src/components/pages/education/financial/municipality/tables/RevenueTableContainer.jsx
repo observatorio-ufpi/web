@@ -430,7 +430,7 @@ function RevenueTableContainer() {
               <div style={{ display: "flex", justifyContent: "flex-end" }}>
                 <Button
                   variant="contained"
-                  color="info"
+                  color="success"
                   onClick={downloadAllTables}
                   sx={{ marginTop: 2 }}
                 >
