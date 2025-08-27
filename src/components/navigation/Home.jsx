@@ -157,6 +157,10 @@ const Home = () => {
             // Limpar o nome (remover ", PI" se existir)
             municipioName = municipioName.replace(', PI', '').replace(',PI', '');
             
+            // Buscar o território de desenvolvimento do município
+            const municipioData = municipios[municipioId];
+            const territorioDesenvolvimento = municipioData ? municipioData.territorioDesenvolvimento : null;
+            
             // Criar novo elemento polygon com eventos
             const newPolygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
             newPolygon.setAttribute('points', polygon.getAttribute('points'));
@@ -164,6 +168,7 @@ const Home = () => {
             newPolygon.setAttribute('id', municipioId);
             newPolygon.setAttribute('style', polygon.getAttribute('style'));
             newPolygon.setAttribute('data-name', municipioName); // Guardar o nome para referência
+            newPolygon.setAttribute('data-territorio', territorioDesenvolvimento); // Guardar o território para referência
             
             // Adicionar eventos de mouse
             newPolygon.addEventListener('click', () => {
@@ -190,7 +195,13 @@ const Home = () => {
               tooltipTimeout = setTimeout(() => {
                 const tooltip = document.getElementById('map-tooltip');
                 if (tooltip) {
-                  tooltip.textContent = municipioName;
+                  // Criar conteúdo do tooltip com nome e território
+                  let tooltipContent = municipioName;
+                  if (territorioDesenvolvimento) {
+                    tooltipContent += `<br><span style="font-size: 12px; color: #666;">${territorioDesenvolvimento}</span>`;
+                  }
+                  
+                  tooltip.innerHTML = tooltipContent;
                   
                   // Usar coordenadas do mouse para posicionar o tooltip
                   const mouseX = e.clientX;
@@ -560,8 +571,8 @@ const Home = () => {
                       }
                       
                       polygon.selected {
-                        fill: #8b5cf6 !important;
-                        stroke: #8b5cf6;
+                        fill: #22c55e !important;
+                        stroke: #22c55e;
                         stroke-width: 0.5;
                       }
                     `}
