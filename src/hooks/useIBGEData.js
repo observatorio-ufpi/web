@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ibgeService } from '../services/ibgeService';
+import { rateService } from '../services/rateService';
 
 export const useIBGEData = () => {
   const [data, setData] = useState(null);
@@ -19,18 +20,26 @@ export const useIBGEData = () => {
           municipalities,
           pib,
           illiteracyRate,
-          education,
-          higherEducation,
-          postGraduation
+          schoolingRate,
+          higherEducationCompletionRate,
+          basicEducationEnrollment,
+          basicEducationSchools,
+          higherEducationEnrollment,
+          higherEducationInstitutions
         ] = await Promise.allSettled([
           ibgeService.getPiauiDemographics(),
           ibgeService.getPiauiAreaAndPopulation(),
           ibgeService.getPiauiMunicipalities(),
           ibgeService.getPiauiPIB(),
-          ibgeService.getPiauiIlliteracyRate(),
-          ibgeService.getPiauiEducation(),
-          ibgeService.getPiauiHigherEducation(),
-          ibgeService.getPiauiPostGraduation()
+          rateService.getPiauiIlliteracyRate(2023),
+          rateService.getPiauiSchoolingRate(2023),
+          rateService.getPiauiHigherEducationCompletionRate(2023),
+          // Buscar dados de educação básica do backend
+          fetch(`${import.meta.env.VITE_API_PUBLIC_URL}/basicEducation/enrollment?filter=min_year:"2023",max_year:"2023",state:"22"`).then(r => r.json()),
+          fetch(`${import.meta.env.VITE_API_PUBLIC_URL}/basicEducation/school/count?filter=min_year:"2023",max_year:"2023",state:"22"`).then(r => r.json()),
+          // Buscar dados de educação superior do backend
+          fetch(`${import.meta.env.VITE_API_PUBLIC_URL}/higherEducation/university_enrollment?filter=min_year:"2023",max_year:"2023",state:"22"`).then(r => r.json()),
+          fetch(`${import.meta.env.VITE_API_PUBLIC_URL}/higherEducation/university/count?filter=min_year:"2023",max_year:"2023",state:"22"`).then(r => r.json())
         ]);
 
         // Processar resultados (alguns podem falhar, outros não)
@@ -48,76 +57,49 @@ export const useIBGEData = () => {
             ? parseInt(pib.value?.[1]?.V)
             : null,
           illiteracyRate: illiteracyRate.status === 'fulfilled' 
-            ? (() => {
-                // Tentar encontrar a taxa de analfabetismo na tabela 5918
-                const data = illiteracyRate.value;
-                if (!data || !Array.isArray(data)) return null;
-                
-                // Procurar por variáveis relacionadas ao analfabetismo
-                for (let i = 1; i < data.length; i++) {
-                  const item = data[i];
-                  if (item.D2N && item.D2N.includes('analfabet') && item.V !== '..') {
-                    return parseFloat(item.V);
-                  }
-                }
-                
-                // Se não encontrar, retornar null
-                return null;
-              })()
+            ? illiteracyRate.value
+            : null,
+          schoolingRate: schoolingRate.status === 'fulfilled' 
+            ? schoolingRate.value
+            : null,
+          higherEducationCompletionRate: higherEducationCompletionRate.status === 'fulfilled' 
+            ? higherEducationCompletionRate.value
             : null,
           education: {
-            enrollments: education.status === 'fulfilled' && education.value
-              ? education.value?.data?.enrollments || null
+            enrollments: basicEducationEnrollment.status === 'fulfilled' 
+              ? basicEducationEnrollment.value?.result?.[0]?.total || null
               : null,
-            schools: education.status === 'fulfilled' && education.value
-              ? education.value?.data?.schools || null
+            schools: basicEducationSchools.status === 'fulfilled' 
+              ? basicEducationSchools.value?.result?.[0]?.total || null
               : null
           },
           higherEducation: {
-            enrollments: higherEducation.status === 'fulfilled' && higherEducation.value
-              ? higherEducation.value?.data?.enrollments || null
+            enrollments: higherEducationEnrollment.status === 'fulfilled' 
+              ? higherEducationEnrollment.value?.result?.[0]?.total || (higherEducationEnrollment.value?.result?.[0]?.total == 0 ? 0 : null)
               : null,
-            institutions: higherEducation.status === 'fulfilled' && higherEducation.value
-              ? higherEducation.value?.data?.institutions || null
-              : null,
-            enrollmentRate: higherEducation.status === 'fulfilled' && higherEducation.value
-              ? higherEducation.value?.data?.enrollmentRate || null
-              : null
-          },
-          postGraduation: {
-            masters: postGraduation.status === 'fulfilled' && postGraduation.value
-              ? postGraduation.value?.data?.masters || null
-              : null,
-            doctors: postGraduation.status === 'fulfilled' && postGraduation.value
-              ? postGraduation.value?.data?.doctors || null
+            institutions: higherEducationInstitutions.status === 'fulfilled' 
+              ? higherEducationInstitutions.value?.result?.[0]?.total || (higherEducationInstitutions.value?.result?.[0]?.total == 0 ? 0 : null)
               : null
           }
         };
 
-        setData(processedData);
-      } catch (err) {
-        console.error('Erro ao buscar dados do IBGE:', err);
-        setError('Erro ao carregar dados. Usando dados padrão.');
-        
-        // Dados de fallback em caso de erro total
-        setData({
-          population: 3375646,
-          municipalities: 224,
-          area: 251529,
-          education: {
-            enrollments: 198306,
-            schools: 634
-          },
-          higherEducation: {
-            enrollments: 135807,
-            institutions: 47,
-            enrollmentRate: 18.5
-          },
-          postGraduation: {
-            masters: 2847,
-            doctors: 156
-          }
+        console.log('Dados brutos de educação básica:', {
+          basicEducationEnrollment: basicEducationEnrollment.status === 'fulfilled' ? basicEducationEnrollment.value : 'rejected',
+          basicEducationSchools: basicEducationSchools.status === 'fulfilled' ? basicEducationSchools.value : 'rejected'
         });
+        console.log('Dados brutos de educação superior:', {
+          higherEducationEnrollment: higherEducationEnrollment.status === 'fulfilled' ? higherEducationEnrollment.value : 'rejected',
+          higherEducationInstitutions: higherEducationInstitutions.status === 'fulfilled' ? higherEducationInstitutions.value : 'rejected'
+        });
+
+        // Log de debug para verificar os dados de taxas
+
+
+        setData(processedData);
+        setError(null);
+      } catch (error) {
+        console.error('Erro ao buscar dados:', error);
+        setError('Erro ao carregar dados');
       } finally {
         setLoading(false);
       }
@@ -126,105 +108,66 @@ export const useIBGEData = () => {
     fetchData();
   }, []);
 
-  const refreshData = async () => {
-    setLoading(true);
-    setError(null);
-    
+  // Função para atualizar dados de taxas (para municípios)
+  const updateRateData = async (municipalityCode, year = 2023) => {
+    if (municipalityCode === '22') {
+      // Para o estado, usar dados já carregados
+      return;
+    }
+
     try {
-      const [
-        demographics,
-        areaAndPopulation,
-        municipalities,
-        pib,
-        illiteracyRate,
-        education,
-        higherEducation,
-        postGraduation
-      ] = await Promise.allSettled([
-        ibgeService.getPiauiDemographics(),
-        ibgeService.getPiauiAreaAndPopulation(),
-        ibgeService.getPiauiMunicipalities(),
-        ibgeService.getPiauiPIB(),
-        ibgeService.getPiauiIlliteracyRate(),
-        ibgeService.getPiauiEducation(),
-        ibgeService.getPiauiHigherEducation(),
-        ibgeService.getPiauiPostGraduation()
+      const [illiteracyRate, schoolingRate, higherEducationCompletionRate] = await Promise.allSettled([
+        rateService.getMunicipalityIlliteracyRate(municipalityCode, year),
+        rateService.getMunicipalitySchoolingRate(municipalityCode, year),
+        rateService.getMunicipalityHigherEducationCompletionRate(municipalityCode, year)
       ]);
 
-      const processedData = {
-        population: areaAndPopulation.status === 'fulfilled' 
-          ? parseInt(areaAndPopulation.value?.[1]?.V)
-          : null,
-        municipalities: municipalities.status === 'fulfilled' 
-          ? municipalities.value?.length || 224 
-          : 224,
-        area: areaAndPopulation.status === 'fulfilled' 
-          ? parseFloat(areaAndPopulation.value?.[2]?.V)
-          : null,
-        pib: pib.status === 'fulfilled' 
-          ? parseInt(pib.value?.[1]?.V)
-          : null,
-        illiteracyRate: illiteracyRate.status === 'fulfilled' 
-          ? (() => {
-                // Tentar encontrar a taxa de analfabetismo na tabela 5918
-                const data = illiteracyRate.value;
-                if (!data || !Array.isArray(data)) return null;
-                
-                // Procurar por variáveis relacionadas ao analfabetismo
-                for (let i = 1; i < data.length; i++) {
-                  const item = data[i];
-                  if (item.D2N && item.D2N.includes('analfabet') && item.V !== '..') {
-                    return parseFloat(item.V);
-                  }
-                }
-                
-                // Se não encontrar, retornar null
-                return null;
-              })()
-            : null,
+      // Buscar dados de educação para o município
+      const [basicEducationEnrollment, basicEducationSchools, higherEducationEnrollment, higherEducationInstitutions] = await Promise.allSettled([
+        fetch(`${import.meta.env.VITE_API_PUBLIC_URL}/basicEducation/enrollment?filter=min_year:"${year}",max_year:"${year}",city:"${municipalityCode}"`).then(r => r.json()),
+        fetch(`${import.meta.env.VITE_API_PUBLIC_URL}/basicEducation/school/count?filter=min_year:"${year}",max_year:"${year}",city:"${municipalityCode}"`).then(r => r.json()),
+        fetch(`${import.meta.env.VITE_API_PUBLIC_URL}/higherEducation/university_enrollment?filter=min_year:"${year}",max_year:"${year}",city:"${municipalityCode}"`).then(r => r.json()),
+        fetch(`${import.meta.env.VITE_API_PUBLIC_URL}/higherEducation/university/count?filter=min_year:"${year}",max_year:"${year}",city:"${municipalityCode}"`).then(r => r.json())
+      ]);
+
+      console.log('Dados brutos de educação básica:', {
+        basicEducationEnrollment: basicEducationEnrollment.status === 'fulfilled' ? basicEducationEnrollment.value : 'rejected',
+        basicEducationSchools: basicEducationSchools.status === 'fulfilled' ? basicEducationSchools.value : 'rejected'
+      });
+      console.log('Dados brutos de educação superior:', {
+        higherEducationEnrollment: higherEducationEnrollment.status === 'fulfilled' ? higherEducationEnrollment.value : 'rejected',
+        higherEducationInstitutions: higherEducationInstitutions.status === 'fulfilled' ? higherEducationInstitutions.value : 'rejected'
+      });
+
+      const updatedData = {
+        ...data,
+        illiteracyRate: illiteracyRate.status === 'fulfilled' ? illiteracyRate.value : null,
+        schoolingRate: schoolingRate.status === 'fulfilled' ? schoolingRate.value : null,
+        higherEducationCompletionRate: higherEducationCompletionRate.status === 'fulfilled' ? higherEducationCompletionRate.value : null,
         education: {
-          enrollments: education.status === 'fulfilled' && education.value
-            ? education.value?.data?.enrollments || null
+          enrollments: basicEducationEnrollment.status === 'fulfilled' 
+            ? basicEducationEnrollment.value?.result?.[0]?.total || null
             : null,
-          schools: education.status === 'fulfilled' && education.value
-            ? education.value?.data?.schools || null
+          schools: basicEducationSchools.status === 'fulfilled' 
+            ? basicEducationSchools.value?.result?.[0]?.total || null
             : null
         },
         higherEducation: {
-          enrollments: higherEducation.status === 'fulfilled' && higherEducation.value
-            ? higherEducation.value?.data?.enrollments || null
+          enrollments: higherEducationEnrollment.status === 'fulfilled' 
+            ? higherEducationEnrollment.value?.result?.[0]?.total || null
             : null,
-          institutions: higherEducation.status === 'fulfilled' && higherEducation.value
-            ? higherEducation.value?.data?.institutions || null
-            : null,
-          enrollmentRate: higherEducation.status === 'fulfilled' && higherEducation.value
-            ? higherEducation.value?.data?.enrollmentRate || null
-            : null
-        },
-        postGraduation: {
-          masters: postGraduation.status === 'fulfilled' && postGraduation.value
-            ? postGraduation.value?.data?.masters || null
-            : null,
-          doctors: postGraduation.status === 'fulfilled' && postGraduation.value
-            ? postGraduation.value?.data?.doctors || null
+          institutions: higherEducationInstitutions.status === 'fulfilled' 
+            ? higherEducationInstitutions.value?.result?.[0]?.total || null
             : null
         }
       };
 
-      setData(processedData);
-      setError(null);
-    } catch (err) {
-      console.error('Erro ao atualizar dados:', err);
-      setError('Erro ao atualizar dados.');
-    } finally {
-      setLoading(false);
+
+      setData(updatedData);
+    } catch (error) {
+      console.error('Erro ao atualizar dados de taxas:', error);
     }
   };
 
-  return {
-    data,
-    loading,
-    error,
-    refreshData
-  };
+  return { data, loading, error, updateRateData };
 };

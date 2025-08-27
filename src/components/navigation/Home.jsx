@@ -4,6 +4,7 @@ import { FaSearch, FaChevronDown, FaGraduationCap, FaDollarSign, FaMapMarkedAlt,
 import { Select } from '../ui';
 import { Card } from '../ui';
 import { formatNumber, formatCurrency, ibgeService } from '../../services/ibgeService';
+import { rateService } from '../../services/rateService';
 import { Loading } from '../ui';
 import { useIBGEData } from '../../hooks/useIBGEData';
 import { municipios } from '../../utils/citiesMapping';
@@ -11,7 +12,7 @@ import '../../style/HomePage.css';
 
 const Home = () => {
   const navigate = useNavigate();
-  const { data: piauiData, loading, error, refreshData } = useIBGEData();
+  const { data: piauiData, loading, error, updateRateData } = useIBGEData();
   
   // Estado para município selecionado e seus dados
   const [selectedMunicipality, setSelectedMunicipality] = useState('22'); // 22 = Piauí
@@ -30,9 +31,12 @@ const Home = () => {
 
   // Função para buscar dados do município selecionado
   const fetchMunicipalityData = async (municipalityCode) => {
+    console.log('fetchMunicipalityData chamada para:', municipalityCode);
+    
     if (municipalityCode === '22') {
       setMunicipalityData(null);
       setMunicipalityError(null);
+      setMunicipalityLoading(false);
       return;
     }
 
@@ -40,18 +44,21 @@ const Home = () => {
     setMunicipalityError(null);
 
     try {
-      const [
-        areaAndPopulation,
-        pib,
-        education,
-        higherEducation,
-        postGraduation
-      ] = await Promise.allSettled([
+      // Buscar dados específicos do município (área, população, PIB)
+      const [areaAndPopulation, pib] = await Promise.allSettled([
         ibgeService.getMunicipalityAreaAndPopulation(municipalityCode),
-        ibgeService.getMunicipalityPIB(municipalityCode),
-        ibgeService.getMunicipalityEducation(municipalityCode),
-        ibgeService.getMunicipalityHigherEducation(municipalityCode),
-        ibgeService.getMunicipalityPostGraduation(municipalityCode)
+        ibgeService.getMunicipalityPIB(municipalityCode)
+      ]);
+
+      // Buscar dados de educação e taxas do município
+      const [illiteracyRate, schoolingRate, higherEducationCompletionRate, basicEducationEnrollment, basicEducationSchools, higherEducationEnrollment, higherEducationInstitutions] = await Promise.allSettled([
+        rateService.getMunicipalityIlliteracyRate(municipalityCode, 2023),
+        rateService.getMunicipalitySchoolingRate(municipalityCode, 2023),
+        rateService.getMunicipalityHigherEducationCompletionRate(municipalityCode, 2023),
+        fetch(`${import.meta.env.VITE_API_PUBLIC_URL}/basicEducation/enrollment?filter=min_year:"2023",max_year:"2023",city:"${municipalityCode}"`).then(r => r.json()),
+        fetch(`${import.meta.env.VITE_API_PUBLIC_URL}/basicEducation/school/count?filter=min_year:"2023",max_year:"2023",city:"${municipalityCode}"`).then(r => r.json()),
+        fetch(`${import.meta.env.VITE_API_PUBLIC_URL}/higherEducation/university_enrollment?filter=min_year:"2023",max_year:"2023",city:"${municipalityCode}"`).then(r => r.json()),
+        fetch(`${import.meta.env.VITE_API_PUBLIC_URL}/higherEducation/university/count?filter=min_year:"2023",max_year:"2023",city:"${municipalityCode}"`).then(r => r.json())
       ]);
 
       const processedData = {
@@ -64,32 +71,25 @@ const Home = () => {
         pib: pib.status === 'fulfilled'
           ? parseInt(pib.value?.[1]?.V) || 0
           : 0,
+        // Dados específicos do município
+        illiteracyRate: illiteracyRate.status === 'fulfilled' ? illiteracyRate.value : null,
+        schoolingRate: schoolingRate.status === 'fulfilled' ? schoolingRate.value : null,
+        higherEducationCompletionRate: higherEducationCompletionRate.status === 'fulfilled' ? higherEducationCompletionRate.value : null,
         education: {
-          enrollments: education.status === 'fulfilled'
-            ? education.value?.data?.enrollments || 0
-            : 0,
-          schools: education.status === 'fulfilled'
-            ? education.value?.data?.schools || 0
-            : 0
+          enrollments: basicEducationEnrollment.status === 'fulfilled' 
+            ? basicEducationEnrollment.value?.result?.[0]?.total || null
+            : null,
+          schools: basicEducationSchools.status === 'fulfilled' 
+            ? basicEducationSchools.value?.result?.[0]?.total || null
+            : null
         },
         higherEducation: {
-          enrollments: higherEducation.status === 'fulfilled'
-            ? higherEducation.value?.data?.enrollments || 0
-            : 0,
-          institutions: higherEducation.status === 'fulfilled'
-            ? higherEducation.value?.data?.institutions || 0
-            : 0,
-          enrollmentRate: higherEducation.status === 'fulfilled'
-            ? higherEducation.value?.data?.enrollmentRate || 0
-            : 0
-        },
-        postGraduation: {
-          masters: postGraduation.status === 'fulfilled'
-            ? postGraduation.value?.data?.masters || 0
-            : 0,
-          doctors: postGraduation.status === 'fulfilled'
-            ? postGraduation.value?.data?.doctors || 0
-            : 0
+          enrollments: higherEducationEnrollment.status === 'fulfilled' 
+            ? higherEducationEnrollment.value?.result?.[0]?.total || null
+            : null,
+          institutions: higherEducationInstitutions.status === 'fulfilled' 
+            ? higherEducationInstitutions.value?.result?.[0]?.total || null
+            : null
         }
       };
 
@@ -104,7 +104,10 @@ const Home = () => {
 
   // Efeito para buscar dados quando o município muda
   useEffect(() => {
-    fetchMunicipalityData(selectedMunicipality);
+    console.log('useEffect - selectedMunicipality mudou para:', selectedMunicipality);
+    if (selectedMunicipality) {
+      fetchMunicipalityData(selectedMunicipality);
+    }
   }, [selectedMunicipality]);
 
   // Efeito para carregar o mapa interativo
@@ -264,6 +267,12 @@ const Home = () => {
   const displayError = selectedMunicipality === '22' ? error : municipalityError;
   const selectedMunicipalityName = municipalitiesList.find(m => m.code === selectedMunicipality)?.name || 'Piauí';
   
+  // Log de debug para verificar os dados
+  console.log('Home - displayData:', displayData);
+  console.log('Home - Taxa de analfabetismo:', displayData?.illiteracyRate);
+  console.log('Home - Taxa de conclusão do ensino médio:', displayData?.schoolingRate);
+  console.log('Home - Taxa de conclusão do ensino superior:', displayData?.higherEducationCompletionRate);
+  
   return (
     <div className="homepage-background">
       {/* Logo Section */}
@@ -386,7 +395,7 @@ const Home = () => {
                     <h3 className="text-base font-bold">{selectedMunicipalityName} - Dados Gerais</h3>
                     {(displayError || municipalityError) && (
                       <button 
-                        onClick={() => selectedMunicipality === '22' ? refreshData() : fetchMunicipalityData(selectedMunicipality)}
+                        onClick={() => selectedMunicipality === '22' ? window.location.reload() : fetchMunicipalityData(selectedMunicipality)}
                         className="text-xs text-blue-600 hover:text-blue-800 underline"
                         title="Tentar novamente"
                       >
@@ -436,8 +445,8 @@ const Home = () => {
                             </span>
                           </div>
                           <div className="flex justify-between">
-                            <span>IDH (2010):</span>
-                            <span className="font-semibold">N/A</span>
+                            <span>IDH (2024):</span>
+                            <span className="font-semibold">0,710</span>
                           </div>
                           <div className="flex justify-between">
                             <span>Taxa de analfabetismo:</span>
@@ -449,8 +458,22 @@ const Home = () => {
                             </span>
                           </div>
                           <div className="flex justify-between">
-                            <span>Taxa de escolarização:</span>
-                            <span className="font-semibold">N/A</span>
+                            <span>Taxa de conclusão do ensino médio:</span>
+                            <span className="font-semibold">
+                              {displayData?.schoolingRate 
+                                ? `${displayData.schoolingRate.toFixed(1)}%`
+                                : 'N/A'
+                              }
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Taxa de conclusão do ensino superior:</span>
+                            <span className="font-semibold">
+                              {displayData?.higherEducationCompletionRate 
+                                ? `${displayData.higherEducationCompletionRate.toFixed(1)}%`
+                                : 'N/A'
+                              }
+                            </span>
                           </div>
                         </>
                       )}
@@ -466,6 +489,30 @@ const Home = () => {
                             <div className="flex justify-between">
                               <span>PIB (2021):</span>
                               <span className="font-semibold">{formatCurrency(displayData.pib)}</span>
+                            </div>
+                          )}
+                          {displayData?.illiteracyRate && (
+                            <div className="flex justify-between">
+                              <span>Taxa de analfabetismo:</span>
+                              <span className="font-semibold">
+                                {displayData.illiteracyRate.toFixed(1)}%
+                              </span>
+                            </div>
+                          )}
+                          {displayData?.schoolingRate && (
+                            <div className="flex justify-between">
+                              <span>Taxa de conclusão do ensino médio:</span>
+                              <span className="font-semibold">
+                                {displayData.schoolingRate.toFixed(1)}%
+                              </span>
+                            </div>
+                          )}
+                          {displayData?.higherEducationCompletionRate && (
+                            <div className="flex justify-between">
+                              <span>Taxa de conclusão do ensino superior:</span>
+                              <span className="font-semibold">
+                                {displayData.higherEducationCompletionRate.toFixed(1)}%
+                              </span>
                             </div>
                           )}
                         </>
@@ -544,23 +591,43 @@ const Home = () => {
                     <div className="text-red-500 text-sm text-center py-2">{displayError}</div>
                   ) : (
                     <>
-                      <div className="text-2xl font-bold text-green-600 mb-2">
-                        {displayData?.education?.enrollments 
-                          ? `${formatNumber(displayData.education.enrollments)} e ${displayData.education.schools}`
-                          : 'Dados não disponíveis'
-                        }
+                      <div className="text-2xl font-bold text-purple-600 mb-2">
+                        {(() => {
+                          const enrollments = displayData?.education?.enrollments;
+                          const schools = displayData?.education?.schools;
+                          
+                          if (enrollments && schools) {
+                            return `${formatNumber(enrollments)} e ${formatNumber(schools)}`;
+                          } else if (enrollments) {
+                            return `${formatNumber(enrollments)}`;
+                          } else if (schools) {
+                            return `${formatNumber(schools)}`;
+                          } else {
+                            return 'Dados não disponíveis';
+                          }
+                        })()}
                       </div>
                       <p className="text-gray-600 mb-3 text-sm">
-                        {displayData?.education?.enrollments 
-                          ? `eram os números de matrículas e escolas na educação básica, respectivamente, em ${selectedMunicipalityName.toLowerCase()} em 2023.`
-                          : 'Informações sobre educação básica não estão disponíveis no momento.'
-                        }
+                        {(() => {
+                          const enrollments = displayData?.education?.enrollments;
+                          const schools = displayData?.education?.schools;
+                          
+                          if (enrollments && schools) {
+                            return `eram os números de matrículas e escolas na educação básica, respectivamente, em ${selectedMunicipalityName.toLowerCase()} em 2023.`;
+                          } else if (enrollments) {
+                            return `eram ${formatNumber(enrollments)} matrículas na educação básica em ${selectedMunicipalityName.toLowerCase()} em 2023.`;
+                          } else if (schools) {
+                            return `eram ${formatNumber(schools)} escolas na educação básica em ${selectedMunicipalityName.toLowerCase()} em 2023.`;
+                          } else {
+                            return 'Informações sobre educação básica não estão disponíveis no momento.';
+                          }
+                        })()}
                       </p>
                     </>
                   )}
                   <button 
                     onClick={() => handleCategorySelect('educacional')}
-                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold transition-all duration-300 hover:-translate-y-1 flex items-center gap-2 w-full justify-center text-sm"
+                    className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-semibold transition-all duration-300 hover:-translate-y-1 flex items-center gap-2 w-full justify-center text-sm"
                   >
                     <FaGraduationCap />
                     dados educacionais
@@ -579,23 +646,43 @@ const Home = () => {
                     <div className="text-red-500 text-sm text-center py-2">{displayError}</div>
                   ) : (
                     <>
-                      <div className="text-2xl font-bold text-green-600 mb-2">
-                        {displayData?.higherEducation?.enrollments 
-                          ? `${formatNumber(displayData.higherEducation.enrollments)} e ${displayData.higherEducation.institutions}`
-                          : 'Dados não disponíveis'
-                        }
+                      <div className="text-2xl font-bold text-purple-600 mb-2">
+                        {(() => {
+                          const enrollments = displayData?.higherEducation?.enrollments;
+                          const institutions = displayData?.higherEducation?.institutions;
+                          
+                          if (enrollments && institutions) {
+                            return `${formatNumber(enrollments)} e ${formatNumber(institutions)}`;
+                          } else if (enrollments) {
+                            return `${formatNumber(enrollments)}`;
+                          } else if (institutions) {
+                            return `${formatNumber(institutions)}`;
+                          } else {
+                            return 'Dados não disponíveis';
+                          }
+                        })()}
                       </div>
                       <p className="text-gray-600 mb-2 text-sm">
-                        {displayData?.higherEducation?.enrollments 
-                          ? `eram os números de matrículas e instituições na <strong>educação superior</strong>, respectivamente, em ${selectedMunicipalityName.toLowerCase()} em 2023.`
-                          : 'Informações sobre educação superior não estão disponíveis no momento.'
-                        }
+                        {(() => {
+                          const enrollments = displayData?.higherEducation?.enrollments;
+                          const institutions = displayData?.higherEducation?.institutions;
+                          
+                          if (enrollments && institutions) {
+                            return `eram os números de matrículas e instituições na educação superior, respectivamente, em ${selectedMunicipalityName.toLowerCase()} em 2023.`;
+                          } else if (enrollments) {
+                            return `eram ${formatNumber(enrollments)} matrículas na educação superior em ${selectedMunicipalityName.toLowerCase()} em 2023.`;
+                          } else if (institutions) {
+                            return `eram ${formatNumber(institutions)} instituições na educação superior em ${selectedMunicipalityName.toLowerCase()} em 2023.`;
+                          } else {
+                            return 'Informações sobre educação superior não estão disponíveis no momento.';
+                          }
+                        })()}
                       </p>
                     </>
                   )}
                   <button 
                     onClick={() => handleCategorySelect('educacional')}
-                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold transition-all duration-300 hover:-translate-y-1 flex items-center gap-2 w-full justify-center text-sm"
+                    className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-semibold transition-all duration-300 hover:-translate-y-1 flex items-center gap-2 w-full justify-center text-sm"
                   >
                     <FaGraduationCap />
                     dados educacionais
@@ -612,7 +699,7 @@ const Home = () => {
                   </p>
                   <button 
                     onClick={() => handleCategorySelect('financeiro')}
-                    className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-semibold transition-all duration-300 hover:-translate-y-1 flex items-center gap-2 w-full justify-center text-sm"
+                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold transition-all duration-300 hover:-translate-y-1 flex items-center gap-2 w-full justify-center text-sm"
                   >
                     <FaDollarSign />
                     dados financeiros

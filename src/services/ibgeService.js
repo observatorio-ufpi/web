@@ -9,7 +9,6 @@ export const ibgeService = {
       // Código do Piauí: 22
       const response = await fetch(`${IBGE_BASE_URL}/localidades/estados/22`);
       const data = await response.json();
-      console.log(data);
       return data;
     } catch (error) {
       console.error('Erro ao buscar dados demográficos:', error);
@@ -36,7 +35,6 @@ export const ibgeService = {
       // Variável 9324 - População residente
       const response = await fetch(`${SIDRA_BASE_URL}/t/6579/n3/22/v/9324/p/2021`);
       const data = await response.json();
-      console.log(data);
       return data;
     } catch (error) {
       console.error('Erro ao buscar população:', error);
@@ -51,7 +49,6 @@ export const ibgeService = {
       // Variável 9324 - População residente
       const response = await fetch(`${SIDRA_BASE_URL}/t/6579/n6/${municipalityCode}/v/9324/p/2021`);
       const data = await response.json();
-      console.log(`População do município ${municipalityCode}:`, data);
       return data;
     } catch (error) {
       console.error('Erro ao buscar população do município:', error);
@@ -74,12 +71,10 @@ export const ibgeService = {
   // Buscar dados de PIB por estado (SIDRA - funciona!)
   async getPiauiPIB() {
     try {
-      console.log('Buscando PIB do Piauí');
       // SIDRA Tabela 5938 - PIB dos municípios
       // Variável 37 - Valor corrente do PIB
       const response = await fetch(`${SIDRA_BASE_URL}/t/5938/n3/22/v/37/p/2021`);
       const data = await response.json();
-      console.log('PIB do Piauí:', data);
       return data;
     } catch (error) {
       console.error('Erro ao buscar PIB:', error);
@@ -90,12 +85,10 @@ export const ibgeService = {
   // Buscar dados de PIB por município (SIDRA - funciona!)
   async getMunicipalityPIB(municipalityCode) {
     try {
-      console.log(`Buscando PIB do município ${municipalityCode}`);
       // SIDRA Tabela 5938 - PIB dos municípios
       // Variável 37 - Valor corrente do PIB
       const response = await fetch(`${SIDRA_BASE_URL}/t/5938/n6/${municipalityCode}/v/37/p/2021`);
       const data = await response.json();
-      console.log(`PIB do município ${municipalityCode}:`, data);
       return data;
     } catch (error) {
       console.error('Erro ao buscar PIB do município:', error);
@@ -231,11 +224,9 @@ export const ibgeService = {
   // Buscar área territorial e população (SIDRA Tabela 4714 - funciona!)
   async getPiauiAreaAndPopulation() {
     try {
-      console.log('Buscando área e população do Piauí');
       // SIDRA Tabela 4714 - Área territorial, população e densidade
       const response = await fetch(`${SIDRA_BASE_URL}/t/4714/n3/22/p/2022`);
       const data = await response.json();
-      console.log('Área e população do Piauí:', data);
       return data;
     } catch (error) {
       console.error('Erro ao buscar área e população:', error);
@@ -246,11 +237,9 @@ export const ibgeService = {
   // Buscar área territorial e população por município (SIDRA Tabela 4714 - funciona!)
   async getMunicipalityAreaAndPopulation(municipalityCode) {
     try {
-      console.log(`Buscando área e população do município ${municipalityCode}`);
       // SIDRA Tabela 4714 - Área territorial, população e densidade
       const response = await fetch(`${SIDRA_BASE_URL}/t/4714/n6/${municipalityCode}/p/2022`);
       const data = await response.json();
-      console.log(`Área e população do município ${municipalityCode}:`, data);
       return data;
     } catch (error) {
       console.error('Erro ao buscar área e população do município:', error);
@@ -291,12 +280,7 @@ export const formatNumber = (number) => {
   
   if (isNaN(number)) return 'N/A';
   
-  if (number >= 1000000) {
-    return (number / 1000000).toFixed(1) + 'M';
-  } else if (number >= 1000) {
-    return (number / 1000).toFixed(1) + 'K';
-  }
-  
+  // Sempre exibir o número completo com separadores de milhares
   return number.toLocaleString('pt-BR');
 };
 
