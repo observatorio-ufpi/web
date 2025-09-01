@@ -87,7 +87,7 @@ function RevenueTableContainer() {
 
   const fetchTableData = (currentPage = page, currentLimit = limit) => {
     fetchData(selectedTable, groupType, {
-      selectedMunicipio,
+      codigoMunicipio: selectedMunicipio,
       territorioDeDesenvolvimentoMunicipio,
       faixaPopulacionalMunicipio,
       aglomeradoMunicipio,
@@ -120,7 +120,7 @@ function RevenueTableContainer() {
   };
 
   const handleFilterChange = (filters) => {
-    setSelectedMunicipio(filters.selectedMunicipio);
+    setSelectedMunicipio(filters.codigoMunicipio);
     setTerritorioDeDesenvolvimentoMunicipio(filters.territorioDeDesenvolvimentoMunicipio);
     setFaixaPopulacionalMunicipio(filters.faixaPopulacionalMunicipio);
     setAglomeradoMunicipio(filters.aglomeradoMunicipio);
@@ -133,7 +133,32 @@ function RevenueTableContainer() {
     setLoading(true);
     setPage(1);
     setHasInitialLoad(true);
-    fetchTableData();
+    
+    // Usar os valores dos filtros diretamente em vez de aguardar o estado ser atualizado
+    fetchData(selectedTable, groupType, {
+      codigoMunicipio: filters.codigoMunicipio,
+      territorioDeDesenvolvimentoMunicipio: filters.territorioDeDesenvolvimentoMunicipio,
+      faixaPopulacionalMunicipio: filters.faixaPopulacionalMunicipio,
+      aglomeradoMunicipio: filters.aglomeradoMunicipio,
+      gerenciaRegionalMunicipio: filters.gerenciaRegionalMunicipio,
+      anoInicial: filters.anoInicial,
+      anoFinal: filters.anoFinal,
+      page: 1,
+      limit: limit,
+    })
+      .then((response) => {
+        setApiData(response.data);
+        setLoading(false);
+        setPage(response.pagination.page);
+        setLimit(response.pagination.limit);
+        setTotalPages(response.pagination.totalPages || 1);
+      })
+      .catch((error) => {
+        console.error(error);
+        setError(error.message);
+        setLoading(false);
+        setTotalPages(1);
+      });
   };
 
   const handleGroupTypeChange = (event) => {

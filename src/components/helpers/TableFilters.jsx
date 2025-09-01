@@ -36,8 +36,8 @@ const FilterComponent = ({
   const [selectedMunicipioState, setSelectedMunicipio] = useState(
     selectedMunicipio ?
       {
-        value: findMunicipioCodigo(selectedMunicipio),
-        label: selectedMunicipio
+        value: selectedMunicipio, // selectedMunicipio já é o código agora
+        label: municipios[selectedMunicipio]?.nomeMunicipio || selectedMunicipio
       } :
       null
   );
@@ -48,10 +48,10 @@ const FilterComponent = ({
     faixaPopulacionalMunicipio ? { value: faixaPopulacionalMunicipio, label: FaixaPopulacional[faixaPopulacionalMunicipio] } : null
   );
   const [aglomeradoState, setAglomeradoMunicipio] = useState(
-    aglomeradoMunicipio ? { value: aglomeradoMunicipio, label: `Aglomerado ${aglomeradoMunicipio}` } : null
+    aglomeradoMunicipio && aglomeradoMunicipio !== 'undefined' ? { value: aglomeradoMunicipio, label: `Aglomerado ${aglomeradoMunicipio}` } : null
   );
   const [gerenciaState, setGerenciaRegionalMunicipio] = useState(
-    gerenciaRegionalMunicipio ? { value: gerenciaRegionalMunicipio, label: `Gerência ${gerenciaRegionalMunicipio}` } : null
+    gerenciaRegionalMunicipio && gerenciaRegionalMunicipio !== 'undefined' ? { value: gerenciaRegionalMunicipio, label: `Gerência ${gerenciaRegionalMunicipio}` } : null
   );
   const [anoInicialState, setAnoInicial] = useState(
     filters.anoInicial ? { value: filters.anoInicial, label: filters.anoInicial } : null
@@ -64,22 +64,22 @@ const FilterComponent = ({
     setSelectedMunicipio(
       selectedMunicipio ?
         {
-          value: findMunicipioCodigo(selectedMunicipio),
-          label: selectedMunicipio
+          value: selectedMunicipio, // selectedMunicipio já é o código agora
+          label: municipios[selectedMunicipio]?.nomeMunicipio || selectedMunicipio
         } :
         null
     );
     setTerritorioDeDesenvolvimentoMunicipio(territorioDeDesenvolvimentoMunicipio ? { value: territorioDeDesenvolvimentoMunicipio, label: Regioes[territorioDeDesenvolvimentoMunicipio] } : null);
     setFaixaPopulacionalMunicipio(faixaPopulacionalMunicipio ? { value: faixaPopulacionalMunicipio, label: FaixaPopulacional[faixaPopulacionalMunicipio] } : null);
-    setAglomeradoMunicipio(aglomeradoMunicipio ? { value: aglomeradoMunicipio, label: `Aglomerado ${aglomeradoMunicipio}` } : null);
-    setGerenciaRegionalMunicipio(gerenciaRegionalMunicipio ? { value: gerenciaRegionalMunicipio, label: `Gerência ${gerenciaRegionalMunicipio}` } : null);
+    setAglomeradoMunicipio(aglomeradoMunicipio && aglomeradoMunicipio !== 'undefined' ? { value: aglomeradoMunicipio, label: `Aglomerado ${aglomeradoMunicipio}` } : null);
+    setGerenciaRegionalMunicipio(gerenciaRegionalMunicipio && gerenciaRegionalMunicipio !== 'undefined' ? { value: gerenciaRegionalMunicipio, label: `Gerência ${gerenciaRegionalMunicipio}` } : null);
     setAnoInicial(anoInicial ? { value: anoInicial, label: anoInicial } : null);
     setAnoFinal(anoFinal ? { value: anoFinal, label: anoFinal } : null);
   }, [selectedMunicipio, territorioDeDesenvolvimentoMunicipio, faixaPopulacionalMunicipio, aglomeradoMunicipio, gerenciaRegionalMunicipio, anoInicial, anoFinal]);
 
   const handleSearch = () => {
     onFilterChange({
-      selectedMunicipio: selectedMunicipioState ? municipios[selectedMunicipioState.value]?.nomeMunicipio : null,
+      codigoMunicipio: selectedMunicipioState ? selectedMunicipioState.value : null,
       territorioDeDesenvolvimentoMunicipio: territorioState ? territorioState.value : null,
       faixaPopulacionalMunicipio: faixaState ? faixaState.value : null,
       aglomeradoMunicipio: aglomeradoState ? aglomeradoState.value : null,
@@ -95,15 +95,30 @@ const FilterComponent = ({
     label: municipios[codigo].nomeMunicipio,
   }));
 
-  const aglomeradoOptions = [...new Set(Object.values(municipios).map(m => m.aglomerado))].map(aglomerado => ({
-    value: aglomerado,
-    label: `Aglomerado ${aglomerado}`,
-  }));
+  const aglomeradoOptions = [...new Set(Object.values(municipios).map(m => m.aglomerado).filter(aglomerado => aglomerado && aglomerado !== 'undefined'))]
+    .sort((a, b) => a - b) // Ordenar numericamente
+    .map(aglomerado => ({
+      value: aglomerado,
+      label: `Aglomerado ${aglomerado}`,
+    }));
 
-  const gerenciaOptions = [...new Set(Object.values(municipios).map(m => m.gerenciaRegional))].map(gerencia => ({
-    value: gerencia,
-    label: `Gerência ${gerencia}`,
-  }));
+  const gerenciaOptions = [...new Set(
+    Object.values(municipios)
+      .map(m => m.gerencia)
+      .filter(gerencia => gerencia && gerencia !== 'undefined')
+      .flatMap(gerencia => {
+        // Se contém vírgula, separar em valores individuais
+        if (gerencia.includes(',')) {
+          return gerencia.split(',').map(g => g.trim());
+        }
+        return [gerencia];
+      })
+  )]
+    .sort((a, b) => a - b) // Ordenar numericamente
+    .map(gerencia => ({
+      value: gerencia,
+      label: `Gerência ${gerencia}`,
+    }));
 
   const anoOptions = Array.from({ length: 18 }, (_, i) => 2006 + i).map(ano => ({
     value: ano,
@@ -131,6 +146,7 @@ const FilterComponent = ({
             options={municipioOptions}
             placeholder="Município"
             size="small"
+            isClearable
           />
         </Grid>
 
@@ -142,6 +158,7 @@ const FilterComponent = ({
             options={Object.keys(Regioes).map(key => ({ value: key, label: Regioes[key] }))}
             placeholder="Território de Desenvolvimento"
             size="small"
+            isClearable
           />
         </Grid>
 
@@ -153,6 +170,7 @@ const FilterComponent = ({
             options={Object.keys(FaixaPopulacional).map(key => ({ value: key, label: FaixaPopulacional[key] }))}
             placeholder="Faixa Populacional"
             size="small"
+            isClearable
           />
         </Grid>
 
@@ -164,6 +182,7 @@ const FilterComponent = ({
             options={aglomeradoOptions}
             placeholder="Aglomerado"
             size="small"
+            isClearable
           />
         </Grid>
 
@@ -175,6 +194,8 @@ const FilterComponent = ({
             options={gerenciaOptions}
             placeholder="Gerência"
             size="small"
+            isSearchable={false}
+            isClearable
           />
         </Grid>
 
@@ -186,6 +207,7 @@ const FilterComponent = ({
             options={anoOptions}
             placeholder="Ano Inicial"
             size="small"
+            isClearable
           />
         </Grid>
 
@@ -196,6 +218,7 @@ const FilterComponent = ({
             onChange={setAnoFinal}
             options={anoOptions}
             size="small"
+            isClearable
           />
         </Grid>
 
