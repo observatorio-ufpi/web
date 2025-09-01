@@ -89,7 +89,7 @@ const StateRevenueTableContainer = () => {
                   { value: 'tabela12', label: 'Protocolo Complementar' }
                 ]}
                 placeholder="Selecione o tipo de tabela"
-                size="small"
+                size="xs"
               />
             </div>
           </div>

@@ -248,7 +248,7 @@ function FilterComponent() {
               }}
               options={typeOptions}
               placeholder="Selecione o tipo"
-              size="small"
+              size="xs"
             />
           </div>
 
@@ -287,7 +287,7 @@ function FilterComponent() {
                       }}
                       options={yearOptions}
                       placeholder="Ano Inicial"
-                      size="small"
+                      size="xs"
                     />
                   </div>
                   <div className="flex-1">
@@ -298,7 +298,7 @@ function FilterComponent() {
                       onChange={(selectedOption) => setEndYear(selectedOption.value)}
                       options={yearOptions.filter(option => option.value >= startYear)}
                       placeholder="Ano Final"
-                      size="small"
+                      size="xs"
                     />
                   </div>
                 </div>
@@ -311,7 +311,7 @@ function FilterComponent() {
                     onChange={(selectedOption) => setYear(selectedOption.value)}
                     options={yearOptions}
                     placeholder="Ano"
-                    size="small"
+                    size="xs"
                   />
                 </div>
               )}
@@ -329,7 +329,7 @@ function FilterComponent() {
               }}
               options={territoryOptions}
               placeholder="Território de Desenvolvimento"
-              size="small"
+              size="xs"
             />
           </div>
 
@@ -344,7 +344,7 @@ function FilterComponent() {
               }}
               options={faixaPopulacionalOptions}
               placeholder="Faixa Populacional"
-              size="small"
+              size="xs"
             />
           </div>
 
@@ -356,7 +356,7 @@ function FilterComponent() {
               onChange={(selectedOption) => setAglomerado(selectedOption ? selectedOption.value : '')}
               options={aglomeradoOptions}
               placeholder="Aglomerado"
-              size="small"
+              size="xs"
             />
           </div>
 
@@ -368,7 +368,7 @@ function FilterComponent() {
               onChange={(selectedOption) => setGerencia(selectedOption ? selectedOption.value : '')}
               options={gerenciaOptions}
               placeholder="Gerencia"
-              size="small"
+              size="xs"
             />
           </div>
 
@@ -380,7 +380,7 @@ function FilterComponent() {
               onChange={(selectedOption) => setCity(selectedOption ? selectedOption.value : '')}
               options={cityOptions}
               placeholder="Cidade"
-              size="small"
+              size="xs"
             />
           </div>
 
@@ -431,7 +431,7 @@ function FilterComponent() {
                       ? "Selecione 1 filtro"
                       : "Selecione até 2 filtros"
                 }
-                size="small"
+                size="xs"
               />
             </div>
             

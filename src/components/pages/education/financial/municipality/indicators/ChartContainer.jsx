@@ -15,8 +15,25 @@ import ResourcesApplicationControlCharts from "./ResourcesApplicationControlChar
 import RevenueCompositionCharts from "./RevenueCompositionCharts";
 import RpebCompositionCharts from "./RpebCompositionCharts";
 import FilterComponent from "../../../../../helpers/TableFilters";
+import Select from "../../../../../ui/Select";
 import { Loading } from "../../../../../ui";
 import { Typography } from "@mui/material";
+
+// Opções para os selects
+const indicatorOptions = [
+  { value: 'constitutionalLimitMde', label: 'Percentual aplicado em MDE' },
+  { value: 'expensesBasicEducationFundeb', label: 'Percentual do fundeb nos profissionais de educação básica' },
+  { value: 'revenueComposition', label: 'Composição das Receitas Impostos e Transferências Constitucionais e Legais [%]' },
+  { value: 'financingCapacity', label: 'Capacidade de Financiamento' },
+  { value: 'rpebComposition', label: 'Composição da Receita Potencial da Educação Básica [%]' },
+  { value: 'resourcesApplicationControl', label: 'Controle da Aplicação de Recursos' },
+  { value: 'educationExpenseComposition', label: 'Composição das Despesas em Educação [%]' },
+];
+
+const groupTypeOptions = [
+  { value: 'municipio', label: 'Município' },
+  { value: 'ano', label: 'Ano' },
+];
 
 const endpoints = {
   // Existing endpoints
@@ -735,12 +752,14 @@ function ChartContainer() {
   const handleTableChange = (event) => {
     setSelectedTable(event.target.value);
     setApiData(null);
+    setHasInitialLoad(false); // Reset para mostrar a mensagem de filtro
     // Não carrega dados automaticamente - aguarda o usuário filtrar
   };
 
   const handleGroupTypeChange = (event) => {
     setGroupType(event.target.value);
     setApiData(null);
+    setHasInitialLoad(false); // Reset para mostrar a mensagem de filtro
     // Não carrega dados automaticamente - aguarda o usuário filtrar
   };
 
@@ -790,56 +809,36 @@ function ChartContainer() {
     <div>
       <div className="app-container">
         <div className="filters-section">
-          <div className="selects-wrapper">
-            <div className="select-container">
-              <label htmlFor="tableSelect" className="select-label">
-                Selecione o indicador:
-              </label>
-              <select
-                id="tableSelect"
-                value={selectedTable}
-                onChange={handleTableChange}
-                className="select-box"
-              >
-                <option value="constitutionalLimitMde">
-                  Percentual aplicado em MDE
-                </option>
-                <option value="expensesBasicEducationFundeb">
-                  Percentual do fundeb nos profissionais de educação básica
-                </option>
-                <option value="revenueComposition">
-                  Composição das Receitas Impostos e Transferências
-                  Constitucionais e Legais [%]
-                </option>
-                <option value="financingCapacity">
-                  Capacidade de Financiamento
-                </option>
-                <option value="rpebComposition">
-                  Composição da Receita Potencial da Educação Básica [%]
-                </option>
-                <option value="resourcesApplicationControl">
-                  Controle da Aplicação de Recursos
-                </option>
-                <option value="educationExpenseComposition">
-                  Composição das Despesas em Educação [%]
-                </option>
-              </select>
-            </div>
+          <div 
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+              gap: '20px',
+              width: '100%',
+              marginBottom: '20px'
+            }}
+          >
+            <Select
+              label="Selecione o indicador:"
+              value={indicatorOptions.find(option => option.value === selectedTable)}
+              onChange={(option) => handleTableChange({ target: { value: option.value } })}
+              options={indicatorOptions}
+              placeholder="Selecione um indicador"
+              size="xs"
+              isClearable
+              fullWidth
+            />
 
-            <div className="select-container">
-              <label htmlFor="groupTypeSelect" className="select-label">
-                Tipo de Agrupamento:
-              </label>
-              <select
-                id="groupTypeSelect"
-                value={groupType}
-                onChange={handleGroupTypeChange}
-                className="select-box"
-              >
-                <option value="municipio">Município</option>
-                <option value="ano">Ano</option>
-              </select>
-            </div>
+            <Select
+              label="Tipo de Agrupamento:"
+              value={groupTypeOptions.find(option => option.value === groupType)}
+              onChange={(option) => handleGroupTypeChange({ target: { value: option.value } })}
+              options={groupTypeOptions}
+              placeholder="Selecione o tipo de agrupamento"
+              size="xs"
+              isClearable
+              fullWidth
+            />
           </div>
 
           <FilterComponent

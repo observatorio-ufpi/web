@@ -145,7 +145,7 @@ const FilterComponent = ({
             onChange={setSelectedMunicipio}
             options={municipioOptions}
             placeholder="Município"
-            size="small"
+            size="xs"
             isClearable
           />
         </Grid>
@@ -157,7 +157,7 @@ const FilterComponent = ({
             onChange={setTerritorioDeDesenvolvimentoMunicipio}
             options={Object.keys(Regioes).map(key => ({ value: key, label: Regioes[key] }))}
             placeholder="Território de Desenvolvimento"
-            size="small"
+            size="xs"
             isClearable
           />
         </Grid>
@@ -169,7 +169,7 @@ const FilterComponent = ({
             onChange={setFaixaPopulacionalMunicipio}
             options={Object.keys(FaixaPopulacional).map(key => ({ value: key, label: FaixaPopulacional[key] }))}
             placeholder="Faixa Populacional"
-            size="small"
+            size="xs"
             isClearable
           />
         </Grid>
@@ -181,7 +181,7 @@ const FilterComponent = ({
             onChange={setAglomeradoMunicipio}
             options={aglomeradoOptions}
             placeholder="Aglomerado"
-            size="small"
+            size="xs"
             isClearable
           />
         </Grid>
@@ -193,7 +193,7 @@ const FilterComponent = ({
             onChange={setGerenciaRegionalMunicipio}
             options={gerenciaOptions}
             placeholder="Gerência"
-            size="small"
+            size="xs"
             isSearchable={false}
             isClearable
           />
@@ -206,7 +206,7 @@ const FilterComponent = ({
             onChange={setAnoInicial}
             options={anoOptions}
             placeholder="Ano Inicial"
-            size="small"
+            size="xs"
             isClearable
           />
         </Grid>
@@ -217,7 +217,8 @@ const FilterComponent = ({
             value={anoFinalState}
             onChange={setAnoFinal}
             options={anoOptions}
-            size="small"
+            placeholder="Ano Final"
+            size="xs"
             isClearable
           />
         </Grid>
