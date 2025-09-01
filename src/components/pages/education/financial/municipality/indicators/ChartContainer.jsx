@@ -144,6 +144,7 @@ function ChartContainer() {
   });
 
   const fetchTableData = (customFilters = null) => {
+    if (loading) return; // Evita múltiplas chamadas simultâneas
     setLoading(true);
 
     // Usar filtros customizados se fornecidos, senão usar os estados
@@ -733,16 +734,14 @@ function ChartContainer() {
 
   const handleTableChange = (event) => {
     setSelectedTable(event.target.value);
-    setLoading(true);
     setApiData(null);
-    fetchTableData();
+    // Não carrega dados automaticamente - aguarda o usuário filtrar
   };
 
   const handleGroupTypeChange = (event) => {
     setGroupType(event.target.value);
-    setLoading(true);
     setApiData(null);
-    fetchTableData();
+    // Não carrega dados automaticamente - aguarda o usuário filtrar
   };
 
   const handleFilterChange = (filters) => {
