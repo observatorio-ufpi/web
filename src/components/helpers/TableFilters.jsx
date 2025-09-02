@@ -1,4 +1,4 @@
-import { Button, Grid, Box } from '@mui/material';
+import { Button } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 import { Select } from '../ui';
 import { FaixaPopulacional, municipios, Regioes } from '../../utils/municipios.mapping';
@@ -126,20 +126,10 @@ const FilterComponent = ({
   }));
 
   return (
-    <Box sx={{ margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
-      <Grid 
-        container 
-        spacing={2} 
-        sx={{ 
-          marginTop: 2,
-          display: 'grid',
-          gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' },
-          gridTemplateRows: 'auto auto auto',
-          gap: 2,
-        }}
-      >
+    <div className="flex flex-col gap-4 p-0 m-0">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
         {/* Município - Primeira coluna, primeira linha */}
-        <Grid item sx={{ gridColumn: 1, gridRow: 1 }}>
+        <div className="md:col-span-1">
           <Select
             value={selectedMunicipioState}
             onChange={setSelectedMunicipio}
@@ -148,10 +138,10 @@ const FilterComponent = ({
             size="xs"
             isClearable
           />
-        </Grid>
+        </div>
 
         {/* Território - Segunda e terceira colunas, primeira linha */}
-        <Grid item sx={{ gridColumn: { xs: 1, md: '2 / span 2' }, gridRow: 1 }}>
+        <div className="md:col-span-2">
           <Select
             value={territorioState}
             onChange={setTerritorioDeDesenvolvimentoMunicipio}
@@ -160,10 +150,10 @@ const FilterComponent = ({
             size="xs"
             isClearable
           />
-        </Grid>
+        </div>
 
         {/* Faixa Populacional - Primeira coluna, segunda linha */}
-        <Grid item sx={{ gridColumn: 1, gridRow: 2 }}>
+        <div className="md:col-span-1">
           <Select
             value={faixaState}
             onChange={setFaixaPopulacionalMunicipio}
@@ -172,10 +162,10 @@ const FilterComponent = ({
             size="xs"
             isClearable
           />
-        </Grid>
+        </div>
 
         {/* Aglomerado - Segunda coluna, segunda linha */}
-        <Grid item sx={{ gridColumn: 2, gridRow: 2 }}>
+        <div className="md:col-span-1">
           <Select
             value={aglomeradoState}
             onChange={setAglomeradoMunicipio}
@@ -184,10 +174,10 @@ const FilterComponent = ({
             size="xs"
             isClearable
           />
-        </Grid>
+        </div>
 
         {/* Gerência - Terceira coluna, segunda linha */}
-        <Grid item sx={{ gridColumn: 3, gridRow: 2 }}>
+        <div className="md:col-span-1">
           <Select
             value={gerenciaState}
             onChange={setGerenciaRegionalMunicipio}
@@ -197,10 +187,10 @@ const FilterComponent = ({
             isSearchable={false}
             isClearable
           />
-        </Grid>
+        </div>
 
         {/* Ano Inicial - Primeira coluna, terceira linha */}
-        <Grid item sx={{ gridColumn: 1, gridRow: 3 }}>
+        <div className="md:col-span-1">
           <Select
             value={anoInicialState}
             onChange={setAnoInicial}
@@ -209,10 +199,10 @@ const FilterComponent = ({
             size="xs"
             isClearable
           />
-        </Grid>
+        </div>
 
         {/* Ano Final - Segunda coluna, terceira linha */}
-        <Grid item sx={{ gridColumn: 2, gridRow: 3 }}>
+        <div className="md:col-span-1">
           <Select
             value={anoFinalState}
             onChange={setAnoFinal}
@@ -221,31 +211,20 @@ const FilterComponent = ({
             size="xs"
             isClearable
           />
-        </Grid>
+        </div>
 
         {/* Botão Filtrar - Terceira coluna, terceira linha */}
-        <Grid item sx={{ 
-          gridColumn: 3, 
-          gridRow: 3, 
-          display: 'flex', 
-          justifyContent: 'flex-end', 
-          alignItems: 'flex-end' 
-        }}>
+        <div className="md:col-span-1 flex justify-end items-end">
           <Button
             variant="contained"
             onClick={handleSearch}
-            sx={{
-              minWidth: '120px',
-              minWidth: { xs: '100%', sm: '100%', md: 'auto' },
-              padding: { xs: '6px 20px', sm: '6px 20px', md: '6px 16px' },
-              marginTop: { xs: '5px', sm: '0' },
-            }}
+            className="w-full md:w-auto min-w-[120px] px-4 py-1.5"
           >
             Filtrar
           </Button>
-        </Grid>
-      </Grid>
-    </Box>
+        </div>
+      </div>
+    </div>
   );
 };
 

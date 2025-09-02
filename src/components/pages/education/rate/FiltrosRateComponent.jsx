@@ -213,10 +213,10 @@ function FiltrosRateComponent() {
 
   return (
     <div className="app-container">
-      <div className="filter-container">
-        <div className="filter-grid">
+      <div className="flex flex-col gap-4 p-0 m-0">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
           {/* Tipo - Primeira coluna, primeira linha */}
-          <div className="filter-municipio">
+          <div className="md:col-span-1">
             <label htmlFor="typeSelect" className="block text-sm font-medium text-gray-700 mb-1">Tipo:</label>
             <Select
               id="typeSelect"
@@ -232,8 +232,8 @@ function FiltrosRateComponent() {
           </div>
 
           {/* Ano - Segunda e terceira colunas, primeira linha */}
-          <div className="filter-territorio">
-            <div className="flex items-center gap-4">
+          <div className="md:col-span-2">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
               <label className="flex items-center gap-2 cursor-pointer whitespace-nowrap">
                 <input
                   type="checkbox"
@@ -248,7 +248,7 @@ function FiltrosRateComponent() {
               </label>
             
               {displayHistorical ? (
-                <div className="flex gap-3 flex-1">
+                <div className="flex flex-col sm:flex-row gap-3 flex-1 w-full">
                   <div className="flex-1">
                     <label htmlFor="startYearSelect" className="block text-sm font-medium text-gray-700 mb-1">Ano Inicial:</label>
                     <Select
@@ -278,7 +278,7 @@ function FiltrosRateComponent() {
                   </div>
                 </div>
               ) : (
-                <div className="flex-1">
+                <div className="flex-1 w-full">
                   <label htmlFor="yearSelect" className="block text-sm font-medium text-gray-700 mb-1">Ano:</label>
                   <Select
                     id="yearSelect"
@@ -294,7 +294,7 @@ function FiltrosRateComponent() {
           </div>
 
           {/* Filtros Múltiplos - Primeira coluna, segunda linha */}
-          <div className="filter-faixa">
+          <div className="md:col-span-1">
             <Select
               id="multiFilterSelect"
               value={selectedFilters}
@@ -333,7 +333,7 @@ function FiltrosRateComponent() {
           </div>
 
           {/* Instruções - Segunda e terceira colunas, segunda linha */}
-          <div className="filter-aglomerado">
+          <div className="md:col-span-2">
             <Box sx={{ 
               width: '100%',
               color: theme.palette.text.secondary,
@@ -359,14 +359,14 @@ function FiltrosRateComponent() {
             </Box>
           </div>
 
-          {/* Botões - Terceira coluna, terceira linha (mais à direita) */}
-          <div className="filter-gerencia">
-            <div className="flex gap-3 justify-end">
+          {/* Botões - Primeira coluna, terceira linha */}
+          <div className="md:col-span-1 flex justify-start">
+            <div className="flex flex-col sm:flex-row gap-3">
               <Button
                 variant="contained"
                 color="primary"
                 onClick={handleFilterClick}
-                className="filter-button"
+                className="w-full sm:w-auto"
               >
                 Filtrar
               </Button>
@@ -378,7 +378,7 @@ function FiltrosRateComponent() {
                 }}
                 variant="contained"
                 onClick={handleClearFilters}
-                className="filter-button"
+                className="w-full sm:w-auto"
               >
                 Limpar
               </Button>
