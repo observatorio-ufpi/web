@@ -75,21 +75,22 @@ const StateRevenueTableContainer = () => {
                 value={{ value: selectedTable, label: stateTableNames[selectedTable] }}
                 onChange={(selectedOption) => setSelectedTable(selectedOption.value)}
                 options={[
-                  { value: 'tabela1', label: 'Impostos Próprios' },
-                  { value: 'tabela2', label: 'Receita líquida de impostos próprios do Piauí' },
-                  { value: 'tabela3', label: 'Receita de transferências constitucionais e legais' },
-                  { value: 'tabela4', label: 'Receita Líquida de Impostos' },
-                  { value: 'tabela5', label: 'Receitas adicionais da educação' },
-                  { value: 'tabela6', label: 'Composição do Fundef/Fundeb' },
-                  { value: 'tabela7', label: 'Composição da complementação do Fundef/Fundeb' },
-                  { value: 'tabela8', label: 'Limite constitucional em MDE' },
-                  { value: 'tabela9', label: 'Despesas com profissionais da educação básica do Fundef/Fundeb' },
-                  { value: 'tabela10', label: 'Despesas em MDE por área de atuação' },
-                  { value: 'tabela11', label: 'Receita Potencial Mínima vinculada à Educação Básica' },
-                  { value: 'tabela12', label: 'Protocolo Complementar' }
+                  { value: 'tabela1', label: "Receita bruta de impostos próprios do Piauí" },
+                  { value: 'tabela2', label: "Receita líquida de impostos próprios do Piauí" },
+                  { value: 'tabela3', label: "Receita bruta de transferências constitucionais recebidas pelo Piauí" },
+                  { value: 'tabela4', label: "Receita líquida de transferências constitucionais recebidas pelo Piauí" },
+                  { value: 'tabela5', label: "Receita líquida resultante de impostos e transferências constitucionais no Piauí" },
+                  { value: 'tabela6', label: "Receitas adicionais para o financiamento do ensino no Piauí" },
+                  { value: 'tabela7', label: "Composição do Fundeb no Piauí" },
+                  { value: 'tabela8', label: "Composição da complementação do Fundeb no Piauí" },
+                  { value: 'tabela9', label: "Limite constitucional em MDE no Piauí " },
+                  { value: 'tabela10', label: "Despesas com profissionais da educação básica com o Fundeb no Piauí" },
+                  { value: 'tabela11', label: "Despesas em MDE por área de atuação no Piauí" },
+                  { value: 'tabela12', label: "Receita Potencial Mínima vinculada à Educação Básica (RPEB)" },
+                  { value: 'tabela13', label: "Protocolo Complementar" },
                 ]}
                 placeholder="Selecione o tipo de tabela"
-                size="xs"
+                size="small"
               />
             </div>
           </div>

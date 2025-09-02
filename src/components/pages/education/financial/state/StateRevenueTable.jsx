@@ -66,6 +66,13 @@ const StateRevenueTable = ({ csvData, tableName }) => {
       return;
     }
 
+    // Verificar se o conteúdo parece ser CSV (não JavaScript)
+    if (csvText.includes('import ') || csvText.includes('window.') || csvText.includes('injectIntoGlobalHook')) {
+      console.error('csvText parece conter código JavaScript em vez de dados CSV:', csvText);
+      setData({ types: [], years: [], valuesByTypeAndYear: {} });
+      return;
+    }
+
     // Remover qualquer conteúdo HTML que possa estar no texto
     const cleanText = csvText.replace(/<[^>]*>/g, '');
     
@@ -106,16 +113,23 @@ const StateRevenueTable = ({ csvData, tableName }) => {
       return result;
     };
     
-    // Analisar a primeira linha para obter os anos
+    // Analisar a primeira linha para obter os tipos de receita (cabeçalhos das colunas)
     const headerParts = parseCSVLine(lines[0]);
-    headerParts.shift(); // Remover o primeiro item (célula vazia ou "Tipo")
-    const years = headerParts;
+    console.log('headerParts', headerParts);
     
-    console.log('Anos extraídos:', years);
+    // O primeiro item é "Ano", os demais são os tipos de receita
+    const types = headerParts.slice(1); // Remover "Ano" e pegar os tipos
     
-    // Processar linhas de dados (tipos de impostos)
-    const types = [];
+    console.log('Tipos extraídos:', types);
+    
+    // Processar linhas de dados para obter os anos e valores
+    const years = [];
     const valuesByTypeAndYear = {};
+    
+    // Inicializar objeto para cada tipo
+    types.forEach(type => {
+      valuesByTypeAndYear[type] = {};
+    });
     
     for (let i = 1; i < lines.length; i++) {
       const values = parseCSVLine(lines[i]);
@@ -123,16 +137,13 @@ const StateRevenueTable = ({ csvData, tableName }) => {
       // Verificar se a linha tem dados suficientes
       if (values.length <= 1) continue;
       
-      // O primeiro valor é o tipo de imposto
-      const type = values[0].replace(/^"|"$/g, ''); // Remover aspas se existirem
-      types.push(type);
+      // O primeiro valor é o ano
+      const year = values[0].replace(/^"|"$/g, ''); // Remover aspas se existirem
+      years.push(year);
       
-      // Inicializar objeto para este tipo
-      valuesByTypeAndYear[type] = {};
-      
-      // Processar valores para cada ano
-      for (let j = 0; j < years.length; j++) {
-        const year = years[j];
+      // Processar valores para cada tipo de receita
+      for (let j = 0; j < types.length; j++) {
+        const type = types[j];
         const value = values[j + 1];
         
         // Converter para número, preservando o valor completo
@@ -152,6 +163,7 @@ const StateRevenueTable = ({ csvData, tableName }) => {
       }
     }
     
+    console.log('Anos processados:', years);
     console.log('Tipos processados:', types);
     console.log('Valores por tipo e ano:', valuesByTypeAndYear);
     
