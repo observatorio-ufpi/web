@@ -45,7 +45,7 @@ const CenteredTableCell = styled(TableCell)(({ theme }) => ({
   verticalAlign: 'middle',
 }));
 
-const StateRevenueTable = ({ csvData, tableName }) => {
+const StateRevenueTable = ({ csvData, tableName, startYear, endYear }) => {
   const [data, setData] = useState({
     types: [],
     years: [],
@@ -56,7 +56,7 @@ const StateRevenueTable = ({ csvData, tableName }) => {
     if (csvData) {
       parseCSVData(csvData);
     }
-  }, [csvData]);
+  }, [csvData]); // Removido startYear e endYear das dependências
 
   const parseCSVData = (csvText) => {
     // Verificar se csvText é uma string
@@ -139,26 +139,31 @@ const StateRevenueTable = ({ csvData, tableName }) => {
       
       // O primeiro valor é o ano
       const year = values[0].replace(/^"|"$/g, ''); // Remover aspas se existirem
-      years.push(year);
+      const yearNum = parseInt(year);
       
-      // Processar valores para cada tipo de receita
-      for (let j = 0; j < types.length; j++) {
-        const type = types[j];
-        const value = values[j + 1];
+      // Filtrar por ano inicial e final
+      if (yearNum >= startYear && yearNum <= endYear) {
+        years.push(year);
         
-        // Converter para número, preservando o valor completo
-        if (value) {
-          // Remover caracteres não numéricos, exceto ponto, vírgula e hífen
-          const cleanValue = value.replace(/[^\d.,-]/g, '');
+        // Processar valores para cada tipo de receita
+        for (let j = 0; j < types.length; j++) {
+          const type = types[j];
+          const value = values[j + 1];
           
-          // Substituir vírgula por ponto para conversão correta
-          // Importante: no Brasil, usamos vírgula como separador decimal
-          const normalizedValue = cleanValue.replace(/\./g, '').replace(/,/g, '.');
-          
-          const numValue = parseFloat(normalizedValue);
-          valuesByTypeAndYear[type][year] = isNaN(numValue) ? value : numValue;
-        } else {
-          valuesByTypeAndYear[type][year] = null;
+          // Converter para número, preservando o valor completo
+          if (value) {
+            // Remover caracteres não numéricos, exceto ponto, vírgula e hífen
+            const cleanValue = value.replace(/[^\d.,-]/g, '');
+            
+            // Substituir vírgula por ponto para conversão correta
+            // Importante: no Brasil, usamos vírgula como separador decimal
+            const normalizedValue = cleanValue.replace(/\./g, '').replace(/,/g, '.');
+            
+            const numValue = parseFloat(normalizedValue);
+            valuesByTypeAndYear[type][year] = isNaN(numValue) ? value : numValue;
+          } else {
+            valuesByTypeAndYear[type][year] = null;
+          }
         }
       }
     }
@@ -188,7 +193,7 @@ const StateRevenueTable = ({ csvData, tableName }) => {
     
     const ws = XLSX.utils.aoa_to_sheet(wsData);
     XLSX.utils.book_append_sheet(wb, ws, 'Dados do Estado');
-    const fileName = `${tableName}.xlsx`;
+    const fileName = `${tableName}_${startYear}-${endYear}.xlsx`;
     XLSX.writeFile(wb, fileName);
   };
 
@@ -253,7 +258,7 @@ const StateRevenueTable = ({ csvData, tableName }) => {
     });
     
     // Salvar PDF
-    doc.save(`${tableName}.pdf`);
+    doc.save(`${tableName}_${startYear}-${endYear}.pdf`);
   };
 
   return (

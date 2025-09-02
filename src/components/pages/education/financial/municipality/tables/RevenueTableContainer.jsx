@@ -363,11 +363,11 @@ function RevenueTableContainer() {
             }}
           >
             <Select
-              label="Tipo de Imposto:"
+              label="Tipo de Tabela:"
               value={tableOptions.find(option => option.value === selectedTable)}
               onChange={(option) => handleTableChange({ target: { value: option.value } })}
               options={tableOptions}
-              placeholder="Selecione o tipo de imposto"
+              placeholder="Selecione o tipo de tabela"
               size="xs"
               isClearable
               fullWidth
