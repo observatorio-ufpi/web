@@ -16,6 +16,7 @@ const FinancingCapacityCharts = ({ data }) => {
         processDataFunction={processRpebFinancingCapacity}
         title="Receita Potencial mínima vinculada para a Educação Básica (RPEb) [R$]"
         data={data.composicaoRpebFinanciamento}
+        enableMonetaryCorrection={true}
       />
 
       <ChartComponent

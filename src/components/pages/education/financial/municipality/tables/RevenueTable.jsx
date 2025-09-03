@@ -9,16 +9,28 @@ import TableCell from "@mui/material/TableCell";
 import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
-import { ThemeProvider, createTheme, styled } from "@mui/material/styles";
-import React from "react";
+import { ThemeProvider, createTheme, styled, useTheme } from "@mui/material/styles";
+import React, { useState, useEffect, useMemo } from "react";
 import * as XLSX from "xlsx";
 import { municipios } from "../../../../../../utils/municipios.mapping";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import Switch from "@mui/material/Switch";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { Box, Typography, CircularProgress } from "@mui/material";
+import ptBR from "date-fns/locale/pt-BR";
+import {
+  fetchIPCAData,
+  calculateMonetaryCorrection,
+  getCurrentDate,
+} from "../../../../../../utils/bacenApi";
 
 const theme = createTheme({
   palette: {
     background: {
-      default: "#f0f0f0",
-      tableHeader: "#cccccc",
+      default: '#f0f0f0',
+      tableHeader: '#cccccc',
     },
   },
   typography: {
@@ -53,16 +65,99 @@ const RevenueTable = ({
   tableName,
   keyTable,
   groupType,
+  enableMonetaryCorrection = false,
 }) => {
-  let rows;
-  let typeToRowToValue;
+  const globalTheme = useTheme();
+  const [useMonetaryCorrection, setUseMonetaryCorrection] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [targetDate, setTargetDate] = useState(new Date());
+  const [correctedData, setCorrectedData] = useState(null);
 
-  ({ rows, typeToRowToValue } = transformDataFunction(
-    data,
-    standardizeTypeFunction
-  ));
+  // Usar useMemo para estabilizar os dados processados
+  const { rows, typeToRowToValue, types } = useMemo(() => {
+    const { rows: processedRows, typeToRowToValue: processedTypeToRowToValue } = transformDataFunction(
+      data,
+      standardizeTypeFunction
+    );
+    const processedTypes = Object.keys(tableMapping);
+    
+    return {
+      rows: processedRows,
+      typeToRowToValue: processedTypeToRowToValue,
+      types: processedTypes
+    };
+  }, [data, transformDataFunction, standardizeTypeFunction, tableMapping]);
 
-  const types = Object.keys(tableMapping);
+  // Aplicar correção monetária quando necessário
+  useEffect(() => {
+    const applyCorrection = async () => {
+      if (!useMonetaryCorrection || !enableMonetaryCorrection || !typeToRowToValue) {
+        setCorrectedData(null);
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        
+        // Obter anos dos dados
+        const years = [];
+        if (groupType === "ano") {
+          years.push(...rows);
+        } else {
+          const firstType = types[0];
+          if (firstType && typeToRowToValue[firstType]) {
+            years.push(...Object.keys(typeToRowToValue[firstType]));
+          }
+        }
+
+        const uniqueYears = [...new Set(years)].filter(Boolean).sort();
+        if (uniqueYears.length === 0) {
+          setLoading(false);
+          return;
+        }
+
+        const startDate = `01/01/${Math.min(...uniqueYears)}`;
+        const formattedTargetDate = targetDate.toLocaleDateString("pt-BR");
+
+        // Buscar dados do IPCA
+        const ipcaData = await fetchIPCAData(startDate, formattedTargetDate);
+
+        // Aplicar correção monetária aos dados ORIGINAIS
+        const corrected = {};
+        
+        Object.keys(typeToRowToValue).forEach(type => {
+          corrected[type] = {};
+          Object.keys(typeToRowToValue[type]).forEach(key => {
+            const originalValue = typeToRowToValue[type][key];
+            if (typeof originalValue === 'number' && originalValue > 0) {
+              const year = groupType === "ano" ? key : key;
+              const originalDate = `01/01/${year}`;
+              corrected[type][key] = calculateMonetaryCorrection(
+                originalValue,
+                originalDate,
+                formattedTargetDate,
+                ipcaData
+              );
+            } else {
+              corrected[type][key] = originalValue;
+            }
+          });
+        });
+
+        setCorrectedData(corrected);
+      } catch (error) {
+        console.error("Erro ao aplicar correção monetária:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    applyCorrection();
+  }, [useMonetaryCorrection, enableMonetaryCorrection, targetDate, groupType]);
+
+  // Usar dados corrigidos se disponíveis, senão usar dados originais
+  const finalDisplayData = correctedData || typeToRowToValue;
 
   const downloadExcel = () => {
     if (groupType === "municipio") {
@@ -74,10 +169,10 @@ const RevenueTable = ({
             row,
             ...types.map((type) => {
               if (
-                typeToRowToValue[type] &&
-                typeToRowToValue[type][row] !== undefined
+                finalDisplayData[type] &&
+                finalDisplayData[type][row] !== undefined
               ) {
-                return typeToRowToValue[type][row];
+                return finalDisplayData[type][row];
               } else {
                 return "-";
               }
@@ -100,10 +195,10 @@ const RevenueTable = ({
             municipios[row]?.nomeMunicipio,
             ...types.map((type) => {
               if (
-                typeToRowToValue[type] &&
-                typeToRowToValue[type][row] !== undefined
+                finalDisplayData[type] &&
+                finalDisplayData[type][row] !== undefined
               ) {
-                return typeToRowToValue[type][row];
+                return finalDisplayData[type][row];
               } else {
                 return "-";
               }
@@ -132,10 +227,10 @@ const RevenueTable = ({
           : `${row}`,
         ...types.map((type) => {
           if (
-            typeToRowToValue[type] &&
-            typeToRowToValue[type][row] !== undefined
+            finalDisplayData[type] &&
+            finalDisplayData[type][row] !== undefined
           ) {
-            return typeToRowToValue[type][row].toLocaleString("pt-BR", {
+            return finalDisplayData[type][row].toLocaleString("pt-BR", {
               style: "currency",
               currency: "BRL",
             });
@@ -176,10 +271,103 @@ const RevenueTable = ({
     doc.save(`${tableName}_${keyTable}.pdf`);
   };
 
+  const handleMonetaryCorrectionToggle = (event) => {
+    setUseMonetaryCorrection(event.target.checked);
+  };
+
+  const handleDateChange = (newDate) => {
+    setTargetDate(newDate);
+  };
+
   return (
     <ThemeProvider theme={theme}>
       <div>
-        {" "}
+        {/* Controles de correção monetária */}
+        {enableMonetaryCorrection && (
+          <Box sx={{
+            display: 'flex',
+            justifyContent: 'flex-end',
+            alignItems: 'center',
+            marginBottom: '20px',
+            padding: '10px',
+            borderRadius: '4px',
+          }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={useMonetaryCorrection}
+                    onChange={handleMonetaryCorrectionToggle}
+                      sx={{
+                       '& .MuiSwitch-switchBase.Mui-checked': {
+                         color: globalTheme.palette.primary.main,
+                       },
+                       '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                         backgroundColor: globalTheme.palette.primary.main,
+                       },
+                     }}
+                  />
+                }
+                label="Correção Monetária"
+                sx={{ marginRight: 0 }}
+              />
+              {useMonetaryCorrection && (
+                <LocalizationProvider
+                  dateAdapter={AdapterDateFns}
+                  adapterLocale={ptBR}
+                >
+                  <DatePicker
+                    label="Data de referência"
+                    value={targetDate}
+                    onChange={handleDateChange}
+                    format="dd/MM/yyyy"
+                    slotProps={{ 
+                      textField: { 
+                        size: "small",
+                                                 sx: {
+                           '& .MuiOutlinedInput-root': {
+                             '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                               borderColor: globalTheme.palette.primary.main,
+                             },
+                           },
+                           '& .MuiInputLabel-root': {
+                             '&.Mui-focused': {
+                               color: globalTheme.palette.primary.main,
+                             },
+                           },
+                           '& .MuiInputBase-input': {
+                             '&::selection': {
+                               backgroundColor: globalTheme.palette.primary.light,
+                               color: 'white',
+                             },
+                             '&::-moz-selection': {
+                               backgroundColor: globalTheme.palette.primary.light,
+                               color: 'white',
+                             },
+                           },
+                           '& .MuiInputBase-input:focus': {
+                             '&::selection': {
+                               backgroundColor: globalTheme.palette.primary.light,
+                               color: 'white',
+                             },
+                           },
+                         },
+                      } 
+                    }}
+                  />
+                </LocalizationProvider>
+              )}
+            </Box>
+          </Box>
+        )}
+        
+        {loading && (
+          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', height: '100px' }}>
+            <CircularProgress />
+            <Typography sx={{ ml: 2 }}>Aplicando correção monetária...</Typography>
+          </Box>
+        )}
+        
         {/* Adiciona margem nas laterais */}
         <Paper sx={{ backgroundColor: theme.palette.background.default }}>
           <TableContainer
@@ -212,9 +400,9 @@ const RevenueTable = ({
                     </BoldTableCell>
                     {types.map((type) => (
                       <CenteredTableCell key={type} align="center">
-                        {typeToRowToValue[type] &&
-                        typeToRowToValue[type][row] !== undefined
-                          ? typeToRowToValue[type][row].toLocaleString(
+                        {finalDisplayData[type] &&
+                        finalDisplayData[type][row] !== undefined
+                          ? finalDisplayData[type][row].toLocaleString(
                               "pt-BR",
                               { style: "currency", currency: "BRL" }
                             )

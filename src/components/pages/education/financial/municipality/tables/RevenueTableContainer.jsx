@@ -135,9 +135,9 @@ function RevenueTableContainer() {
 
   const handleTableChange = (event) => {
     setSelectedTable(event.target.value);
-    setLoading(true);
     setApiData(null);
-    fetchTableData();
+    setHasInitialLoad(false); // Reset para mostrar a mensagem de filtro
+    // Não carrega dados automaticamente - aguarda o usuário filtrar
   };
 
   const handleFilterChange = (filters) => {
@@ -184,9 +184,9 @@ function RevenueTableContainer() {
 
   const handleGroupTypeChange = (event) => {
     setGroupType(event.target.value);
-    setLoading(true);
     setApiData(null);
-    fetchTableData();
+    setHasInitialLoad(false); // Reset para mostrar a mensagem de filtro
+    // Não carrega dados automaticamente - aguarda o usuário filtrar
   };
 
   const downloadAllTables = () => {
@@ -504,6 +504,7 @@ function RevenueTableContainer() {
                             tableName="Impostos Próprios"
                             keyTable={key}
                             groupType={groupType}
+                            enableMonetaryCorrection={true}
                           />
                         </div>
                       )}
@@ -523,6 +524,7 @@ function RevenueTableContainer() {
                             tableName="Receita de transferências constitucionais e legais"
                             keyTable={key}
                             groupType={groupType}
+                            enableMonetaryCorrection={true}
                           />
                         </div>
                       )}
@@ -542,6 +544,7 @@ function RevenueTableContainer() {
                             tableName="Receita Líquida de Impostos do Município"
                             keyTable={key}
                             groupType={groupType}
+                            enableMonetaryCorrection={true}
                           />
                         </div>
                       )}
@@ -563,6 +566,7 @@ function RevenueTableContainer() {
                             tableName="Receitas adicionais da educação no Município"
                             keyTable={key}
                             groupType={groupType}
+                            enableMonetaryCorrection={true}
                           />
                         </div>
                       )}

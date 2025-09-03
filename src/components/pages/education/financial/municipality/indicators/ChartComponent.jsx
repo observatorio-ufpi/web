@@ -8,7 +8,7 @@ import Switch from "@mui/material/Switch";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import { Box, Typography, CircularProgress } from "@mui/material";
+import { Box, Typography, CircularProgress, useTheme } from "@mui/material";
 import ptBR from "date-fns/locale/pt-BR";
 import {
   fetchIPCAData,
@@ -21,7 +21,9 @@ const ChartComponent = ({
   processDataFunction,
   title,
   data,
+  enableMonetaryCorrection = false,
 }) => {
+  const theme = useTheme();
   const [chartData, setChartData] = useState({
     labels: [],
     datasets: [],
@@ -143,33 +145,74 @@ const ChartComponent = ({
         width: '100%',
       }}>
         <Typography variant="h6" component="h3">{title}</Typography>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-          <FormControlLabel
-            control={
-              <Switch
-                checked={useMonetaryCorrection}
-                onChange={handleMonetaryCorrectionToggle}
-                color="primary"
-              />
-            }
-            label="Correção Monetária"
-            sx={{ marginRight: 0 }}
-          />
-          {useMonetaryCorrection && (
-            <LocalizationProvider
-              dateAdapter={AdapterDateFns}
-              adapterLocale={ptBR}
-            >
-              <DatePicker
-                label="Data de referência"
-                value={targetDate}
-                onChange={handleDateChange}
-                format="dd/MM/yyyy"
-                slotProps={{ textField: { size: "small" } }}
-              />
-            </LocalizationProvider>
-          )}
-        </Box>
+        {enableMonetaryCorrection && (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={useMonetaryCorrection}
+                  onChange={handleMonetaryCorrectionToggle}
+                  sx={{
+                    '& .MuiSwitch-switchBase.Mui-checked': {
+                      color: theme.palette.primary.main,
+                    },
+                    '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                      backgroundColor: theme.palette.primary.main,
+                    },
+                  }}
+                />
+              }
+              label="Correção Monetária"
+              sx={{ marginRight: 0 }}
+            />
+            {useMonetaryCorrection && (
+              <LocalizationProvider
+                dateAdapter={AdapterDateFns}
+                adapterLocale={ptBR}
+              >
+                <DatePicker
+                  label="Data de referência"
+                  value={targetDate}
+                  onChange={handleDateChange}
+                  format="dd/MM/yyyy"
+                  slotProps={{ 
+                    textField: { 
+                      size: "small",
+                          sx: {
+                         '& .MuiOutlinedInput-root': {
+                           '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                             borderColor: theme.palette.primary.main,
+                           },
+                         },
+                         '& .MuiInputLabel-root': {
+                           '&.Mui-focused': {
+                             color: theme.palette.primary.main,
+                           },
+                         },
+                         '& .MuiInputBase-input': {
+                           '&::selection': {
+                             backgroundColor: theme.palette.primary.light,
+                             color: 'white',
+                           },
+                           '&::-moz-selection': {
+                             backgroundColor: theme.palette.primary.light,
+                             color: 'white',
+                           },
+                         },
+                         '& .MuiInputBase-input:focus': {
+                           '&::selection': {
+                             backgroundColor: theme.palette.primary.light,
+                             color: 'white',
+                           },
+                         },
+                       },
+                    } 
+                  }}
+                />
+              </LocalizationProvider>
+            )}
+          </Box>
+        )}
       </Box>
       {loading ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', height: '200px' }}>
