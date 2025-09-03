@@ -151,7 +151,7 @@ function StateIndicatorsContainer() {
                 color: theme.palette.primary.main
               }}
             >
-              Selecione o indicador desejado e clique em "Carregar Indicadores" para visualizar os dados.
+              Selecione o indicador desejado e clique em "Filtrar" para visualizar os dados.
             </Typography>
           )}
 
