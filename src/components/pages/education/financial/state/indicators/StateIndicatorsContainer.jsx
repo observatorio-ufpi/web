@@ -79,63 +79,45 @@ function StateIndicatorsContainer() {
     <div>
       <div className="app-container">
         <div className="filters-section">
-          <div 
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-              gap: '20px',
-              width: '100%',
-              marginBottom: '20px'
-            }}
-          >
-            <Select
-              label="Selecione o indicador:"
-              value={stateIndicatorOptions.find(option => option.value === selectedIndicator)}
-              onChange={handleIndicatorChange}
-              options={stateIndicatorOptions}
-              placeholder="Selecione um indicador"
-              size="xs"
-              isClearable
-              fullWidth
-            />
-          </div>
+          <div className="flex flex-col gap-4 p-0 m-0">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+              {/* Filtro de Indicador - Primeira coluna */}
+              <div className="md:col-span-1">
+                <Select
+                  label="Selecione o indicador:"
+                  value={stateIndicatorOptions.find(option => option.value === selectedIndicator)}
+                  onChange={handleIndicatorChange}
+                  options={stateIndicatorOptions}
+                  placeholder="Selecione um indicador"
+                  size="xs"
+                  isClearable
+                  fullWidth
+                />
+              </div>
 
-          <div 
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-              gap: '20px',
-              width: '100%',
-              marginBottom: '20px'
-            }}
-          >
-            <YearRangeFilter
-              startYear={startYear}
-              endYear={endYear}
-              onStartYearChange={handleStartYearChange}
-              onEndYearChange={handleEndYearChange}
-              minYear={2007}
-              maxYear={2023}
-            />
-          </div>
+              {/* Filtro de Ano - Segunda coluna */}
+              <div className="md:col-span-1">
+                <YearRangeFilter
+                  startYear={startYear}
+                  endYear={endYear}
+                  onStartYearChange={handleStartYearChange}
+                  onEndYearChange={handleEndYearChange}
+                  minYear={2007}
+                  maxYear={2023}
+                />
+              </div>
 
-          <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-            <Button
-              variant="contained"
-              onClick={handleLoadData}
-              sx={{
-                backgroundColor: theme.palette.primary.main,
-                color: 'white',
-                padding: '12px 24px',
-                fontSize: '16px',
-                fontWeight: 'bold',
-                '&:hover': {
-                  backgroundColor: theme.palette.primary.dark,
-                }
-              }}
-            >
-              Carregar Indicadores
-            </Button>
+              {/* Botão Filtrar - Terceira coluna */}
+              <div className="md:col-span-1 flex justify-end items-end">
+                <Button
+                  variant="contained"
+                  onClick={handleLoadData}
+                  className="w-full md:w-auto min-w-[120px] px-4 py-1.5"
+                >
+                  Filtrar
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
 

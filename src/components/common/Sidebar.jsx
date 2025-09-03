@@ -9,6 +9,11 @@ const Sidebar = () => {
   const { isOpen, setIsOpen } = useSidebar();
 
   const isActive = (path) => {
+    if (path === '/indicadores') {
+      // Para indicadores municipais, só ativa se for exatamente /indicadores ou subrotas que não sejam estaduais
+      return location.pathname === '/indicadores' || 
+             (location.pathname.startsWith('/indicadores/') && !location.pathname.startsWith('/indicadores-estaduais'));
+    }
     return location.pathname.startsWith(path);
   };
 
@@ -126,7 +131,7 @@ const Sidebar = () => {
                   }`}
                 >
                   <FaDollarSign className="mr-3 text-lg flex-shrink-0" />
-                  <span className={`${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>Financiamento</span>
+                  <span className={`${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>Exercícios - Municípios</span>
                 </Link>
               </li>
               <li>
@@ -139,7 +144,7 @@ const Sidebar = () => {
                   }`}
                 >
                   <FaDollarSign className="mr-3 text-lg flex-shrink-0" />
-                  <span className={`${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>Estado</span>
+                  <span className={`${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>Exercícios - Estado</span>
                 </Link>
               </li>
               <li>
@@ -152,7 +157,7 @@ const Sidebar = () => {
                   }`}
                 >
                   <FaDollarSign className="mr-3 text-lg flex-shrink-0" />
-                  <span className={`${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>Indicadores</span>
+                  <span className={`${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>Indicadores Municipais</span>
                 </Link>
               </li>
               <li>

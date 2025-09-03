@@ -132,8 +132,9 @@ const StateChartComponent = ({
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'flex-start',
-      padding: '10px',
-      margin: '20px',
+      padding: '20px',
+      margin: '40px 20px',
+      width: '100%',
     }}>
       <Box sx={{
         display: 'flex',
