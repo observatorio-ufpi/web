@@ -859,18 +859,20 @@ const ApiDataTable = ({
         {type === 'school/count' && isEtapaSelected && (
           <p>{ETAPA_ESCOLA_NOTE}</p>
         )}
-        <div ref={chartRef}>
-          <HistoricalChart
-            data={data}
-            type={type}
-            isEtapaSelected={isEtapaSelected}
-            isLocalidadeSelected={isLocalidadeSelected}
-            isDependenciaSelected={isDependenciaSelected}
-            isVinculoSelected={isVinculoSelected}
-            isFormacaoDocenteSelected={isFormacaoDocenteSelected}
-            isFaixaEtariaSelected={isFaixaEtariaSelected}
-          />
-        </div>
+        {!(type === 'school/count' && isEtapaSelected) && (
+          <div ref={chartRef}>
+            <HistoricalChart
+              data={data}
+              type={type}
+              isEtapaSelected={isEtapaSelected}
+              isLocalidadeSelected={isLocalidadeSelected}
+              isDependenciaSelected={isDependenciaSelected}
+              isVinculoSelected={isVinculoSelected}
+              isFormacaoDocenteSelected={isFormacaoDocenteSelected}
+              isFaixaEtariaSelected={isFaixaEtariaSelected}
+            />
+          </div>
+        )}
         <div style={{ marginTop: '1rem' }}>
           <TableExport
             data={exportData}
