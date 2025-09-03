@@ -14,6 +14,7 @@ const CustomSelect = ({
   ...props 
 }) => {
   const sizes = {
+    xs: 'text-xs',
     small: 'text-sm',
     medium: 'text-base',
     large: 'text-lg'
@@ -28,7 +29,7 @@ const CustomSelect = ({
       border: state.isFocused ? '2px solid #8b5cf6' : '2px solid #e5e7eb',
       borderRadius: '8px',
       boxShadow: state.isFocused ? '0 0 0 1px #8b5cf6' : 'none',
-      minHeight: size === 'small' ? '36px' : size === 'large' ? '48px' : '40px',
+      minHeight: size === 'xs' ? '28px' : size === 'small' ? '36px' : size === 'large' ? '48px' : '40px',
       '&:hover': {
         border: '2px solid #8b5cf6'
       }
@@ -68,18 +69,18 @@ const CustomSelect = ({
     }),
     valueContainer: (provided) => ({
       ...provided,
-      padding: size === 'small' ? '4px 8px' : size === 'large' ? '12px 16px' : '8px 12px'
+      padding: size === 'xs' ? '2px 6px' : size === 'small' ? '4px 8px' : size === 'large' ? '12px 16px' : '8px 12px'
     }),
     indicatorsContainer: (provided) => ({
       ...provided,
-      padding: size === 'small' ? '4px 8px' : size === 'large' ? '12px 16px' : '8px 12px'
+      padding: size === 'xs' ? '2px 6px' : size === 'small' ? '4px 8px' : size === 'large' ? '12px 16px' : '8px 12px'
     })
   };
   
   return (
     <div className={`${fullWidth ? 'w-full' : 'min-w-[200px]'} ${className}`}>
       {label && (
-        <label className="block text-gray-700 mb-2 text-sm font-medium">
+        <label className={`block text-gray-700 mb-2 font-medium ${size === 'xs' ? 'text-xs' : 'text-sm'}`}>
           {label}
         </label>
       )}

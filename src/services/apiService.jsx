@@ -111,7 +111,7 @@ const endpoints = {
 export const fetchData = async (table, groupType, filters) => {
   try {
     const queryParams = new URLSearchParams({
-      ...(filters.nomeMunicipio && { nomeMunicipio: filters.nomeMunicipio }),
+      ...(filters.codigoMunicipio && { codigoMunicipio: filters.codigoMunicipio }),
       ...(filters.territorioDeDesenvolvimentoMunicipio && {
         territorioDeDesenvolvimentoMunicipio:
           filters.territorioDeDesenvolvimentoMunicipio,

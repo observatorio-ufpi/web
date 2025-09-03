@@ -1,34 +1,35 @@
 // Mapeamento de tabelas do estado para arquivos CSV
 export const stateTableFiles = {
-  tabela1: "/src/files/tabela1_estado - Página1.csv",
-  tabela2: "/src/files/tabela2_estado - Página1.csv",
-  tabela3: "/src/files/tabela3_estado - Página1.csv",
-  tabela4: "/src/files/tabela4_estado - Página1.csv",
-  tabela5: "/src/files/tabela5_estado - Página1.csv",
-  tabela6: "/src/files/tabela6_estado - Página1.csv",
-  tabela7: "/src/files/tabela7_estado - Página1.csv",
-  tabela8: "/src/files/tabela8_estado - Página1.csv",
-  tabela9: "/src/files/tabela9_estado - Página1.csv",
-  tabela10: "/src/files/tabela10_estado - Página1.csv",
-  tabela11: "/src/files/tabela11_estado - Página1.csv",
-  tabela12: "/src/files/tabela_complementar_estado - Página1.csv"
+  tabela1: "/src/files/estado_tabela_1.csv",
+  tabela2: "/src/files/estado_tabela_2.csv",
+  tabela3: "/src/files/estado_tabela_3.csv",
+  tabela4: "/src/files/estado_tabela_4.csv",
+  tabela5: "/src/files/estado_tabela_5.csv",
+  tabela6: "/src/files/estado_tabela_6.csv",
+  tabela7: "/src/files/estado_tabela_7.csv",
+  tabela8: "/src/files/estado_tabela_8.csv",
+  tabela9: "/src/files/estado_tabela_9.csv",
+  tabela10: "/src/files/estado_tabela_10.csv",
+  tabela11: "/src/files/estado_tabela_11.csv",
+  tabela12: "/src/files/estado_tabela_12.csv",
+  tabela13: "/src/files/estado_tabela_13.csv"
 };
 
 // Mapeamento de nomes de tabelas
 export const stateTableNames = {
-  tabela1: "Impostos Próprios do Piauí",
+  tabela1: "Receita bruta de impostos próprios do Piauí",
   tabela2: "Receita líquida de impostos próprios do Piauí",
-  tabela3: "Receita de transferências constitucionais recebidas pelo Piauí",
-  tabela4: "Receita líquida resultante de impostos do Piauí",
-  tabela5: "Receitas adicionais para o financiamento do ensino no Piauí",
-  tabela6: "Composição do Fundeb no Piauí",
-  tabela7: "Composição da complementação do Fundeb no Piauí",
-  tabela8:
-    "Limite constitucional em MDE no Piauí ",
-  tabela9: "Despesas com profissionais da educação básica com o Fundeb no Piauí",
-  tabela10: "Despesas em MDE por área de atuação no Piauí",
-  tabela11: " Receita Potencial Mínima vinculada à Educação Básica (RPEB)",
-  tabela12: "Protocolo Complementar"
+  tabela3: "Receita bruta de transferências constitucionais recebidas pelo Piauí",
+  tabela4: "Receita líquida de transferências constitucionais recebidas pelo Piauí",
+  tabela5: "Receita líquida resultante de impostos e transferências constitucionais no Piauí",
+  tabela6: "Receitas adicionais para o financiamento do ensino no Piauí",
+  tabela7: "Composição do Fundeb no Piauí",
+  tabela8: "Composição da complementação do Fundeb no Piauí",
+  tabela9: "Limite constitucional em MDE no Piauí ",
+  tabela10: "Despesas com profissionais da educação básica com o Fundeb no Piauí",
+  tabela11: "Despesas em MDE por área de atuação no Piauí",
+  tabela12: "Receita Potencial Mínima vinculada à Educação Básica (RPEB)",
+  tabela13: "Protocolo Complementar"
 };
 
 // Função para carregar o conteúdo do CSV

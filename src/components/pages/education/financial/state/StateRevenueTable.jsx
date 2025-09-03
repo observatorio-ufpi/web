@@ -45,7 +45,7 @@ const CenteredTableCell = styled(TableCell)(({ theme }) => ({
   verticalAlign: 'middle',
 }));
 
-const StateRevenueTable = ({ csvData, tableName }) => {
+const StateRevenueTable = ({ csvData, tableName, startYear, endYear }) => {
   const [data, setData] = useState({
     types: [],
     years: [],
@@ -56,12 +56,19 @@ const StateRevenueTable = ({ csvData, tableName }) => {
     if (csvData) {
       parseCSVData(csvData);
     }
-  }, [csvData]);
+  }, [csvData]); // Removido startYear e endYear das dependências
 
   const parseCSVData = (csvText) => {
     // Verificar se csvText é uma string
     if (typeof csvText !== 'string') {
       console.error('csvText não é uma string:', csvText);
+      setData({ types: [], years: [], valuesByTypeAndYear: {} });
+      return;
+    }
+
+    // Verificar se o conteúdo parece ser CSV (não JavaScript)
+    if (csvText.includes('import ') || csvText.includes('window.') || csvText.includes('injectIntoGlobalHook')) {
+      console.error('csvText parece conter código JavaScript em vez de dados CSV:', csvText);
       setData({ types: [], years: [], valuesByTypeAndYear: {} });
       return;
     }
@@ -106,16 +113,23 @@ const StateRevenueTable = ({ csvData, tableName }) => {
       return result;
     };
     
-    // Analisar a primeira linha para obter os anos
+    // Analisar a primeira linha para obter os tipos de receita (cabeçalhos das colunas)
     const headerParts = parseCSVLine(lines[0]);
-    headerParts.shift(); // Remover o primeiro item (célula vazia ou "Tipo")
-    const years = headerParts;
+    console.log('headerParts', headerParts);
     
-    console.log('Anos extraídos:', years);
+    // O primeiro item é "Ano", os demais são os tipos de receita
+    const types = headerParts.slice(1); // Remover "Ano" e pegar os tipos
     
-    // Processar linhas de dados (tipos de impostos)
-    const types = [];
+    console.log('Tipos extraídos:', types);
+    
+    // Processar linhas de dados para obter os anos e valores
+    const years = [];
     const valuesByTypeAndYear = {};
+    
+    // Inicializar objeto para cada tipo
+    types.forEach(type => {
+      valuesByTypeAndYear[type] = {};
+    });
     
     for (let i = 1; i < lines.length; i++) {
       const values = parseCSVLine(lines[i]);
@@ -123,35 +137,38 @@ const StateRevenueTable = ({ csvData, tableName }) => {
       // Verificar se a linha tem dados suficientes
       if (values.length <= 1) continue;
       
-      // O primeiro valor é o tipo de imposto
-      const type = values[0].replace(/^"|"$/g, ''); // Remover aspas se existirem
-      types.push(type);
+      // O primeiro valor é o ano
+      const year = values[0].replace(/^"|"$/g, ''); // Remover aspas se existirem
+      const yearNum = parseInt(year);
       
-      // Inicializar objeto para este tipo
-      valuesByTypeAndYear[type] = {};
-      
-      // Processar valores para cada ano
-      for (let j = 0; j < years.length; j++) {
-        const year = years[j];
-        const value = values[j + 1];
+      // Filtrar por ano inicial e final
+      if (yearNum >= startYear && yearNum <= endYear) {
+        years.push(year);
         
-        // Converter para número, preservando o valor completo
-        if (value) {
-          // Remover caracteres não numéricos, exceto ponto, vírgula e hífen
-          const cleanValue = value.replace(/[^\d.,-]/g, '');
+        // Processar valores para cada tipo de receita
+        for (let j = 0; j < types.length; j++) {
+          const type = types[j];
+          const value = values[j + 1];
           
-          // Substituir vírgula por ponto para conversão correta
-          // Importante: no Brasil, usamos vírgula como separador decimal
-          const normalizedValue = cleanValue.replace(/\./g, '').replace(/,/g, '.');
-          
-          const numValue = parseFloat(normalizedValue);
-          valuesByTypeAndYear[type][year] = isNaN(numValue) ? value : numValue;
-        } else {
-          valuesByTypeAndYear[type][year] = null;
+          // Converter para número, preservando o valor completo
+          if (value) {
+            // Remover caracteres não numéricos, exceto ponto, vírgula e hífen
+            const cleanValue = value.replace(/[^\d.,-]/g, '');
+            
+            // Substituir vírgula por ponto para conversão correta
+            // Importante: no Brasil, usamos vírgula como separador decimal
+            const normalizedValue = cleanValue.replace(/\./g, '').replace(/,/g, '.');
+            
+            const numValue = parseFloat(normalizedValue);
+            valuesByTypeAndYear[type][year] = isNaN(numValue) ? value : numValue;
+          } else {
+            valuesByTypeAndYear[type][year] = null;
+          }
         }
       }
     }
     
+    console.log('Anos processados:', years);
     console.log('Tipos processados:', types);
     console.log('Valores por tipo e ano:', valuesByTypeAndYear);
     
@@ -176,7 +193,7 @@ const StateRevenueTable = ({ csvData, tableName }) => {
     
     const ws = XLSX.utils.aoa_to_sheet(wsData);
     XLSX.utils.book_append_sheet(wb, ws, 'Dados do Estado');
-    const fileName = `${tableName}.xlsx`;
+    const fileName = `${tableName}_${startYear}-${endYear}.xlsx`;
     XLSX.writeFile(wb, fileName);
   };
 
@@ -241,7 +258,7 @@ const StateRevenueTable = ({ csvData, tableName }) => {
     });
     
     // Salvar PDF
-    doc.save(`${tableName}.pdf`);
+    doc.save(`${tableName}_${startYear}-${endYear}.pdf`);
   };
 
   return (

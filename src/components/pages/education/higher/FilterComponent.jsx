@@ -230,10 +230,10 @@ function FilterComponent() {
 
   return (
     <div className="app-container">
-      <div className="filter-container">
-        <div className="filter-grid">
+      <div className="flex flex-col gap-4 p-0 m-0">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
           {/* Tipo - Primeira coluna, primeira linha */}
-          <div className="filter-municipio">
+          <div className="md:col-span-1">
             <label htmlFor="typeSelect" className="block text-sm font-medium text-gray-700 mb-1">Tipo:</label>
             <Select
               id="typeSelect"
@@ -248,13 +248,13 @@ function FilterComponent() {
               }}
               options={typeOptions}
               placeholder="Selecione o tipo"
-              size="small"
+              size="xs"
             />
           </div>
 
           {/* Ano - Segunda e terceira colunas, primeira linha */}
-          <div className="filter-territorio">
-            <div className="flex items-center gap-4">
+          <div className="md:col-span-2">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
               <label className="flex items-center gap-2 cursor-pointer whitespace-nowrap">
                 <input
                   type="checkbox"
@@ -273,7 +273,7 @@ function FilterComponent() {
               </label>
             
               {displayHistorical ? (
-                <div className="flex gap-3 flex-1">
+                <div className="flex flex-col sm:flex-row gap-3 flex-1 w-full">
                   <div className="flex-1">
                     <label htmlFor="startYearSelect" className="block text-sm font-medium text-gray-700 mb-1">Ano Inicial:</label>
                     <Select
@@ -287,7 +287,7 @@ function FilterComponent() {
                       }}
                       options={yearOptions}
                       placeholder="Ano Inicial"
-                      size="small"
+                      size="xs"
                     />
                   </div>
                   <div className="flex-1">
@@ -298,12 +298,12 @@ function FilterComponent() {
                       onChange={(selectedOption) => setEndYear(selectedOption.value)}
                       options={yearOptions.filter(option => option.value >= startYear)}
                       placeholder="Ano Final"
-                      size="small"
+                      size="xs"
                     />
                   </div>
                 </div>
               ) : (
-                <div className="flex-1">
+                <div className="flex-1 w-full">
                   <label htmlFor="yearSelect" className="block text-sm font-medium text-gray-700 mb-1">Ano:</label>
                   <Select
                     id="yearSelect"
@@ -311,7 +311,7 @@ function FilterComponent() {
                     onChange={(selectedOption) => setYear(selectedOption.value)}
                     options={yearOptions}
                     placeholder="Ano"
-                    size="small"
+                    size="xs"
                   />
                 </div>
               )}
@@ -319,7 +319,7 @@ function FilterComponent() {
           </div>
 
           {/* Território - Primeira coluna, segunda linha */}
-          <div className="filter-faixa">
+          <div className="md:col-span-1">
             <Select
               id="territorySelect"
               value={territoryOptions.find(option => option.value === territory) || null}
@@ -329,12 +329,12 @@ function FilterComponent() {
               }}
               options={territoryOptions}
               placeholder="Território de Desenvolvimento"
-              size="small"
+              size="xs"
             />
           </div>
 
           {/* Faixa Populacional - Segunda coluna, segunda linha */}
-          <div className="filter-aglomerado">
+          <div className="md:col-span-1">
             <Select
               id="faixaPopulacionalSelect"
               value={faixaPopulacionalOptions.find(option => option.value === faixaPopulacional) || null}
@@ -344,48 +344,48 @@ function FilterComponent() {
               }}
               options={faixaPopulacionalOptions}
               placeholder="Faixa Populacional"
-              size="small"
+              size="xs"
             />
           </div>
 
           {/* Aglomerado - Terceira coluna, segunda linha */}
-          <div className="filter-gerencia">
+          <div className="md:col-span-1">
             <Select
               id="aglomeradoSelect"
               value={aglomeradoOptions.find(option => option.value === aglomerado) || null}
               onChange={(selectedOption) => setAglomerado(selectedOption ? selectedOption.value : '')}
               options={aglomeradoOptions}
               placeholder="Aglomerado"
-              size="small"
+              size="xs"
             />
           </div>
 
           {/* Gerência - Primeira coluna, terceira linha */}
-          <div className="filter-ano-inicial">
+          <div className="md:col-span-1">
             <Select
               id="gerenciaSelect"
               value={gerenciaOptions.find(option => option.value === gerencia) || null}
               onChange={(selectedOption) => setGerencia(selectedOption ? selectedOption.value : '')}
               options={gerenciaOptions}
               placeholder="Gerencia"
-              size="small"
+              size="xs"
             />
           </div>
 
           {/* Cidade - Segunda coluna, terceira linha */}
-          <div className="filter-ano-final">
+          <div className="md:col-span-1">
             <Select
               id="citySelect"
               value={cityOptions.find(option => option.value === city) || null}
               onChange={(selectedOption) => setCity(selectedOption ? selectedOption.value : '')}
               options={cityOptions}
               placeholder="Cidade"
-              size="small"
+              size="xs"
             />
           </div>
 
           {/* Filtros Múltiplos - Terceira coluna, terceira linha */}
-          <div className="filter-button-container">
+          <div className="md:col-span-1 flex flex-col justify-end">
             <div className="mb-3">
               <Select
                 id="multiFilterSelect"
@@ -431,16 +431,16 @@ function FilterComponent() {
                       ? "Selecione 1 filtro"
                       : "Selecione até 2 filtros"
                 }
-                size="small"
+                size="xs"
               />
             </div>
             
-            <div className="flex gap-3 justify-end">
+            <div className="flex flex-col sm:flex-row gap-3 justify-end">
               <Button
                 variant="contained"
                 color="primary"
                 onClick={handleFilterClick}
-                className="filter-button"
+                className="w-full sm:w-auto"
               >
                 Filtrar
               </Button>
@@ -452,7 +452,7 @@ function FilterComponent() {
                 }}
                 variant="contained"
                 onClick={handleClearFilters}
-                className="filter-button"
+                className="w-full sm:w-auto"
               >
                 Limpar
               </Button>

@@ -1,110 +1,115 @@
-import React, { useState, useEffect } from 'react';
-import { loadCSVFile, stateTableNames } from '../../../../../services/csvService.jsx';
+import React, { useState } from 'react';
+import { stateTableNames } from '../../../../../services/csvService.jsx';
 import StateRevenueTable from './StateRevenueTable.jsx';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
+import StateFilters from './StateFilters.jsx';
+import { useStateData } from '../../../../../hooks/useStateData.jsx';
+import { useTheme } from '@mui/material/styles';
+import { Typography } from '@mui/material';
 import '../../../../../style/RevenueTableContainer.css';
-import { Loading, Select } from "../../../../ui";
-
-const theme = createTheme({
-  palette: {
-    background: {
-      default: '#f0f0f0',
-    },
-  },
-});
+import { Loading } from "../../../../ui";
 
 const StateRevenueTableContainer = () => {
+  const theme = useTheme();
   const [selectedTable, setSelectedTable] = useState('tabela1');
-  const [csvData, setCsvData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [startYear, setStartYear] = useState(2007);
+  const [endYear, setEndYear] = useState(2023);
+  const [hasInitialLoad, setHasInitialLoad] = useState(false);
 
-  useEffect(() => {
-    loadTableData();
-  }, [selectedTable]);
+  // Usar o hook personalizado para gerenciar os dados (sem autoLoad)
+  const { csvData, loading, error, refetch } = useStateData(selectedTable, startYear, endYear, false);
 
-  const loadTableData = async () => {
-    try {
-      setLoading(true);
-      console.log(`Carregando dados para a tabela: ${selectedTable}`);
-      // Usar a função loadCSVFile para carregar os dados
-      const data = await loadCSVFile(selectedTable);
-      
-      console.log(`Dados carregados com sucesso: ${data ? 'sim' : 'não'}`);
-      setCsvData(data);
-      setError(null);
-    } catch (error) {
-      console.error('Erro ao carregar dados da tabela:', error);
-      setError(`Erro ao carregar dados da tabela: ${error.message}`);
-    } finally {
-      setLoading(false);
-    }
+  const handleTableChange = (tableValue) => {
+    setSelectedTable(tableValue);
+    // Resetar dados e estado quando mudar de tabela
+    setHasInitialLoad(false);
   };
 
-  const handleTableChange = (event) => {
-    setSelectedTable(event.target.value);
+  const handleStartYearChange = (year) => {
+    setStartYear(year);
+    // Não resetar hasInitialLoad quando apenas o ano mudar
   };
 
-  if (loading) {
-    return <Loading />;
-  }
+  const handleEndYearChange = (year) => {
+    setEndYear(year);
+    // Não resetar hasInitialLoad quando apenas o ano mudar
+  };
 
-  if (error) {
-    return (
-      <div className="app-container">
-        <div style={{ 
-          textAlign: 'center', 
-          padding: '40px 20px',
-          color: '#d9534f',
-          fontSize: '18px'
-        }}>
-          <p>Falha ao carregar os dados. Por favor, tente novamente mais tarde.</p>
-        </div>
-      </div>
-    );
-  }
+  const handleFilter = () => {
+    setHasInitialLoad(true);
+    refetch();
+  };
 
   return (
-    <ThemeProvider theme={theme}>
-      <div className='app-container'>
-        <div className="filters-section">
-          <div className="selects-wrapper">
-            <div className="select-container">
-              <label htmlFor="tableSelect" className="select-label">Tipo de Tabela do Estado:</label>
-              <Select
-                value={{ value: selectedTable, label: stateTableNames[selectedTable] }}
-                onChange={(selectedOption) => setSelectedTable(selectedOption.value)}
-                options={[
-                  { value: 'tabela1', label: 'Impostos Próprios' },
-                  { value: 'tabela2', label: 'Receita líquida de impostos próprios do Piauí' },
-                  { value: 'tabela3', label: 'Receita de transferências constitucionais e legais' },
-                  { value: 'tabela4', label: 'Receita Líquida de Impostos' },
-                  { value: 'tabela5', label: 'Receitas adicionais da educação' },
-                  { value: 'tabela6', label: 'Composição do Fundef/Fundeb' },
-                  { value: 'tabela7', label: 'Composição da complementação do Fundef/Fundeb' },
-                  { value: 'tabela8', label: 'Limite constitucional em MDE' },
-                  { value: 'tabela9', label: 'Despesas com profissionais da educação básica do Fundef/Fundeb' },
-                  { value: 'tabela10', label: 'Despesas em MDE por área de atuação' },
-                  { value: 'tabela11', label: 'Receita Potencial Mínima vinculada à Educação Básica' },
-                  { value: 'tabela12', label: 'Protocolo Complementar' }
-                ]}
-                placeholder="Selecione o tipo de tabela"
-                size="small"
-              />
-            </div>
-          </div>
-        </div>
+    <div className='app-container'>
+      <div className="filters-section">
+        <StateFilters
+          selectedTable={selectedTable}
+          onTableChange={handleTableChange}
+          startYear={startYear}
+          endYear={endYear}
+          onStartYearChange={handleStartYearChange}
+          onEndYearChange={handleEndYearChange}
+          onFilter={handleFilter}
+          loading={loading}
+        />
+      </div>
 
-        {csvData && (
+      <hr className="divider" />
+
+      {/* Área de dados - sempre visível */}
+      <div className="data-section">
+        {loading && <Loading />}
+
+        {!loading && error && (
+          <div style={{ 
+            textAlign: 'center', 
+            padding: '40px 20px',
+            color: '#d9534f',
+            fontSize: '18px'
+          }}>
+            <p>Falha ao carregar os dados. Por favor, tente novamente mais tarde.</p>
+          </div>
+        )}
+
+        {!loading && !error && !csvData && !hasInitialLoad && (
+          <Typography 
+            variant="body1" 
+            sx={{ 
+              textAlign: 'center',
+              fontSize: '18px',
+              fontWeight: 'bold',
+              margin: '20px auto',
+              maxWidth: '400px',
+              color: theme.palette.primary.main
+            }}
+          >
+            Selecione os filtros desejados e clique em "Filtrar" para montar uma consulta.
+          </Typography>
+        )}
+
+        {!loading && !error && !csvData && hasInitialLoad && (
+          <div style={{ 
+            textAlign: 'center', 
+            padding: '40px 20px',
+            color: '#d9534f',
+            fontSize: '18px'
+          }}>
+            <p>Nenhum dado encontrado com os filtros selecionados.</p>
+          </div>
+        )}
+
+        {!loading && !error && csvData && (
           <div className='table-container'>
             <StateRevenueTable 
               csvData={csvData} 
-              tableName={stateTableNames[selectedTable]} 
+              tableName={stateTableNames[selectedTable]}
+              startYear={startYear}
+              endYear={endYear}
             />
           </div>
         )}
       </div>
-    </ThemeProvider>
+    </div>
   );
 };
 

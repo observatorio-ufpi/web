@@ -15,8 +15,25 @@ import ResourcesApplicationControlCharts from "./ResourcesApplicationControlChar
 import RevenueCompositionCharts from "./RevenueCompositionCharts";
 import RpebCompositionCharts from "./RpebCompositionCharts";
 import FilterComponent from "../../../../../helpers/TableFilters";
+import Select from "../../../../../ui/Select";
 import { Loading } from "../../../../../ui";
 import { Typography } from "@mui/material";
+
+// Opções para os selects
+const indicatorOptions = [
+  { value: 'constitutionalLimitMde', label: 'Percentual aplicado em MDE' },
+  { value: 'expensesBasicEducationFundeb', label: 'Percentual do fundeb nos profissionais de educação básica' },
+  { value: 'revenueComposition', label: 'Composição das Receitas Impostos e Transferências Constitucionais e Legais [%]' },
+  { value: 'financingCapacity', label: 'Capacidade de Financiamento' },
+  { value: 'rpebComposition', label: 'Composição da Receita Potencial da Educação Básica [%]' },
+  { value: 'resourcesApplicationControl', label: 'Controle da Aplicação de Recursos' },
+  { value: 'educationExpenseComposition', label: 'Composição das Despesas em Educação [%]' },
+];
+
+const groupTypeOptions = [
+  { value: 'municipio', label: 'Município' },
+  { value: 'ano', label: 'Ano' },
+];
 
 const endpoints = {
   // Existing endpoints
@@ -138,165 +155,217 @@ function ChartContainer() {
   const [limit, setLimit] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [hasInitialLoad, setHasInitialLoad] = useState(false);
+  const [filters, setFilters] = useState({
+    anoInicial: 2006,
+    anoFinal: new Date().getFullYear(),
+  });
 
-  const fetchTableData = () => {
+  const fetchTableData = (customFilters = null) => {
+    if (loading) return; // Evita múltiplas chamadas simultâneas
     setLoading(true);
+
+    // Usar filtros customizados se fornecidos, senão usar os estados
+    const currentFilters = customFilters || {
+      codigoMunicipio: selectedMunicipio,
+      territorioDeDesenvolvimentoMunicipio,
+      faixaPopulacionalMunicipio,
+      aglomeradoMunicipio,
+      gerenciaRegionalMunicipio,
+      anoInicial: filters.anoInicial,
+      anoFinal: filters.anoFinal,
+      page,
+      limit,
+    };
 
     if (selectedTable === "revenueComposition") {
       // Fetch all revenue composition indicators
       Promise.all([
         fetchData("iptu-composition", groupType, {
-          selectedMunicipio,
-          territorioDeDesenvolvimentoMunicipio,
-          faixaPopulacionalMunicipio,
-          aglomeradoMunicipio,
-          gerenciaRegionalMunicipio,
-          page,
-          limit,
+          codigoMunicipio: currentFilters.codigoMunicipio,
+          territorioDeDesenvolvimentoMunicipio: currentFilters.territorioDeDesenvolvimentoMunicipio,
+          faixaPopulacionalMunicipio: currentFilters.faixaPopulacionalMunicipio,
+          aglomeradoMunicipio: currentFilters.aglomeradoMunicipio,
+          gerenciaRegionalMunicipio: currentFilters.gerenciaRegionalMunicipio,
+          anoInicial: currentFilters.anoInicial,
+          anoFinal: currentFilters.anoFinal,
+          page: currentFilters.page,
+          limit: currentFilters.limit,
         }),
         fetchData("iss-composition", groupType, {
-          selectedMunicipio,
-          territorioDeDesenvolvimentoMunicipio,
-          faixaPopulacionalMunicipio,
-          aglomeradoMunicipio,
-          gerenciaRegionalMunicipio,
-          page,
-          limit,
+          codigoMunicipio: currentFilters.codigoMunicipio,
+          territorioDeDesenvolvimentoMunicipio: currentFilters.territorioDeDesenvolvimentoMunicipio,
+          faixaPopulacionalMunicipio: currentFilters.faixaPopulacionalMunicipio,
+          aglomeradoMunicipio: currentFilters.aglomeradoMunicipio,
+          gerenciaRegionalMunicipio: currentFilters.gerenciaRegionalMunicipio,
+          anoInicial: currentFilters.anoInicial,
+          anoFinal: currentFilters.anoFinal,
+          page: currentFilters.page,
+          limit: currentFilters.limit,
         }),
         fetchData("itbi-composition", groupType, {
-          selectedMunicipio,
-          territorioDeDesenvolvimentoMunicipio,
-          faixaPopulacionalMunicipio,
-          aglomeradoMunicipio,
-          gerenciaRegionalMunicipio,
-          page,
-          limit,
+          codigoMunicipio: currentFilters.codigoMunicipio,
+          territorioDeDesenvolvimentoMunicipio: currentFilters.territorioDeDesenvolvimentoMunicipio,
+          faixaPopulacionalMunicipio: currentFilters.faixaPopulacionalMunicipio,
+          aglomeradoMunicipio: currentFilters.aglomeradoMunicipio,
+          gerenciaRegionalMunicipio: currentFilters.gerenciaRegionalMunicipio,
+          anoInicial: currentFilters.anoInicial,
+          anoFinal: currentFilters.anoFinal,
+          page: currentFilters.page,
+          limit: currentFilters.limit,
         }),
         fetchData("irrf-composition", groupType, {
-          selectedMunicipio,
-          territorioDeDesenvolvimentoMunicipio,
-          faixaPopulacionalMunicipio,
-          aglomeradoMunicipio,
-          gerenciaRegionalMunicipio,
-          page,
-          limit,
+          codigoMunicipio: currentFilters.codigoMunicipio,
+          territorioDeDesenvolvimentoMunicipio: currentFilters.territorioDeDesenvolvimentoMunicipio,
+          faixaPopulacionalMunicipio: currentFilters.faixaPopulacionalMunicipio,
+          aglomeradoMunicipio: currentFilters.aglomeradoMunicipio,
+          gerenciaRegionalMunicipio: currentFilters.gerenciaRegionalMunicipio,
+          anoInicial: currentFilters.anoInicial,
+          anoFinal: currentFilters.anoFinal,
+          page: currentFilters.page,
+          limit: currentFilters.limit,
         }),
         fetchData("ipva-composition", groupType, {
-          selectedMunicipio,
-          territorioDeDesenvolvimentoMunicipio,
-          faixaPopulacionalMunicipio,
-          aglomeradoMunicipio,
-          gerenciaRegionalMunicipio,
-          page,
-          limit,
+          codigoMunicipio: currentFilters.codigoMunicipio,
+          territorioDeDesenvolvimentoMunicipio: currentFilters.territorioDeDesenvolvimentoMunicipio,
+          faixaPopulacionalMunicipio: currentFilters.faixaPopulacionalMunicipio,
+          aglomeradoMunicipio: currentFilters.aglomeradoMunicipio,
+          gerenciaRegionalMunicipio: currentFilters.gerenciaRegionalMunicipio,
+          anoInicial: currentFilters.anoInicial,
+          anoFinal: currentFilters.anoFinal,
+          page: currentFilters.page,
+          limit: currentFilters.limit,
         }),
         fetchData("icms-composition", groupType, {
-          selectedMunicipio,
-          territorioDeDesenvolvimentoMunicipio,
-          faixaPopulacionalMunicipio,
-          aglomeradoMunicipio,
-          gerenciaRegionalMunicipio,
-          page,
-          limit,
+          codigoMunicipio: currentFilters.codigoMunicipio,
+          territorioDeDesenvolvimentoMunicipio: currentFilters.territorioDeDesenvolvimentoMunicipio,
+          faixaPopulacionalMunicipio: currentFilters.faixaPopulacionalMunicipio,
+          aglomeradoMunicipio: currentFilters.aglomeradoMunicipio,
+          gerenciaRegionalMunicipio: currentFilters.gerenciaRegionalMunicipio,
+          anoInicial: currentFilters.anoInicial,
+          anoFinal: currentFilters.anoFinal,
+          page: currentFilters.page,
+          limit: currentFilters.limit,
         }),
         fetchData("fpm-composition", groupType, {
-          selectedMunicipio,
-          territorioDeDesenvolvimentoMunicipio,
-          faixaPopulacionalMunicipio,
-          aglomeradoMunicipio,
-          gerenciaRegionalMunicipio,
-          page,
-          limit,
+          codigoMunicipio: currentFilters.codigoMunicipio,
+          territorioDeDesenvolvimentoMunicipio: currentFilters.territorioDeDesenvolvimentoMunicipio,
+          faixaPopulacionalMunicipio: currentFilters.faixaPopulacionalMunicipio,
+          aglomeradoMunicipio: currentFilters.aglomeradoMunicipio,
+          gerenciaRegionalMunicipio: currentFilters.gerenciaRegionalMunicipio,
+          anoInicial: currentFilters.anoInicial,
+          anoFinal: currentFilters.anoFinal,
+          page: currentFilters.page,
+          limit: currentFilters.limit,
         }),
         fetchData("cota-parte-iof-ouro", groupType, {
-          selectedMunicipio,
-          territorioDeDesenvolvimentoMunicipio,
-          faixaPopulacionalMunicipio,
-          aglomeradoMunicipio,
-          gerenciaRegionalMunicipio,
-          page,
-          limit,
+          codigoMunicipio: currentFilters.codigoMunicipio,
+          territorioDeDesenvolvimentoMunicipio: currentFilters.territorioDeDesenvolvimentoMunicipio,
+          faixaPopulacionalMunicipio: currentFilters.faixaPopulacionalMunicipio,
+          aglomeradoMunicipio: currentFilters.aglomeradoMunicipio,
+          gerenciaRegionalMunicipio: currentFilters.gerenciaRegionalMunicipio,
+          anoInicial: currentFilters.anoInicial,
+          anoFinal: currentFilters.anoFinal,
+          page: currentFilters.page,
+          limit: currentFilters.limit,
         }),
         fetchData("outras-transferencias", groupType, {
-          selectedMunicipio,
-          territorioDeDesenvolvimentoMunicipio,
-          faixaPopulacionalMunicipio,
-          aglomeradoMunicipio,
-          gerenciaRegionalMunicipio,
-          page,
-          limit,
+          codigoMunicipio: currentFilters.codigoMunicipio,
+          territorioDeDesenvolvimentoMunicipio: currentFilters.territorioDeDesenvolvimentoMunicipio,
+          faixaPopulacionalMunicipio: currentFilters.faixaPopulacionalMunicipio,
+          aglomeradoMunicipio: currentFilters.aglomeradoMunicipio,
+          gerenciaRegionalMunicipio: currentFilters.gerenciaRegionalMunicipio,
+          anoInicial: currentFilters.anoInicial,
+          anoFinal: currentFilters.anoFinal,
+          page: currentFilters.page,
+          limit: currentFilters.limit,
         }),
         fetchData("icms-desoneracao", groupType, {
-          selectedMunicipio,
-          territorioDeDesenvolvimentoMunicipio,
-          faixaPopulacionalMunicipio,
-          aglomeradoMunicipio,
-          gerenciaRegionalMunicipio,
-          page,
-          limit,
+          codigoMunicipio: currentFilters.codigoMunicipio,
+          territorioDeDesenvolvimentoMunicipio: currentFilters.territorioDeDesenvolvimentoMunicipio,
+          faixaPopulacionalMunicipio: currentFilters.faixaPopulacionalMunicipio,
+          aglomeradoMunicipio: currentFilters.aglomeradoMunicipio,
+          gerenciaRegionalMunicipio: currentFilters.gerenciaRegionalMunicipio,
+          anoInicial: currentFilters.anoInicial,
+          anoFinal: currentFilters.anoFinal,
+          page: currentFilters.page,
+          limit: currentFilters.limit,
         }),
         fetchData("cota-parte-ipi", groupType, {
-          selectedMunicipio,
-          territorioDeDesenvolvimentoMunicipio,
-          faixaPopulacionalMunicipio,
-          aglomeradoMunicipio,
-          gerenciaRegionalMunicipio,
-          page,
-          limit,
+          codigoMunicipio: currentFilters.codigoMunicipio,
+          territorioDeDesenvolvimentoMunicipio: currentFilters.territorioDeDesenvolvimentoMunicipio,
+          faixaPopulacionalMunicipio: currentFilters.faixaPopulacionalMunicipio,
+          aglomeradoMunicipio: currentFilters.aglomeradoMunicipio,
+          gerenciaRegionalMunicipio: currentFilters.gerenciaRegionalMunicipio,
+          anoInicial: currentFilters.anoInicial,
+          anoFinal: currentFilters.anoFinal,
+          page: currentFilters.page,
+          limit: currentFilters.limit,
         }),
         fetchData("cota-parte-itr", groupType, {
-          selectedMunicipio,
-          territorioDeDesenvolvimentoMunicipio,
-          faixaPopulacionalMunicipio,
-          aglomeradoMunicipio,
-          gerenciaRegionalMunicipio,
-          page,
-          limit,
+          codigoMunicipio: currentFilters.codigoMunicipio,
+          territorioDeDesenvolvimentoMunicipio: currentFilters.territorioDeDesenvolvimentoMunicipio,
+          faixaPopulacionalMunicipio: currentFilters.faixaPopulacionalMunicipio,
+          aglomeradoMunicipio: currentFilters.aglomeradoMunicipio,
+          gerenciaRegionalMunicipio: currentFilters.gerenciaRegionalMunicipio,
+          anoInicial: currentFilters.anoInicial,
+          anoFinal: currentFilters.anoFinal,
+          page: currentFilters.page,
+          limit: currentFilters.limit,
         }),
         fetchData("participacao-receita-impostos-proprios", groupType, {
-          selectedMunicipio,
-          territorioDeDesenvolvimentoMunicipio,
-          faixaPopulacionalMunicipio,
-          aglomeradoMunicipio,
-          gerenciaRegionalMunicipio,
-          page,
-          limit,
+          codigoMunicipio: currentFilters.codigoMunicipio,
+          territorioDeDesenvolvimentoMunicipio: currentFilters.territorioDeDesenvolvimentoMunicipio,
+          faixaPopulacionalMunicipio: currentFilters.faixaPopulacionalMunicipio,
+          aglomeradoMunicipio: currentFilters.aglomeradoMunicipio,
+          gerenciaRegionalMunicipio: currentFilters.gerenciaRegionalMunicipio,
+          anoInicial: currentFilters.anoInicial,
+          anoFinal: currentFilters.anoFinal,
+          page: currentFilters.page,
+          limit: currentFilters.limit,
         }),
         fetchData("participacao-transferencias", groupType, {
-          selectedMunicipio,
-          territorioDeDesenvolvimentoMunicipio,
-          faixaPopulacionalMunicipio,
-          aglomeradoMunicipio,
-          gerenciaRegionalMunicipio,
-          page,
-          limit,
+          codigoMunicipio: currentFilters.codigoMunicipio,
+          territorioDeDesenvolvimentoMunicipio: currentFilters.territorioDeDesenvolvimentoMunicipio,
+          faixaPopulacionalMunicipio: currentFilters.faixaPopulacionalMunicipio,
+          aglomeradoMunicipio: currentFilters.aglomeradoMunicipio,
+          gerenciaRegionalMunicipio: currentFilters.gerenciaRegionalMunicipio,
+          anoInicial: currentFilters.anoInicial,
+          anoFinal: currentFilters.anoFinal,
+          page: currentFilters.page,
+          limit: currentFilters.limit,
         }),
         fetchData("razao-impostos-transferencias", groupType, {
-          selectedMunicipio,
-          territorioDeDesenvolvimentoMunicipio,
-          faixaPopulacionalMunicipio,
-          aglomeradoMunicipio,
-          gerenciaRegionalMunicipio,
-          page,
-          limit,
+          codigoMunicipio: currentFilters.codigoMunicipio,
+          territorioDeDesenvolvimentoMunicipio: currentFilters.territorioDeDesenvolvimentoMunicipio,
+          faixaPopulacionalMunicipio: currentFilters.faixaPopulacionalMunicipio,
+          aglomeradoMunicipio: currentFilters.aglomeradoMunicipio,
+          gerenciaRegionalMunicipio: currentFilters.gerenciaRegionalMunicipio,
+          anoInicial: currentFilters.anoInicial,
+          anoFinal: currentFilters.anoFinal,
+          page: currentFilters.page,
+          limit: currentFilters.limit,
         }),
         fetchData("razao-transferencias-impostos", groupType, {
-          selectedMunicipio,
-          territorioDeDesenvolvimentoMunicipio,
-          faixaPopulacionalMunicipio,
-          aglomeradoMunicipio,
-          gerenciaRegionalMunicipio,
-          page,
-          limit,
+          codigoMunicipio: currentFilters.codigoMunicipio,
+          territorioDeDesenvolvimentoMunicipio: currentFilters.territorioDeDesenvolvimentoMunicipio,
+          faixaPopulacionalMunicipio: currentFilters.faixaPopulacionalMunicipio,
+          aglomeradoMunicipio: currentFilters.aglomeradoMunicipio,
+          gerenciaRegionalMunicipio: currentFilters.gerenciaRegionalMunicipio,
+          anoInicial: currentFilters.anoInicial,
+          anoFinal: currentFilters.anoFinal,
+          page: currentFilters.page,
+          limit: currentFilters.limit,
         }),
         fetchData("participacao-fundeb", groupType, {
-          selectedMunicipio,
-          territorioDeDesenvolvimentoMunicipio,
-          faixaPopulacionalMunicipio,
-          aglomeradoMunicipio,
-          gerenciaRegionalMunicipio,
-          page,
-          limit,
+          codigoMunicipio: currentFilters.codigoMunicipio,
+          territorioDeDesenvolvimentoMunicipio: currentFilters.territorioDeDesenvolvimentoMunicipio,
+          faixaPopulacionalMunicipio: currentFilters.faixaPopulacionalMunicipio,
+          aglomeradoMunicipio: currentFilters.aglomeradoMunicipio,
+          gerenciaRegionalMunicipio: currentFilters.gerenciaRegionalMunicipio,
+          anoInicial: currentFilters.anoInicial,
+          anoFinal: currentFilters.anoFinal,
+          page: currentFilters.page,
+          limit: currentFilters.limit,
         }),
       ])
         .then(
@@ -370,40 +439,48 @@ function ChartContainer() {
     } else if (selectedTable === "rpebComposition") {
       Promise.all([
         fetchData("fundeb_participation_mde", groupType, {
-          selectedMunicipio,
-          territorioDeDesenvolvimentoMunicipio,
-          faixaPopulacionalMunicipio,
-          aglomeradoMunicipio,
-          gerenciaRegionalMunicipio,
-          page,
-          limit,
+          codigoMunicipio: currentFilters.codigoMunicipio,
+          territorioDeDesenvolvimentoMunicipio: currentFilters.territorioDeDesenvolvimentoMunicipio,
+          faixaPopulacionalMunicipio: currentFilters.faixaPopulacionalMunicipio,
+          aglomeradoMunicipio: currentFilters.aglomeradoMunicipio,
+          gerenciaRegionalMunicipio: currentFilters.gerenciaRegionalMunicipio,
+          anoInicial: currentFilters.anoInicial,
+          anoFinal: currentFilters.anoFinal,
+          page: currentFilters.page,
+          limit: currentFilters.limit,
         }),
         fetchData("resultado_liquido_fundeb", groupType, {
-          selectedMunicipio,
-          territorioDeDesenvolvimentoMunicipio,
-          faixaPopulacionalMunicipio,
-          aglomeradoMunicipio,
-          gerenciaRegionalMunicipio,
-          page,
-          limit,
+          codigoMunicipio: currentFilters.codigoMunicipio,
+          territorioDeDesenvolvimentoMunicipio: currentFilters.territorioDeDesenvolvimentoMunicipio,
+          faixaPopulacionalMunicipio: currentFilters.faixaPopulacionalMunicipio,
+          aglomeradoMunicipio: currentFilters.aglomeradoMunicipio,
+          gerenciaRegionalMunicipio: currentFilters.gerenciaRegionalMunicipio,
+          anoInicial: currentFilters.anoInicial,
+          anoFinal: currentFilters.anoFinal,
+          page: currentFilters.page,
+          limit: currentFilters.limit,
         }),
         fetchData("participacao_complementacao_uniao", groupType, {
-          selectedMunicipio,
-          territorioDeDesenvolvimentoMunicipio,
-          faixaPopulacionalMunicipio,
-          aglomeradoMunicipio,
-          gerenciaRegionalMunicipio,
-          page,
-          limit,
+          codigoMunicipio: currentFilters.codigoMunicipio,
+          territorioDeDesenvolvimentoMunicipio: currentFilters.territorioDeDesenvolvimentoMunicipio,
+          faixaPopulacionalMunicipio: currentFilters.faixaPopulacionalMunicipio,
+          aglomeradoMunicipio: currentFilters.aglomeradoMunicipio,
+          gerenciaRegionalMunicipio: currentFilters.gerenciaRegionalMunicipio,
+          anoInicial: currentFilters.anoInicial,
+          anoFinal: currentFilters.anoFinal,
+          page: currentFilters.page,
+          limit: currentFilters.limit,
         }),
         fetchData("participacao_receitas_adicionais", groupType, {
-          selectedMunicipio,
-          territorioDeDesenvolvimentoMunicipio,
-          faixaPopulacionalMunicipio,
-          aglomeradoMunicipio,
-          gerenciaRegionalMunicipio,
-          page,
-          limit,
+          codigoMunicipio: currentFilters.codigoMunicipio,
+          territorioDeDesenvolvimentoMunicipio: currentFilters.territorioDeDesenvolvimentoMunicipio,
+          faixaPopulacionalMunicipio: currentFilters.faixaPopulacionalMunicipio,
+          aglomeradoMunicipio: currentFilters.aglomeradoMunicipio,
+          gerenciaRegionalMunicipio: currentFilters.gerenciaRegionalMunicipio,
+          anoInicial: currentFilters.anoInicial,
+          anoFinal: currentFilters.anoFinal,
+          page: currentFilters.page,
+          limit: currentFilters.limit,
         }),
       ])
         .then(
@@ -438,49 +515,59 @@ function ChartContainer() {
     } else if (selectedTable === "educationExpenseComposition") {
       Promise.all([
         fetchData("mde_total_expense", groupType, {
-          selectedMunicipio,
-          territorioDeDesenvolvimentoMunicipio,
-          faixaPopulacionalMunicipio,
-          aglomeradoMunicipio,
-          gerenciaRegionalMunicipio,
-          page,
-          limit,
+          codigoMunicipio: currentFilters.codigoMunicipio,
+          territorioDeDesenvolvimentoMunicipio: currentFilters.territorioDeDesenvolvimentoMunicipio,
+          faixaPopulacionalMunicipio: currentFilters.faixaPopulacionalMunicipio,
+          aglomeradoMunicipio: currentFilters.aglomeradoMunicipio,
+          gerenciaRegionalMunicipio: currentFilters.gerenciaRegionalMunicipio,
+          anoInicial: currentFilters.anoInicial,
+          anoFinal: currentFilters.anoFinal,
+          page: currentFilters.page,
+          limit: currentFilters.limit,
         }),
         fetchData("mde_pessoal_ativo", groupType, {
-          selectedMunicipio,
-          territorioDeDesenvolvimentoMunicipio,
-          faixaPopulacionalMunicipio,
-          aglomeradoMunicipio,
-          gerenciaRegionalMunicipio,
-          page,
-          limit,
+          codigoMunicipio: currentFilters.codigoMunicipio,
+          territorioDeDesenvolvimentoMunicipio: currentFilters.territorioDeDesenvolvimentoMunicipio,
+          faixaPopulacionalMunicipio: currentFilters.faixaPopulacionalMunicipio,
+          aglomeradoMunicipio: currentFilters.aglomeradoMunicipio,
+          gerenciaRegionalMunicipio: currentFilters.gerenciaRegionalMunicipio,
+          anoInicial: currentFilters.anoInicial,
+          anoFinal: currentFilters.anoFinal,
+          page: currentFilters.page,
+          limit: currentFilters.limit,
         }),
         fetchData("mde_pessoal_inativo", groupType, {
-          selectedMunicipio,
-          territorioDeDesenvolvimentoMunicipio,
-          faixaPopulacionalMunicipio,
-          aglomeradoMunicipio,
-          gerenciaRegionalMunicipio,
-          page,
-          limit,
+          codigoMunicipio: currentFilters.codigoMunicipio,
+          territorioDeDesenvolvimentoMunicipio: currentFilters.territorioDeDesenvolvimentoMunicipio,
+          faixaPopulacionalMunicipio: currentFilters.faixaPopulacionalMunicipio,
+          aglomeradoMunicipio: currentFilters.aglomeradoMunicipio,
+          gerenciaRegionalMunicipio: currentFilters.gerenciaRegionalMunicipio,
+          anoInicial: currentFilters.anoInicial,
+          anoFinal: currentFilters.anoFinal,
+          page: currentFilters.page,
+          limit: currentFilters.limit,
         }),
         fetchData("mde_capital", groupType, {
-          selectedMunicipio,
-          territorioDeDesenvolvimentoMunicipio,
-          faixaPopulacionalMunicipio,
-          aglomeradoMunicipio,
-          gerenciaRegionalMunicipio,
-          page,
-          limit,
+          codigoMunicipio: currentFilters.codigoMunicipio,
+          territorioDeDesenvolvimentoMunicipio: currentFilters.territorioDeDesenvolvimentoMunicipio,
+          faixaPopulacionalMunicipio: currentFilters.faixaPopulacionalMunicipio,
+          aglomeradoMunicipio: currentFilters.aglomeradoMunicipio,
+          gerenciaRegionalMunicipio: currentFilters.gerenciaRegionalMunicipio,
+          anoInicial: currentFilters.anoInicial,
+          anoFinal: currentFilters.anoFinal,
+          page: currentFilters.page,
+          limit: currentFilters.limit,
         }),
         fetchData("mde_transferencias_instituicoes_privadas", groupType, {
-          selectedMunicipio,
-          territorioDeDesenvolvimentoMunicipio,
-          faixaPopulacionalMunicipio,
-          aglomeradoMunicipio,
-          gerenciaRegionalMunicipio,
-          page,
-          limit,
+          codigoMunicipio: currentFilters.codigoMunicipio,
+          territorioDeDesenvolvimentoMunicipio: currentFilters.territorioDeDesenvolvimentoMunicipio,
+          faixaPopulacionalMunicipio: currentFilters.faixaPopulacionalMunicipio,
+          aglomeradoMunicipio: currentFilters.aglomeradoMunicipio,
+          gerenciaRegionalMunicipio: currentFilters.gerenciaRegionalMunicipio,
+          anoInicial: currentFilters.anoInicial,
+          anoFinal: currentFilters.anoFinal,
+          page: currentFilters.page,
+          limit: currentFilters.limit,
         }),
       ])
         .then(
@@ -518,40 +605,48 @@ function ChartContainer() {
     } else if (selectedTable === "resourcesApplicationControl") {
       Promise.all([
         fetchData("aplicacao_mde", groupType, {
-          selectedMunicipio,
-          territorioDeDesenvolvimentoMunicipio,
-          faixaPopulacionalMunicipio,
-          aglomeradoMunicipio,
-          gerenciaRegionalMunicipio,
-          page,
-          limit,
+          codigoMunicipio: currentFilters.codigoMunicipio,
+          territorioDeDesenvolvimentoMunicipio: currentFilters.territorioDeDesenvolvimentoMunicipio,
+          faixaPopulacionalMunicipio: currentFilters.faixaPopulacionalMunicipio,
+          aglomeradoMunicipio: currentFilters.aglomeradoMunicipio,
+          gerenciaRegionalMunicipio: currentFilters.gerenciaRegionalMunicipio,
+          anoInicial: currentFilters.anoInicial,
+          anoFinal: currentFilters.anoFinal,
+          page: currentFilters.page,
+          limit: currentFilters.limit,
         }),
         fetchData("aplicacao_fundeb_pag_profissionais_educacao", groupType, {
-          selectedMunicipio,
-          territorioDeDesenvolvimentoMunicipio,
-          faixaPopulacionalMunicipio,
-          aglomeradoMunicipio,
-          gerenciaRegionalMunicipio,
-          page,
-          limit,
+          codigoMunicipio: currentFilters.codigoMunicipio,
+          territorioDeDesenvolvimentoMunicipio: currentFilters.territorioDeDesenvolvimentoMunicipio,
+          faixaPopulacionalMunicipio: currentFilters.faixaPopulacionalMunicipio,
+          aglomeradoMunicipio: currentFilters.aglomeradoMunicipio,
+          gerenciaRegionalMunicipio: currentFilters.gerenciaRegionalMunicipio,
+          anoInicial: currentFilters.anoInicial,
+          anoFinal: currentFilters.anoFinal,
+          page: currentFilters.page,
+          limit: currentFilters.limit,
         }),
         fetchData("aplicacao_vaat_educacao_infantil", groupType, {
-          selectedMunicipio,
-          territorioDeDesenvolvimentoMunicipio,
-          faixaPopulacionalMunicipio,
-          aglomeradoMunicipio,
-          gerenciaRegionalMunicipio,
-          page,
-          limit,
+          codigoMunicipio: currentFilters.codigoMunicipio,
+          territorioDeDesenvolvimentoMunicipio: currentFilters.territorioDeDesenvolvimentoMunicipio,
+          faixaPopulacionalMunicipio: currentFilters.faixaPopulacionalMunicipio,
+          aglomeradoMunicipio: currentFilters.aglomeradoMunicipio,
+          gerenciaRegionalMunicipio: currentFilters.gerenciaRegionalMunicipio,
+          anoInicial: currentFilters.anoInicial,
+          anoFinal: currentFilters.anoFinal,
+          page: currentFilters.page,
+          limit: currentFilters.limit,
         }),
         fetchData("aplicacao_vaat_despesa_capital", groupType, {
-          selectedMunicipio,
-          territorioDeDesenvolvimentoMunicipio,
-          faixaPopulacionalMunicipio,
-          aglomeradoMunicipio,
-          gerenciaRegionalMunicipio,
-          page,
-          limit,
+          codigoMunicipio: currentFilters.codigoMunicipio,
+          territorioDeDesenvolvimentoMunicipio: currentFilters.territorioDeDesenvolvimentoMunicipio,
+          faixaPopulacionalMunicipio: currentFilters.faixaPopulacionalMunicipio,
+          aglomeradoMunicipio: currentFilters.aglomeradoMunicipio,
+          gerenciaRegionalMunicipio: currentFilters.gerenciaRegionalMunicipio,
+          anoInicial: currentFilters.anoInicial,
+          anoFinal: currentFilters.anoFinal,
+          page: currentFilters.page,
+          limit: currentFilters.limit,
         }),
       ])
         .then(
@@ -586,22 +681,26 @@ function ChartContainer() {
     } else if (selectedTable === "financingCapacity") {
       Promise.all([
         fetchData("composicao_fundeb_financiamento", groupType, {
-          selectedMunicipio,
-          territorioDeDesenvolvimentoMunicipio,
-          faixaPopulacionalMunicipio,
-          aglomeradoMunicipio,
-          gerenciaRegionalMunicipio,
-          page,
-          limit,
+          codigoMunicipio: currentFilters.codigoMunicipio,
+          territorioDeDesenvolvimentoMunicipio: currentFilters.territorioDeDesenvolvimentoMunicipio,
+          faixaPopulacionalMunicipio: currentFilters.faixaPopulacionalMunicipio,
+          aglomeradoMunicipio: currentFilters.aglomeradoMunicipio,
+          gerenciaRegionalMunicipio: currentFilters.gerenciaRegionalMunicipio,
+          anoInicial: currentFilters.anoInicial,
+          anoFinal: currentFilters.anoFinal,
+          page: currentFilters.page,
+          limit: currentFilters.limit,
         }),
         fetchData("composicao_rpeb_financiamento", groupType, {
-          selectedMunicipio,
-          territorioDeDesenvolvimentoMunicipio,
-          faixaPopulacionalMunicipio,
-          aglomeradoMunicipio,
-          gerenciaRegionalMunicipio,
-          page,
-          limit,
+          codigoMunicipio: currentFilters.codigoMunicipio,
+          territorioDeDesenvolvimentoMunicipio: currentFilters.territorioDeDesenvolvimentoMunicipio,
+          faixaPopulacionalMunicipio: currentFilters.faixaPopulacionalMunicipio,
+          aglomeradoMunicipio: currentFilters.aglomeradoMunicipio,
+          gerenciaRegionalMunicipio: currentFilters.gerenciaRegionalMunicipio,
+          anoInicial: currentFilters.anoInicial,
+          anoFinal: currentFilters.anoFinal,
+          page: currentFilters.page,
+          limit: currentFilters.limit,
         }),
       ])
         .then(
@@ -627,13 +726,15 @@ function ChartContainer() {
     } else {
       // Existing fetch logic for other tables
       fetchData(selectedTable, groupType, {
-        selectedMunicipio,
-        territorioDeDesenvolvimentoMunicipio,
-        faixaPopulacionalMunicipio,
-        aglomeradoMunicipio,
-        gerenciaRegionalMunicipio,
-        page,
-        limit,
+        codigoMunicipio: currentFilters.codigoMunicipio,
+        territorioDeDesenvolvimentoMunicipio: currentFilters.territorioDeDesenvolvimentoMunicipio,
+        faixaPopulacionalMunicipio: currentFilters.faixaPopulacionalMunicipio,
+        aglomeradoMunicipio: currentFilters.aglomeradoMunicipio,
+        gerenciaRegionalMunicipio: currentFilters.gerenciaRegionalMunicipio,
+        anoInicial: currentFilters.anoInicial,
+        anoFinal: currentFilters.anoFinal,
+        page: currentFilters.page,
+        limit: currentFilters.limit,
       })
         .then((data) => {
           setApiData(data);
@@ -650,27 +751,44 @@ function ChartContainer() {
 
   const handleTableChange = (event) => {
     setSelectedTable(event.target.value);
-    setLoading(true);
     setApiData(null);
-    fetchTableData();
+    setHasInitialLoad(false); // Reset para mostrar a mensagem de filtro
+    // Não carrega dados automaticamente - aguarda o usuário filtrar
   };
 
   const handleGroupTypeChange = (event) => {
     setGroupType(event.target.value);
-    setLoading(true);
     setApiData(null);
-    fetchTableData();
+    setHasInitialLoad(false); // Reset para mostrar a mensagem de filtro
+    // Não carrega dados automaticamente - aguarda o usuário filtrar
   };
 
   const handleFilterChange = (filters) => {
-    setSelectedMunicipio(filters.selectedMunicipio);
+    setSelectedMunicipio(filters.codigoMunicipio);
     setTerritorioDeDesenvolvimentoMunicipio(filters.territorioDeDesenvolvimentoMunicipio);
     setFaixaPopulacionalMunicipio(filters.faixaPopulacionalMunicipio);
     setAglomeradoMunicipio(filters.aglomeradoMunicipio);
     setGerenciaRegionalMunicipio(filters.gerenciaRegionalMunicipio);
+    setFilters(prev => ({
+      ...prev,
+      anoInicial: filters.anoInicial,
+      anoFinal: filters.anoFinal,
+    }));
     setLoading(true);
     setHasInitialLoad(true);
-    fetchTableData();
+    
+    // Usar os valores dos filtros diretamente em vez de aguardar o estado ser atualizado
+    fetchTableData({
+      codigoMunicipio: filters.codigoMunicipio,
+      territorioDeDesenvolvimentoMunicipio: filters.territorioDeDesenvolvimentoMunicipio,
+      faixaPopulacionalMunicipio: filters.faixaPopulacionalMunicipio,
+      aglomeradoMunicipio: filters.aglomeradoMunicipio,
+      gerenciaRegionalMunicipio: filters.gerenciaRegionalMunicipio,
+      anoInicial: filters.anoInicial,
+      anoFinal: filters.anoFinal,
+      page: 1,
+      limit: limit,
+    });
   };
 
   const handlePageChange = (event, newPage) => {
@@ -691,56 +809,36 @@ function ChartContainer() {
     <div>
       <div className="app-container">
         <div className="filters-section">
-          <div className="selects-wrapper">
-            <div className="select-container">
-              <label htmlFor="tableSelect" className="select-label">
-                Selecione o indicador:
-              </label>
-              <select
-                id="tableSelect"
-                value={selectedTable}
-                onChange={handleTableChange}
-                className="select-box"
-              >
-                <option value="constitutionalLimitMde">
-                  Percentual aplicado em MDE
-                </option>
-                <option value="expensesBasicEducationFundeb">
-                  Percentual do fundeb nos profissionais de educação básica
-                </option>
-                <option value="revenueComposition">
-                  Composição das Receitas Impostos e Transferências
-                  Constitucionais e Legais [%]
-                </option>
-                <option value="financingCapacity">
-                  Capacidade de Financiamento
-                </option>
-                <option value="rpebComposition">
-                  Composição da Receita Potencial da Educação Básica [%]
-                </option>
-                <option value="resourcesApplicationControl">
-                  Controle da Aplicação de Recursos
-                </option>
-                <option value="educationExpenseComposition">
-                  Composição das Despesas em Educação [%]
-                </option>
-              </select>
-            </div>
+          <div 
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+              gap: '20px',
+              width: '100%',
+              marginBottom: '20px'
+            }}
+          >
+            <Select
+              label="Selecione o indicador:"
+              value={indicatorOptions.find(option => option.value === selectedTable)}
+              onChange={(option) => handleTableChange({ target: { value: option.value } })}
+              options={indicatorOptions}
+              placeholder="Selecione um indicador"
+              size="xs"
+              isClearable
+              fullWidth
+            />
 
-            <div className="select-container">
-              <label htmlFor="groupTypeSelect" className="select-label">
-                Tipo de Agrupamento:
-              </label>
-              <select
-                id="groupTypeSelect"
-                value={groupType}
-                onChange={handleGroupTypeChange}
-                className="select-box"
-              >
-                <option value="municipio">Município</option>
-                <option value="ano">Ano</option>
-              </select>
-            </div>
+            <Select
+              label="Tipo de Agrupamento:"
+              value={groupTypeOptions.find(option => option.value === groupType)}
+              onChange={(option) => handleGroupTypeChange({ target: { value: option.value } })}
+              options={groupTypeOptions}
+              placeholder="Selecione o tipo de agrupamento"
+              size="xs"
+              isClearable
+              fullWidth
+            />
           </div>
 
           <FilterComponent
@@ -750,6 +848,8 @@ function ChartContainer() {
             faixaPopulacionalMunicipio={faixaPopulacionalMunicipio}
             aglomeradoMunicipio={aglomeradoMunicipio}
             gerenciaRegionalMunicipio={gerenciaRegionalMunicipio}
+            anoInicial={filters.anoInicial}
+            anoFinal={filters.anoFinal}
           />
         </div>
 
