@@ -25,9 +25,9 @@ const indicatorOptions = [
   { value: 'expensesBasicEducationFundeb', label: 'Percentual do fundeb nos profissionais de educação básica' },
   { value: 'revenueComposition', label: 'Composição das Receitas Impostos e Transferências Constitucionais e Legais [%]' },
   { value: 'financingCapacity', label: 'Capacidade de Financiamento' },
-  { value: 'rpebComposition', label: 'Composição da Receita Potencial da Educação Básica [%]' },
-  { value: 'resourcesApplicationControl', label: 'Controle da Aplicação de Recursos' },
-  { value: 'educationExpenseComposition', label: 'Composição das Despesas em Educação [%]' },
+  // { value: 'rpebComposition', label: 'Composição da Receita Potencial da Educação Básica [%]' },
+  // { value: 'resourcesApplicationControl', label: 'Controle da Aplicação de Recursos' },
+  // { value: 'educationExpenseComposition', label: 'Composição das Despesas em Educação [%]' },
 ];
 
 const groupTypeOptions = [
@@ -794,7 +794,17 @@ function ChartContainer() {
   const handlePageChange = (event, newPage) => {
     setPage(newPage);
     setLoading(true);
-    fetchTableData();
+    fetchTableData({
+      codigoMunicipio: selectedMunicipio,
+      territorioDeDesenvolvimentoMunicipio,
+      faixaPopulacionalMunicipio,
+      aglomeradoMunicipio,
+      gerenciaRegionalMunicipio,
+      anoInicial: filters.anoInicial,
+      anoFinal: filters.anoFinal,
+      page: newPage,
+      limit,
+    });
   };
 
   const handleLimitChange = (event) => {
@@ -802,7 +812,17 @@ function ChartContainer() {
     setLimit(newLimit);
     setPage(1);
     setLoading(true);
-    fetchTableData();
+    fetchTableData({
+      codigoMunicipio: selectedMunicipio,
+      territorioDeDesenvolvimentoMunicipio,
+      faixaPopulacionalMunicipio,
+      aglomeradoMunicipio,
+      gerenciaRegionalMunicipio,
+      anoInicial: filters.anoInicial,
+      anoFinal: filters.anoFinal,
+      page: 1,
+      limit: newLimit,
+    });
   };
 
   return (
