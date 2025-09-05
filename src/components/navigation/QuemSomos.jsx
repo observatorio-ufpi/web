@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaGraduationCap, FaSearch, FaBook, FaDollarSign, FaUsers, FaUniversity, FaTimes } from 'react-icons/fa';
+import { FaGraduationCap, FaSearch, FaBook, FaDollarSign, FaUsers, FaUniversity, FaTimes, FaCode, FaFreeCodeCamp, FaCodeBranch, FaCodepen } from 'react-icons/fa';
 import { MdSchool, MdPeople, MdScience } from 'react-icons/md';
 
 const QuemSomos = () => {
@@ -408,7 +408,7 @@ const QuemSomos = () => {
       <section className="py-20">
         <div className="max-w-7xl mx-auto px-4 text-center">
           <h2 className="text-4xl md:text-5xl font-bold text-black mb-16 italic">
-            Linhas de pesquisa
+            Faça sua pesquisa sobre
           </h2>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -455,12 +455,18 @@ const QuemSomos = () => {
         </div>
       </section>
 
-             {/* Células de Pesquisa Section */}
-       <section className="py-20">
+      <div className="max-w-7xl mx-auto px-4 text-center py-20">
+        <h2 className="text-4xl md:text-5xl font-bold text-black mb-16 italic">
+          Equipe do Opepi
+        </h2>
+      </div>
+
+      {/* Células de Pesquisa Section */}
+       <section>
         <div className="max-w-7xl mx-auto px-4 text-center">
-          <h2 className="text-4xl md:text-5xl font-bold text-black mb-16 italic">
+          <h3 className="text-3xl md:text-4xl font-bold text-black mb-16 italic">
             Células de pesquisa
-          </h2>
+          </h3>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                          {/* Célula 1 */}
@@ -578,67 +584,55 @@ const QuemSomos = () => {
         </div>
       </section>
 
-      {/* Equipe do Opepi Section */}
-      <section className="py-20">
-        <div className="max-w-7xl mx-auto px-4 text-center">
-          <h2 className="text-4xl md:text-5xl font-bold text-black mb-16 italic">
-            Equipe do Opepi
-          </h2>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
-            {/* Coluna Esquerda */}
-            <div className="text-left">
-              {/* Pesquisadores */}
-              <div className="mb-12">
-                <h3 className="text-2xl font-bold text-gray-800 mb-6">Pesquisadores</h3>
-                <ul className="space-y-3 text-gray-700">
-                  <li>Magna Jovita Gomes de Sales e Silva</li>
-                  <li>Maria do Socorro Soares</li>
-                  <li>Otilio Paulo da Silva Neto</li>
-                  <li>Romildo de Castro Araújo</li>
-                  <li>Geraldo do Nascimento Carvalho</li>
-                  <li>Lucineide Maria dos Santos Soares</li>
-                  <li>Luís Carlos Sales</li>
-                </ul>
-              </div>
+             {/* Grupos de Trabalho Section */}
+       <section className="py-20">
+         <div className="max-w-7xl mx-auto px-4 text-center">
+           <h3 className="text-3xl md:text-4xl font-bold text-black mb-16 italic">
+             Grupos de Trabalho
+           </h3>
+           
+           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+             {/* GT Dados */}
+             <div 
+               className="p-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-105" 
+               style={{ backgroundColor: 'var(--background-color)' }}
+             >
+               <div className="text-blue-600 text-3xl mb-4 flex justify-center">
+                 <FaSearch />
+               </div>
+               <h3 className="text-lg font-semibold text-gray-800">
+                 GT Dados
+               </h3>
+             </div>
 
-              {/* Coordenação */}
-              <div>
-                <h3 className="text-2xl font-bold text-gray-800 mb-6">Coordenação</h3>
-                <ul className="space-y-3 text-gray-700">
-                  <li>Profª Drª Rosana Evangelista da Cruz (DEFE/UFPI)</li>
-                  <li>Prof. Dr. Thiago Alves (FACE/UFG)</li>
-                </ul>
-              </div>
-            </div>
+             {/* GT Plataforma */}
+             <div 
+               className="p-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-105" 
+               style={{ backgroundColor: 'var(--background-color)' }}
+             >
+               <div className="text-green-600 text-3xl mb-4 flex justify-center">
+                 <FaCode />
+               </div>
+               <h3 className="text-lg font-semibold text-gray-800">
+                 GT Plataforma
+               </h3>
+             </div>
 
-            {/* Coluna Direita */}
-            <div className="text-left">
-              {/* Discentes */}
-              <div className="mb-12">
-                <h3 className="text-2xl font-bold text-gray-800 mb-6">Discentes</h3>
-                <ul className="space-y-3 text-gray-700">
-                  <li>Francislene Santos Castro</li>
-                  <li>Jéssica Maiure Chaves Matos</li>
-                  <li>Lucine Rodrigues Vasconcelos</li>
-                  <li>Silvania Uchôa de Castro</li>
-                  <li>Valquira Macedo Cantuario</li>
-                </ul>
-              </div>
-
-              {/* Colaboradores */}
-              <div>
-                <h3 className="text-2xl font-bold text-gray-800 mb-6">Colaboradores</h3>
-                <ul className="space-y-3 text-gray-700">
-                  <li>Francisco Ivan Assis de Araújo</li>
-                  <li>Juliana Da Silva Melo</li>
-                  <li>Maria de Jesus Rodrigues Duarte</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+             {/* GT Legislação */}
+             <div 
+               className="p-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-105" 
+               style={{ backgroundColor: 'var(--background-color)' }}
+             >
+               <div className="text-orange-600 text-3xl mb-4 flex justify-center">
+                 <FaGraduationCap />
+               </div>
+               <h3 className="text-lg font-semibold text-gray-800">
+                 GT Legislação
+               </h3>
+             </div>
+           </div>
+         </div>
+       </section>
 
              {/* Nuppege Section */}
        <section className="py-20">
