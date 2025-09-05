@@ -11,7 +11,7 @@ import {
 } from 'recharts';
 
 const HistoricalChart = ({ data, type, isEtapaSelected, isLocalidadeSelected, isDependenciaSelected,
-  isVinculoSelected, isFormacaoDocenteSelected, isFaixaEtariaSelected }) => {
+  isVinculoSelected, isFormacaoDocenteSelected, isFaixaEtariaSelected, isInstructionLevelSelected }) => {
   if (!data || !data.result) {
     return null;
   }
@@ -41,6 +41,7 @@ const HistoricalChart = ({ data, type, isEtapaSelected, isLocalidadeSelected, is
     if (isVinculoSelected) return { name: 'contract_type_name', label: 'Vínculo' };
     if (isFormacaoDocenteSelected) return { name: 'initial_training_name', label: 'Formação Docente' };
     if (isFaixaEtariaSelected) return { name: 'age_range_name', label: 'Faixa Etária' };
+    if (isInstructionLevelSelected) return { name: 'instruction_level_name', label: 'Nível de Instrução' };
     return null;
   };
 
@@ -86,8 +87,20 @@ const HistoricalChart = ({ data, type, isEtapaSelected, isLocalidadeSelected, is
 
   const colors = [
     '#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#a4de6c',
-    '#d0ed57', '#83a6ed', '#8dd1e1', '#a4de6c', '#d0ed57'
+    '#d0ed57', '#83a6ed', '#8dd1e1', '#ff6b6b', '#4ecdc4',
+    '#45b7d1', '#96ceb4', '#feca57', '#ff9ff3', '#54a0ff'
   ];
+
+  // Função para formatar valores no tooltip
+  const formatTooltipValue = (value, name) => {
+    const formattedValue = typeof value === 'number' ? value.toLocaleString('pt-BR') : value;
+    return [formattedValue, name];
+  };
+
+  // Função para formatar valores no eixo Y
+  const formatYAxisValue = (value) => {
+    return typeof value === 'number' ? value.toLocaleString('pt-BR') : value;
+  };
 
   return (
     <div style={{
@@ -95,31 +108,47 @@ const HistoricalChart = ({ data, type, isEtapaSelected, isLocalidadeSelected, is
       marginTop: '2rem',
       border: '2px solid #ccc',
       borderRadius: '4px',
-      padding: '20px'
+      padding: '20px',
+      backgroundColor: '#ffffff',
+      boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
     }}>
       <ResponsiveContainer>
         <LineChart
           data={chartData}
           margin={{ top: 20, right: 30, left: 40, bottom: 60 }}
         >
-          <CartesianGrid strokeDasharray="3 3" />
+          <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
           <XAxis
             dataKey="year"
+            tick={{ fontSize: 12, fill: '#666' }}
             label={{
               value: 'Ano',
               position: 'insideBottom',
-              offset: -5
+              offset: -5,
+              style: { textAnchor: 'middle', fontSize: 14, fontWeight: 'bold' }
             }}
           />
           <YAxis
+            tick={{ fontSize: 12, fill: '#666' }}
+            tickFormatter={formatYAxisValue}
             label={{
               value: type === 'school/count' ? 'Número de Escolas' : 'Total',
               angle: -90,
               position: 'insideLeft',
-              offset: -20
+              offset: -20,
+              style: { textAnchor: 'middle', fontSize: 14, fontWeight: 'bold' }
             }}
           />
-          <Tooltip />
+          <Tooltip
+            formatter={formatTooltipValue}
+            labelStyle={{ color: '#333', fontWeight: 'bold' }}
+            contentStyle={{
+              backgroundColor: 'rgba(255, 255, 255, 0.95)',
+              border: '1px solid #ccc',
+              borderRadius: '4px',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+            }}
+          />
           <Legend
             verticalAlign="bottom"
             align="center"
@@ -127,6 +156,7 @@ const HistoricalChart = ({ data, type, isEtapaSelected, isLocalidadeSelected, is
               paddingTop: '10px',
               bottom: 0
             }}
+            iconType="line"
           />
           {lines.map((line, index) => (
             <Line
@@ -134,6 +164,9 @@ const HistoricalChart = ({ data, type, isEtapaSelected, isLocalidadeSelected, is
               type="monotone"
               dataKey={line}
               stroke={colors[index % colors.length]}
+              strokeWidth={3}
+              dot={{ fill: colors[index % colors.length], strokeWidth: 2, r: 4 }}
+              activeDot={{ r: 6, stroke: colors[index % colors.length], strokeWidth: 2 }}
               name={line}
             />
           ))}

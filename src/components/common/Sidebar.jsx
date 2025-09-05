@@ -31,11 +31,11 @@ const Sidebar = () => {
       </button>
 
       {/* Sidebar */}
-      <aside 
+      <aside
         className={`${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         } md:translate-x-0 fixed left-0 top-0 h-screen overflow-y-auto transition-transform duration-300 ease-in-out z-40 shadow-lg`}
-        style={{ 
+        style={{
           backgroundColor: '#E8E4E3',
           width: isOpen ? '16rem' : '4rem'
         }}
@@ -57,7 +57,7 @@ const Sidebar = () => {
             </Link>
           </div>
         </div>
-        
+
         <hr className="border-gray-300" />
 
         {/* Navegação */}
@@ -78,7 +78,7 @@ const Sidebar = () => {
                   }`}
                 >
                   <FaGraduationCap className="mr-3 text-lg flex-shrink-0" />
-                  <span className={`${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>ABC Ed. Básica</span>
+                  <span className={`${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>Educação Básica</span>
                 </Link>
               </li>
               <li>
@@ -91,7 +91,7 @@ const Sidebar = () => {
                   }`}
                 >
                   <FaGraduationCap className="mr-3 text-lg flex-shrink-0" />
-                  <span className={`${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>Ed. Superior</span>
+                  <span className={`${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>Ensino Superior</span>
                 </Link>
               </li>
               <li>

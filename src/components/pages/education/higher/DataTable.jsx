@@ -6,6 +6,8 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import { ThemeProvider, createTheme, styled } from '@mui/material/styles';
 import React from 'react';
+import BarChart from '../../../common/BarChart';
+import PieChart from '../../../common/PieChart';
 import TableExport from '../../../common/TableExport';
 
 // ==========================================
@@ -269,6 +271,14 @@ const processCrossTableData = (data, rowIdField, columnIdField, rowField, column
   };
 };
 
+  // Formata números com pontos para separar milhares
+  const formatNumber = (value) => {
+    if (value === null || value === undefined || value === '') return '';
+    const num = Number(value);
+    if (isNaN(num)) return value;
+    return num.toLocaleString('pt-BR');
+  };
+
   const hasNoData = (data, tableDataArray, municipioDataArray) => {
     const noFilterData = !Array.isArray(data?.result) || data.result.length === 0;
     const noCrossData = !data?.result?.byModalidadeAndFaixaEtariaSuperior?.length &&
@@ -323,7 +333,9 @@ const processCrossTableData = (data, rowIdField, columnIdField, rowField, column
                     >
                       {header === 'total' && formatTotal
                         ? `${Number(item[header] || 0).toFixed(2)}%`
-                        : item[header]?.toString() || ''}
+                        : header === 'total'
+                          ? formatNumber(item[header])
+                          : item[header]?.toString() || ''}
                     </TableCell>
                   ))}
                 </TableRow>
@@ -456,7 +468,7 @@ const DataTable = ({
                 <TableRow>
                   {sortedYears.map(year => (
                     <CenteredTableCell key={year}>
-                      {yearMap.get(year)}
+                      {formatNumber(yearMap.get(year))}
                     </CenteredTableCell>
                   ))}
                 </TableRow>
@@ -540,7 +552,7 @@ const DataTable = ({
                     <CenteredTableCell>{category}</CenteredTableCell>
                     {sortedYears.map(year => (
                       <CenteredTableCell key={year}>
-                        {yearMap.get(year) || 0}
+                        {formatNumber(yearMap.get(year) || 0)}
                       </CenteredTableCell>
                     ))}
                   </TableRow>
@@ -626,26 +638,30 @@ const renderCrossTable = () => {
                   <CenteredTableCell>{rowName}</CenteredTableCell>
                   {Array.from(uniqueColumns.keys()).map(columnId => (
                     <CenteredTableCell key={columnId}>
-                      {cellValues.get(`${rowId}-${columnId}`) || 0}
+                      {formatNumber(cellValues.get(`${rowId}-${columnId}`) || 0)}
                     </CenteredTableCell>
                   ))}
-                  <CenteredTableCell>{rowTotals.get(rowId)}</CenteredTableCell>
+                  <CenteredTableCell>{formatNumber(rowTotals.get(rowId))}</CenteredTableCell>
                 </TableRow>
               ))}
             <TableRow>
               <BoldTableCell>Total</BoldTableCell>
               {Array.from(uniqueColumns.keys()).map(columnId => (
                 <BoldTableCell key={columnId}>
-                  {columnTotals.get(columnId)}
+                  {formatNumber(columnTotals.get(columnId))}
                 </BoldTableCell>
               ))}
               <BoldTableCell>
-                {Array.from(columnTotals.values()).reduce((sum, val) => sum + val, 0)}
+                {formatNumber(Array.from(columnTotals.values()).reduce((sum, val) => sum + val, 0))}
               </BoldTableCell>
             </TableRow>
           </TableBody>
         </Table>
       </TableContainer>
+
+      {/* Adicionar gráficos para tabelas cruzadas */}
+      {renderCrossTableCharts(uniqueRows, uniqueColumns, cellValues, config.rowHeader)}
+
       <TableExport
         data={exportData}
         headers={exportHeaders}
@@ -657,6 +673,128 @@ const renderCrossTable = () => {
     </div>
   );
 };
+
+  // Função para renderizar gráficos para tabelas simples
+  const renderSimpleTableCharts = (filterType, tableData) => {
+    if (!tableData || tableData.length === 0) return null;
+
+    // Mapear os campos corretos para cada tipo de filtro
+    const getFieldName = (filterType) => {
+      switch (filterType) {
+        case 'modalidade':
+          return 'upper_education_mod_name';
+        case 'regimeDeTrabalho':
+          return 'work_regime_name';
+        case 'formacaoDocente':
+          return 'initial_training_name';
+        case 'categoriaAdministrativa':
+          return 'upper_adm_dependency_name';
+        case 'faixaEtariaSuperior':
+          return 'age_student_code_name';
+        case 'organizacaoAcademica':
+          return 'academic_level_name';
+        default:
+          return Object.keys(tableData[0] || {}).find(key => key !== 'total');
+      }
+    };
+
+    const fieldName = getFieldName(filterType);
+    const chartData = tableData.map(item => ({
+      name: item[fieldName] || 'N/A',
+      value: Number(item.total) || 0
+    }));
+
+    // Determinar se deve usar gráfico de pizza ou barras baseado no número de itens
+    const usePieChart = chartData.length <= 8 && chartData.length > 1;
+    const chartTitle = getTableTitle(filterType);
+
+    return (
+      <div style={{ marginTop: '1rem' }}>
+        {usePieChart ? (
+          <PieChart
+            data={chartData}
+            title={`Distribuição por ${chartTitle.replace('Dados por ', '')}`}
+            height={400}
+          />
+        ) : (
+          <BarChart
+            data={chartData}
+            title={chartTitle}
+            height={400}
+            xAxisKey="name"
+            yAxisKey="value"
+            showLegend={false}
+          />
+        )}
+      </div>
+    );
+  };
+
+  // Função para obter título legível para cada tipo de filtro
+  const getTableTitle = (filterType) => {
+    switch (filterType) {
+      case 'modalidade':
+        return 'Dados por Modalidade';
+      case 'regimeDeTrabalho':
+        return 'Dados por Regime de Trabalho';
+      case 'formacaoDocente':
+        return 'Dados por Formação Docente';
+      case 'categoriaAdministrativa':
+        return 'Dados por Categoria Administrativa';
+      case 'faixaEtariaSuperior':
+        return 'Dados por Faixa Etária';
+      case 'organizacaoAcademica':
+        return 'Dados por Organização Acadêmica';
+      default:
+        return `Dados por ${filterType}`;
+    }
+  };
+
+  // Função para renderizar gráficos para tabelas cruzadas
+  const renderCrossTableCharts = (uniqueRows, uniqueColumns, cellValues, rowHeader) => {
+    if (!uniqueRows || !uniqueColumns || uniqueRows.size === 0 || uniqueColumns.size === 0) {
+      return null;
+    }
+
+    // Criar dados para gráfico de barras agrupadas
+    const chartData = Array.from(uniqueRows.entries()).map(([rowId, rowName]) => {
+      const rowData = { name: rowName };
+      Array.from(uniqueColumns.entries()).forEach(([colId, colName]) => {
+        rowData[colName] = Number(cellValues.get(`${rowId}-${colId}`) || 0);
+      });
+      return rowData;
+    });
+
+    // Se há muitas colunas, usar gráfico de pizza para a primeira linha
+    if (uniqueColumns.size > 6) {
+      const firstRowData = Array.from(uniqueColumns.entries()).map(([colId, colName]) => ({
+        name: colName,
+        value: Number(cellValues.get(`${Array.from(uniqueRows.keys())[0]}-${colId}`) || 0)
+      }));
+
+      return (
+        <div style={{ marginTop: '1rem' }}>
+          <PieChart
+            data={firstRowData}
+            title={`Distribuição - ${Array.from(uniqueRows.values())[0]}`}
+            height={400}
+          />
+        </div>
+      );
+    }
+
+    return (
+      <div style={{ marginTop: '1rem' }}>
+        <BarChart
+          data={chartData}
+          title={`Comparação por ${rowHeader}`}
+          height={400}
+          xAxisKey="name"
+          showLegend={true}
+        />
+      </div>
+    );
+  };
 
   const renderSimpleTable = (filterType) => {
     let headers, tableData, sortField, formatTotal, usePagination = false, note = null;
@@ -707,12 +845,16 @@ const renderCrossTable = () => {
           note={note}
           ref={tableRefs[filterType]}
         />
+
+        {/* Adicionar gráficos para tabelas simples */}
+        {renderSimpleTableCharts(filterType, tableData)}
+
         <TableExport
           data={tableData}
           headers={headers}
           headerDisplayNames={HEADER_DISPLAY_NAMES}
           fileName={`dados_por_${filterType}`}
-          tableTitle={title || `Dados por ${filterType === 'modalidade' ? 'Modalidade' : filterType === 'regimeDeTrabalho' ? 'Regime de Trabalho' : filterType === 'formacaoDocente' ? 'Formação Docente' : filterType === 'categoriaAdministrativa' ? 'Categoria Administrativa' : filterType === 'faixaEtariaSuperior' ? 'Faixa Etária' : filterType === 'organizacaoAcademica' ? 'Organização Acadêmica' : filterType}`}
+          tableTitle={title || getTableTitle(filterType)}
           tableRef={tableRefs[filterType]}
         />
       </div>
@@ -777,6 +919,35 @@ const renderCrossTable = () => {
                   ]}
                   ref={tableRefs.municipio}
                 />
+
+                {/* Gráfico para municípios */}
+                {municipioDataArray.length > 0 && (
+                  <div style={{ marginTop: '1rem' }}>
+                    {municipioDataArray.length <= 10 ? (
+                      <PieChart
+                        data={municipioDataArray.map(item => ({
+                          name: item.cityName,
+                          value: item.total
+                        }))}
+                        title="Distribuição por Município"
+                        height={400}
+                      />
+                    ) : (
+                      <BarChart
+                        data={municipioDataArray.map(item => ({
+                          name: item.cityName,
+                          value: item.total
+                        }))}
+                        title="Dados por Município"
+                        height={400}
+                        xAxisKey="name"
+                        yAxisKey="value"
+                        showLegend={false}
+                      />
+                    )}
+                  </div>
+                )}
+
                 <TableExport
                   data={[
                     ...municipioDataArray,

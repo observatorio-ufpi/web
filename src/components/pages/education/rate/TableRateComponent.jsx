@@ -7,6 +7,8 @@ import TablePagination from '@mui/material/TablePagination';
 import TableRow from '@mui/material/TableRow';
 import { ThemeProvider, createTheme, styled } from '@mui/material/styles';
 import React from 'react';
+import BarChart from '../../../common/BarChart';
+import PieChart from '../../../common/PieChart';
 import TableExport from '../../../common/TableExport';
 import HistoricalChart from '../HistoricalChart';
 
@@ -135,6 +137,14 @@ const CROSS_TABLE_CONFIGS = {
 
 // Verifica se o tipo de dados deve ser formatado como porcentagem
 const isRatioType = (type) => RATIO_TYPES.includes(type);
+
+// Formata números com pontos para separar milhares
+const formatNumber = (value) => {
+  if (value === null || value === undefined || value === '') return '';
+  const num = Number(value);
+  if (isNaN(num)) return value;
+  return num.toLocaleString('pt-BR');
+};
 
 // Verifica se os dados estão vazios
 const hasNoData = (data) => {
@@ -275,7 +285,9 @@ const BasicTable = ({ headers, data, formatTotal = false, ref }) => {
                 >
                   {header === 'total' && formatTotal
                     ? `${Number(item[header] || 0).toFixed(2)}%`
-                    : item[header]?.toString() || ''}
+                    : header === 'total'
+                      ? formatNumber(item[header])
+                      : item[header]?.toString() || ''}
                 </TableCell>
               ))}
             </TableRow>
@@ -319,7 +331,9 @@ const PaginatedTable = ({
                     <CenteredTableCell key={header}>
                       {header === 'total' && formatTotal
                         ? `${Number(item[header] || 0).toFixed(2)}%`
-                        : item[header]?.toString() || ''}
+                        : header === 'total'
+                          ? formatNumber(item[header])
+                          : item[header]?.toString() || ''}
                     </CenteredTableCell>
                   ))}
                 </TableRow>
@@ -382,11 +396,11 @@ const CrossTable = ({
                   <CenteredTableCell key={columnId}>
                     {isRatioType(type)
                       ? `${Number(cellValues.get(`${rowId}-${columnId}`) || 0).toFixed(2)}%`
-                      : cellValues.get(`${rowId}-${columnId}`) || 0}
+                      : formatNumber(cellValues.get(`${rowId}-${columnId}`) || 0)}
                   </CenteredTableCell>
                 ))}
                 {showTotals &&
-                  <CenteredTableCell>{rowTotals.get(rowId)}</CenteredTableCell>
+                  <CenteredTableCell>{formatNumber(rowTotals.get(rowId))}</CenteredTableCell>
                 }
               </TableRow>
             ))}
@@ -395,11 +409,11 @@ const CrossTable = ({
                 <BoldTableCell>Total</BoldTableCell>
                 {Array.from(uniqueColumns.keys()).map(columnId => (
                   <BoldTableCell key={columnId}>
-                    {columnTotals.get(columnId)}
+                    {formatNumber(columnTotals.get(columnId))}
                   </BoldTableCell>
                 ))}
                 <BoldTableCell>
-                  {Array.from(columnTotals.values()).reduce((sum, val) => sum + val, 0)}
+                  {formatNumber(Array.from(columnTotals.values()).reduce((sum, val) => sum + val, 0))}
                 </BoldTableCell>
               </TableRow>
             )}
@@ -546,7 +560,7 @@ const TableRateComponent = ({
                     <CenteredTableCell key={year}>
                       {isRatioType(type)
                         ? `${Number(yearMap.get(year) || 0).toFixed(2)}%`
-                        : yearMap.get(year)}
+                        : formatNumber(yearMap.get(year))}
                     </CenteredTableCell>
                   ))}
                 </TableRow>
@@ -633,7 +647,7 @@ const TableRateComponent = ({
                       <CenteredTableCell key={year}>
                         {isRatioType(type)
                           ? `${Number(yearMap.get(year) || 0).toFixed(2)}%`
-                          : yearMap.get(year) || 0}
+                          : formatNumber(yearMap.get(year) || 0)}
                       </CenteredTableCell>
                     ))}
                   </TableRow>
@@ -663,6 +677,106 @@ const TableRateComponent = ({
             chartRef={chartRef}
           />
         </div>
+      </div>
+    );
+  };
+
+  // Função para renderizar gráficos para tabelas simples
+  const renderSimpleTableCharts = (filterType, tableData) => {
+    if (!tableData || tableData.length === 0) return null;
+
+    // Mapear os campos corretos para cada tipo de filtro
+    const getFieldName = (filterType) => {
+      switch (filterType) {
+        case 'etapa':
+          return 'education_level_mod_name';
+        case 'localidade':
+          return 'location_name';
+        case 'faixaEtaria':
+          return 'age_range_name';
+        case 'instruction_level':
+          return 'instruction_level_name';
+        default:
+          return Object.keys(tableData[0] || {}).find(key => key !== 'total');
+      }
+    };
+
+    const fieldName = getFieldName(filterType);
+    const chartData = tableData.map(item => ({
+      name: item[fieldName] || 'N/A',
+      value: Number(item.total) || 0
+    }));
+
+    // Determinar se deve usar gráfico de pizza ou barras baseado no número de itens
+    const usePieChart = chartData.length <= 8 && chartData.length > 1;
+    const chartTitle = getTableTitle(filterType);
+
+    return (
+      <div style={{ marginTop: '1rem' }}>
+        {usePieChart ? (
+          <PieChart
+            data={chartData}
+            title={`Distribuição por ${chartTitle.replace('Dados por ', '')}`}
+            height={400}
+            showTotal={false}
+          />
+        ) : (
+          <BarChart
+            data={chartData}
+            title={chartTitle}
+            height={400}
+            xAxisKey="name"
+            yAxisKey="value"
+            showLegend={false}
+          />
+        )}
+      </div>
+    );
+  };
+
+  // Função para renderizar gráficos para tabelas cruzadas
+  const renderCrossTableCharts = (uniqueRows, uniqueColumns, cellValues, rowHeader) => {
+    if (!uniqueRows || !uniqueColumns || uniqueRows.size === 0 || uniqueColumns.size === 0) {
+      return null;
+    }
+
+    // Criar dados para gráfico de barras agrupadas
+    const chartData = Array.from(uniqueRows.entries()).map(([rowId, rowName]) => {
+      const rowData = { name: rowName };
+      Array.from(uniqueColumns.entries()).forEach(([colId, colName]) => {
+        rowData[colName] = Number(cellValues.get(`${rowId}-${colId}`) || 0);
+      });
+      return rowData;
+    });
+
+    // Se há muitas colunas, usar gráfico de pizza para a primeira linha
+    if (uniqueColumns.size > 6) {
+      const firstRowData = Array.from(uniqueColumns.entries()).map(([colId, colName]) => ({
+        name: colName,
+        value: Number(cellValues.get(`${Array.from(uniqueRows.keys())[0]}-${colId}`) || 0)
+      }));
+
+      return (
+        <div style={{ marginTop: '1rem' }}>
+          <PieChart
+            data={firstRowData}
+            title={`Distribuição - ${Array.from(uniqueRows.values())[0]}`}
+            height={400}
+            showTotal={false}
+          />
+        </div>
+      );
+    }
+
+    return (
+      <div style={{ marginTop: '1rem' }}>
+        <BarChart
+          data={chartData}
+          title={`Comparação por ${rowHeader}`}
+          height={400}
+          xAxisKey="name"
+          showLegend={true}
+        />
       </div>
     );
   };
@@ -736,7 +850,9 @@ const TableRateComponent = ({
                     <CenteredTableCell key={header}>
                       {header === 'total' && formatTotal
                         ? `${Number(item[header] || 0).toFixed(2)}%`
-                        : item[header]?.toString() || ''}
+                        : header === 'total'
+                          ? formatNumber(item[header])
+                          : item[header]?.toString() || ''}
                     </CenteredTableCell>
                   ))}
                 </TableRow>
@@ -744,6 +860,10 @@ const TableRateComponent = ({
             </TableBody>
           </Table>
         </TableContainer>
+
+        {/* Adicionar gráficos para tabelas simples */}
+        {renderSimpleTableCharts(filterType, tableData)}
+
         <TableExport
           data={exportData}
           headers={exportHeaders}
@@ -832,6 +952,9 @@ const TableRateComponent = ({
           handleChangeRowsPerPage={handleChangeRowsPerPage}
           ref={tableRefs.cross}
         />
+
+        {/* Adicionar gráficos para tabelas cruzadas */}
+        {renderCrossTableCharts(uniqueRows, uniqueColumns, cellValues, config.rowHeader)}
       </div>
     );
   };
