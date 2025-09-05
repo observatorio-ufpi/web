@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { FaGraduationCap, FaSearch, FaBook, FaDollarSign, FaUsers, FaUniversity } from 'react-icons/fa';
+import { FaGraduationCap, FaSearch, FaBook, FaDollarSign, FaUsers, FaUniversity, FaTimes } from 'react-icons/fa';
 import { MdSchool, MdPeople, MdScience } from 'react-icons/md';
 
 const QuemSomos = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const [selectedCelula, setSelectedCelula] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const photos = [
     {
@@ -69,6 +71,161 @@ const QuemSomos = () => {
     },
   ];
 
+  // Dados das células de pesquisa
+  const celulasData = {
+    gestao: {
+      id: 'gestao',
+      nome: 'Célula de Gestão de Sistemas e Unidades Escolares',
+      foto: '/images/celulas/celula_gestao_de_sistemas_e_unidades_escolares.png',
+      objetivo: 'Analisar o processo de formulação, implementação e avaliação das políticas educacionais para a gestão dos sistemas e unidades escolares nas redes de ensino público do Piauí, com foco nos modelos de gestão, programas e projetos desenvolvidos pelas secretarias estadual e municipais de educação.',
+      membros: [
+        'Maria do Socorro Soares - Doutora (UFPI Picos) - coordenação',
+        'Ana Adriana de Sá - Graduanda (UFPI Picos)',
+        'Cristiana Barra Teixeira - Doutora (UFPI Picos)',
+        'Johnny de Sousa Silva - Graduanda (UFPI Picos)',
+        'Maria Mônica Batista de Sousa - Graduanda (UFPI Picos)',
+        'Romildo de Castro Araújo - Doutor (UFPI Picos)'
+      ]
+    },
+    financiamento: {
+      id: 'financiamento',
+      nome: 'Célula de Financiamento da Educação',
+      foto: '/images/celulas/celula_financiamento_da_educacao.png',
+      objetivo: 'Investigar as políticas de financiamento e gestão da educação desenvolvidas no Piauí na perspectiva de analisar os processos de ampliação ou restrição dos direitos educacionais no Estado.',
+      membros: [
+        'Magna Jovita Gomes de Sales e Silva - Doutora em Educação (SEMEC/SEDUC) - coordenação',
+        'Silvania Uchôa de Castro - Doutora (SEDUC/UESPI) - coordenação',
+        'Cleide Ferreira Leão - Especialista (SEMEC)',
+        'Efigênia Alves Neres - Doutoranda (UFPI)',
+        'Francisco Ivan Assis de Araújo - Mestre (IFPI Piripiri)',
+        'Francislene Santos Castro - Doutora (SEMEC)',
+        'Gabrielle Alves Alencar - Graduanda (UFPI)',
+        'José Victor Almeida de Sousa - Graduando (UFPI)',
+        'Lucas Figueredo Soares - Graduando (UFPI)',
+        'Lucine Rodrigues Vasconcelos Borges de Almeida - Mestre (SEDUC)',
+        'Luís Carlos Sales - Doutor (UFPI)',
+        'Rosana Evangelista da Cruz - Doutora (UFPI)',
+        'Rosivaldo dos Santos Souza - Doutorando (UFPI)',
+        'Teodoro de Sousa Sampaio - Graduando (UFPI)',
+        'Valquira Macêdo Cantuaria - Doutora (SEMEC)',
+        'Vinícius Silva de Sousa - Mestrando (UFPI)'
+      ]
+    },
+    ensinoSuperior: {
+      id: 'ensinoSuperior',
+      nome: 'Célula de Ensino Superior',
+      foto: '/images/celulas/celula_ensino_superior.png',
+      objetivo: 'Analisar as políticas públicas para a educação superior e suas implicações nas Instituições de Ensino Superior – IES no Piauí.',
+      membros: [
+        'Maria da Penha Feitosa - Doutora (UFPI Floriano) - coordenação',
+        'Mônica Núbia Albuquerque Dias - Doutoranda (UFPI Floriano)',
+        'Geraldo do Nascimento Carvalho - Doutor (UFPI)'
+      ]
+    },
+    educacaoInfantil: {
+      id: 'educacaoInfantil',
+      nome: 'Célula de Educação Infantil',
+      foto: '/images/celulas/celula_educacao_infantil.png',
+      objetivo: 'Desenvolver pesquisas que investiguem como as políticas educacionais desenvolvidas no âmbito da educação infantil revelam o movimento/trajetória de luta da sociedade pelo direito à educação de crianças piauienses de zero a seis anos.',
+      membros: [
+        'Carmen Lucia de Sousa Lima - Doutora (UFPI) – coordenação',
+        'Valéria Madeira Martins Ribeiro - Mestra (UESPI) - coordenação',
+        'Alana Ravena Gomes da Silva - Graduanda (UESPI)',
+        'Cleuma Magalhães e Sousa - Mestre (UESPI)',
+        'Gerlândia Amorim da Silva - Especialista (UESPI)',
+        'Isabel Cristina da Silva Fontineles - Doutora (UESPI)',
+        'Karinne Williams Silva Lemos - Graduanda (UESPI)',
+        'Marcela Oliveira Castelo Branco - Especialista (NEUROGREEN)',
+        'Maria Alcioneia Brito Fontenele - Especialista (SEMEC)',
+        'Maria Carmem Bezerra Lima - Doutora (UESPI)',
+        'Maria de Jesus Rodrigues - Doutoranda (UFPI)',
+        'Marlon Araújo Carreiro - Mestrando (UFPI)',
+        'Mary Gracy e Silva Lima - Doutora (UESPI/CCM)',
+        'Michelle Morgana Gomes Fonseca Alcântara - Mestra (SEMEC)',
+        'Vinícius Silva de Sousa - Mestrando (UFPI)',
+        'Vitória Sousa Rodrigues - Especialista (UESPI)',
+        'Zélia Maria Carvalho e Silva - Doutoranda (UFPI/CAFS)'
+      ]
+    },
+    eja: {
+      id: 'eja',
+      nome: 'Célula de Educação de Jovens e Adultos',
+      foto: '/images/celulas/celula_educacao_jovens_e_adultos.png',
+      objetivo: 'Analisar as políticas públicas para a Educação de Jovens e Adultos – EJA no sistema público de educação no âmbito federal, estadual e municipal no Piauí, visando à produção de um diagnóstico dessa modalidade.',
+      membros: [
+        'Francislene Santos Castro - Doutora (SEMEC) – coordenação',
+        'Marlucia Lima de Sousa Meneses - Doutoranda (PUC-Brasília/SEDUC) - coordenação',
+        'Ana Paula Monteiro de Moura - Mestra (IFPI Floriano)',
+        'Andrea Martins - Doutora (UFPI)',
+        'Francisco das Chagas das Alves Rodrigues - Mestre (SEMEC)',
+        'Jefferson de Sales Oliveira - Mestre',
+        'Leia Soares da Silva - Mestra (IFPI)',
+        'Marli Clementino Gonçalves - Doutora (UFPI)'
+      ]
+    },
+    producaoConhecimento: {
+      id: 'producaoConhecimento',
+      nome: 'Célula de Produção do Conhecimento em Política Educacional',
+      foto: '/images/celulas/celula_producao_de_conhecimento.png',
+      objetivo: 'Investigar a constituição do campo política educacional no que se refere aos processos de produção e divulgação do conhecimento, indicando as tendências, potencialidades e desafios sobre a temática no Piauí.',
+      membros: [
+        'Enayde Fernandes Silva - Doutora (UFPI Picos) – coordenação',
+        'Maria de Jesus Rodrigues Duarte - Doutoranda (UFPI/SEMEC) - coordenação',
+        'Alan Fonseca dos Santos - Mestre (UESPI)',
+        'Ana Paula Monteiro de Moura - Mestra (IFPI Floriano)',
+        'Ana Sthefany Andrade Araújo - Graduanda (UESPI/Parnaíba)',
+        'Juliana Macedo de Carvalho Castelo Branco - Mestranda (UFPI/SEMEC)',
+        'Lucilene de Almeida Muniz - Graduanda (UESPI/Parnaíba)',
+        'Magna Jovita Gomes de Sales e Silva - Doutora (SEMEC/SEDUC)',
+        'Maria Clara de Sousa Costa - Doutoranda (UFPI)',
+        'Marli Clementino Gonçalves - Doutora (UFPI)',
+        'Marlucia Lima de Sousa Meneses - Doutoranda (PUC-BSB/SEDUC)',
+        'Rigoberto Veloso de Carvalho – Doutorando (Biblioteca Central UFPI)',
+        'Rosana Evangelista da Cruz - Doutora (UFPI)',
+        'Vinícius Silva de Sousa - Mestrando (UFPI)'
+      ]
+    },
+    educacaoCampo: {
+      id: 'educacaoCampo',
+      nome: 'Célula de Educação do Campo',
+      foto: '/images/celulas/celula_educacao_do_campo.png',
+      objetivo: 'Analisar o processo de materialização da política de Educação do Campo no Piauí no tocante à oferta, permanência, formação de educadores, gestão escolar e dos sistemas estadual e municipais, tendo em vista a qualidade social inscrita nos marcos fundacionais da política de Educação do Campo e na produção acadêmica e dos movimentos sociais do campo.',
+      membros: [
+        'Maria Clara de Sousa Costa - Doutoranda (UFPI) - coordenação',
+        'Lucineide Barros Medeiros - Doutora (UESPI) - coordenação',
+        'Jullyane Frazão Santana - Doutoranda (USP)',
+        'Adilson de Apiaim - Mestre (SEDUC)',
+        'Marli Clementino Gonçalves - Doutora (UFPI)',
+        'Kátia Cristina - Especialista (UESPI)',
+        'Messias Muniz - Especialista (UFPI)',
+        'Miriã Medeiros - Especialista (SEDUC)'
+      ]
+    },
+    avaliacao: {
+      id: 'avaliacao',
+      nome: 'Célula de Políticas de Avaliação Educacional',
+      foto: '/images/celulas/celula_politicas_avaliacao_educacional.png',
+      objetivo: 'Analisar os efeitos e implicações das políticas de avaliação educacional, em especial das avaliações externas, nos sistemas educacionais brasileiros diante do processo de ensino e aprendizagem desenvolvido nas unidades escolares.',
+      membros: [
+        'Luisa Xavier de Oliveira - Doutora (UFPI) - coordenação',
+        'Wirla Risany Lima Carvalho - Doutora (UFPI) - coordenação',
+        'Alan Fonseca dos Santos - Mestre (UESPI)',
+        'Ana Gabriele de Moura Rodrigues - Mestranda (UFPI)',
+        'Ateumice Maria do Nascimento - Especialista (SEMEC)',
+        'Cleudiana Maria de Oliveira Silva - Mestre (SEDUC)',
+        'Cleuma Magalhães e Sousa - Mestre (SEMEC)',
+        'Cleverson Moreira Lino - Doutorando (UFPI)',
+        'Dayane Martinelle da Silva Santos - Doutoranda (UFPI/SEMEC)',
+        'Diego Rael Ferreira Barbosa - Graduando (UFPI)',
+        'Eusilene da Rocha Ferreira - Doutoranda (UFPI/SEMEC)',
+        'Francisca Eudeilane da Silva Pereira - Mestra (SEDUC/SEMEC)',
+        'Sandra Regina Silva Garrido - Especialista (SEMEC)',
+        'Vanusa Gomes Soares - Mestra (SEMEC)',
+        'Vinícius Silva de Sousa - Mestrando (UFPI)'
+      ]
+    }
+  };
+
   // Calcular número total de slides (3 fotos por slide)
   const totalSlides = Math.ceil(photos.length / 3);
 
@@ -129,6 +286,59 @@ const QuemSomos = () => {
   const handleBlur = () => {
     setIsPaused(false);
   };
+
+  // Funções para o modal
+  const openModal = (celulaId) => {
+    setSelectedCelula(celulasData[celulaId]);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedCelula(null);
+  };
+
+  // Navegação entre células no modal
+  const goToNextCelula = () => {
+    const celulaIds = Object.keys(celulasData);
+    const currentIndex = celulaIds.indexOf(selectedCelula.id);
+    const nextIndex = (currentIndex + 1) % celulaIds.length;
+    setSelectedCelula(celulasData[celulaIds[nextIndex]]);
+  };
+
+  const goToPrevCelula = () => {
+    const celulaIds = Object.keys(celulasData);
+    const currentIndex = celulaIds.indexOf(selectedCelula.id);
+    const prevIndex = currentIndex === 0 ? celulaIds.length - 1 : currentIndex - 1;
+    setSelectedCelula(celulasData[celulaIds[prevIndex]]);
+  };
+
+  // Navegação por teclado
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (!isModalOpen) return;
+      
+      switch (event.key) {
+        case 'ArrowLeft':
+          event.preventDefault();
+          goToPrevCelula();
+          break;
+        case 'ArrowRight':
+          event.preventDefault();
+          goToNextCelula();
+          break;
+        case 'Escape':
+          event.preventDefault();
+          closeModal();
+          break;
+        default:
+          break;
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isModalOpen, selectedCelula]);
 
   // Função para gerar os slides dinamicamente
   const generateSlides = () => {
@@ -254,7 +464,11 @@ const QuemSomos = () => {
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                          {/* Célula 1 */}
-             <div className="p-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300" style={{ backgroundColor: 'var(--background-color)' }}>
+             <div 
+               className="p-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-105" 
+               style={{ backgroundColor: 'var(--background-color)' }}
+               onClick={() => openModal('gestao')}
+             >
               <div className="text-purple-600 text-3xl mb-4 flex justify-center">
                 <MdSchool />
               </div>
@@ -264,7 +478,11 @@ const QuemSomos = () => {
             </div>
 
                          {/* Célula 2 */}
-             <div className="p-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300" style={{ backgroundColor: 'var(--background-color)' }}>
+             <div 
+               className="p-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-105" 
+               style={{ backgroundColor: 'var(--background-color)' }}
+               onClick={() => openModal('financiamento')}
+             >
               <div className="text-purple-600 text-3xl mb-4 flex justify-center">
                 <FaDollarSign />
               </div>
@@ -274,7 +492,11 @@ const QuemSomos = () => {
             </div>
 
                          {/* Célula 3 */}
-             <div className="p-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300" style={{ backgroundColor: 'var(--background-color)' }}>
+             <div 
+               className="p-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-105" 
+               style={{ backgroundColor: 'var(--background-color)' }}
+               onClick={() => openModal('ensinoSuperior')}
+             >
               <div className="text-purple-600 text-3xl mb-4 flex justify-center">
                 <FaGraduationCap />
               </div>
@@ -284,7 +506,11 @@ const QuemSomos = () => {
             </div>
 
                          {/* Célula 4 */}
-             <div className="p-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300" style={{ backgroundColor: 'var(--background-color)' }}>
+             <div 
+               className="p-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-105" 
+               style={{ backgroundColor: 'var(--background-color)' }}
+               onClick={() => openModal('educacaoInfantil')}
+             >
               <div className="text-purple-600 text-3xl mb-4 flex justify-center">
                 <MdPeople />
               </div>
@@ -294,7 +520,11 @@ const QuemSomos = () => {
             </div>
 
                          {/* Célula 5 */}
-             <div className="p-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300" style={{ backgroundColor: 'var(--background-color)' }}>
+             <div 
+               className="p-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-105" 
+               style={{ backgroundColor: 'var(--background-color)' }}
+               onClick={() => openModal('eja')}
+             >
               <div className="text-purple-600 text-3xl mb-4 flex justify-center">
                 <FaUsers />
               </div>
@@ -304,7 +534,11 @@ const QuemSomos = () => {
             </div>
 
                          {/* Célula 6 */}
-             <div className="p-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300" style={{ backgroundColor: 'var(--background-color)' }}>
+             <div 
+               className="p-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-105" 
+               style={{ backgroundColor: 'var(--background-color)' }}
+               onClick={() => openModal('producaoConhecimento')}
+             >
               <div className="text-purple-600 text-3xl mb-4 flex justify-center">
                 <MdScience />
               </div>
@@ -314,12 +548,30 @@ const QuemSomos = () => {
             </div>
 
                          {/* Célula 7 */}
-             <div className="p-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 md:col-span-2 lg:col-span-1" style={{ backgroundColor: 'var(--background-color)' }}>
+             <div 
+               className="p-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-105 md:col-span-2 lg:col-span-1" 
+               style={{ backgroundColor: 'var(--background-color)' }}
+               onClick={() => openModal('educacaoCampo')}
+             >
               <div className="text-purple-600 text-3xl mb-4 flex justify-center">
                 <FaUniversity />
               </div>
               <h3 className="text-lg font-semibold text-gray-800">
                 Célula de Educação do Campo
+              </h3>
+            </div>
+
+                         {/* Célula 8 */}
+             <div 
+               className="p-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-105" 
+               style={{ backgroundColor: 'var(--background-color)' }}
+               onClick={() => openModal('avaliacao')}
+             >
+              <div className="text-purple-600 text-3xl mb-4 flex justify-center">
+                <FaSearch />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-800">
+                Célula de Políticas de Avaliação Educacional
               </h3>
             </div>
           </div>
@@ -489,6 +741,118 @@ const QuemSomos = () => {
           </div>
         </div>
       </section>
+
+      {/* Modal das Células */}
+      {isModalOpen && selectedCelula && (
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-md flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-2xl">
+            {/* Header do Modal com Foto */}
+            <div className="relative h-64 bg-gradient-to-r from-purple-600 to-blue-600">
+              <img
+                src={selectedCelula.foto}
+                alt={selectedCelula.nome}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+              <div className="absolute bottom-0 left-0 right-0 p-6">
+                <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">
+                  {selectedCelula.nome}
+                </h2>
+              </div>
+              
+              {/* Botão de fechar */}
+              <button
+                onClick={closeModal}
+                className="absolute top-4 right-4 bg-white/20 hover:bg-white/30 text-white rounded-full p-2 transition-all duration-200 hover:scale-110"
+              >
+                <FaTimes className="w-6 h-6" />
+              </button>
+
+              {/* Botões de navegação */}
+              <button
+                onClick={goToPrevCelula}
+                className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/30 text-white rounded-full p-3 transition-all duration-200 hover:scale-110"
+                aria-label="Célula anterior"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+
+              <button
+                onClick={goToNextCelula}
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/30 text-white rounded-full p-3 transition-all duration-200 hover:scale-110"
+                aria-label="Próxima célula"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Corpo do Modal */}
+            <div className="p-6 max-h-96 overflow-y-auto">
+              {/* Objetivo */}
+              <div className="mb-8">
+                <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                  <FaSearch className="text-purple-600 mr-2" />
+                  Objetivo
+                </h3>
+                <p className="text-gray-700 leading-relaxed text-justify">
+                  {selectedCelula.objetivo}
+                </p>
+              </div>
+
+              {/* Membros */}
+              <div>
+                <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                  <FaUsers className="text-purple-600 mr-2" />
+                  Membros
+                </h3>
+                <div className="space-y-3">
+                  {selectedCelula.membros.map((membro, index) => (
+                    <div key={index} className="flex items-start">
+                      <div className="w-2 h-2 bg-purple-600 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                      <p className="text-gray-700 text-sm leading-relaxed">
+                        {membro}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Footer do Modal */}
+            <div className="bg-gray-50 px-6 py-4 border-t">
+              <div className="flex justify-between items-center">
+                {/* Indicadores de posição */}
+                <div className="flex space-x-2">
+                  {Object.keys(celulasData).map((celulaId, index) => (
+                    <button
+                      key={celulaId}
+                      onClick={() => setSelectedCelula(celulasData[celulaId])}
+                      className={`w-3 h-3 rounded-full transition-all duration-200 ${
+                        selectedCelula.id === celulaId 
+                          ? 'bg-purple-600 scale-125' 
+                          : 'bg-gray-300 hover:bg-gray-400'
+                      }`}
+                      aria-label={`Ir para ${celulasData[celulaId].nome}`}
+                    />
+                  ))}
+                </div>
+
+                {/* Botão de fechar */}
+                <button
+                  onClick={closeModal}
+                  className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg transition-colors duration-200 font-medium"
+                >
+                  Fechar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
