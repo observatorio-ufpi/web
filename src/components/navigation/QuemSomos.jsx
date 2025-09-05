@@ -1,8 +1,171 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaGraduationCap, FaSearch, FaBook, FaDollarSign, FaUsers, FaUniversity } from 'react-icons/fa';
 import { MdSchool, MdPeople, MdScience } from 'react-icons/md';
 
 const QuemSomos = () => {
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+
+  const photos = [
+    {
+      src: "/images/fotos-reunioes/REUNIAO_NUPPEGE.jpg",
+      alt: "Reunião NUPPEGE",
+      title: "Reunião NUPPEGE"
+    },
+    {
+      src: "/images/fotos-reunioes/GT_PLATAFORMA.jpg",
+      alt: "GT Plataforma",
+      title: "GT Plataforma"
+    },
+    {
+      src: "/images/fotos-reunioes/GT_DADOS_1.jpg",
+      alt: "GT Dados",
+      title: "GT Dados"
+    },
+    {
+      src: "/images/fotos-reunioes/ATIVIDADE_EXTENSIONISTA.jpg",
+      alt: "Atividade Extensionista",
+      title: "Atividade Extensionista"
+    },
+    {
+      src: "/images/fotos-reunioes/LEGISLACAO_TERESINA.jpg",
+      alt: "Legislação Teresina",
+      title: "Legislação Teresina"
+    },
+    {
+      src: "/images/fotos-reunioes/REUNIAO_NUPPEGE_2.jpg",
+      alt: "Reunião NUPPEGE",
+      title: "Reunião NUPPEGE"
+    },
+    {
+      src: "/images/fotos-reunioes/REUNIAO_NUPPEGE_3.jpg",
+      alt: "Reunião NUPPEGE",
+      title: "Reunião NUPPEGE"
+    },
+    {
+      src: "/images/fotos-reunioes/GT_PLATAFORMA_2.jpg",
+      alt: "GT Plataforma",
+      title: "GT Plataforma"
+    },
+    {
+      src: "/images/fotos-reunioes/REUNIAO_NUPPEGE_4.jpg",
+      alt: "Reunião NUPPEGE",
+      title: "Reunião NUPPEGE"
+    },
+    {
+      src: "/images/fotos-reunioes/ATIVIDADE_EXTENSIONISTA_2.jpg",
+      alt: "Atividade Extensionista",
+      title: "Atividade Extensionista"
+    },
+    {
+      src: "/images/fotos-reunioes/GT_DADOS_2.jpg",
+      alt: "GT Dados",
+      title: "GT Dados"
+    },
+    {
+      src: "/images/fotos-reunioes/LEGISLACAO_TERESINA_2.jpg",
+      alt: "Legislação Teresina",
+      title: "Legislação Teresina"
+    },
+  ];
+
+  // Calcular número total de slides (3 fotos por slide)
+  const totalSlides = Math.ceil(photos.length / 3);
+
+  // Auto-play functionality
+  useEffect(() => {
+    if (isPaused) return; // Pausa o auto-play se isPaused for true
+
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => {
+        if (prev === totalSlides - 1) { // Se estiver no último slide
+          return 0; // Volta para o primeiro slide
+        }
+        return prev + 1;
+      });
+    }, 5000); // Change slide every 5 seconds
+
+    return () => clearInterval(interval);
+  }, [totalSlides, isPaused]);
+
+  const goToSlide = (index) => {
+    setCurrentSlide(index);
+    setIsPaused(true); // Pausa quando usuário navega manualmente
+  };
+
+  const nextSlide = () => {
+    setCurrentSlide((prev) => {
+      if (prev === totalSlides - 1) { // Se estiver no último slide
+        return 0; // Volta para o primeiro
+      }
+      return prev + 1;
+    });
+    setIsPaused(true); // Pausa quando usuário navega manualmente
+  };
+
+  const prevSlide = () => {
+    setCurrentSlide((prev) => {
+      if (prev === 0) { // Se estiver no primeiro slide
+        return totalSlides - 1; // Vai para o último
+      }
+      return prev - 1;
+    });
+    setIsPaused(true); // Pausa quando usuário navega manualmente
+  };
+
+  // Funções para controlar pause/resume
+  const handleMouseEnter = () => {
+    setIsPaused(true);
+  };
+
+  const handleMouseLeave = () => {
+    setIsPaused(false);
+  };
+
+  const handleFocus = () => {
+    setIsPaused(true);
+  };
+
+  const handleBlur = () => {
+    setIsPaused(false);
+  };
+
+  // Função para gerar os slides dinamicamente
+  const generateSlides = () => {
+    const slides = [];
+    for (let i = 0; i < totalSlides; i++) {
+      const startIndex = i * 3;
+      const endIndex = Math.min(startIndex + 3, photos.length);
+      const slidePhotos = photos.slice(startIndex, endIndex);
+      
+      slides.push(
+        <div key={i} className="w-full flex-shrink-0">
+          <div className="flex space-x-6 justify-center">
+            {slidePhotos.map((photo, index) => (
+              <div 
+                key={startIndex + index}
+                className="flex-shrink-0 w-80 h-80 rounded-xl shadow-lg overflow-hidden carousel-card relative" 
+                style={{ backgroundColor: 'var(--background-color)' }}
+              >
+                <img 
+                  src={photo.src}
+                  alt={photo.alt}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
+                  <h3 className="text-lg font-semibold text-white">
+                    {photo.title}
+                  </h3>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+    return slides;
+  };
+
   return (
     <div className="homepage-background">
              {/* Header Section */}
@@ -21,10 +184,10 @@ const QuemSomos = () => {
             {/* Lado Direito - Descrição */}
             <div className="text-left flex-1">
               <p className="text-lg text-gray-700 leading-relaxed mb-6">
-                O Observatório da Política Educacional Piauiense: monitoramento da ação estatal e direito à educação se constitui de um projeto interdisciplinar, interinstitucional e intercampi, materializado pela formação de células de pesquisa temáticas dedicadas aos diferentes objetos da política educacional.
+                 O Observatório da Política Educacional Piauiense (Opepi): monitoramento da ação estatal e direito à educação se constitui de uma ação interdisciplinar (Educação, Ciência da Computação, Biblioteconomia e Comunicação Social), interinstitucional (UFPI, UESPI e IFPI) e intercampi (Teresina, Parnaíba, Picos, Floriano, São Raimundo Nonato, Piripiri), materializada pela formação de células de pesquisa temáticas dedicadas aos diferentes objetos da política educacional.
               </p>
               <p className="text-lg text-gray-700 leading-relaxed font-medium italic">
-                A política educacional desenvolvida no Piauí é o tema deste projeto que pretende responder à seguinte questão: <strong>Quais as tendências, potencialidades e desafios da ação estatal para a garantia do direito à educação no Piauí?</strong>
+                O Observatório pretende responder à seguinte questão: <strong>Quais as tendências, potencialidades e desafios da ação estatal para a garantia do direito à educação no Piauí?</strong>
               </p>
             </div>
           </div>
@@ -241,16 +404,16 @@ const QuemSomos = () => {
             {/* Lado Direito - Descrição */}
             <div className="text-left flex-1">
               <p className="text-lg text-gray-700 leading-relaxed mb-6">
-                O Núcleo de Estudos e Pesquisa em Políticas e Gestão da Educação - NUPPEGE se constitui em um espaço de investigação sobre políticas educacionais.
+                O Núcleo de Estudos, Pesquisa e Extensão em Políticas e Gestão da Educação - NUPPEGE se constitui em um espaço de investigação sobre políticas educacionais de caráter interdisciplinar, interinstitucional e intercampi.
               </p>
               <p className="text-lg text-gray-700 leading-relaxed mb-6">
-                Desde 1999, seus pesquisadores têm se debruçado sobre a temática, em âmbito da graduação e da pós-graduação, gerando vasta produção, expressa em teses; dissertações; relatórios de iniciação científica; trabalhos de conclusão de curso; artigos; livros e capítulo de livros e comunicações orais em eventos de âmbito internacional, nacional, regional, estadual e local.
+                O NUPPEGE é composto por docentes, ativas (os) e aposentadas (os), estudantes da UFPI, da UESPI e do IFPI, além de profissionais e pessoas vinculadas a movimentos populares, sindicais e outros da sociedade civil que se identificam com os objetivos do Núcleo.
               </p>
               <p className="text-lg text-gray-700 leading-relaxed mb-6">
-                O NUPPEGE é composto por docentes, ativas (os) e aposentadas (os), estudantes da UFPI e de outras IES, além de profissionais e pessoas vinculadas a movimentos populares, sindicais e outros da sociedade civil que se identificam com os objetivos do Núcleo.
+                Criado em 1999 e institucionalizado em 2003, o NUPPEGE tem se debruçado sobre a temática política educacionais e gestão da educação, em âmbito da graduação e da pós-graduação, gerando vasta produção, expressa em teses, dissertações, relatórios de iniciação científica, trabalhos de conclusão de curso, artigos, livros e capítulos de livros e comunicações orais em eventos de âmbito internacional, nacional, regional, estadual e local.
               </p>
               <p className="text-lg text-gray-700 leading-relaxed">
-                O NUPPEGE é um núcleo permanente estabelecido em espaço específico para núcleos de pesquisas localizado no CCE/PPGED/UFPI, podendo suas reuniões ocorrerem no formato remoto em casos de excepcionalidade.
+                O NUPPEGE, além de se dedicar ao ensino e à pesquisa, desenvolve atividades extensionistas sistemáticas relacionadas à defesa do direito à educação, como a participação na Campanha Nacional pelo Direito à Educação, a realização das Semanas de Ação Mundial, a representação no Fórum Municipal de Educação de Teresina e no Fórum Estadual do Piauí, assim como apoia a organização do Movimento Interfóruns da Educação Infantil no Piauí e outras ações em defesa do direito à educação.
               </p>
             </div>
           </div>
@@ -260,41 +423,68 @@ const QuemSomos = () => {
       {/* Galeria de Imagens Section */}
       <section className="py-20">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="flex overflow-x-auto space-x-6 pb-4">
-                         {/* Card 1 */}
-             <div className="flex-shrink-0 w-80 rounded-xl shadow-lg overflow-hidden" style={{ backgroundColor: 'var(--background-color)' }}>
-              <div className="h-48 bg-gray-200 flex items-center justify-center">
-                <span className="text-gray-500">Imagem da Primeira Reunião</span>
+          <h2 className="text-3xl font-bold text-center mb-12 text-gray-800">
+            Galeria de Fotos
+          </h2>
+          <div 
+            className="relative"
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+            onFocus={handleFocus}
+            onBlur={handleBlur}
+            tabIndex={0}
+          >
+            {/* Carrossel Container */}
+            <div className="relative overflow-hidden">
+              <div 
+                className="flex transition-transform duration-500 ease-in-out"
+                style={{ transform: `translateX(-${currentSlide * 100}%)` }}
+              >
+                {generateSlides()}
               </div>
-              <div className="p-6">
-                <h3 className="text-lg font-semibold text-gray-800">
-                  Primeira reunião ordinária de 2025
-                </h3>
-              </div>
+
+              {/* Botões de navegação */}
+              <button
+                onClick={prevSlide}
+                className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/90 hover:bg-white text-gray-800 rounded-full p-3 shadow-lg transition-all duration-200 hover:scale-110 z-10"
+                aria-label="Slide anterior"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+
+              <button
+                onClick={nextSlide}
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/90 hover:bg-white text-gray-800 rounded-full p-3 shadow-lg transition-all duration-200 hover:scale-110 z-10"
+                aria-label="Próximo slide"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+
+            </div>
+            
+            {/* Indicadores de slides */}
+            <div className="flex justify-center mt-6 space-x-2">
+              {Array.from({ length: totalSlides }, (_, index) => (
+                <button
+                  key={index}
+                  onClick={() => goToSlide(index)}
+                  className={`w-3 h-3 rounded-full transition-all duration-200 ${
+                    index === currentSlide 
+                      ? 'bg-purple-600 scale-125' 
+                      : 'bg-gray-300 hover:bg-gray-400'
+                  }`}
+                  aria-label={`Ir para slide ${index + 1}`}
+                />
+              ))}
             </div>
 
-                         {/* Card 2 */}
-             <div className="flex-shrink-0 w-80 rounded-xl shadow-lg overflow-hidden" style={{ backgroundColor: 'var(--background-color)' }}>
-              <div className="h-48 bg-gray-200 flex items-center justify-center">
-                <span className="text-gray-500">Imagem dos GT's</span>
-              </div>
-              <div className="p-6">
-                <h3 className="text-lg font-semibold text-gray-800">
-                  Reunião dos GT's Dados e Plataforma
-                </h3>
-              </div>
-            </div>
-
-                         {/* Card 3 */}
-             <div className="flex-shrink-0 w-80 rounded-xl shadow-lg overflow-hidden" style={{ backgroundColor: 'var(--background-color)' }}>
-              <div className="h-48 bg-gray-200 flex items-center justify-center">
-                <span className="text-gray-500">Imagem UESPI</span>
-              </div>
-              <div className="p-6">
-                <h3 className="text-lg font-semibold text-gray-800">
-                  UESPI/Oe...
-                </h3>
-              </div>
+            {/* Contador de slides */}
+            <div className="text-center mt-4 text-gray-600">
+              {currentSlide + 1} de {totalSlides}
             </div>
           </div>
         </div>

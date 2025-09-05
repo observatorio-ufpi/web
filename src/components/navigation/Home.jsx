@@ -830,9 +830,7 @@ const Home = () => {
             {/* Lado Direito - Descrição */}
             <div className="text-left">
               <p className="text-lg text-gray-700 leading-relaxed">
-                O Observatório da política educacional piauiense (Opepi): monitoramento da ação estatal e direito à educação, 
-                é um projeto que consiste nas investigações do Núcleo de Estudos e Pesquisas em Políticas e Gestão da Educação (Nuppege). 
-                Temos como objetivo analisar como as políticas educacionais desenvolvidas no Piauí têm contribuído para a ampliação ou para a restrição do direito à educação no Estado.
+                O Observatório da Política Educacional Piauiense (Opepi): monitoramento da ação estatal e direito à educação, é um projeto que consiste em investigações desenvolvidas pelo Núcleo de Estudos, Pesquisas e Extensão em Políticas e Gestão da Educação (Nuppege). O Observatório tem como objetivo contribuir para a produção de conhecimento sobre como as políticas educacionais desenvolvidas no Piauí têm colaborado para a ampliação ou restrição do direito à educação no Estado.
               </p>
             </div>
           </div>
