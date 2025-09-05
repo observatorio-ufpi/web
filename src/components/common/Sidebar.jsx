@@ -9,6 +9,11 @@ const Sidebar = () => {
   const { isOpen, setIsOpen } = useSidebar();
 
   const isActive = (path) => {
+    if (path === '/indicadores') {
+      // Para indicadores municipais, só ativa se for exatamente /indicadores ou subrotas que não sejam estaduais
+      return location.pathname === '/indicadores' ||
+             (location.pathname.startsWith('/indicadores/') && !location.pathname.startsWith('/indicadores-estaduais'));
+    }
     return location.pathname.startsWith(path);
   };
 
@@ -25,7 +30,7 @@ const Sidebar = () => {
       {/* Botão para abrir/fechar a sidebar */}
       <button
         onClick={toggleSidebar}
-        className="fixed top-4 left-4 z-50 p-2 bg-gray-800 text-white rounded-lg shadow-lg hover:bg-gray-700 transition-colors md:hidden"
+        className="fixed top-4 left-4 z-50 p-2 bg-gray-800 text-white rounded-lg shadow-lg hover:bg-gray-700 transition-colors"
       >
         {isOpen ? <FaTimes /> : <FaBars />}
       </button>
@@ -34,7 +39,7 @@ const Sidebar = () => {
       <aside
         className={`${
           isOpen ? 'translate-x-0' : '-translate-x-full'
-        } md:translate-x-0 fixed left-0 top-0 h-screen overflow-y-auto transition-transform duration-300 ease-in-out z-40 shadow-lg`}
+        } fixed left-0 top-0 h-screen overflow-y-auto transition-transform duration-300 ease-in-out z-40 shadow-lg`}
         style={{
           backgroundColor: '#E8E4E3',
           width: isOpen ? '16rem' : '4rem'
@@ -42,7 +47,7 @@ const Sidebar = () => {
       >
         {/* Header da Sidebar */}
         <div className="p-6 md:p-6 lg:p-6 xl:p-6 2xl:p-6 p-3 sm:p-4 md:p-6 border-b border-gray-200">
-          <div className="flex items-center mb-4">
+          <div className="flex items-center mt-8 mb-4">
             <Link to="/" className="flex items-center">
               <img
                 src="/images/logos/logo-opepi-v2.png"
@@ -126,7 +131,7 @@ const Sidebar = () => {
                   }`}
                 >
                   <FaDollarSign className="mr-3 text-lg flex-shrink-0" />
-                  <span className={`${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>Financiamento</span>
+                  <span className={`${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>Exercícios - Municípios</span>
                 </Link>
               </li>
               <li>
@@ -139,7 +144,7 @@ const Sidebar = () => {
                   }`}
                 >
                   <FaDollarSign className="mr-3 text-lg flex-shrink-0" />
-                  <span className={`${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>Estado</span>
+                  <span className={`${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>Exercícios - Estado</span>
                 </Link>
               </li>
               <li>
@@ -152,7 +157,20 @@ const Sidebar = () => {
                   }`}
                 >
                   <FaDollarSign className="mr-3 text-lg flex-shrink-0" />
-                  <span className={`${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>Indicadores</span>
+                  <span className={`${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>Indicadores Municipais</span>
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/indicadores-estaduais"
+                  className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                    isActive('/indicadores-estaduais')
+                      ? 'bg-green-100 text-green-700'
+                      : 'text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  <FaDollarSign className="mr-3 text-lg flex-shrink-0" />
+                  <span className={`${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>Indicadores Estaduais</span>
                 </Link>
               </li>
             </ul>

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import BarChart from "./BarChart";
+import StateBarChart from "./StateBarChart";
+import StateLineChart from "./StateLineChart";
 import * as XLSX from "xlsx";
 import { FaFileExcel, FaDownload } from "react-icons/fa";
 import Button from "@mui/material/Button";
@@ -16,21 +17,21 @@ import {
   getCurrentDate,
 } from "../../../../../../utils/bacenApi";
 
-const ChartComponent = ({
+const StateChartComponent = ({
   indicatorType,
   processDataFunction,
   title,
   data,
   enableMonetaryCorrection = false,
+  chartType = 'bar', // 'bar' ou 'line'
+  yAxisLabel = 'Valor (R$)'
 }) => {
   const theme = useTheme();
   const [chartData, setChartData] = useState({
     labels: [],
     datasets: [],
   });
-  const [municipalityColors, setMunicipalityColors] = useState({});
   const [useMonetaryCorrection, setUseMonetaryCorrection] = useState(false);
-  const [ipcaData, setIpcaData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [targetDate, setTargetDate] = useState(new Date());
 
@@ -67,7 +68,7 @@ const ChartComponent = ({
         setLoading(true);
         const processedData = processDataFunction(data, colorPalette);
 
-        if (useMonetaryCorrection) {
+        if (useMonetaryCorrection && enableMonetaryCorrection) {
           // Get the date range from the data
           const years = processedData.chartData.labels
             .map((label) => {
@@ -81,7 +82,6 @@ const ChartComponent = ({
 
           // Fetch IPCA data
           const ipcaData = await fetchIPCAData(startDate, formattedTargetDate);
-          setIpcaData(ipcaData);
 
           // Apply monetary correction to the data
           const correctedData = {
@@ -109,8 +109,6 @@ const ChartComponent = ({
         } else {
           setChartData(processedData.chartData);
         }
-
-        setMunicipalityColors(processedData.municipalityColors);
       } catch (error) {
         console.error("Erro ao buscar dados:", error);
       } finally {
@@ -119,7 +117,7 @@ const ChartComponent = ({
     };
 
     getData();
-  }, [indicatorType, processDataFunction, useMonetaryCorrection, targetDate]);
+  }, [indicatorType, processDataFunction, useMonetaryCorrection, targetDate, data, enableMonetaryCorrection]);
 
   const handleMonetaryCorrectionToggle = (event) => {
     setUseMonetaryCorrection(event.target.checked);
@@ -134,8 +132,9 @@ const ChartComponent = ({
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'flex-start',
-      padding: '10px',
-      margin: '20px',
+      padding: '20px',
+      margin: '40px 20px',
+      width: '100%',
     }}>
       <Box sx={{
         display: 'flex',
@@ -178,34 +177,34 @@ const ChartComponent = ({
                   slotProps={{ 
                     textField: { 
                       size: "small",
-                          sx: {
-                         '& .MuiOutlinedInput-root': {
-                           '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                             borderColor: theme.palette.primary.main,
-                           },
-                         },
-                         '& .MuiInputLabel-root': {
-                           '&.Mui-focused': {
-                             color: theme.palette.primary.main,
-                           },
-                         },
-                         '& .MuiInputBase-input': {
-                           '&::selection': {
-                             backgroundColor: theme.palette.primary.light,
-                             color: 'white',
-                           },
-                           '&::-moz-selection': {
-                             backgroundColor: theme.palette.primary.light,
-                             color: 'white',
-                           },
-                         },
-                         '& .MuiInputBase-input:focus': {
-                           '&::selection': {
-                             backgroundColor: theme.palette.primary.light,
-                             color: 'white',
-                           },
-                         },
-                       },
+                      sx: {
+                        '& .MuiOutlinedInput-root': {
+                          '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                            borderColor: theme.palette.primary.main,
+                          },
+                        },
+                        '& .MuiInputLabel-root': {
+                          '&.Mui-focused': {
+                            color: theme.palette.primary.main,
+                          },
+                        },
+                        '& .MuiInputBase-input': {
+                          '&::selection': {
+                            backgroundColor: theme.palette.primary.light,
+                            color: 'white',
+                          },
+                          '&::-moz-selection': {
+                            backgroundColor: theme.palette.primary.light,
+                            color: 'white',
+                          },
+                        },
+                        '& .MuiInputBase-input:focus': {
+                          '&::selection': {
+                            backgroundColor: theme.palette.primary.light,
+                            color: 'white',
+                          },
+                        },
+                      },
                     } 
                   }}
                 />
@@ -220,36 +219,15 @@ const ChartComponent = ({
         </Box>
       ) : (
         <>
-          <BarChart chartData={chartData} title={title} />
-          <Box sx={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            marginTop: '100px',
-            gap: '5px',
-            fontSize: '13px',
-            justifyContent: 'center',
-          }}>
-            {Object.values(municipalityColors).map((municipio, index) => (
-              <Box key={index} sx={{
-                display: 'flex',
-                alignItems: 'center',
-                marginBottom: '5px',
-              }}>
-                <Box sx={{
-                  width: '15px',
-                  height: '15px',
-                  backgroundColor: municipio.color,
-                  marginRight: '5px',
-                  borderRadius: '2px',
-                }} />
-                <Typography variant="body2">{municipio.name}</Typography>
-              </Box>
-            ))}
-          </Box>
+          {chartType === 'line' ? (
+            <StateLineChart chartData={chartData} title={title} yAxisLabel={yAxisLabel} />
+          ) : (
+            <StateBarChart chartData={chartData} title={title} />
+          )}
         </>
       )}
     </Box>
   );
 };
 
-export default ChartComponent;
+export default StateChartComponent;

@@ -10,9 +10,6 @@ const CustomPagination = ({ page, totalPages, limit, onPageChange, onLimitChange
       gap: '0.5rem',
       marginTop: '30px',
       padding: '12px',
-      background: 'rgba(255, 255, 255, 0.8)',
-      borderRadius: '20px',
-      boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
       flexWrap: 'nowrap',
       '@media (max-width: 768px)': {
         padding: '8px',

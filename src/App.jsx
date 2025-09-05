@@ -19,6 +19,7 @@ import ParentComponent from "./components/pages/education/basic/ParentComponent.
 import FilterComponent from "./components/pages/education/higher/FilterComponent.jsx";
 import FiltrosRateComponent from "./components/pages/education/rate/FiltrosRateComponent.jsx";
 import ChartContainer from "./components/pages/education/financial/municipality/indicators/ChartContainer.jsx";
+import StateIndicatorsContainer from "./components/pages/education/financial/state/indicators/StateIndicatorsContainer.jsx";
 import AppLayout from "./components/layouts/AppLayout.jsx";
 import theme from "./theme/muiTheme.jsx";
 import "./App.css";
@@ -79,6 +80,7 @@ function App() {
             <Route path="municipios" element={<RevenueTableContainer />} />
             <Route path="estado" element={<StateRevenueTableContainer />} />
             <Route path="indicadores" element={<ChartContainer />} />
+            <Route path="indicadores-estaduais" element={<StateIndicatorsContainer />} />
             <Route path="dados-educacionais/basica" element={<ParentComponent />} />
             <Route path="dados-educacionais/superior" element={<FilterComponent />} />
             <Route path="dados-educacionais/taxas" element={<FiltrosRateComponent />} />
