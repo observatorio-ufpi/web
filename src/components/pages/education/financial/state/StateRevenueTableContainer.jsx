@@ -105,6 +105,7 @@ const StateRevenueTableContainer = () => {
               tableName={stateTableNames[selectedTable]}
               startYear={startYear}
               endYear={endYear}
+              enableMonetaryCorrection={true}
             />
           </div>
         )}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { FaFilePdf, FaFileExcel } from 'react-icons/fa';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -10,8 +10,14 @@ import TableCell from '@mui/material/TableCell';
 import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
-import { ThemeProvider, createTheme, styled } from '@mui/material/styles';
+import { ThemeProvider, createTheme, styled, useTheme } from '@mui/material/styles';
+import { Box, FormControlLabel, Switch, TextField } from '@mui/material';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { ptBR } from 'date-fns/locale';
 import * as XLSX from 'xlsx';
+import { fetchIPCAData, calculateMonetaryCorrection } from '../../../../../utils/bacenApi.jsx';
 import '../../../../../style/Buttons.css';
 
 const theme = createTheme({
@@ -45,18 +51,80 @@ const CenteredTableCell = styled(TableCell)(({ theme }) => ({
   verticalAlign: 'middle',
 }));
 
-const StateRevenueTable = ({ csvData, tableName, startYear, endYear }) => {
+const StateRevenueTable = ({ csvData, tableName, startYear, endYear, enableMonetaryCorrection = false }) => {
+  const globalTheme = useTheme();
   const [data, setData] = useState({
     types: [],
     years: [],
     valuesByTypeAndYear: {}
   });
+  const [useMonetaryCorrection, setUseMonetaryCorrection] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [targetDate, setTargetDate] = useState(new Date());
+  const [correctedData, setCorrectedData] = useState(null);
 
   useEffect(() => {
     if (csvData) {
       parseCSVData(csvData);
     }
   }, [csvData]); // Removido startYear e endYear das dependências
+
+  // Aplicar correção monetária quando necessário
+  useEffect(() => {
+    const applyCorrection = async () => {
+      if (!useMonetaryCorrection || !enableMonetaryCorrection || !data.valuesByTypeAndYear || Object.keys(data.valuesByTypeAndYear).length === 0) {
+        setCorrectedData(null);
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        
+        // Obter anos dos dados
+        const years = data.years.filter(Boolean).sort();
+        if (years.length === 0) {
+          setLoading(false);
+          return;
+        }
+
+        const startDate = `01/01/${Math.min(...years)}`;
+        const formattedTargetDate = targetDate.toLocaleDateString("pt-BR");
+
+        // Buscar dados do IPCA
+        const ipcaData = await fetchIPCAData(startDate, formattedTargetDate);
+
+        // Aplicar correção monetária aos dados ORIGINAIS
+        const corrected = {};
+        
+        Object.keys(data.valuesByTypeAndYear).forEach(type => {
+          corrected[type] = {};
+          Object.keys(data.valuesByTypeAndYear[type]).forEach(year => {
+            const originalValue = data.valuesByTypeAndYear[type][year];
+            if (typeof originalValue === 'number' && originalValue > 0) {
+              const originalDate = `01/01/${year}`;
+              corrected[type][year] = calculateMonetaryCorrection(
+                originalValue,
+                originalDate,
+                formattedTargetDate,
+                ipcaData
+              );
+            } else {
+              corrected[type][year] = originalValue;
+            }
+          });
+        });
+
+        setCorrectedData(corrected);
+      } catch (error) {
+        console.error("Erro ao aplicar correção monetária:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    applyCorrection();
+  }, [useMonetaryCorrection, enableMonetaryCorrection, targetDate, data.valuesByTypeAndYear, data.years]);
 
   const parseCSVData = (csvText) => {
     // Verificar se csvText é uma string
@@ -175,6 +243,19 @@ const StateRevenueTable = ({ csvData, tableName, startYear, endYear }) => {
     setData({ types, years, valuesByTypeAndYear });
   };
 
+  // Usar dados corrigidos se disponíveis, senão usar dados originais
+  const finalDisplayData = useMemo(() => {
+    return correctedData || data.valuesByTypeAndYear;
+  }, [correctedData, data.valuesByTypeAndYear]);
+
+  const handleMonetaryCorrectionToggle = (event) => {
+    setUseMonetaryCorrection(event.target.checked);
+  };
+
+  const handleDateChange = (newDate) => {
+    setTargetDate(newDate);
+  };
+
   const downloadExcel = () => {
     const wb = XLSX.utils.book_new();
     
@@ -183,11 +264,12 @@ const StateRevenueTable = ({ csvData, tableName, startYear, endYear }) => {
       ['Ano', ...data.types],
       ...data.years.map(year => [
         year,
-        ...data.types.map(type => 
-          data.valuesByTypeAndYear[type][year] !== undefined && data.valuesByTypeAndYear[type][year] !== null
-            ? data.valuesByTypeAndYear[type][year]
-            : '-'
-        )
+        ...data.types.map(type => {
+          const value = finalDisplayData[type] && finalDisplayData[type][year] !== undefined 
+            ? finalDisplayData[type][year] 
+            : data.valuesByTypeAndYear[type][year];
+          return value !== undefined && value !== null ? value : '-';
+        })
       ])
     ];
     
@@ -213,7 +295,9 @@ const StateRevenueTable = ({ csvData, tableName, startYear, endYear }) => {
     const tableData = data.years.map(year => [
       year,
       ...data.types.map(type => {
-        const value = data.valuesByTypeAndYear[type][year];
+        const value = finalDisplayData[type] && finalDisplayData[type][year] !== undefined 
+          ? finalDisplayData[type][year] 
+          : data.valuesByTypeAndYear[type][year];
         return typeof value === 'number' 
           ? value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
           : value || '-';
@@ -264,6 +348,56 @@ const StateRevenueTable = ({ csvData, tableName, startYear, endYear }) => {
   return (
     <ThemeProvider theme={theme}>
       <div>
+        {/* Controles de correção monetária */}
+        {enableMonetaryCorrection && (
+          <Box sx={{
+            display: 'flex',
+            justifyContent: 'flex-end',
+            alignItems: 'center',
+            marginBottom: '20px',
+            padding: '10px',
+            borderRadius: '4px',
+          }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={useMonetaryCorrection}
+                    onChange={handleMonetaryCorrectionToggle}
+                    sx={{
+                      '& .MuiSwitch-switchBase.Mui-checked': {
+                        color: globalTheme.palette.primary.main,
+                      },
+                      '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                        backgroundColor: globalTheme.palette.primary.main,
+                      },
+                    }}
+                  />
+                }
+                label="Correção Monetária"
+                sx={{ marginRight: 0 }}
+              />
+              {useMonetaryCorrection && (
+                <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ptBR}>
+                  <DatePicker
+                    label="Data de Referência"
+                    value={targetDate}
+                    onChange={handleDateChange}
+                    renderInput={(params) => <TextField {...params} size="small" />}
+                    inputFormat="dd/MM/yyyy"
+                  />
+                </LocalizationProvider>
+              )}
+            </Box>
+          </Box>
+        )}
+
+        {loading && (
+          <Box sx={{ textAlign: 'center', padding: '20px' }}>
+            Aplicando correção monetária...
+          </Box>
+        )}
+
         <Paper sx={{ backgroundColor: theme.palette.background.default }}>
           <TableContainer component={Paper} sx={{ maxWidth: '100%', overflowX: 'auto' }}>
             <Table sx={{ minWidth: 650 }} aria-label="state revenue table">
@@ -284,7 +418,9 @@ const StateRevenueTable = ({ csvData, tableName, startYear, endYear }) => {
                       {year}
                     </BoldTableCell>
                     {data.types.map((type, idx) => {
-                      const value = data.valuesByTypeAndYear[type][year];
+                      const value = finalDisplayData[type] && finalDisplayData[type][year] !== undefined 
+                        ? finalDisplayData[type][year] 
+                        : data.valuesByTypeAndYear[type][year];
                       return (
                         <CenteredTableCell key={idx} align="center">
                           {typeof value === 'number' 
