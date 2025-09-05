@@ -70,7 +70,7 @@ const Sidebar = () => {
           {/* Dados Educacionais */}
           <div className="mb-8">
             <h3 className={`text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4 ${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>
-              dados educacionais
+              Dados Educacionais
             </h3>
             <ul className="space-y-2">
               <li>
@@ -118,7 +118,7 @@ const Sidebar = () => {
           {/* Dados Financeiros */}
           <div className="mb-8">
             <h3 className={`text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4 ${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>
-              dados financeiros
+              Financiamento da Educação
             </h3>
             <ul className="space-y-2">
               <li>
@@ -131,20 +131,7 @@ const Sidebar = () => {
                   }`}
                 >
                   <FaDollarSign className="mr-3 text-lg flex-shrink-0" />
-                  <span className={`${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>Exercícios - Municípios</span>
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/estado"
-                  className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                    isActive('/estado')
-                      ? 'bg-green-100 text-green-700'
-                      : 'text-gray-700 hover:bg-gray-100'
-                  }`}
-                >
-                  <FaDollarSign className="mr-3 text-lg flex-shrink-0" />
-                  <span className={`${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>Exercícios - Estado</span>
+                  <span className={`${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>Dados do Município</span>
                 </Link>
               </li>
               <li>
@@ -158,6 +145,19 @@ const Sidebar = () => {
                 >
                   <FaDollarSign className="mr-3 text-lg flex-shrink-0" />
                   <span className={`${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>Indicadores Municipais</span>
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/estado"
+                  className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                    isActive('/estado')
+                      ? 'bg-green-100 text-green-700'
+                      : 'text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  <FaDollarSign className="mr-3 text-lg flex-shrink-0" />
+                  <span className={`${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>Dados do Estado</span>
                 </Link>
               </li>
               <li>
@@ -193,19 +193,6 @@ const Sidebar = () => {
                 >
                   <FaInfoCircle className="mr-3 text-lg flex-shrink-0" />
                   <span className={`${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>Quem somos</span>
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/o-que-fazemos"
-                  className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                    isActive('/o-que-fazemos')
-                      ? 'bg-green-100 text-green-700'
-                      : 'text-gray-700 hover:bg-gray-100'
-                  }`}
-                >
-                  <FaInfoCircle className="mr-3 text-lg flex-shrink-0" />
-                  <span className={`${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>O que fazemos</span>
                 </Link>
               </li>
               <li>

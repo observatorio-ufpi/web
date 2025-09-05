@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { FaFacebook, FaInstagram, FaYoutube } from 'react-icons/fa';
+import { FaInstagram } from 'react-icons/fa';
 
 const Footer = () => {
   return (
@@ -10,11 +10,16 @@ const Footer = () => {
           {/* Coluna 1: Redes sociais */}
           <div className="text-center sm:text-left lg:col-span-2">
             <div className="flex justify-center sm:justify-start space-x-4 mb-6">
-              <FaFacebook className="text-purple-600 text-2xl cursor-pointer hover:text-purple-700 transition-colors" />
-              <FaInstagram className="text-purple-600 text-2xl cursor-pointer hover:text-purple-700 transition-colors" />
-              <FaYoutube className="text-purple-600 text-2xl cursor-pointer hover:text-purple-700 transition-colors" />
+              <a 
+                href="https://www.instagram.com/nuppege" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-purple-600 hover:text-purple-700 transition-colors"
+              >
+                <FaInstagram className="text-2xl cursor-pointer" />
+              </a>
             </div>
-            <p className="text-gray-600">email@email.com</p>
+            <p className="text-purple-600">nuppege@ufpi.edu.br</p>
           </div>
 
           {/* Coluna 2: Desenvolvimento */}

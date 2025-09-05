@@ -58,16 +58,6 @@ const Navbar = () => {
                   quem somos
                 </Link>
                 <Link 
-                  to="/o-que-fazemos" 
-                  className={`px-3 py-1 rounded-full text-sm font-medium transition-all duration-200 ${
-                    isActive('/o-que-fazemos') 
-                      ? 'text-purple-600 bg-purple-100' 
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  o que fazemos
-                </Link>
-                <Link 
                   to="/repositorio" 
                   className={`px-3 py-1 rounded-full text-sm font-medium transition-all duration-200 ${
                     isActive('/repositorio') 
