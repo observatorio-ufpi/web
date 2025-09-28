@@ -7,8 +7,8 @@ import TablePagination from '@mui/material/TablePagination';
 import TableRow from '@mui/material/TableRow';
 import { ThemeProvider, createTheme, styled } from '@mui/material/styles';
 import React from 'react';
-import BarChart from '../../../common/BarChart';
-import PieChart from '../../../common/PieChart';
+import EnhancedBarChart from '../../../common/EnhancedBarChart';
+import EnhancedPieChart from '../../../common/EnhancedPieChart';
 import TableExport from '../../../common/TableExport';
 import HistoricalChart from '../HistoricalChart';
 
@@ -456,6 +456,8 @@ const TableRateComponent = ({
 
   // Referências para as tabelas e gráfico
   const chartRef = React.useRef(null);
+  const crossChartRef = React.useRef(null);
+  const simpleChartRef = React.useRef(null);
   const tableRefs = {
     historical: React.useRef(null),
     default: React.useRef(null),
@@ -712,26 +714,36 @@ const TableRateComponent = ({
     const chartTitle = getTableTitle(filterType);
 
     return (
-      <div style={{ marginTop: '1rem' }}>
+      <div style={{ marginTop: '1rem' }} ref={simpleChartRef}>
         {usePieChart ? (
-          <PieChart
+          <EnhancedPieChart
             data={chartData}
             title={`Distribuição por ${chartTitle.replace('Dados por ', '')}`}
-            height={400}
-            showTotal={false}
+            height={500}
           />
         ) : (
-          <BarChart
+          <EnhancedPieChart
             data={chartData}
             title={chartTitle}
-            height={400}
-            xAxisKey="name"
-            yAxisKey="value"
-            showLegend={false}
+            height={500}
           />
         )}
       </div>
     );
+  };
+
+  // Função para gerar título correto para combinações de filtros
+  const getCrossTableTitle = () => {
+    const selectedFilters = [];
+    if (isEtapaSelected) selectedFilters.push('Etapa');
+    if (isLocalidadeSelected) selectedFilters.push('Localidade');
+    if (isFaixaEtariaSelected) selectedFilters.push('Faixa Etária');
+    if (isInstructionLevelSelected) selectedFilters.push('Nível de Instrução');
+
+    if (selectedFilters.length === 2) {
+      return `Combinação: ${selectedFilters[0]} × ${selectedFilters[1]}`;
+    }
+    return 'Combinação de Filtros';
   };
 
   // Função para renderizar gráficos para tabelas cruzadas
@@ -749,33 +761,16 @@ const TableRateComponent = ({
       return rowData;
     });
 
-    // Se há muitas colunas, usar gráfico de pizza para a primeira linha
-    if (uniqueColumns.size > 6) {
-      const firstRowData = Array.from(uniqueColumns.entries()).map(([colId, colName]) => ({
-        name: colName,
-        value: Number(cellValues.get(`${Array.from(uniqueRows.keys())[0]}-${colId}`) || 0)
-      }));
-
-      return (
-        <div style={{ marginTop: '1rem' }}>
-          <PieChart
-            data={firstRowData}
-            title={`Distribuição - ${Array.from(uniqueRows.values())[0]}`}
-            height={400}
-            showTotal={false}
-          />
-        </div>
-      );
-    }
+    // Para combinações de filtros, sempre usar gráfico de barras
+    const chartTitle = getCrossTableTitle();
 
     return (
-      <div style={{ marginTop: '1rem' }}>
-        <BarChart
+      <div style={{ marginTop: '1rem' }} ref={crossChartRef}>
+        <EnhancedBarChart
           data={chartData}
-          title={`Comparação por ${rowHeader}`}
-          height={400}
+          title={chartTitle}
+          height={500}
           xAxisKey="name"
-          showLegend={true}
         />
       </div>
     );

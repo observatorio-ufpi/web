@@ -1,4 +1,5 @@
 import { Button, Tooltip } from '@mui/material';
+import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
@@ -16,6 +17,8 @@ import * as XLSX from 'xlsx';
  * @param {string} props.fileName - Nome do arquivo para download (sem extensão)
  * @param {string} props.tableTitle - Título da tabela (opcional)
  * @param {React.RefObject} props.chartRef - Referência para o gráfico (opcional)
+ * @param {string} props.chartType - Tipo de gráfico: 'pie', 'bar', 'line' (opcional)
+ * @param {Array} props.chartData - Dados específicos do gráfico (opcional)
  */
 const TableExport = ({
   data,
@@ -23,7 +26,9 @@ const TableExport = ({
   headerDisplayNames,
   fileName = 'tabela_exportada',
   tableTitle = '',
-  chartRef
+  chartRef,
+  chartType = 'bar',
+  chartData = null
 }) => {
   // Função para gerar um nome de arquivo baseado no título
   const generateFileName = () => {
@@ -40,6 +45,49 @@ const TableExport = ({
       .substring(0, 100);              // Limita o tamanho para evitar nomes muito longos
 
     return sanitizedTitle || fileName;
+  };
+
+  // Função para preparar dados do gráfico baseado nos dados da tabela
+  const prepareChartData = () => {
+    if (chartData) return chartData;
+
+    if (!data || data.length === 0) return null;
+
+    // Detectar automaticamente se é gráfico de pizza ou barras baseado na estrutura dos dados
+    const firstRow = data[0];
+    const keys = Object.keys(firstRow);
+
+    // Se tem apenas duas colunas (nome e valor), é pizza
+    if (keys.length === 2) {
+      const nameKey = keys.find(key => typeof firstRow[key] === 'string');
+      const valueKey = keys.find(key => typeof firstRow[key] === 'number' || !isNaN(Number(firstRow[key])));
+
+      if (nameKey && valueKey) {
+        const pieChartData = {
+          type: 'pie',
+          categories: data.map(item => item[nameKey]),
+          series: [{
+            name: headerDisplayNames[valueKey] || valueKey,
+            data: data.map(item => Number(item[valueKey]) || 0)
+          }]
+        };
+        return pieChartData;
+      }
+    }
+
+    // Se tem mais colunas, é gráfico de barras
+    const nameKey = keys[0]; // Primeira coluna como categoria
+    const dataKeys = keys.slice(1).filter(key => key !== 'Total'); // Demais colunas como séries (exceto Total)
+
+    const barChartData = {
+      type: 'bar',
+      categories: data.map(item => item[nameKey]),
+      series: dataKeys.map(key => ({
+        name: headerDisplayNames[key] || key,
+        data: data.map(item => Number(item[key]) || 0)
+      }))
+    };
+    return barChartData;
   };
 
   // Função para exportar para PDF
@@ -118,36 +166,107 @@ const TableExport = ({
     }
   };
 
-  // Função para exportar para Excel
-  const exportToExcel = () => {
+  // Função para exportar para Excel com tabela de dados para gráfico
+  const exportToExcel = async () => {
     if (!data || data.length === 0) {
-      alert('Não há dados para exportar');
+      console.warn('Não há dados para exportar');
       return;
     }
 
     try {
-      // Preparar dados para o Excel
-      const excelData = data.map(item => {
-        const row = {};
+      // Criar workbook com ExcelJS
+      const workbook = new ExcelJS.Workbook();
+      workbook.creator = 'Sistema de Observatório';
+      workbook.created = new Date();
+
+      // Preparar dados do gráfico
+      const chartDataForExcel = prepareChartData();
+
+      // Criar planilha de dados
+      const dataWorksheet = workbook.addWorksheet('Dados');
+
+      // Adicionar cabeçalhos
+      const headerRow = headers.map(header => headerDisplayNames[header] || header);
+      dataWorksheet.addRow(headerRow);
+
+      // Estilizar cabeçalhos
+      const headerRowObj = dataWorksheet.getRow(1);
+      headerRowObj.font = { bold: true };
+      headerRowObj.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FFCCCCCC' }
+      };
+
+      // Adicionar dados (substituindo valores vazios por 0)
+      data.forEach(item => {
+        const row = [];
         headers.forEach(header => {
-          const displayName = headerDisplayNames[header] || header;
-          row[displayName] = item[header]?.toString() || '';
+          const value = item[header];
+          // Substituir valores vazios por 0 em colunas numéricas
+          if (header === 'total' || typeof value === 'number' || !isNaN(Number(value))) {
+            row.push(value === '' || value === null || value === undefined ? 0 : value);
+          } else {
+            row.push(value || '');
+          }
         });
-        return row;
+        dataWorksheet.addRow(row);
       });
 
-      // Criar planilha
-      const worksheet = XLSX.utils.json_to_sheet(excelData);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, 'Dados');
+      // Auto-ajustar largura das colunas
+      dataWorksheet.columns.forEach(column => {
+        column.width = 15;
+      });
 
-      // Converter para binário e salvar
-      const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-      const blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
+      if (chartDataForExcel) {
+        // Criar planilha para dados do gráfico (apenas tabela)
+        const chartWorksheet = workbook.addWorksheet('Gráfico');
+
+        if (chartDataForExcel.type === 'pie') {
+          // Dados para gráfico de pizza
+          chartWorksheet.addRow(['Categoria', 'Valor']);
+          chartDataForExcel.categories.forEach((category, index) => {
+            const value = chartDataForExcel.series[0].data[index] || 0;
+            chartWorksheet.addRow([category, value]);
+          });
+        } else {
+          // Dados para gráfico de barras
+          const headerRow = ['Categoria', ...chartDataForExcel.series.map(s => s.name)];
+          chartWorksheet.addRow(headerRow);
+
+          chartDataForExcel.categories.forEach((category, index) => {
+            const row = [category];
+            chartDataForExcel.series.forEach(series => {
+              row.push(series.data[index] || 0);
+            });
+            chartWorksheet.addRow(row);
+          });
+        }
+
+        // Estilizar cabeçalhos da planilha de gráfico
+        const chartHeaderRow = chartWorksheet.getRow(1);
+        chartHeaderRow.font = { bold: true };
+        chartHeaderRow.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FF4CAF50' }
+        };
+
+        // Auto-ajustar largura das colunas
+        chartWorksheet.columns.forEach(column => {
+          column.width = 15;
+        });
+      }
+
+      // Salvar arquivo
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      });
       saveAs(blob, `${generateFileName()}.xlsx`);
+
     } catch (error) {
       console.error('Erro ao exportar para Excel:', error);
-      alert('Erro ao exportar para Excel. Verifique o console para mais detalhes.');
     }
   };
 

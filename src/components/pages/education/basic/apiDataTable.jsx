@@ -8,6 +8,8 @@ import TableRow from '@mui/material/TableRow';
 import { ThemeProvider, createTheme, styled } from '@mui/material/styles';
 import React from 'react';
 import BarChart from '../../../common/BarChart';
+import EnhancedBarChart from '../../../common/EnhancedBarChart';
+import EnhancedPieChart from '../../../common/EnhancedPieChart';
 import PieChart from '../../../common/PieChart';
 import TableExport from '../../../common/TableExport';
 import HistoricalChart from '../HistoricalChart';
@@ -623,8 +625,10 @@ const ApiDataTable = ({
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
 
-  // Referências para as tabelas e gráfico
+  // Referências para as tabelas e gráficos
   const chartRef = React.useRef(null);
+  const crossChartRef = React.useRef(null);
+  const simpleChartRef = React.useRef(null);
   const tableRefs = {
     historical: React.useRef(null),
     default: React.useRef(null),
@@ -786,13 +790,19 @@ const ApiDataTable = ({
       const categoryName = item[extraColumn.name];
       const categoryId = item[extraColumn.id];
       years.add(year);
-      categories.add(categoryName);
-      categoryIds.set(categoryName, categoryId);
 
-      if (!categoryYearMap.has(categoryName)) {
-        categoryYearMap.set(categoryName, new Map());
+      // CORREÇÃO: Agrupar apenas por ID
+      const categoryKey = categoryId;
+      categories.add(categoryKey);
+      categoryIds.set(categoryKey, categoryId);
+
+      if (!categoryYearMap.has(categoryKey)) {
+        categoryYearMap.set(categoryKey, new Map());
       }
-      categoryYearMap.get(categoryName).set(year, Number(item.total) || 0);
+
+      // Somar valores se já existir dados para este ID+ano
+      const currentTotal = categoryYearMap.get(categoryKey).get(year) || 0;
+      categoryYearMap.get(categoryKey).set(year, currentTotal + (Number(item.total) || 0));
     });
 
     // Converter Set para Array e ordenar
@@ -804,10 +814,13 @@ const ApiDataTable = ({
 
     // Preparar dados para exportação
     const exportData = [];
-    sortedCategories.forEach(category => {
-      const row = { [extraColumn.label]: category };
+    sortedCategories.forEach(categoryId => {
+      // Buscar o nome da categoria nos dados originais
+      const categoryItem = data.result.find(item => item[extraColumn.id] == categoryId);
+      const categoryName = categoryItem ? categoryItem[extraColumn.name] : `ID ${categoryId}`;
+      const row = { [extraColumn.label]: categoryName };
       sortedYears.forEach(year => {
-        row[year] = categoryYearMap.get(category)?.get(year) || 0;
+        row[year] = categoryYearMap.get(categoryId)?.get(year) || 0;
       });
       exportData.push(row);
     });
@@ -835,12 +848,15 @@ const ApiDataTable = ({
               {sortedCategories
                 .slice(type === 'school/count' && isEtapaSelected ? page * rowsPerPage : 0,
                       type === 'school/count' && isEtapaSelected ? page * rowsPerPage + rowsPerPage : undefined)
-                .map(category => {
-                  const yearMap = categoryYearMap.get(category);
+                .map(categoryId => {
+                  const yearMap = categoryYearMap.get(categoryId);
+                  // Buscar o nome da categoria nos dados originais
+                  const categoryItem = data.result.find(item => item[extraColumn.id] == categoryId);
+                  const categoryName = categoryItem ? categoryItem[extraColumn.name] : `ID ${categoryId}`;
 
                   return (
-                    <TableRow key={category}>
-                      <CenteredTableCell>{category}</CenteredTableCell>
+                    <TableRow key={categoryId}>
+                      <CenteredTableCell>{categoryName}</CenteredTableCell>
                       {sortedYears.map(year => (
                         <CenteredTableCell key={year}>
                           {isRatioType(type)
@@ -902,6 +918,22 @@ const ApiDataTable = ({
     );
   };
 
+  // Função para gerar título correto para combinações de filtros
+  const getCrossTableTitle = () => {
+    const selectedFilters = [];
+    if (isEtapaSelected) selectedFilters.push('Etapa');
+    if (isLocalidadeSelected) selectedFilters.push('Localidade');
+    if (isDependenciaSelected) selectedFilters.push('Dependência');
+    if (isVinculoSelected) selectedFilters.push('Vínculo');
+    if (isFormacaoDocenteSelected) selectedFilters.push('Formação Docente');
+    if (isFaixaEtariaSelected) selectedFilters.push('Faixa Etária');
+
+    if (selectedFilters.length === 2) {
+      return `Combinação: ${selectedFilters[0]} × ${selectedFilters[1]}`;
+    }
+    return 'Combinação de Filtros';
+  };
+
   // Função para renderizar gráficos para tabelas cruzadas
   const renderCrossTableCharts = (uniqueRows, uniqueColumns, cellValues, rowHeader) => {
     if (!uniqueRows || !uniqueColumns || uniqueRows.size === 0 || uniqueColumns.size === 0) {
@@ -917,32 +949,16 @@ const ApiDataTable = ({
       return rowData;
     });
 
-    // Se há muitas colunas, usar gráfico de pizza para a primeira linha
-    if (uniqueColumns.size > 6) {
-      const firstRowData = Array.from(uniqueColumns.entries()).map(([colId, colName]) => ({
-        name: colName,
-        value: Number(cellValues.get(`${Array.from(uniqueRows.keys())[0]}-${colId}`) || 0)
-      }));
-
-      return (
-        <div style={{ marginTop: '1rem' }}>
-          <PieChart
-            data={firstRowData}
-            title={`Distribuição - ${Array.from(uniqueRows.values())[0]}`}
-            height={400}
-          />
-        </div>
-      );
-    }
+    // Para combinações de filtros, sempre usar gráfico de barras
+    const chartTitle = getCrossTableTitle();
 
     return (
-      <div style={{ marginTop: '1rem' }}>
-        <BarChart
+      <div style={{ marginTop: '1rem' }} ref={crossChartRef}>
+        <EnhancedBarChart
           data={chartData}
-          title={`Comparação por ${rowHeader}`}
-          height={400}
+          title={chartTitle}
+          height={500}
           xAxisKey="name"
-          showLegend={true}
         />
       </div>
     );
@@ -1047,6 +1063,7 @@ const ApiDataTable = ({
           fileName="dados_cruzados"
           tableTitle={title || "Dados Cruzados"}
           tableRef={tableRefs.cross}
+          chartRef={crossChartRef}
         />
         {type === 'school/count' && isEtapaSelected && (
           <TablePagination
@@ -1102,21 +1119,18 @@ const ApiDataTable = ({
     const chartTitle = getTableTitle(filterType);
 
     return (
-      <div style={{ marginTop: '1rem' }}>
+      <div style={{ marginTop: '1rem' }} ref={simpleChartRef}>
         {usePieChart ? (
-          <PieChart
+          <EnhancedPieChart
             data={chartData}
             title={`Distribuição por ${chartTitle.replace('Dados por ', '')}`}
-            height={400}
+            height={500}
           />
         ) : (
-          <BarChart
+          <EnhancedPieChart
             data={chartData}
             title={chartTitle}
-            height={400}
-            xAxisKey="name"
-            yAxisKey="value"
-            showLegend={false}
+            height={500}
           />
         )}
       </div>
@@ -1230,6 +1244,7 @@ const ApiDataTable = ({
           fileName={`dados_por_${filterType}`}
           tableTitle={title || getTableTitle(filterType)}
           tableRef={tableRefs[filterType]}
+          chartRef={simpleChartRef}
         />
         {usePagination && (
           <TablePagination

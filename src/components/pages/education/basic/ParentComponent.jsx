@@ -15,7 +15,7 @@ function ParentComponent() {
     class: { min: 2007, max: 2024 },
     teacher: { min: 2021, max: 2024 },
     auxiliar: { min: 2007, max: 2024 },
-    employees: { min: 2007, max: 2023 }
+    employees: { min: 2007, max: 2024 }
   }), []);
 
   const [type, setType] = useState('enrollment');
@@ -47,20 +47,8 @@ function ParentComponent() {
 
   // Função para obter os limites de anos para série histórica
   const getHistoricalYearLimits = useMemo(() => {
-    // Para tipos em série histórica (que têm dados até 2024), aplicar regras específicas
-    // EXCETO para teacher que pode cruzar entre 2023 e 2024
-    if ((type === 'school/count' || type === 'enrollment' || type === 'class' || type === 'auxiliar') && displayHistorical) {
-      if (startYear <= 2023) {
-        // Se ano inicial <= 2023, ano final máximo = 2023
-        return { min: startYear, max: 2023 };
-      } else {
-        // Se ano inicial >= 2024, ano final = ano inicial (só um ano)
-        return { min: startYear, max: startYear };
-      }
-    }
-
     return yearLimits[type] || { min: 2007, max: 2022 };
-  }, [type, yearLimits, displayHistorical, startYear]);
+  }, [type, yearLimits]);
 
   // Usar getYearLimits para yearOptions
   const yearOptions = useMemo(() => {
@@ -80,65 +68,10 @@ function ParentComponent() {
     setEndYear(getYearLimits.max);
   }, [getYearLimits]);
 
-  // Efeito para validar anos quando mudar tipo ou série histórica para tipos que têm dados até 2024
-  useEffect(() => {
-    // Aplicar restrições apenas quando há dimensões selecionadas
-    // EXCETO para teacher que pode cruzar entre 2023 e 2024
-    if ((type === 'school/count' || type === 'enrollment' || type === 'class' || type === 'auxiliar') && displayHistorical && selectedFilters.length > 0) {
-      if (startYear <= 2023) {
-        // Se ano inicial <= 2023, ano final máximo = 2023
-        if (endYear > 2023) {
-          setEndYear(2023);
-        }
-      } else if (startYear >= 2024) {
-        // Se ano inicial >= 2024, ano final pode ser qualquer ano >= 2024
-        if (endYear < 2024) {
-          setEndYear(startYear);
-        }
-      }
-    }
-  }, [type, displayHistorical, startYear, endYear, selectedFilters]);
-
-  // Efeito para ajustar anos quando adicionar/remover dimensões para tipos que têm dados até 2024
-  useEffect(() => {
-    // EXCETO para teacher que pode cruzar entre 2023 e 2024
-    if ((type === 'school/count' || type === 'enrollment' || type === 'class' || type === 'auxiliar') && displayHistorical) {
-      if (selectedFilters.length === 0) {
-        // Sem dimensões: permitir qualquer ano
-        // Não fazer nada, deixar o usuário escolher livremente
-      } else {
-        // Com dimensões: aplicar restrições
-        if (startYear <= 2023) {
-          if (endYear > 2023) {
-            setEndYear(2023);
-          }
-        } else if (startYear >= 2024) {
-          if (endYear < 2024) {
-            setEndYear(startYear);
-          }
-        }
-      }
-    }
-  }, [selectedFilters, type, displayHistorical, startYear, endYear]);
 
 
 
   const handleFilterClick = () => {
-    // Validação para tipos em série histórica COM dimensões (que têm dados até 2024)
-    // EXCETO para teacher que pode cruzar entre 2023 e 2024
-    if ((type === 'school/count' || type === 'enrollment' || type === 'class' || type === 'auxiliar') && displayHistorical && selectedFilters.length > 0) {
-      if (startYear <= 2023 && endYear > 2023) {
-        setError('Para consultas com filtros, série histórica não pode cruzar o limite entre 2023 e 2024.');
-        setIsLoading(false);
-        return;
-      }
-      if (startYear >= 2024 && endYear < 2024) {
-        setError('Para consultas com filtros, série histórica não pode cruzar o limite entre 2023 e 2024.');
-        setIsLoading(false);
-        return;
-      }
-    }
-
     setIsLoading(true);
     setError(null);
     setData(null);
@@ -324,22 +257,6 @@ function ParentComponent() {
                              onChange={(selectedOption) => {
                  setType(selectedOption.value);
                  setSelectedFilters([]);
-
-                                   // Se mudou para tipos que têm dados até 2024 e está em série histórica COM dimensões, ajustar anos se necessário
-                  // EXCETO para teacher que pode cruzar entre 2023 e 2024
-                  if ((selectedOption.value === 'school/count' || selectedOption.value === 'enrollment' || selectedOption.value === 'class' || selectedOption.value === 'auxiliar') && displayHistorical && selectedFilters.length > 0) {
-                    if (startYear <= 2023) {
-                      // Se ano inicial <= 2023, ano final máximo = 2023
-                      if (endYear > 2023) {
-                        setEndYear(2023);
-                      }
-                    } else if (startYear >= 2024) {
-                      // Se ano inicial >= 2024, ano final pode ser qualquer ano >= 2024
-                      if (endYear < 2024) {
-                        setEndYear(startYear);
-                      }
-                    }
-                  }
                }}
               options={typeOptions}
               placeholder="Selecione o tipo"
@@ -357,22 +274,6 @@ function ParentComponent() {
                                      onChange={(e) => {
                      setDisplayHistorical(e.target.checked);
                      setSelectedFilters([]);
-
-                                           // Se ativou série histórica para tipos COM dimensões (que têm dados até 2024), ajustar anos se necessário
-                      // EXCETO para teacher que pode cruzar entre 2023 e 2024
-                      if (e.target.checked && (type === 'school/count' || type === 'enrollment' || type === 'class' || type === 'auxiliar') && selectedFilters.length > 0) {
-                        if (startYear <= 2023) {
-                          // Se ano inicial <= 2023, ano final máximo = 2023
-                          if (endYear > 2023) {
-                            setEndYear(2023);
-                          }
-                        } else if (startYear >= 2024) {
-                          // Se ano inicial >= 2024, ano final pode ser qualquer ano >= 2024
-                          if (endYear < 2024) {
-                            setEndYear(startYear);
-                          }
-                        }
-                      }
                    }}
                   className="cursor-pointer"
                 />
@@ -390,36 +291,12 @@ function ParentComponent() {
                          const newStartYear = selectedOption.value;
                          setStartYear(newStartYear);
 
-                                                   // Para tipos em série histórica COM dimensões (que têm dados até 2024), aplicar regras específicas
-                          // EXCETO para teacher que pode cruzar entre 2023 e 2024
-                          if ((type === 'school/count' || type === 'enrollment' || type === 'class' || type === 'auxiliar') && displayHistorical && selectedFilters.length > 0) {
-                            if (newStartYear <= 2023) {
-                              // Se ano inicial <= 2023, ano final máximo = 2023
-                              if (endYear > 2023) {
-                                setEndYear(2023);
-                              }
-                            } else if (newStartYear >= 2024) {
-                              // Se ano inicial >= 2024, ano final pode ser qualquer ano >= 2024
-                              if (endYear < 2024) {
-                                setEndYear(newStartYear);
-                              }
-                            }
-                          } else {
-                           // Para outros tipos, lógica normal
-                           if (newStartYear > endYear) {
-                             setEndYear(newStartYear);
-                           }
+                         // Lógica normal: se ano inicial > ano final, ajustar ano final
+                         if (newStartYear > endYear) {
+                           setEndYear(newStartYear);
                          }
                        }}
-                                             options={yearOptions.filter(option => {
-                         // Para tipos em série histórica COM dimensões (que têm dados até 2024), aplicar regras específicas
-                         // EXCETO para teacher que pode cruzar entre 2023 e 2024
-                         if ((type === 'school/count' || type === 'enrollment' || type === 'class' || type === 'auxiliar') && displayHistorical && selectedFilters.length > 0) {
-                           // Permitir qualquer ano inicial, mas o ano final será limitado conforme as regras
-                           return true;
-                         }
-                         return true;
-                       })}
+                                             options={yearOptions}
                       placeholder="Ano Inicial"
                       size="xs"
                     />
@@ -430,21 +307,7 @@ function ParentComponent() {
                       id="endYearSelect"
                       value={yearOptions.find(option => option.value === endYear)}
                       onChange={(selectedOption) => setEndYear(selectedOption.value)}
-                                             options={yearOptions.filter(option => {
-                                                   // Para tipos em série histórica COM dimensões (que têm dados até 2024), aplicar regras específicas
-                          // EXCETO para teacher que pode cruzar entre 2023 e 2024
-                          if ((type === 'school/count' || type === 'enrollment' || type === 'class' || type === 'auxiliar') && displayHistorical && selectedFilters.length > 0) {
-                            if (startYear <= 2023) {
-                              // Se ano inicial <= 2023, ano final máximo = 2023
-                              return option.value >= startYear && option.value <= 2023;
-                            } else if (startYear >= 2024) {
-                              // Se ano inicial >= 2024, ano final pode ser qualquer ano >= 2024
-                              return option.value >= startYear;
-                            }
-                          }
-                         // Para outros tipos ou tipos sem dimensões, lógica normal
-                         return option.value >= startYear;
-                       })}
+                                             options={yearOptions.filter(option => option.value >= startYear)}
                       placeholder="Ano Final"
                       size="xs"
                     />
@@ -580,29 +443,6 @@ function ParentComponent() {
                  </div>
        </div>
 
-               {/* Mensagem informativa para tipos em série histórica (que têm dados até 2024) */}
-        {(type === 'school/count' || type === 'enrollment' || type === 'class' || type === 'auxiliar') && displayHistorical && (
-          <div style={{
-            backgroundColor: '#f0f8ff',
-            border: '1px solid #87ceeb',
-            borderRadius: '8px',
-            padding: '10px',
-            margin: '10px 0',
-            textAlign: 'center'
-          }}>
-                         <Typography
-               variant="body2"
-               sx={{
-                 fontSize: '13px',
-                 color: '#0066cc',
-                 fontStyle: 'italic'
-               }}
-             >
-               <strong>Obs:</strong> Para consultas com filtros, série histórica não pode cruzar o limite entre 2023 e 2024.
-               Use 2007-2023 ou 2024-2024+ (quando disponível).
-             </Typography>
-          </div>
-        )}
 
        {isLoading && (
         <Loading />
