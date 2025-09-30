@@ -1054,7 +1054,7 @@ const ApiDataTable = ({
         </TableContainer>
 
         {/* Adicionar gráficos para tabelas cruzadas */}
-        {renderCrossTableCharts(uniqueRows, uniqueColumns, cellValues, config.rowHeader)}
+        {!(type === 'school/count' && isEtapaSelected) && renderCrossTableCharts(uniqueRows, uniqueColumns, cellValues, config.rowHeader)}
 
         <TableExport
           data={exportData}
@@ -1145,6 +1145,8 @@ const ApiDataTable = ({
       case 'etapa':
         headers = HEADERS.etapa;
         tableData = data.result;
+        usePagination = type === 'school/count';
+        note = type === 'school/count' ? ETAPA_ESCOLA_NOTE : null;
         break;
 
       case 'localidade':
@@ -1235,17 +1237,8 @@ const ApiDataTable = ({
         </TableContainer>
 
         {/* Adicionar gráficos para tabelas simples */}
-        {renderSimpleTableCharts(filterType, tableData)}
+        {!(type === 'school/count' && filterType === 'etapa') && renderSimpleTableCharts(filterType, tableData)}
 
-        <TableExport
-          data={exportData}
-          headers={exportHeaders}
-          headerDisplayNames={headerDisplayNames}
-          fileName={`dados_por_${filterType}`}
-          tableTitle={title || getTableTitle(filterType)}
-          tableRef={tableRefs[filterType]}
-          chartRef={simpleChartRef}
-        />
         {usePagination && (
           <TablePagination
             component="div"
@@ -1261,7 +1254,32 @@ const ApiDataTable = ({
             }
           />
         )}
-        {note && <p>{note}</p>}
+
+        {note && (
+          <div style={{
+            marginTop: '1rem',
+            marginBottom: '1rem',
+            padding: '1rem',
+            backgroundColor: '#f5f5f5',
+            border: '1px solid #ddd',
+            borderRadius: '4px',
+            fontSize: '0.9rem',
+            color: '#333',
+            lineHeight: '1.4'
+          }}>
+            {note}
+          </div>
+        )}
+
+        <TableExport
+          data={exportData}
+          headers={exportHeaders}
+          headerDisplayNames={headerDisplayNames}
+          fileName={`dados_por_${filterType}`}
+          tableTitle={title || getTableTitle(filterType)}
+          tableRef={tableRefs[filterType]}
+          chartRef={simpleChartRef}
+        />
       </div>
     );
   };
