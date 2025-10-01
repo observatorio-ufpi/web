@@ -3,6 +3,7 @@ import { processResults as processApiResults } from "../../../../services/dataPr
 
 function ApiContainer({
   type,
+  basePath = 'basicEducation',
   year,
   isHistorical,
   startYear,
@@ -39,36 +40,40 @@ function ApiContainer({
     };
 
     const buildUrl = (filter, forceEndpoint = null) => {
-      const selectedDims = [];
+      let selectedDims = [];
 
-      if (isEtapaSelected) {
-        selectedDims.push("education_level_mod");
+      if (basePath === 'basicEducation') {
+        if (isEtapaSelected) {
+          selectedDims.push("education_level_mod");
+        }
+        if (isLocalidadeSelected) {
+          selectedDims.push("location");
+        }
+        if (isDependenciaSelected) {
+          selectedDims.push("adm_dependency_detailed");
+        }
+        if (isVinculoSelected) {
+          selectedDims.push("contract_type");
+        }
+        if (isFormacaoDocenteSelected) {
+          selectedDims.push("initial_training");
+        }
+        if (isFaixaEtariaSelected) {
+          selectedDims.push("age_range");
+        }
+      } else if (basePath === 'censo-escolar') {
+        selectedDims = selectedFilters.map(filter => filter.value);
       }
-      if (isLocalidadeSelected) {
-        selectedDims.push("location");
-      }
-      if (isDependenciaSelected) {
-        selectedDims.push("adm_dependency_detailed");
-      }
-      if (isVinculoSelected) {
-        selectedDims.push("contract_type");
-      }
-      if (isFormacaoDocenteSelected) {
-        selectedDims.push("initial_training");
-      }
-      if (isFaixaEtariaSelected) {
-        selectedDims.push("age_range");
-      }
-
 
       const dims = selectedDims.length > 0 ? `dims=${selectedDims.join(",")}` : "";
 
       // Determinar o endpoint correto
       let endpoint = forceEndpoint || type;
 
-      // Se for histórico, usar os novos endpoints de série histórica
-      if (isHistorical) {
-        // Tratar endpoint school/count que já tem uma barra
+      // Para censo-escolar, não adicionar /timeseries - o backend deve lidar com isso
+      // baseado nos parâmetros min_year e max_year
+      if (basePath === 'basicEducation' && isHistorical) {
+        // Apenas para basicEducation usar timeseries
         if (endpoint === 'school/count') {
           endpoint = 'school/count/timeseries';
         } else {
@@ -76,8 +81,15 @@ function ApiContainer({
         }
       }
 
-      //return `https://simcaq.c3sl.ufpr.br/api/v1/${endpoint}?${dims}&filter=${encodeURIComponent(filter)}`;
-      return `${import.meta.env.VITE_API_PUBLIC_URL}/basicEducation/${endpoint}?${dims}&filter=${encodeURIComponent(filter)}`;
+      // Construir URL base
+      const baseUrl = `${import.meta.env.VITE_API_PUBLIC_URL}/${basePath}/${endpoint}`;
+      
+      // Adicionar parâmetros
+      const params = [];
+      if (dims) params.push(dims);
+      params.push(`filter=${encodeURIComponent(filter)}`);
+      
+      return `${baseUrl}?${params.join('&')}`;
     };
 
     const fetchCityData = async (cityId, cityName) => {
@@ -85,7 +97,11 @@ function ApiContainer({
       const url = buildUrl(filter);
       const response = await fetch(url);
 
-      if (!response.ok) throw new Error(`Erro HTTP! Status: ${response.status}`);
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Erro na resposta da API:', errorText);
+        throw new Error(`Erro HTTP! Status: ${response.status}`);
+      }
 
       const result = await response.json();
       result.cityName = cityName;
@@ -93,6 +109,9 @@ function ApiContainer({
     };
 
     const handleResults = (allResults) => {
+      if (basePath === 'censo-escolar') {
+        return allResults[0];
+      }
       return processApiResults(allResults, selectedFilters);
     };
 
@@ -112,7 +131,6 @@ function ApiContainer({
             );
 
             // Soma os resultados por ano e filtros selecionados
-            // Primeiro, vamos coletar todos os dados únicos de todas as cidades
             const allUniqueData = [];
             allResults.forEach(cityResult => {
               cityResult.result.forEach(item => {
@@ -175,9 +193,14 @@ function ApiContainer({
             // Busca histórica original para cidade/estado único
             const filter = buildFilter(city);
             const url = buildUrl(filter);
+            console.log('URL histórica:', url);
             const response = await fetch(url);
 
-            if (!response.ok) throw new Error(`Erro HTTP! Status: ${response.status}`);
+            if (!response.ok) {
+              const errorText = await response.text();
+              console.error('Erro na resposta da API:', errorText);
+              throw new Error(`Erro HTTP! Status: ${response.status}`);
+            }
 
             const result = await response.json();
             onDataFetched(result);
@@ -185,6 +208,7 @@ function ApiContainer({
           return;
         }
 
+        // Consultas não-históricas
         if (citiesList.length > 0 && !city) {
           console.log("Cities List:", citiesList);
           const allResults = await Promise.all(
@@ -199,15 +223,20 @@ function ApiContainer({
         } else {
           const filter = buildFilter(city);
           const url = buildUrl(filter);
+          console.log('URL:', url);
           const response = await fetch(url);
 
-          if (!response.ok) throw new Error(`Erro HTTP! Status: ${response.status}`);
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Erro na resposta da API:', errorText);
+            throw new Error(`Erro HTTP! Status: ${response.status}`);
+          }
 
           const result = await response.json();
           const allResults = [result];
           console.log("All Results:", allResults);
           const finalResult = handleResults(allResults);
-          console.log("AQui API Result:", finalResult);
+          console.log("API Result:", finalResult);
           onDataFetched(finalResult);
         }
 
@@ -221,7 +250,7 @@ function ApiContainer({
     };
 
     fetchData();
-  }, [triggerFetch, type, year, isHistorical, startYear, endYear, state, city, territory, faixaPopulacional, aglomerado, gerencia, citiesList, onDataFetched, onError, onLoading, selectedFilters]);
+  }, [triggerFetch, type, year, isHistorical, startYear, endYear, state, city, territory, faixaPopulacional, aglomerado, gerencia, citiesList, onDataFetched, onError, onLoading, selectedFilters, basePath]);
 
   return null;
 }

@@ -36,14 +36,6 @@ const EducationSelection = () => {
       </Typography>
       
       <div 
-        sx={{
-          display: 'flex',
-          flexDirection: { xs: 'column', sm: 'row' },
-          gap: 3,
-          justifyContent: 'center',
-          alignItems: 'stretch',
-          marginTop: 2,
-        }}
         style={{
           display: 'flex',
           flexDirection: 'row',
@@ -54,6 +46,7 @@ const EducationSelection = () => {
           flexWrap: 'wrap'
         }}
       >
+        {/* Card 1 - Educação Básica */}
         <div 
           style={{
             flex: '1 1 300px',
@@ -88,7 +81,44 @@ const EducationSelection = () => {
             </Card.Content>
           </Card>
         </div>
+
+        {/* Card 2 - Censo Escolar */}
+        <div 
+          style={{
+            flex: '1 1 300px',
+            maxWidth: '350px',
+            minWidth: '250px'
+          }}
+        >
+          <Card variant="elevated" className="h-full">
+            <Card.Content padding="large" className="flex flex-col items-center text-center justify-between">
+              <FaMapMarkedAlt 
+                style={{ 
+                  color: theme.palette.primary.main,
+                  fontSize: '4rem',
+                  marginBottom: '1.5rem'
+                }}
+              />
+              <Typography variant="h6" component="h2" gutterBottom>
+                Censo Escolar
+              </Typography>
+              <Typography variant="body2" color="textSecondary">
+                Dados de infraestrutura das escolas do Censo Escolar.
+              </Typography>
+              <Button 
+                component={Link} 
+                to="/dados-educacionais/censo-escolar" 
+                variant="primary"
+                size="medium"
+                className="mt-4"
+              >
+                Acessar
+              </Button>
+            </Card.Content>
+          </Card>
+        </div>
         
+        {/* Card 3 - Educação Superior */}
         <div 
           style={{
             flex: '1 1 300px',
@@ -124,6 +154,7 @@ const EducationSelection = () => {
           </Card>
         </div>
         
+        {/* Card 4 - Taxas Educacionais */}
         <div 
           style={{
             flex: '1 1 300px',
@@ -141,14 +172,14 @@ const EducationSelection = () => {
                 }}
               />
               <Typography variant="h6" component="h2" gutterBottom>
-                Taxa de Frequência
+                Taxas Educacionais
               </Typography>
               <Typography variant="body2" color="textSecondary">
-                Dados sobre taxas de frequência escolar e indicadores de participação.
+                Dados sobre taxas de aprovação, reprovação, abandono e distorção idade-série.
               </Typography>
               <Button 
                 component={Link} 
-                to="/dados-educacionais/taxa-frequencia" 
+                to="/dados-educacionais/taxas" 
                 variant="primary"
                 size="medium"
                 className="mt-4"

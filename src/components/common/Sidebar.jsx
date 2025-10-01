@@ -87,6 +87,22 @@ const Sidebar = () => {
                 </Link>
               </li>
               <li>
+               {/* Novo item: Censo Escolar */}
+              
+              <li>
+                <Link
+                  to="/dados-educacionais/censo-escolar"
+                  className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                    isActive('/dados-educacionais/censo-escolar')
+                      ? 'bg-green-100 text-green-700'
+                      : 'text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  <FaGraduationCap className="mr-3 text-lg flex-shrink-0" />
+                  <span className={`${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>Censo Escolar</span>
+                </Link>
+              </li>
+
                 <Link
                   to="/dados-educacionais/superior"
                   className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${

@@ -1,13 +1,12 @@
 import { Button, Typography } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import React, { useEffect, useMemo, useState } from 'react';
-import { Select } from '../../../ui';
 import '../../../../style/RevenueTableContainer.css';
 import '../../../../style/TableFilters.css';
 import { FaixaPopulacional, municipios, Regioes } from '../../../../utils/citiesMapping';
+import { Loading, Select } from '../../../ui';
 import ApiHigherContainer from './ApiHigherComponent.jsx';
 import DataTable from './DataTable.jsx';
-import { useTheme } from '@mui/material/styles';
-import { Loading } from "../../../ui";
 
 function FilterComponent() {
   const [type, setType] = useState('university/count');
@@ -271,7 +270,7 @@ function FilterComponent() {
                 />
                 <span className="font-medium text-gray-700">Série Histórica</span>
               </label>
-            
+
               {displayHistorical ? (
                 <div className="flex flex-col sm:flex-row gap-3 flex-1 w-full">
                   <div className="flex-1">
@@ -434,7 +433,7 @@ function FilterComponent() {
                 size="xs"
               />
             </div>
-            
+
             <div className="flex flex-col sm:flex-row gap-3 justify-end">
               <Button
                 variant="contained"
@@ -473,9 +472,9 @@ function FilterComponent() {
           )}
 
       {!isLoading && !error && !data && (
-        <Typography 
-          variant="body1" 
-          sx={{ 
+        <Typography
+          variant="body1"
+          sx={{
             textAlign: 'center',
             fontSize: '18px',
             fontWeight: 'bold',
@@ -516,6 +515,7 @@ function FilterComponent() {
           data={data.finalResult ? data.finalResult : data}
           municipioData={data.allResults && data.allResults.length > 0 ? data.allResults : []}
           isHistorical={isHistorical}
+          type={type}
           isModalidadeSelected={isModalidadeSelected}
           isRegimeSelected={isRegimeSelected}
           isFormacaoDocenteSelected={isFormacaoDocenteSelected}

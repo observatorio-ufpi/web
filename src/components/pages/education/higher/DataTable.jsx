@@ -9,6 +9,7 @@ import React from 'react';
 import BarChart from '../../../common/BarChart';
 import PieChart from '../../../common/PieChart';
 import TableExport from '../../../common/TableExport';
+import HistoricalChart from '../HistoricalChart';
 
 // ==========================================
 // TEMA E ESTILOS
@@ -351,6 +352,7 @@ const DataTable = ({
   data,
   municipioData,
   isHistorical,
+  type,
   isModalidadeSelected,
   isRegimeSelected,
   isFormacaoDocenteSelected,
@@ -561,6 +563,18 @@ const DataTable = ({
             </TableBody>
           </Table>
         </TableContainer>
+        <div style={{ marginTop: '1rem' }}>
+          <HistoricalChart
+            data={data}
+            type={type}
+            isModalidadeSelected={isModalidadeSelected}
+            isRegimeSelected={isRegimeSelected}
+            isCategoriaAdministrativaSelected={isCategoriaAdministrativaSelected}
+            isFaixaEtariaSuperiorSelected={isFaixaEtariaSuperiorSelected}
+            isOrganizacaoAcademicaSelected={isOrganizacaoAcademicaSelected}
+            isFormacaoDocenteSelected={isFormacaoDocenteSelected}
+          />
+        </div>
         <TableExport
           data={exportData}
           headers={exportHeaders}
