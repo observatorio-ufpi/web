@@ -27,6 +27,7 @@ const TableExport = ({
   fileName = 'tabela_exportada',
   tableTitle = '',
   chartRef,
+  showPdfExport = true, // Add this new prop
   chartType = 'bar',
   chartData = null
 }) => {
@@ -125,9 +126,9 @@ const TableExport = ({
         tableRows.push(tableRow);
       });
 
-      // Log para verificar dados e cabeçalhos
-      console.log('Headers:', displayHeaders);
-      console.log('Table Rows:', tableRows);
+            // Log para verificar dados e cabeçalhos
+      console.log('Headers for PDF export:', displayHeaders);
+      console.log('Table Rows for PDF export:', tableRows);
 
       // Adicionar a tabela com autoTable
       pdf.autoTable({
@@ -303,32 +304,34 @@ const TableExport = ({
           <span className="button-text" style={{ fontWeight: 500 }}>Excel</span>
         </Button>
       </Tooltip>
-      <Tooltip title="Exportar para PDF">
-        <Button
-          variant="contained"
-          color="error"
-          onClick={exportToPDF}
-          startIcon={<FaFilePdf size={18} />}
-          sx={{
-            minWidth: '120px',
-            '@media (max-width: 600px)': {
-              minWidth: '40px',
-              padding: '6px !important',
-              '& .MuiButton-startIcon': {
-                margin: 0,
+      {showPdfExport && ( // Wrap with conditional rendering
+        <Tooltip title="Exportar para PDF">
+          <Button
+            variant="contained"
+            color="error"
+            onClick={exportToPDF}
+            startIcon={<FaFilePdf size={18} />}
+            sx={{
+              minWidth: '120px',
+              '@media (max-width: 600px)': {
+                minWidth: '40px',
+                padding: '6px !important',
+                '& .MuiButton-startIcon': {
+                  margin: 0,
+                },
+                '& .button-text': {
+                  display: 'none',
+                },
+                '& svg': {
+                  fontSize: '20px',
+                },
               },
-              '& .button-text': {
-                display: 'none',
-              },
-              '& svg': {
-                fontSize: '20px',
-              },
-            },
-          }}
-        >
-          <span className="button-text" style={{ fontWeight: 500 }}>PDF</span>
-        </Button>
-      </Tooltip>
+            }}
+          >
+            <span className="button-text" style={{ fontWeight: 500 }}>PDF</span>
+          </Button>
+        </Tooltip>
+      )}
     </div>
   );
 };

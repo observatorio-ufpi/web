@@ -56,13 +56,16 @@
   grid-column: 3;
   grid-row: 3;
   display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: stretch;
+  flex-direction: row; /* Change to row to place buttons side-by-side */
+  justify-content: center; /* Center horizontally */
+  align-items: center; /* Center vertically */
+  gap: 10px; /* Add some space between buttons */
 }
 
 .filter-button {
-  min-width: 120px;
+  min-width: 90px; /* Decrease width */
+  width: auto; /* Allow width to adjust */
+  padding: 8px 12px; /* Adjust padding for smaller buttons */
 }
 
 /* Estilos para labels */
@@ -159,7 +162,9 @@
   .filter-button-container {
     grid-column: 2;
     grid-row: 4;
-    justify-content: flex-end;
+    justify-content: center; /* Change to center */
+    flex-direction: row; /* Ensure row direction */
+    gap: 10px;
   }
 }
 
@@ -205,5 +210,7 @@
     grid-row: 8;
     justify-content: center;
     margin-top: 10px;
+    flex-direction: row; /* Ensure row direction */
+    gap: 10px;
   }
 }

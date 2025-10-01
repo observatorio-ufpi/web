@@ -16,6 +16,7 @@ import EducationSelection from "./components/navigation/EducationSelection.jsx";
 import Navbar from "./components/common/Navbar.jsx";
 import Footer from "./components/common/Footer.jsx";
 import ParentComponent from "./components/pages/education/basic/ParentComponent.jsx";
+import CensoEscolarComponent from "./components/pages/education/basic/CensoEscolarComponent.jsx";
 import FilterComponent from "./components/pages/education/higher/FilterComponent.jsx";
 import FiltrosRateComponent from "./components/pages/education/rate/FiltrosRateComponent.jsx";
 import ChartContainer from "./components/pages/education/financial/municipality/indicators/ChartContainer.jsx";
@@ -82,6 +83,7 @@ function App() {
             <Route path="indicadores" element={<ChartContainer />} />
             <Route path="indicadores-estaduais" element={<StateIndicatorsContainer />} />
             <Route path="dados-educacionais/basica" element={<ParentComponent />} />
+            <Route path="dados-educacionais/censo-escolar" element={<CensoEscolarComponent />} />
             <Route path="dados-educacionais/superior" element={<FilterComponent />} />
             <Route path="dados-educacionais/taxas" element={<FiltrosRateComponent />} />
           </Route>
