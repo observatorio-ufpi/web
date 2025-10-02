@@ -39,6 +39,6 @@ jobs:
         script: |
           cd ${{ secrets.SERVER_PATH }}
           echo "${{ secrets.SUDO_PASSWORD }}" | sudo -S cp -r build/* /var/www/html/observatorio/web/build/
-          echo "${{ secrets.SUDO_PASSWORD }}" | sudo -S cp -r build/src/* /var/www/html/observatorio/web/build/src/
+          echo "${{ secrets.SUDO_PASSWORD }}" | sudo -S cp -r src/files/ /var/www/html/observatorio/web/build/src/files/
           echo "${{ secrets.SUDO_PASSWORD }}" | sudo -S chown -R www-data:www-data /var/www/html/observatorio/
           echo "${{ secrets.SUDO_PASSWORD }}" | sudo -S systemctl restart apache2
