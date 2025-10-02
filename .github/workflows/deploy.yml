@@ -26,8 +26,8 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y openfortivpn
-        echo "${{ secrets.VPN_PASSWORD }}" | sudo openfortivpn vpnssl.ati.pi.gov.br:443 -u ${{ secrets.VPN_USERNAME }} --trusted-cert ${{ secrets.VPN_CERT_HASH }} --pppd-use-peerdns &
-        sleep 10
+        echo "${{ secrets.VPN_PASSWORD }}" | sudo openfortivpn vpnssl.ati.pi.gov.br:443 -u ${{ secrets.VPN_USERNAME }} --trusted-cert ${{ secrets.VPN_CERT_HASH }} --pppd-use-peerdns=1 &
+        sleep 15
       
     - name: Deploy to server
       uses: appleboy/ssh-action@v0.1.5
@@ -35,6 +35,7 @@ jobs:
         host: ${{ secrets.SERVER_HOST }}
         username: ${{ secrets.SERVER_USER }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
+        timeout: 60s
         script: |
           cd ${{ secrets.SERVER_PATH }}
           sudo cp -r build/* /var/www/html/observatorio/web/build/
