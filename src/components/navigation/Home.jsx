@@ -348,7 +348,7 @@ const Home = () => {
               variant="elevated" 
               className="feature-card border-2 border-purple-500 cursor-pointer hover:shadow-lg transition-all duration-300" 
               backgroundColor="var(--background-color)"
-              onClick={() => navigate('/dados-educacionais')}
+              onClick={() => navigate('/dados-educacionais/basica')}
             >
               <Card.Content padding="default" className="text-center">
                 <div className="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
