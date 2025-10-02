@@ -13,6 +13,8 @@ import '../../style/HomePage.css';
 const Home = () => {
   const navigate = useNavigate();
   const { data: piauiData, loading, error, updateRateData } = useIBGEData();
+
+  console.log('CI DEPLOYMENT TEST')
   
   // Estado para município selecionado e seus dados
   const [selectedMunicipality, setSelectedMunicipality] = useState('22'); // 22 = Piauí
