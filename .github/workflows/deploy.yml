@@ -21,6 +21,13 @@ jobs:
       
     - name: Build
       run: npm run build
+
+    - name: Setup OpenFortiVPN
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y openfortivpn
+        echo "${{ secrets.VPN_PASSWORD }}" | sudo openfortivpn vpnssl.ati.pi.gov.br:443 -u ${{ secrets.VPN_USERNAME }} --trusted-cert ${{ secrets.VPN_CERT_HASH }} --pppd-use-peerdns &
+        sleep 10
       
     - name: Deploy to server
       uses: appleboy/ssh-action@v0.1.5
