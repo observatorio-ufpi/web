@@ -38,8 +38,6 @@ const AppLayout = () => {
   // Valor do contexto
   const sidebarValue = {
     isOpen,
-    width: isOpen ? '16rem' : '0rem',
-    marginLeft: isOpen ? '16rem' : '0rem',
     setIsOpen
   };
 
@@ -49,13 +47,8 @@ const AppLayout = () => {
         {/* Sidebar fixa */}
         <Sidebar />
         
-        {/* Conteúdo principal com margem dinâmica para a sidebar */}
-        <div 
-          className="transition-all duration-300"
-          style={{ 
-            marginLeft: isOpen ? '16rem' : '0rem'
-          }}
-        >
+        {/* Conteúdo principal */}
+        <div className="w-full">
           {/* Área de conteúdo */}
           <main className="min-h-screen p-3 sm:p-4 md:p-6">
             <Outlet />
