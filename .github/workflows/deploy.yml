@@ -94,10 +94,10 @@ jobs:
             echo "${{ secrets.SUDO_PASSWORD }}" | sudo -S cp -r /tmp/observatorio-build/* /var/www/html/observatorio/web/build/
 
             # cria pasta de destino
-            echo "${{ secrets.SUDO_PASSWORD }}" | sudo -S mkdir -p /var/www/html/observatorio/web/build/src/files
+            echo "${{ secrets.SUDO_PASSWORD }}" | sudo -S mkdir -p /var/www/html/observatorio/web/build/src/
 
             # copia arquivos estáticos (conteúdo direto)
-            echo "${{ secrets.SUDO_PASSWORD }}" | sudo -S cp -r /tmp/observatorio-files/. /var/www/html/observatorio/web/build/src/files/
+            echo "${{ secrets.SUDO_PASSWORD }}" | sudo -S cp -r /tmp/observatorio-files/. /var/www/html/observatorio/web/build/src/
 
             # corrige permissões
             echo "${{ secrets.SUDO_PASSWORD }}" | sudo -S chown -R www-data:www-data /var/www/html/observatorio/web
