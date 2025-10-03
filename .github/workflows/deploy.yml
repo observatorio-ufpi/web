@@ -35,12 +35,11 @@ jobs:
           name: build-files
           path: build/
 
-      - name: Upload static files
+      - name: Upload static files content only
         uses: actions/upload-artifact@v4
         with:
           name: static-files
-          path: src/files/
-          
+          path: src/files/*  # aqui subimos só o conteúdo, sem a pasta 'files'
 
   deploy:
     needs: build
@@ -67,13 +66,13 @@ jobs:
           source: "build/*"
           target: "/tmp/observatorio-build"
 
-      - name: Copy static files to server
+      - name: Copy static files content to server
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "files/*"
+          source: "files/*"  # aqui teremos apenas os arquivos e subpastas, sem 'files' extra
           target: "/tmp/observatorio-files"
 
       - name: Finalize deployment
@@ -83,14 +82,30 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
+            # cria pasta de destino
             echo "${{ secrets.SUDO_PASSWORD }}" | sudo -S mkdir -p /var/www/html/observatorio/web/build/src/files
+            
+            # faz backup do build atual
             if [ -d /var/www/html/observatorio/web/build ]; then
               echo "${{ secrets.SUDO_PASSWORD }}" | sudo -S mv /var/www/html/observatorio/web/build /var/www/html/observatorio/web/build-backup-$(date +%Y%m%d-%H%M%S)
             fi
+
+            # copia build
             echo "${{ secrets.SUDO_PASSWORD }}" | sudo -S cp -r /tmp/observatorio-build/* /var/www/html/observatorio/web/build/
+
+            # cria pasta de destino
             echo "${{ secrets.SUDO_PASSWORD }}" | sudo -S mkdir -p /var/www/html/observatorio/web/build/src/files
-            echo "${{ secrets.SUDO_PASSWORD }}" | sudo -S cp -r /tmp/observatorio-files/* /var/www/html/observatorio/web/build/src/files/
+
+            # copia arquivos estáticos (conteúdo direto)
+            echo "${{ secrets.SUDO_PASSWORD }}" | sudo -S cp -r /tmp/observatorio-files/. /var/www/html/observatorio/web/build/src/files/
+
+            # corrige permissões
             echo "${{ secrets.SUDO_PASSWORD }}" | sudo -S chown -R www-data:www-data /var/www/html/observatorio/web
+
+            # recarrega nginx
             echo "${{ secrets.SUDO_PASSWORD }}" | sudo -S systemctl reload nginx
+
+            # limpa temporários
             rm -rf /tmp/observatorio-build
             rm -rf /tmp/observatorio-files
+
