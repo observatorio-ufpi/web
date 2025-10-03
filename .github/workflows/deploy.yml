@@ -88,8 +88,9 @@ jobs:
               echo "${{ secrets.SUDO_PASSWORD }}" | sudo -S mv /var/www/html/observatorio/web/build /var/www/html/observatorio/web/build-backup-$(date +%Y%m%d-%H%M%S)
             fi
             echo "${{ secrets.SUDO_PASSWORD }}" | sudo -S cp -r /tmp/observatorio-build/* /var/www/html/observatorio/web/build/
+            echo "${{ secrets.SUDO_PASSWORD }}" | sudo -S mkdir -p /var/www/html/observatorio/web/build/src/files
             echo "${{ secrets.SUDO_PASSWORD }}" | sudo -S cp -r /tmp/observatorio-files/* /var/www/html/observatorio/web/build/src/files/
             echo "${{ secrets.SUDO_PASSWORD }}" | sudo -S chown -R www-data:www-data /var/www/html/observatorio/web
-            echo "${{ secrets.SUDO_PASSWORD }}" | sudo -S systemctl reload apache2
+            echo "${{ secrets.SUDO_PASSWORD }}" | sudo -S systemctl reload nginx
             rm -rf /tmp/observatorio-build
             rm -rf /tmp/observatorio-files
