@@ -21,13 +21,6 @@ jobs:
       
     - name: Build
       run: npm run build
-
-    - name: Setup OpenFortiVPN
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y openfortivpn
-        echo "${{ secrets.VPN_PASSWORD }}" | sudo openfortivpn vpnssl.ati.pi.gov.br:443 -u ${{ secrets.VPN_USERNAME }} --trusted-cert ${{ secrets.VPN_CERT_HASH }} --pppd-use-peerdns=1 &
-        sleep 15
       
     - name: Deploy to server
       uses: appleboy/ssh-action@v0.1.5
@@ -37,8 +30,7 @@ jobs:
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         timeout: 60s
         script: |
-          cd ${{ secrets.SERVER_PATH }}
           echo "${{ secrets.SUDO_PASSWORD }}" | sudo -S cp -r build/* /var/www/html/observatorio/web/build/
           echo "${{ secrets.SUDO_PASSWORD }}" | sudo -S cp -r src/files/ /var/www/html/observatorio/web/build/src/files/
           echo "${{ secrets.SUDO_PASSWORD }}" | sudo -S chown -R www-data:www-data /var/www/html/observatorio/
-          echo "${{ secrets.SUDO_PASSWORD }}" | sudo -S systemctl restart apache2
+          echo "${{ secrets.SUDO_PASSWORD }}" | sudo -S systemctl reload nginx
