@@ -63,7 +63,7 @@ function CensoEscolarComponent() {
       filterInfo.push(`Filtros: ${filterNames.join(', ')}`);
     }
 
-    let fullTitle = `Censo Escolar - Infraestrutura - ${locationName} (${yearDisplay})`;
+    let fullTitle = `Condições de Oferta - Infraestrutura - ${locationName} (${yearDisplay})`;
     if (filterInfo.length > 0) {
       fullTitle += ` | ${filterInfo.join(' | ')}`;
     }

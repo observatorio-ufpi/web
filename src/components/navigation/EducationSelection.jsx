@@ -67,7 +67,7 @@ const EducationSelection = () => {
                 Educação Básica
               </Typography>
               <Typography variant="body2" color="textSecondary">
-                Dados sobre educação infantil, fundamental e médio, incluindo matrículas e funcionários.
+                Educação Infantil, Fundamental e Médio
               </Typography>
               <Button 
                 component={Link} 
@@ -100,14 +100,14 @@ const EducationSelection = () => {
                 }}
               />
               <Typography variant="h6" component="h2" gutterBottom>
-                Censo Escolar
+                Condições de Oferta
               </Typography>
               <Typography variant="body2" color="textSecondary">
-                Dados de infraestrutura das escolas do Censo Escolar.
+                Infraestrutura Escolar
               </Typography>
               <Button 
                 component={Link} 
-                to="/dados-educacionais/censo-escolar" 
+                to="/dados-educacionais/condicoes-de-oferta" 
                 variant="primary"
                 size="medium"
                 className="mt-4"
@@ -139,7 +139,7 @@ const EducationSelection = () => {
                 Educação Superior
               </Typography>
               <Typography variant="body2" color="textSecondary">
-                Informações sobre ensino superior, incluindo matrículas e dados institucionais.
+                Matrículas e Dados Institucionais
               </Typography>
               <Button 
                 component={Link} 
@@ -172,14 +172,14 @@ const EducationSelection = () => {
                 }}
               />
               <Typography variant="h6" component="h2" gutterBottom>
-                Taxas Educacionais
+                Indicadores Educacionais
               </Typography>
               <Typography variant="body2" color="textSecondary">
-                Dados sobre taxas de aprovação, reprovação, abandono e distorção idade-série.
+                Taxas de Aprovação, Reprovação, Abandono e Distorção Idade-Série
               </Typography>
               <Button 
                 component={Link} 
-                to="/dados-educacionais/taxas" 
+                to="/dados-educacionais/indicadores" 
                 variant="primary"
                 size="medium"
                 className="mt-4"

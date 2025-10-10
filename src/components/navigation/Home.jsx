@@ -295,29 +295,43 @@ const Home = () => {
   console.log('Home - Taxa de conclusão do ensino médio:', displayData?.schoolingRate);
   console.log('Home - Taxa de conclusão do ensino superior:', displayData?.higherEducationCompletionRate);
   console.log('Home - Dados financeiros:', displayData?.financialData);
+
+  const legendData = [
+    { name: 'Planície Litorânea', color: '#8c9bb3' },
+    { name: 'Cocais', color: '#c0b972' },
+    { name: 'Carnaubais', color: '#72928f' },
+    { name: 'Entre Rios', color: '#c8a140' },
+    { name: 'Vale do Sambito', color: '#d8dc7a' },
+    { name: 'Vale do Canindé', color: '#9e8fca' },
+    { name: 'Serra da Capivara', color: '#a7a569' },
+    { name: 'Vale do Rio Guaribas', color: '#cebadd' },
+    { name: 'Chapada Vale do Itaim', color: '#97b9aa' },
+    { name: 'Chapada das Mangabeiras', color: '#b0985a' },
+    { name: 'Tabuleiros do Alto Parnaíba', color: '#535bac' },
+  ].sort((a, b) => a.name.localeCompare(b.name));
   
   return (
     <div className="homepage-background">
       {/* Logo Section */}
-      <section className="pt-16 pb-8">
-        <div className="max-w-7xl mx-auto text-center px-4">
-          <div className="mb-8">
+      <section className="pt-14 pb-7">
+        <div className="py-0 max-w-7xl mx-auto text-center px-4">
+          <div className="mb-9">
             <img 
               src="/images/logos/logo-opepi.png" 
               alt="Opepi Logo" 
               className="mx-auto h-20 md:h-24"
             />
           </div>
-          <p className="text-lg text-gray-600 mb-4">
-            observatório da política educacional piauiense
+          <p className="text-lg text-gray-600 mb-2">
+            Observatório da Política Educacional Piauiense
           </p>
         </div>
       </section>
 
       {/* Platform Features */}
-      <section className="py-14">
+      <section className="py-6">
         <div className="max-w-7xl mx-auto px-4">
-          <h1 className="headline-large text-4xl md:text-5xl text-black mb-8">
+          <h1 className="headline-large text-3xl md:text-4xl text-black mb-8 text-center">
             Monitoramento da ação estatal e direito à educação
           </h1>
           <p className="text-lg text-gray-700 mb-12 max-w-4xl mx-auto leading-relaxed text-center">
@@ -348,7 +362,7 @@ const Home = () => {
               variant="elevated" 
               className="feature-card border-2 border-purple-500 cursor-pointer hover:shadow-lg transition-all duration-300" 
               backgroundColor="var(--background-color)"
-              onClick={() => navigate('/dados-educacionais/basica')}
+              onClick={() => navigate('/dados-educacionais')}
             >
               <Card.Content padding="default" className="text-center">
                 <div className="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -549,6 +563,23 @@ const Home = () => {
                   </div>
                 </Card.Content>
               </Card>
+
+              <Card variant="elevated" backgroundColor="var(--background-color)" className="mt-6">
+                <Card.Content padding="small">
+                  <h3 className="text-base font-bold mb-3">Territórios de Desenvolvimento</h3>
+                  <div className="space-y-2">
+                    {legendData.map((item) => (
+                      <div key={item.name} className="flex items-center">
+                        <div
+                          className="w-4 h-4 rounded-sm mr-2 border border-gray-400"
+                          style={{ backgroundColor: item.color }}
+                        ></div>
+                        <span className="text-sm">{item.name}</span>
+                      </div>
+                    ))}
+                  </div>
+                </Card.Content>
+              </Card>
             </div>
 
             {/* Mapa do Piauí Interativo */}
@@ -619,38 +650,39 @@ const Home = () => {
                     <div className="text-red-500 text-sm text-center py-2">{displayError}</div>
                   ) : (
                     <>
-                      <div className="text-2xl font-bold text-purple-600 mb-2">
-                        {(() => {
-                          const enrollments = displayData?.education?.enrollments;
-                          const schools = displayData?.education?.schools;
-                          
-                          if (enrollments && schools) {
-                            return `${formatNumber(enrollments)} e ${formatNumber(schools)}`;
-                          } else if (enrollments) {
-                            return `${formatNumber(enrollments)}`;
-                          } else if (schools) {
-                            return `${formatNumber(schools)}`;
-                          } else {
-                            return 'Dados não disponíveis';
-                          }
-                        })()}
+                      <div className="mb-4 space-y-2">
+                        {/* Título do card */}
+                        <h3 className="text-base font-bold text-purple-700 uppercase tracking-wide">
+                          Educação Básica
+                        </h3>
+
+                        <p className="text-sm font-semibold text-gray-700 uppercase">
+                          {selectedMunicipalityName}
+                        </p>
+
+                        <div className="space-y-1">
+                          <div className="flex justify-between items-center px-2">
+                            <span className="text-sm text-gray-600">Matrículas:</span>
+                            <span className="text-lg font-bold text-purple-600">
+                              {displayData?.education?.enrollments
+                                ? formatNumber(displayData.education.enrollments)
+                                : 'N/A'}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center px-2">
+                            <span className="text-sm text-gray-600">Escolas:</span>
+                            <span className="text-lg font-bold text-purple-600">
+                              {displayData?.education?.schools
+                                ? formatNumber(displayData.education.schools)
+                                : 'N/A'}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center px-2">
+                            <span className="text-sm text-gray-600">Ano:</span>
+                            <span className="text-lg font-bold text-purple-600">2023</span>
+                          </div>
+                        </div>
                       </div>
-                      <p className="text-gray-600 mb-3 text-sm">
-                        {(() => {
-                          const enrollments = displayData?.education?.enrollments;
-                          const schools = displayData?.education?.schools;
-                          
-                          if (enrollments && schools) {
-                            return `eram os números de matrículas e escolas na educação básica, respectivamente, em ${selectedMunicipalityName.toLowerCase()} em 2023.`;
-                          } else if (enrollments) {
-                            return `eram ${formatNumber(enrollments)} matrículas na educação básica em ${selectedMunicipalityName.toLowerCase()} em 2023.`;
-                          } else if (schools) {
-                            return `eram ${formatNumber(schools)} escolas na educação básica em ${selectedMunicipalityName.toLowerCase()} em 2023.`;
-                          } else {
-                            return 'Informações sobre educação básica não estão disponíveis no momento.';
-                          }
-                        })()}
-                      </p>
                     </>
                   )}
                   <button 
@@ -674,38 +706,39 @@ const Home = () => {
                     <div className="text-red-500 text-sm text-center py-2">{displayError}</div>
                   ) : (
                     <>
-                      <div className="text-2xl font-bold text-purple-600 mb-2">
-                        {(() => {
-                          const enrollments = displayData?.higherEducation?.enrollments;
-                          const institutions = displayData?.higherEducation?.institutions;
-                          
-                          if (enrollments && institutions) {
-                            return `${formatNumber(enrollments)} e ${formatNumber(institutions)}`;
-                          } else if (enrollments) {
-                            return `${formatNumber(enrollments)}`;
-                          } else if (institutions) {
-                            return `${formatNumber(institutions)}`;
-                          } else {
-                            return 'Dados não disponíveis';
-                          }
-                        })()}
+                      <div className="mb-4 space-y-2">
+                        {/* Título do card */}
+                        <h3 className="text-base font-bold text-purple-700 uppercase tracking-wide">
+                          Educação Superior
+                        </h3>
+
+                        <p className="text-sm font-semibold text-gray-700 uppercase">
+                          {selectedMunicipalityName}
+                        </p>
+
+                        <div className="space-y-1">
+                          <div className="flex justify-between items-center px-2">
+                            <span className="text-sm text-gray-600">Matrículas:</span>
+                            <span className="text-lg font-bold text-purple-600">
+                              {displayData?.higherEducation?.enrollments
+                                ? formatNumber(displayData.higherEducation.enrollments)
+                                : 'N/A'}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center px-2">
+                            <span className="text-sm text-gray-600">Instituições:</span>
+                            <span className="text-lg font-bold text-purple-600">
+                              {displayData?.higherEducation?.institutions
+                                ? formatNumber(displayData.higherEducation.institutions)
+                                : 'N/A'}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center px-2">
+                            <span className="text-sm text-gray-600">Ano:</span>
+                            <span className="text-lg font-bold text-purple-600">2023</span>
+                          </div>
+                        </div>
                       </div>
-                      <p className="text-gray-600 mb-2 text-sm">
-                        {(() => {
-                          const enrollments = displayData?.higherEducation?.enrollments;
-                          const institutions = displayData?.higherEducation?.institutions;
-                          
-                          if (enrollments && institutions) {
-                            return `eram os números de matrículas e instituições na educação superior, respectivamente, em ${selectedMunicipalityName.toLowerCase()} em 2023.`;
-                          } else if (enrollments) {
-                            return `eram ${formatNumber(enrollments)} matrículas na educação superior em ${selectedMunicipalityName.toLowerCase()} em 2023.`;
-                          } else if (institutions) {
-                            return `eram ${formatNumber(institutions)} instituições na educação superior em ${selectedMunicipalityName.toLowerCase()} em 2023.`;
-                          } else {
-                            return 'Informações sobre educação superior não estão disponíveis no momento.';
-                          }
-                        })()}
-                      </p>
                     </>
                   )}
                   <button 
@@ -717,6 +750,7 @@ const Home = () => {
                   </button>
                 </Card.Content>
               </Card>
+
             </div>
           </div>
         </div>
