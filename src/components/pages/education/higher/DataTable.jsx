@@ -298,7 +298,7 @@ const processCrossTableData = (data, rowIdField, columnIdField, rowField, column
            municipioDataArray.every(arr => !Array.isArray(arr) || arr.length === 0);
   };
 
-  const BasicTable = React.forwardRef(({ headers, data, formatTotal = false, sortField = null }, ref) => {
+  const BasicTable = React.forwardRef(({ headers, data, formatTotal = false, sortField = null, showTotal = false, totalValue = 0 }, ref) => {
     const sortedData = sortField
       ? [...data].sort((a, b) => Number(a[sortField]) - Number(b[sortField]))
       : data;
@@ -342,6 +342,20 @@ const processCrossTableData = (data, rowIdField, columnIdField, rowField, column
                 </TableRow>
               );
             })}
+            {/* Linha de total */}
+            {showTotal && (
+              <TableRow>
+                {headers.map(header => (
+                  <BoldTableCell key={header}>
+                    {header === 'total' && formatTotal
+                      ? `${Number(totalValue).toFixed(2)}%`
+                      : header === 'total'
+                        ? formatNumber(totalValue)
+                        : 'Total'}
+                  </BoldTableCell>
+                ))}
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </TableContainer>
@@ -844,6 +858,29 @@ const renderCrossTable = () => {
         return null;
     }
 
+    // Calcular total para adicionar linha de total
+    const totalValue = tableData.reduce((sum, item) => sum + Number(item.total || 0), 0);
+
+    // Preparar dados para exportação incluindo linha de total
+    const exportData = tableData.map(item => {
+      const row = {};
+      headers.forEach(header => {
+        row[header] = item[header];
+      });
+      return row;
+    });
+
+    // Adicionar linha de total aos dados de exportação
+    const totalRow = {};
+    headers.forEach(header => {
+      if (header === 'total') {
+        totalRow[header] = totalValue;
+      } else {
+        totalRow[header] = 'Total';
+      }
+    });
+    exportData.push(totalRow);
+
     return (
       <div>
         <BasicTable
@@ -851,8 +888,8 @@ const renderCrossTable = () => {
           data={tableData}
           sortField={sortField}
           formatTotal={formatTotal}
-          usePagination={usePagination}
-          note={note}
+          showTotal={true}
+          totalValue={totalValue}
           ref={tableRefs[filterType]}
         />
 
@@ -860,7 +897,7 @@ const renderCrossTable = () => {
         {renderSimpleTableCharts(filterType, tableData)}
 
         <TableExport
-          data={tableData}
+          data={exportData}
           headers={headers}
           headerDisplayNames={HEADER_DISPLAY_NAMES}
           fileName={`dados_por_${filterType}`}

@@ -1197,7 +1197,10 @@ const ApiDataTable = ({
         return null;
     }
 
-    // Preparar dados para exportação
+    // Calcular total para adicionar linha de total
+    const totalValue = tableData.reduce((sum, item) => sum + Number(item.total || 0), 0);
+
+    // Preparar dados para exportação incluindo linha de total
     const exportData = tableData.map(item => {
       const row = {};
       headers.forEach(header => {
@@ -1205,6 +1208,17 @@ const ApiDataTable = ({
       });
       return row;
     });
+
+    // Adicionar linha de total aos dados de exportação
+    const totalRow = {};
+    headers.forEach(header => {
+      if (header === 'total') {
+        totalRow[header] = totalValue;
+      } else {
+        totalRow[header] = 'Total';
+      }
+    });
+    exportData.push(totalRow);
 
     // Preparar headers para exportação
     const exportHeaders = headers;
@@ -1243,6 +1257,18 @@ const ApiDataTable = ({
                     ))}
                   </TableRow>
                 ))}
+              {/* Linha de total */}
+              <TableRow>
+                {headers.map(header => (
+                  <BoldTableCell key={header}>
+                    {header === 'total' && formatTotal
+                      ? `${Number(totalValue).toFixed(2)}%`
+                      : header === 'total'
+                        ? formatNumber(totalValue)
+                        : 'Total'}
+                  </BoldTableCell>
+                ))}
+              </TableRow>
             </TableBody>
           </Table>
         </TableContainer>
