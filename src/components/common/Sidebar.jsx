@@ -1,6 +1,6 @@
 import React from 'react';
+import { FaArrowLeft, FaBars, FaDollarSign, FaGraduationCap, FaInfoCircle, FaTimes } from 'react-icons/fa';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { FaGraduationCap, FaDollarSign, FaInfoCircle, FaArrowLeft, FaBars, FaTimes } from 'react-icons/fa';
 import { useSidebar } from '../layouts/AppLayout';
 
 const Sidebar = () => {
@@ -87,9 +87,6 @@ const Sidebar = () => {
                 </Link>
               </li>
               <li>
-               {/* Novo item: Censo Escolar */}
-              
-              <li>
                 <Link
                   to="/dados-educacionais/censo-escolar"
                   className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
@@ -102,7 +99,7 @@ const Sidebar = () => {
                   <span className={`${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>Censo Escolar</span>
                 </Link>
               </li>
-
+              <li>
                 <Link
                   to="/dados-educacionais/superior"
                   className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
@@ -112,7 +109,7 @@ const Sidebar = () => {
                   }`}
                 >
                   <FaGraduationCap className="mr-3 text-lg flex-shrink-0" />
-                  <span className={`${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>Ensino Superior</span>
+                  <span className={`${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>Educação Superior</span>
                 </Link>
               </li>
               <li>

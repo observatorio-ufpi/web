@@ -397,7 +397,7 @@ function ParentComponent() {
               value={cityOptions.find(option => option.value === city) || null}
               onChange={(selectedOption) => setCity(selectedOption ? selectedOption.value : '')}
               options={cityOptions}
-              placeholder="Cidade"
+              placeholder="Município"
               size="xs"
               isClearable={true}
             />
