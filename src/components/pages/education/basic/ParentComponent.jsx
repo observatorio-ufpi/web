@@ -1,4 +1,4 @@
-import { Button, Typography } from '@mui/material';
+import { Button, Switch, Typography } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import React, { useEffect, useMemo, useState } from 'react';
 import '../../../../style/RevenueTableContainer.css';
@@ -35,6 +35,7 @@ function ParentComponent() {
   const [isLocalidadeSelected, setIsLocalidadeSelected] = useState(false);
   const [isDependenciaSelected, setIsDependenciaSelected] = useState(false);
   const [displayHistorical, setDisplayHistorical] = useState(false);
+  const [showConsolidated, setShowConsolidated] = useState(false);
   const [year, setYear] = useState(yearLimits.enrollment.max);
   const [filteredYear, setFilteredYear] = useState(null);
   const [startYear, setStartYear] = useState(yearLimits.enrollment.min);
@@ -403,8 +404,8 @@ function ParentComponent() {
             />
           </div>
 
-          {/* Filtros Múltiplos - Terceira coluna, terceira linha */}
-          <div className="md:col-span-1 flex flex-col justify-end">
+          {/* Filtros Múltiplos - Segunda coluna, terceira linha */}
+          <div className="md:col-span-1">
             <div className="mb-3">
               <Select
                 id="multiFilterSelect"
@@ -424,8 +425,33 @@ function ParentComponent() {
                 size="xs"
               />
             </div>
+          </div>
 
-            <div className="flex flex-col sm:flex-row gap-3 justify-end">
+          {/* Botões - Ocupa todo o espaço da linha */}
+          <div className="md:col-span-3 flex flex-col justify-end">
+            <div className="flex flex-col sm:flex-row gap-3 justify-end items-end">
+              {/* Toggle para modo consolidado (apenas quando há filtros territoriais combinados com outros filtros) */}
+              {(territory || faixaPopulacional || aglomerado || gerencia) && (isEtapaSelected || isLocalidadeSelected || isDependenciaSelected) && (
+                <div className="flex items-center space-x-2">
+                  <label className="flex items-center pb-2 space-x-2 cursor-pointer">
+                    <Switch
+                      checked={showConsolidated}
+                      onChange={(e) => setShowConsolidated(e.target.checked)}
+                      color="primary"
+                      size="small"
+                      sx={{
+                        '& .MuiSwitch-thumb': {
+                          backgroundColor: showConsolidated ? '#1976d2' : '#fafafa',
+                        },
+                        '& .MuiSwitch-track': {
+                          backgroundColor: showConsolidated ? '#1976d2' : '#ccc',
+                        },
+                      }}
+                    />
+                    <span className="text-gray-700">Mostrar dados consolidados</span>
+                  </label>
+                </div>
+              )}
               <Button
                 variant="contained"
                 color="primary"
@@ -513,6 +539,7 @@ function ParentComponent() {
           type={filteredType}
           year={filteredYear || year}
           title={title} // Passando o título para o ApiDataTable
+          showConsolidated={showConsolidated}
         />
       ) : null}
     </div>

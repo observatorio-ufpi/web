@@ -480,8 +480,16 @@ const TableRateComponent = ({
   if (hasNoData(data)) {
     return (
       <ThemeProvider theme={theme}>
-        <div>
-          Nenhum dado disponível
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          minHeight: '200px',
+          fontSize: '18px',
+          fontWeight: 'bold',
+          color: '#6c757d'
+        }}>
+          Nenhum dado disponível para os filtros selecionados
         </div>
       </ThemeProvider>
     );

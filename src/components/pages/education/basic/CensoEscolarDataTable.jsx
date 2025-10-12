@@ -1,23 +1,23 @@
-import React, { useState, useMemo, useRef } from 'react';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Button,
-  Menu,
-  MenuItem,
-  Checkbox,
-  FormControlLabel,
-  Box,
-  Typography,
+    Box,
+    Button,
+    Checkbox,
+    FormControlLabel,
+    Menu,
+    MenuItem,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    Typography,
 } from '@mui/material';
 import { styled, useTheme } from '@mui/material/styles';
+import React, { useMemo, useRef, useState } from 'react';
 import { FaEye } from 'react-icons/fa';
-import CustomPagination from "../../../helpers/CustomPagination";
 import TableExport from '../../../common/TableExport';
+import CustomPagination from "../../../helpers/CustomPagination";
 
 import { columnNameMap } from '../../../../utils/columnNameMap';
 
@@ -50,11 +50,19 @@ function CensoEscolarDataTable({ data, title }) {
 
   if (!sortedData || sortedData.length === 0) {
     return (
-      <Box sx={{ textAlign: 'center', padding: 3 }}>
+      <Box sx={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: '200px',
+        fontSize: '18px',
+        fontWeight: 'bold',
+        color: '#6c757d'
+      }}>
         <Typography variant="h6" sx={{ marginBottom: 2 }}>
           {title}
         </Typography>
-        <Typography variant="body1">Nenhum dado disponível</Typography>
+        <Typography variant="body1">Nenhum dado disponível para os filtros selecionados</Typography>
       </Box>
     );
   }
@@ -105,7 +113,7 @@ function CensoEscolarDataTable({ data, title }) {
     setLimit(value);
     setPage(1);
   };
-  
+
   // 3️⃣ ALTERAÇÃO: Exportação agora usa os dados ordenados (sortedData)
   const exportData = useMemo(() => {
     return sortedData.map(row => {

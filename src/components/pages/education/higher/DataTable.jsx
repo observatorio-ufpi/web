@@ -373,7 +373,8 @@ const DataTable = ({
   isCategoriaAdministrativaSelected,
   isFaixaEtariaSuperiorSelected,
   isOrganizacaoAcademicaSelected,
-  title = ''
+  title = '',
+  showConsolidated = false
 }) => {
 
   // Referências para as tabelas
@@ -399,8 +400,16 @@ const DataTable = ({
   if (hasNoData(data, tableDataArray, municipioDataArray)) {
     return (
       <ThemeProvider theme={theme}>
-        <div>
-          Nenhum dado disponível
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          minHeight: '200px',
+          fontSize: '18px',
+          fontWeight: 'bold',
+          color: '#6c757d'
+        }}>
+          Nenhum dado disponível para os filtros selecionados
         </div>
       </ThemeProvider>
     );
@@ -775,6 +784,114 @@ const renderCrossTable = () => {
     }
   };
 
+  // Função para determinar headers baseado nos filtros selecionados
+  const getHeadersForCityData = () => {
+    if (isModalidadeSelected) return HEADERS.modalidade;
+    if (isRegimeSelected) return HEADERS.regimeDeTrabalho;
+    if (isFormacaoDocenteSelected) return HEADERS.formacaoDocente;
+    if (isCategoriaAdministrativaSelected) return HEADERS.categoriaAdministrativa;
+    if (isFaixaEtariaSuperiorSelected) return HEADERS.faixaEtariaSuperior;
+    if (isOrganizacaoAcademicaSelected) return HEADERS.organizacaoAcademica;
+    return HEADERS.default;
+  };
+
+  // Função para consolidar dados mantendo categorias separadas
+  const consolidateDataByCategory = () => {
+    if (!municipioData || municipioData.length === 0) return [];
+
+    // Determinar qual campo usar baseado no filtro selecionado
+    const getCategoryField = () => {
+      if (isModalidadeSelected) return 'upper_education_mod_name';
+      if (isRegimeSelected) return 'work_regime_name';
+      if (isFormacaoDocenteSelected) return 'initial_training_name';
+      if (isCategoriaAdministrativaSelected) return 'upper_adm_dependency_name';
+      if (isFaixaEtariaSuperiorSelected) return 'age_student_code_name';
+      if (isOrganizacaoAcademicaSelected) return 'academic_level_name';
+      return 'total';
+    };
+
+    const categoryField = getCategoryField();
+    const consolidatedMap = new Map();
+
+    // Consolidar dados de todas as cidades
+    municipioData.forEach(cityData => {
+      const cityResult = cityData.result || [];
+      cityResult.forEach(item => {
+        const category = item[categoryField] || 'N/A';
+        const total = Number(item.total) || 0;
+
+        if (consolidatedMap.has(category)) {
+          consolidatedMap.set(category, consolidatedMap.get(category) + total);
+        } else {
+          consolidatedMap.set(category, total);
+        }
+      });
+    });
+
+    // Converter Map para array
+    return Array.from(consolidatedMap.entries()).map(([category, total]) => ({
+      [categoryField]: category,
+      total: total
+    }));
+  };
+
+  // Função para renderizar dados individuais por cidade
+  const renderIndividualCityData = () => {
+    if (!municipioData || municipioData.length === 0) return null;
+
+    const headers = getHeadersForCityData();
+
+    return (
+      <div>
+        {municipioData.map((cityData, index) => {
+          const cityName = cityData.cityName || `Cidade ${index + 1}`;
+          const cityResult = cityData.result || [];
+
+          if (!cityResult || cityResult.length === 0) return null;
+
+          return (
+            <div key={index} style={{ marginBottom: '2rem', border: '1px solid #ddd', borderRadius: '8px', padding: '1rem' }}>
+              <h3 style={{ marginBottom: '1rem', color: '#333', borderBottom: '2px solid #007bff', paddingBottom: '0.5rem' }}>
+                {cityName}
+              </h3>
+
+              {/* Renderizar tabela para esta cidade */}
+              <BasicTable
+                headers={headers}
+                data={cityResult}
+                ref={React.createRef()}
+              />
+
+              {/* Gráfico para esta cidade */}
+              {cityResult.length > 0 && (
+                <div style={{ marginTop: '1rem' }}>
+                  <EnhancedPieChart
+                    data={cityResult.map(item => ({
+                      name: item.upper_education_mod_name || item.work_regime_name || item.initial_training_name || item.upper_adm_dependency_name || item.age_student_code_name || item.academic_level_name || 'N/A',
+                      value: Number(item.total) || 0
+                    }))}
+                    title={`Distribuição - ${cityName}`}
+                    height={400}
+                  />
+                </div>
+              )}
+
+              {/* Exportação para esta cidade */}
+              <TableExport
+                data={cityResult}
+                headers={headers}
+                headerDisplayNames={HEADER_DISPLAY_NAMES}
+                fileName={`dados_${cityName.toLowerCase().replace(/\s+/g, '_')}`}
+                tableTitle={`Dados - ${cityName}`}
+                tableRef={React.createRef()}
+              />
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
   // Função para renderizar gráficos para tabelas cruzadas
   const renderCrossTableCharts = (uniqueRows, uniqueColumns, cellValues, rowHeader) => {
     if (!uniqueRows || !uniqueColumns || uniqueRows.size === 0 || uniqueColumns.size === 0) {
@@ -922,6 +1039,12 @@ const renderCrossTable = () => {
     (isOrganizacaoAcademicaSelected && isFormacaoDocenteSelected)
   );
 
+  // Verificar se há dados de múltiplas cidades (filtros territoriais)
+  const hasMultipleCities = municipioData && municipioData.length > 0;
+
+  // Verificar se há filtros territoriais combinados com outros filtros
+  const hasTerritorialWithOtherFilters = hasMultipleCities && (isModalidadeSelected || isRegimeSelected || isFormacaoDocenteSelected || isCategoriaAdministrativaSelected || isFaixaEtariaSuperiorSelected || isOrganizacaoAcademicaSelected);
+
   return (
     <ThemeProvider theme={theme}>
       <div>
@@ -930,6 +1053,50 @@ const renderCrossTable = () => {
 
             {/* Tabela cruzada */}
             {!isHistorical && hasCrossFilters && renderCrossTable()}
+
+        {/* Dados individuais por cidade (quando há filtros territoriais combinados com outros filtros e não está em modo consolidado) */}
+        {!isHistorical && hasTerritorialWithOtherFilters && !showConsolidated && municipioDataArray.length > 0 && (
+          <div style={{ marginTop: '2rem' }}>
+            {renderIndividualCityData()}
+          </div>
+        )}
+
+        {/* Dados consolidados (quando há filtros territoriais combinados com outros filtros e está em modo consolidado) */}
+        {!isHistorical && hasTerritorialWithOtherFilters && showConsolidated && municipioDataArray.length > 0 && (
+          <div style={{ marginTop: '2rem' }}>
+            {/* Tabela consolidada por categoria */}
+            <div>
+              <BasicTable
+                headers={getHeadersForCityData()}
+                data={consolidateDataByCategory()}
+                ref={tableRefs.default}
+              />
+
+              {/* Gráfico para dados consolidados */}
+              {consolidateDataByCategory().length > 0 && (
+                <div style={{ marginTop: '1rem' }}>
+                  <EnhancedPieChart
+                    data={consolidateDataByCategory().map(item => ({
+                      name: item.upper_education_mod_name || item.work_regime_name || item.initial_training_name || item.upper_adm_dependency_name || item.age_student_code_name || item.academic_level_name || 'N/A',
+                      value: Number(item.total) || 0
+                    }))}
+                    title="Distribuição Consolidada"
+                    height={500}
+                  />
+                </div>
+              )}
+
+              <TableExport
+                data={consolidateDataByCategory()}
+                headers={getHeadersForCityData()}
+                headerDisplayNames={HEADER_DISPLAY_NAMES}
+                fileName="dados_consolidados"
+                tableTitle={title || "Dados Consolidados"}
+                tableRef={tableRefs.default}
+              />
+            </div>
+          </div>
+        )}
 
         {/* Tabela simples (sem filtros) */}
         {!isHistorical && hasNoFilters && (
@@ -952,7 +1119,8 @@ const renderCrossTable = () => {
                 />
               </div>
             ))}
-            {/* Tabela de municípios */}
+
+            {/* Tabela de municípios consolidada */}
             {municipioDataArray.length > 0 && (
               <div>
                 <BasicTable
@@ -1005,7 +1173,7 @@ const renderCrossTable = () => {
         )}
 
             {/* Tabelas simples com filtros individuais */}
-            {!isHistorical && !hasCrossFilters && (
+            {!isHistorical && !hasCrossFilters && !hasMultipleCities && (
               <>
                 {isModalidadeSelected && renderSimpleTable('modalidade')}
                 {isRegimeSelected && renderSimpleTable('regimeDeTrabalho')}
