@@ -284,7 +284,7 @@ const BasicTable = ({ headers, data, formatTotal = false, ref }) => {
                   }}
                 >
                   {header === 'total' && formatTotal
-                    ? `${Number(item[header] || 0).toFixed(2)}%`
+                    ? `${Number(item[header] || 0).toFixed(2).replace('.', ',')}%`
                     : header === 'total'
                       ? formatNumber(item[header])
                       : item[header]?.toString() || ''}
@@ -330,7 +330,7 @@ const PaginatedTable = ({
                   {headers.map(header => (
                     <CenteredTableCell key={header}>
                       {header === 'total' && formatTotal
-                        ? `${Number(item[header] || 0).toFixed(2)}%`
+                        ? `${Number(item[header] || 0).toFixed(2).replace('.', ',')}%`
                         : header === 'total'
                           ? formatNumber(item[header])
                           : item[header]?.toString() || ''}
@@ -395,7 +395,7 @@ const CrossTable = ({
                 {Array.from(uniqueColumns.keys()).map(columnId => (
                   <CenteredTableCell key={columnId}>
                     {isRatioType(type)
-                      ? `${Number(cellValues.get(`${rowId}-${columnId}`) || 0).toFixed(2)}%`
+                      ? `${Number(cellValues.get(`${rowId}-${columnId}`) || 0).toFixed(2).replace('.', ',')}%`
                       : formatNumber(cellValues.get(`${rowId}-${columnId}`) || 0)}
                   </CenteredTableCell>
                 ))}
@@ -561,7 +561,7 @@ const TableRateComponent = ({
                   {sortedYears.map(year => (
                     <CenteredTableCell key={year}>
                       {isRatioType(type)
-                        ? `${Number(yearMap.get(year) || 0).toFixed(2)}%`
+                        ? `${Number(yearMap.get(year) || 0).toFixed(2).replace('.', ',')}%`
                         : formatNumber(yearMap.get(year))}
                     </CenteredTableCell>
                   ))}
@@ -648,7 +648,7 @@ const TableRateComponent = ({
                     {sortedYears.map(year => (
                       <CenteredTableCell key={year}>
                         {isRatioType(type)
-                          ? `${Number(yearMap.get(year) || 0).toFixed(2)}%`
+                          ? `${Number(yearMap.get(year) || 0).toFixed(2).replace('.', ',')}%`
                           : formatNumber(yearMap.get(year) || 0)}
                       </CenteredTableCell>
                     ))}
@@ -844,7 +844,7 @@ const TableRateComponent = ({
                   {headers.map(header => (
                     <CenteredTableCell key={header}>
                       {header === 'total' && formatTotal
-                        ? `${Number(item[header] || 0).toFixed(2)}%`
+                        ? `${Number(item[header] || 0).toFixed(2).replace('.', ',')}%`
                         : header === 'total'
                           ? formatNumber(item[header])
                           : item[header]?.toString() || ''}

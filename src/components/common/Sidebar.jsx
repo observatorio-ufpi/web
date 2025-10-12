@@ -122,7 +122,7 @@ const Sidebar = () => {
                   }`}
                 >
                   <FaGraduationCap className="mr-3 text-lg flex-shrink-0" />
-                  <span className={`${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>Taxas</span>
+                  <span className={`${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>Indicadores</span>
                 </Link>
               </li>
             </ul>
