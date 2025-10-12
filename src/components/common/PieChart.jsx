@@ -70,7 +70,7 @@ const PieChart = ({
             cx="50%"
             cy="50%"
             labelLine={false}
-            label={({ percentage }) => percentage >= 2 ? `${percentage.toFixed(1)}%` : ''}
+            label={({ percentage }) => percentage >= 2 ? `${percentage.toFixed(1).replace('.', ',')}%` : ''}
             outerRadius={120}
             innerRadius={60}
             fill="#8884d8"
@@ -84,7 +84,7 @@ const PieChart = ({
             formatter={(value, name, props) => {
               const percentage = props.payload?.percentage || 0;
               return [
-                `${formatValue(value)} (${percentage.toFixed(1)}%)`,
+                `${formatValue(value)} (${percentage.toFixed(1).replace('.', ',')}%)`,
                 name
               ];
             }}

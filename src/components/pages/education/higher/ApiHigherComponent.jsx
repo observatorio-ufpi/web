@@ -177,9 +177,9 @@ function ApiHigherContainer({
               citiesList.map(([cityId, cityInfo]) => fetchCityData(cityId, cityInfo.nomeMunicipio))
             );
 
-            const finalResult = handleResults(allResults);
-            console.log("Final Result:", finalResult);
-            onDataFetched({ finalResult, allResults });
+              const finalResult = handleResults(allResults);
+              console.log("Final Result:", finalResult);
+              onDataFetched({ finalResult, allResults });
         } else if (citiesList.length === 0 && (territory || faixaPopulacional || aglomerado || gerencia)) {
             onDataFetched({ finalResult: [], allResults: [] });
         } else {

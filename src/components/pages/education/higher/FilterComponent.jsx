@@ -177,7 +177,10 @@ function FilterComponent() {
     const matchesTerritory = !territory || territorioDesenvolvimento === Regioes[territory];
     const matchesFaixaPopulacional = !faixaPopulacional || cityFaixaPopulacional === FaixaPopulacional[faixaPopulacional];
     const matchesAglomerado = !aglomerado || cityAglomerado === aglomerado;
-    const matchesGerencia = !gerencia || cityGerencia === gerencia;
+
+    // Para gerência, verificar se a gerencia selecionada está contida na string de gerencias da cidade
+    // (considerando que uma cidade pode ter múltiplas gerencias separadas por vírgula)
+    const matchesGerencia = !gerencia || cityGerencia.split(',').map(g => g.trim()).includes(gerencia);
 
     // Retorna true apenas se TODAS as condições selecionadas são atendidas
     return matchesTerritory && matchesFaixaPopulacional && matchesAglomerado && matchesGerencia;
@@ -204,7 +207,7 @@ function FilterComponent() {
     .sort((a, b) => parseInt(a) - parseInt(b))
     .map(gerencia => ({
       value: gerencia,
-      label: 'Gerencia ' + gerencia.padStart(2, '0'),
+      label: gerencia + 'ª GRE',
     }));
 
   const aglomeradoOptions = [...new Set(Object.values(municipios).map(m => m.aglomerado))]
@@ -213,7 +216,7 @@ function FilterComponent() {
     .sort((a, b) => parseInt(a) - parseInt(b))
     .map(aglomerado => ({
       value: aglomerado,
-      label: 'Aglomerado ' + aglomerado.padStart(2, '0'),
+      label: 'AG ' + aglomerado,
     }));
 
   const cityOptions = filteredCities.map(([key, { nomeMunicipio }]) => ({
@@ -329,6 +332,7 @@ function FilterComponent() {
               options={territoryOptions}
               placeholder="Território de Desenvolvimento"
               size="xs"
+              isClearable={true}
             />
           </div>
 
@@ -344,6 +348,7 @@ function FilterComponent() {
               options={faixaPopulacionalOptions}
               placeholder="Faixa Populacional"
               size="xs"
+              isClearable={true}
             />
           </div>
 
@@ -356,6 +361,7 @@ function FilterComponent() {
               options={aglomeradoOptions}
               placeholder="Aglomerado"
               size="xs"
+              isClearable={true}
             />
           </div>
 
@@ -366,8 +372,9 @@ function FilterComponent() {
               value={gerenciaOptions.find(option => option.value === gerencia) || null}
               onChange={(selectedOption) => setGerencia(selectedOption ? selectedOption.value : '')}
               options={gerenciaOptions}
-              placeholder="Gerencia"
+              placeholder="Gerência"
               size="xs"
+              isClearable={true}
             />
           </div>
 
@@ -380,6 +387,7 @@ function FilterComponent() {
               options={cityOptions}
               placeholder="Cidade"
               size="xs"
+              isClearable={true}
             />
           </div>
 
@@ -441,7 +449,7 @@ function FilterComponent() {
                 onClick={handleFilterClick}
                 className="w-full sm:w-auto"
               >
-                Filtrar
+                Mostrar resultados
               </Button>
 
               <Button

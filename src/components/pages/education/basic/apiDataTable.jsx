@@ -7,10 +7,8 @@ import TablePagination from '@mui/material/TablePagination';
 import TableRow from '@mui/material/TableRow';
 import { ThemeProvider, createTheme, styled } from '@mui/material/styles';
 import React from 'react';
-import BarChart from '../../../common/BarChart';
 import EnhancedBarChart from '../../../common/EnhancedBarChart';
 import EnhancedPieChart from '../../../common/EnhancedPieChart';
-import PieChart from '../../../common/PieChart';
 import TableExport from '../../../common/TableExport';
 import HistoricalChart from '../HistoricalChart';
 
@@ -390,7 +388,7 @@ const hasNoData = (data, tableDataArray, municipioDataArray) => {
 // ==========================================
 
 // Componente de tabela básica
-const BasicTable = ({ headers, data, formatTotal = false, sortField = null, ref }) => {
+const BasicTable = React.forwardRef(({ headers, data, formatTotal = false, sortField = null }, ref) => {
   const sortedData = sortField
     ? [...data].sort((a, b) => Number(a[sortField]) - Number(b[sortField]))
     : data;
@@ -438,7 +436,7 @@ const BasicTable = ({ headers, data, formatTotal = false, sortField = null, ref 
       </Table>
     </TableContainer>
   );
-};
+});
 
 // Componente de tabela com paginação
 const PaginatedTable = ({
@@ -662,8 +660,21 @@ const ApiDataTable = ({
   if (hasNoData(data, tableDataArray, municipioDataArray)) {
     return (
       <ThemeProvider theme={theme}>
-        <div>
-          Nenhum dado disponível
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          minHeight: '200px',
+          fontSize: '18px',
+          fontWeight: 'bold',
+          color: '#6c757d',
+          backgroundColor: '#f8f9fa',
+          border: '2px solid #dee2e6',
+          borderRadius: '8px',
+          padding: '40px',
+          margin: '20px 0'
+        }}>
+          Nenhum dado disponível para os filtros selecionados
         </div>
       </ThemeProvider>
     );
@@ -1325,14 +1336,14 @@ const ApiDataTable = ({
   return (
     <ThemeProvider theme={theme}>
       <div>
-        {isHistorical && (
-          <div>
-            {renderHistoricalTable()}
-          </div>
-        )}
+            {isHistorical && (
+              <div>
+                {renderHistoricalTable()}
+              </div>
+            )}
 
-        {/* Tabela cruzada */}
-        {!isHistorical && hasCrossFilters && renderCrossTable()}
+            {/* Tabela cruzada */}
+            {!isHistorical && hasCrossFilters && renderCrossTable()}
 
         {/* Tabela simples (sem filtros) */}
         {!isHistorical && hasNoFilters && (
@@ -1373,30 +1384,19 @@ const ApiDataTable = ({
                 />
 
                 {/* Gráfico para municípios */}
-                {municipioDataArray.length > 0 && (
+                {municipioDataArray.length > 0 && municipioDataArray.some(item => item.total > 0) && (
                   <div style={{ marginTop: '1rem' }}>
-                    {municipioDataArray.length <= 10 ? (
-                      <PieChart
-                        data={municipioDataArray.map(item => ({
-                          name: item.cityName,
-                          value: item.total
-                        }))}
-                        title="Distribuição por Município"
-                        height={400}
-                      />
-                    ) : (
-                      <BarChart
-                        data={municipioDataArray.map(item => ({
-                          name: item.cityName,
-                          value: item.total
-                        }))}
-                        title="Dados por Município"
-                        height={400}
-                        xAxisKey="name"
-                        yAxisKey="value"
-                        showLegend={false}
-                      />
-                    )}
+                    <EnhancedBarChart
+                      data={[
+                        municipioDataArray.reduce((acc, item) => {
+                          acc[item.cityName] = item.total;
+                          return acc;
+                        }, { name: 'Municípios' })
+                      ]}
+                      title="Distribuição por Município"
+                      height={500}
+                      xAxisKey="name"
+                    />
                   </div>
                 )}
 
@@ -1419,15 +1419,15 @@ const ApiDataTable = ({
           </>
         )}
 
-        {/* Tabelas simples com filtros individuais */}
-        {!isHistorical && !hasCrossFilters && (
-          <>
-            {isEtapaSelected && renderSimpleTable('etapa')}
-            {isLocalidadeSelected && renderSimpleTable('localidade')}
-            {isDependenciaSelected && renderSimpleTable('dependencia')}
-            {isVinculoSelected && renderSimpleTable('vinculo')}
-            {isFormacaoDocenteSelected && renderSimpleTable('formacaoDocente')}
-            {isFaixaEtariaSelected && renderSimpleTable('faixaEtaria')}
+            {/* Tabelas simples com filtros individuais */}
+            {!isHistorical && !hasCrossFilters && (
+              <>
+                {isEtapaSelected && renderSimpleTable('etapa')}
+                {isLocalidadeSelected && renderSimpleTable('localidade')}
+                {isDependenciaSelected && renderSimpleTable('dependencia')}
+                {isVinculoSelected && renderSimpleTable('vinculo')}
+                {isFormacaoDocenteSelected && renderSimpleTable('formacaoDocente')}
+                {isFaixaEtariaSelected && renderSimpleTable('faixaEtaria')}
           </>
         )}
       </div>

@@ -6,8 +6,8 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import { ThemeProvider, createTheme, styled } from '@mui/material/styles';
 import React from 'react';
-import BarChart from '../../../common/BarChart';
-import PieChart from '../../../common/PieChart';
+import EnhancedBarChart from '../../../common/EnhancedBarChart';
+import EnhancedPieChart from '../../../common/EnhancedPieChart';
 import TableExport from '../../../common/TableExport';
 import HistoricalChart from '../HistoricalChart';
 
@@ -28,17 +28,17 @@ const theme = createTheme({
 
   const StyledTableHead = styled(TableHead)(({ theme }) => ({
     backgroundColor: theme.palette.background.tableHeader,
-  }));
+}));
 
-  const BoldTableCell = styled(TableCell)(({ theme }) => ({
-    fontWeight: 'bold',
-    minWidth: '8rem',
-    textAlign: 'center',
-    verticalAlign: 'middle',
-    '@media (max-width: 600px)': {
-      minWidth: '6rem',
-    },
-  }));
+const BoldTableCell = styled(TableCell)(({ theme }) => ({
+  fontWeight: 'bold',
+  minWidth: '8rem',
+  textAlign: 'center',
+  verticalAlign: 'middle',
+  '@media (max-width: 600px)': {
+    minWidth: '6rem',
+  },
+}));
 
   const CenteredTableCell = styled(TableCell)(({ theme }) => ({
     textAlign: 'center',
@@ -298,7 +298,7 @@ const processCrossTableData = (data, rowIdField, columnIdField, rowField, column
            municipioDataArray.every(arr => !Array.isArray(arr) || arr.length === 0);
   };
 
-  const BasicTable = ({ headers, data, formatTotal = false, sortField = null, ref }) => {
+  const BasicTable = React.forwardRef(({ headers, data, formatTotal = false, sortField = null }, ref) => {
     const sortedData = sortField
       ? [...data].sort((a, b) => Number(a[sortField]) - Number(b[sortField]))
       : data;
@@ -346,7 +346,7 @@ const processCrossTableData = (data, rowIdField, columnIdField, rowField, column
         </Table>
       </TableContainer>
     );
-  };
+  });
 
 const DataTable = ({
   data,
@@ -725,19 +725,16 @@ const renderCrossTable = () => {
     return (
       <div style={{ marginTop: '1rem' }}>
         {usePieChart ? (
-          <PieChart
+          <EnhancedPieChart
             data={chartData}
             title={`Distribuição por ${chartTitle.replace('Dados por ', '')}`}
-            height={400}
+            height={500}
           />
         ) : (
-          <BarChart
+          <EnhancedPieChart
             data={chartData}
             title={chartTitle}
-            height={400}
-            xAxisKey="name"
-            yAxisKey="value"
-            showLegend={false}
+            height={500}
           />
         )}
       </div>
@@ -788,10 +785,10 @@ const renderCrossTable = () => {
 
       return (
         <div style={{ marginTop: '1rem' }}>
-          <PieChart
+          <EnhancedPieChart
             data={firstRowData}
             title={`Distribuição - ${Array.from(uniqueRows.values())[0]}`}
-            height={400}
+            height={500}
           />
         </div>
       );
@@ -799,12 +796,11 @@ const renderCrossTable = () => {
 
     return (
       <div style={{ marginTop: '1rem' }}>
-        <BarChart
+        <EnhancedBarChart
           data={chartData}
           title={`Comparação por ${rowHeader}`}
-          height={400}
+          height={500}
           xAxisKey="name"
-          showLegend={true}
         />
       </div>
     );
@@ -892,11 +888,11 @@ const renderCrossTable = () => {
   return (
     <ThemeProvider theme={theme}>
       <div>
-        {/* Tabela histórica */}
-        {isHistorical && renderHistoricalTable()}
+            {/* Tabela histórica */}
+            {isHistorical && renderHistoricalTable()}
 
-        {/* Tabela cruzada */}
-        {!isHistorical && hasCrossFilters && renderCrossTable()}
+            {/* Tabela cruzada */}
+            {!isHistorical && hasCrossFilters && renderCrossTable()}
 
         {/* Tabela simples (sem filtros) */}
         {!isHistorical && hasNoFilters && (
@@ -935,30 +931,19 @@ const renderCrossTable = () => {
                 />
 
                 {/* Gráfico para municípios */}
-                {municipioDataArray.length > 0 && (
+                {municipioDataArray.length > 0 && municipioDataArray.some(item => item.total > 0) && (
                   <div style={{ marginTop: '1rem' }}>
-                    {municipioDataArray.length <= 10 ? (
-                      <PieChart
-                        data={municipioDataArray.map(item => ({
-                          name: item.cityName,
-                          value: item.total
-                        }))}
-                        title="Distribuição por Município"
-                        height={400}
-                      />
-                    ) : (
-                      <BarChart
-                        data={municipioDataArray.map(item => ({
-                          name: item.cityName,
-                          value: item.total
-                        }))}
-                        title="Dados por Município"
-                        height={400}
-                        xAxisKey="name"
-                        yAxisKey="value"
-                        showLegend={false}
-                      />
-                    )}
+                    <EnhancedBarChart
+                      data={[
+                        municipioDataArray.reduce((acc, item) => {
+                          acc[item.cityName] = item.total;
+                          return acc;
+                        }, { name: 'Municípios' })
+                      ]}
+                      title="Distribuição por Município"
+                      height={500}
+                      xAxisKey="name"
+                    />
                   </div>
                 )}
 
@@ -982,15 +967,15 @@ const renderCrossTable = () => {
           </>
         )}
 
-        {/* Tabelas simples com filtros individuais */}
-        {!isHistorical && !hasCrossFilters && (
-          <>
-            {isModalidadeSelected && renderSimpleTable('modalidade')}
-            {isRegimeSelected && renderSimpleTable('regimeDeTrabalho')}
-            {isFormacaoDocenteSelected && renderSimpleTable('formacaoDocente')}
-            {isCategoriaAdministrativaSelected && renderSimpleTable('categoriaAdministrativa')}
-            {isFaixaEtariaSuperiorSelected && renderSimpleTable('faixaEtariaSuperior')}
-            {isOrganizacaoAcademicaSelected && renderSimpleTable('organizacaoAcademica')}
+            {/* Tabelas simples com filtros individuais */}
+            {!isHistorical && !hasCrossFilters && (
+              <>
+                {isModalidadeSelected && renderSimpleTable('modalidade')}
+                {isRegimeSelected && renderSimpleTable('regimeDeTrabalho')}
+                {isFormacaoDocenteSelected && renderSimpleTable('formacaoDocente')}
+                {isCategoriaAdministrativaSelected && renderSimpleTable('categoriaAdministrativa')}
+                {isFaixaEtariaSuperiorSelected && renderSimpleTable('faixaEtariaSuperior')}
+                {isOrganizacaoAcademicaSelected && renderSimpleTable('organizacaoAcademica')}
           </>
         )}
       </div>
