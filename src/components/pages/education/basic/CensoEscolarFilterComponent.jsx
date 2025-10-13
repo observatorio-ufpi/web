@@ -1,7 +1,7 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { Button } from '@mui/material';
 import { Select } from '../../../ui';
-import { municipios } from '../../../../utils/citiesMapping';
+import { municipios, Regioes, FaixaPopulacional } from '../../../../utils/citiesMapping';
 import '../../../../style/TableFilters.css';
 
 function CensoEscolarFilterComponent({
@@ -20,6 +20,14 @@ function CensoEscolarFilterComponent({
   handleFilterClick,
   handleClearFilters,
   filterOptions,
+  faixaPopulacional,
+  setFaixaPopulacional,
+  aglomerado,
+  setAglomerado,
+  gerencia,
+  setGerencia,
+  territory,
+  setTerritory,
 }) {
   const yearOptions = useMemo(() => {
     return Array.from(
@@ -36,17 +44,68 @@ function CensoEscolarFilterComponent({
     label: nomeMunicipio,
   }));
 
+  // When other locality filters are selected, limit the city options to those matching
+  const filteredCityOptions = useMemo(() => {
+    const territoryLabel = territory ? Regioes[territory] : null;
+    const faixaLabel = faixaPopulacional ? FaixaPopulacional[faixaPopulacional] : null;
+
+    return Object.entries(municipios)
+      .filter(([, m]) => {
+        if (territoryLabel && m.territorioDesenvolvimento !== territoryLabel) return false;
+        if (faixaLabel && m.faixaPopulacional !== faixaLabel) return false;
+        if (aglomerado && String(m.aglomerado) !== String(aglomerado)) return false;
+        if (gerencia) {
+          const gerencias = String(m.gerencia).split(',').map(g => g.trim());
+          if (!gerencias.includes(String(gerencia))) return false;
+        }
+        return true;
+      })
+      .map(([key, { nomeMunicipio }]) => ({ value: key, label: nomeMunicipio }));
+  }, [territory, faixaPopulacional, aglomerado, gerencia]);
+
+  // If a city is selected, disable other locality filters
+  const otherLocalityDisabled = !!city;
+
+  // If filters changed and the selected city is no longer in options, clear it
+  useEffect(() => {
+    if (city) {
+      const exists = filteredCityOptions.some(opt => opt.value === city);
+      if (!exists) {
+        setCity('');
+      }
+    }
+  }, [filteredCityOptions, city, setCity]);
+
+  // Compute options from mapping data so the dropdowns reflect actual values
+  const faixaPopulacionalOptions = Object.keys(FaixaPopulacional).map((key) => ({ value: key, label: FaixaPopulacional[key] }));
+
+  const aglomeradoOptions = [...new Set(Object.values(municipios).map(m => m.aglomerado).filter(a => a && a !== 'undefined'))]
+    .sort((a, b) => Number(a) - Number(b))
+    .map(a => ({ value: a, label: `Aglomerado ${a}` }));
+
+  const gerenciaOptions = [...new Set(
+    Object.values(municipios)
+      .map(m => m.gerencia)
+      .filter(g => g && g !== 'undefined')
+      .flatMap(g => (g.includes(',') ? g.split(',').map(x => x.trim()) : [g]))
+  )]
+    .sort((a, b) => Number(a) - Number(b))
+    .map(g => ({ value: g, label: `Gerência ${g}` }));
+
+  const territorioOptions = Object.keys(Regioes).map(key => ({ value: key, label: Regioes[key] }));
+
   return (
     <div className="filter-container">
       <div className="filter-grid">
         <div className="filter-item filter-municipio">
           <Select
             id="citySelect"
-            value={cityOptions.find(option => option.value === city) || null}
+            value={(filteredCityOptions.length > 0 ? filteredCityOptions : cityOptions).find(option => option.value === city) || null}
             onChange={(selectedOption) => setCity(selectedOption ? selectedOption.value : '')}
-            options={cityOptions}
+            options={filteredCityOptions.length > 0 ? filteredCityOptions : cityOptions}
             placeholder="Cidade"
             size="xs"
+            isClearable
           />
         </div>
 
@@ -102,6 +161,59 @@ function CensoEscolarFilterComponent({
             isMulti
             placeholder="Selecione as categorias"
             size="xs"
+            disabled={otherLocalityDisabled}
+          />
+        </div>
+
+        <div className="filter-item filter-faixa-populacional">
+          <Select
+            id="faixaPopulacionalSelect"
+            value={faixaPopulacional ? { value: faixaPopulacional, label: FaixaPopulacional[faixaPopulacional] } : null}
+            onChange={(selectedOption) => setFaixaPopulacional(selectedOption ? selectedOption.value : '')}
+            options={faixaPopulacionalOptions}
+            placeholder="Faixa Populacional"
+            size="xs"
+            isClearable
+            disabled={otherLocalityDisabled}
+          />
+        </div>
+
+        <div className="filter-item filter-aglomerado">
+          <Select
+            id="aglomeradoSelect"
+            value={aglomerado ? { value: aglomerado, label: `Aglomerado ${aglomerado}` } : null}
+            onChange={(selectedOption) => setAglomerado(selectedOption ? selectedOption.value : '')}
+            options={aglomeradoOptions}
+            placeholder="Aglomerado"
+            size="xs"
+            isClearable
+            disabled={otherLocalityDisabled}
+          />
+        </div>
+
+        <div className="filter-item filter-gerencia">
+          <Select
+            id="gerenciaSelect"
+            value={gerencia ? { value: gerencia, label: `Gerência ${gerencia}` } : null}
+            onChange={(selectedOption) => setGerencia(selectedOption ? selectedOption.value : '')}
+            options={gerenciaOptions}
+            placeholder="Gerência"
+            size="xs"
+            isClearable
+            disabled={otherLocalityDisabled}
+          />
+        </div>
+
+        <div className="filter-item filter-territorio">
+          <Select
+            id="territorySelect"
+            value={territory ? { value: territory, label: Regioes[territory] } : null}
+            onChange={(selectedOption) => setTerritory(selectedOption ? selectedOption.value : '')}
+            options={territorioOptions}
+            placeholder="Território de Desenvolvimento"
+            size="xs"
+            isClearable
+            disabled={otherLocalityDisabled}
           />
         </div>
 

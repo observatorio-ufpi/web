@@ -88,7 +88,20 @@ function ApiContainer({
       const params = [];
       if (dims) params.push(dims);
       params.push(`filter=${encodeURIComponent(filter)}`);
-      
+
+      // Also include explicit min_year/max_year and dims as separate params for compatibility
+      const yearMatch = filter.match(/min_year:"?(\d{4})"?,?max_year:"?(\d{4})"?/);
+      if (yearMatch) {
+        params.push(`min_year=${encodeURIComponent(yearMatch[1])}`);
+        params.push(`max_year=${encodeURIComponent(yearMatch[2])}`);
+      }
+
+      // Include locality query params so backend can filter by Localidade attributes
+      if (territory) params.push(`territory=${encodeURIComponent(territory)}`);
+      if (faixaPopulacional) params.push(`faixa_populacional=${encodeURIComponent(faixaPopulacional)}`);
+      if (aglomerado) params.push(`aglomerado=${encodeURIComponent(aglomerado)}`);
+      if (gerencia) params.push(`gerencia=${encodeURIComponent(gerencia)}`);
+
       return `${baseUrl}?${params.join('&')}`;
     };
 
@@ -187,8 +200,6 @@ function ApiContainer({
             };
 
             onDataFetched(summedResults);
-          } else if (citiesList.length === 0 && (territory || faixaPopulacional || aglomerado || gerencia)) {
-            onDataFetched({ finalResult: [], allResults: [] });
           } else {
             // Busca histórica original para cidade/estado único
             const filter = buildFilter(city);
@@ -218,8 +229,6 @@ function ApiContainer({
           const finalResult = handleResults(allResults);
           console.log("Final Result:", finalResult);
           onDataFetched({ finalResult, allResults });
-        } else if (citiesList.length === 0 && (territory || faixaPopulacional || aglomerado || gerencia)) {
-          onDataFetched({ finalResult: [], allResults: [] });
         } else {
           const filter = buildFilter(city);
           const url = buildUrl(filter);

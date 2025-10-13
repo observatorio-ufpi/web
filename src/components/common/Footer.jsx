@@ -9,6 +9,7 @@ const Footer = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-6 sm:gap-8">
           {/* Coluna 1: Redes sociais */}
           <div className="text-center sm:text-left lg:col-span-2">
+            <h3 className="font-bold text-lg mb-4">Nossos Contatos</h3>
             <div className="flex justify-center sm:justify-start space-x-4 mb-6">
               <a 
                 href="https://www.instagram.com/nuppege" 
@@ -19,7 +20,7 @@ const Footer = () => {
                 <FaInstagram className="text-2xl cursor-pointer" />
               </a>
             </div>
-            <p className="text-purple-600">nuppege@ufpi.edu.br</p>
+            <p className="text-purple-600">opepi@ufpi.edu.br</p>
           </div>
 
           {/* Coluna 2: Desenvolvimento */}
@@ -67,16 +68,6 @@ const Footer = () => {
                 src="/images/logos/logo_cnpq.png"
                 alt="CNPQ"
                 className="h-10"
-              />
-              <img
-                src="/images/logos/logo_ufpr.png"
-                alt="UFPR"
-                className="h-12"
-              />
-              <img
-                src="/images/logos/logo_ufg.png"
-                alt="UFG"
-                className="h-20"
               />
             </div>
           </div>

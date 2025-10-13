@@ -3,7 +3,7 @@ import { useTheme } from '@mui/material/styles';
 import React, { useMemo, useState } from 'react';
 import '../../../../style/RevenueTableContainer.css';
 import '../../../../style/TableFilters.css';
-import { municipios } from '../../../../utils/citiesMapping';
+import { municipios, Regioes, FaixaPopulacional } from '../../../../utils/citiesMapping';
 import { Loading } from '../../../ui';
 import ApiContainer from './ApiComponent.jsx';
 import CensoEscolarDataTable from './CensoEscolarDataTable.jsx';
@@ -22,6 +22,10 @@ function CensoEscolarComponent() {
   const [year, setYear] = useState(2024);
   const [startYear, setStartYear] = useState(2007);
   const [endYear, setEndYear] = useState(2024);
+  const [territory, setTerritory] = useState('');
+  const [faixaPopulacional, setFaixaPopulacional] = useState('');
+  const [aglomerado, setAglomerado] = useState('');
+  const [gerencia, setGerencia] = useState('');
 
   const yearOptions = useMemo(
     () =>
@@ -36,6 +40,26 @@ function CensoEscolarComponent() {
     value: key,
     label: nomeMunicipio,
   }));
+
+  // Compute citiesList to pass to ApiContainer matching filters (used for historical/multi-city fetch)
+  const citiesList = Object.entries(municipios)
+    .filter(([, m]) => {
+      if (territory) {
+        const territoryLabel = Regioes ? Regioes[territory] : null;
+        if (territoryLabel && m.territorioDesenvolvimento !== territoryLabel) return false;
+      }
+      if (faixaPopulacional) {
+        const faixaLabel = FaixaPopulacional ? FaixaPopulacional[faixaPopulacional] : null;
+        if (faixaLabel && m.faixaPopulacional !== faixaLabel) return false;
+      }
+      if (aglomerado && String(m.aglomerado) !== String(aglomerado)) return false;
+      if (gerencia) {
+        const gerencias = String(m.gerencia).split(',').map(g => g.trim());
+        if (!gerencias.includes(String(gerencia))) return false;
+      }
+      return true;
+    })
+    .map(([key, value]) => [key, value]);
 
   const filterOptions = [
     { value: 'local_funcionamento', label: 'Local de Funcionamento' },
@@ -83,6 +107,10 @@ function CensoEscolarComponent() {
     setYear(2024);
     setStartYear(2007);
     setEndYear(2024);
+    setTerritory('');
+    setFaixaPopulacional('');
+    setAglomerado('');
+    setGerencia('');
   };
 
   return (
@@ -106,6 +134,14 @@ function CensoEscolarComponent() {
           filterOptions={filterOptions}
           cityOptions={cityOptions}
           yearOptions={yearOptions}
+          territory={territory}
+          setTerritory={setTerritory}
+          faixaPopulacional={faixaPopulacional}
+          setFaixaPopulacional={setFaixaPopulacional}
+          aglomerado={aglomerado}
+          setAglomerado={setAglomerado}
+          gerencia={gerencia}
+          setGerencia={setGerencia}
         />
       </div>
 
@@ -146,12 +182,51 @@ function CensoEscolarComponent() {
           startYear={startYear}
           endYear={endYear}
           city={city}
-          citiesList={[]}
-          onDataFetched={(fetchedData) => {
-            console.log('onDataFetched data:', fetchedData);
-            setData(fetchedData);
-            setIsLoading(false);
-          }}
+          territory={territory}
+          faixaPopulacional={faixaPopulacional}
+          aglomerado={aglomerado}
+          gerencia={gerencia}
+          citiesList={citiesList}
+            onDataFetched={(fetchedData) => {
+              console.log('onDataFetched data:', fetchedData);
+              // Normalize shape: ApiContainer may return either:
+              // - { finalResult, allResults } (when multiple cities aggregated)
+              // - { result, metadata?, cityName? } (single API response)
+              // - an array or other shapes in edge cases
+              let normalized = null;
+
+              if (!fetchedData) {
+                normalized = { result: [] };
+              } else if (Array.isArray(fetchedData)) {
+                // Unexpected array: wrap into result
+                normalized = { result: fetchedData };
+              } else if (fetchedData.finalResult && fetchedData.allResults) {
+                // The aggregated path returns { finalResult, allResults }
+                // where finalResult is the processed summary (may contain result inside)
+                if (fetchedData.finalResult && fetchedData.finalResult.result) {
+                  normalized = fetchedData.finalResult;
+                } else {
+                  // If finalResult is the direct result object
+                  normalized = { result: Array.isArray(fetchedData.finalResult) ? fetchedData.finalResult : [fetchedData.finalResult] };
+                }
+              } else if (fetchedData.result) {
+                normalized = fetchedData;
+              } else if (fetchedData.finalResult) {
+                // handle case where finalResult was passed directly
+                normalized = Array.isArray(fetchedData.finalResult) ? { result: fetchedData.finalResult } : { result: [fetchedData.finalResult] };
+              } else {
+                // Fallback: try to find a 'result' property inside nested objects
+                const maybeResult = fetchedData.result || fetchedData.data || null;
+                if (Array.isArray(maybeResult)) normalized = { result: maybeResult };
+                else normalized = { result: [] };
+              }
+
+              // Ensure result is an array
+              if (!Array.isArray(normalized.result)) normalized.result = [];
+
+              setData(normalized);
+              setIsLoading(false);
+            }}
           onError={(errMsg) => {
             setError(errMsg);
             setIsLoading(false);

@@ -87,9 +87,6 @@ const Sidebar = () => {
                 </Link>
               </li>
               <li>
-               {/* Novo item: Condições de Oferta*/}
-              
-              <li>
                 <Link
                   to="/dados-educacionais/condicoes-de-oferta"
                   className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
@@ -102,7 +99,7 @@ const Sidebar = () => {
                   <span className={`${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>Condições de Oferta</span>
                 </Link>
               </li>
-
+              <li>
                 <Link
                   to="/dados-educacionais/superior"
                   className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
