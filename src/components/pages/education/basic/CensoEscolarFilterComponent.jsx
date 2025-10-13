@@ -44,55 +44,79 @@ function CensoEscolarFilterComponent({
     label: nomeMunicipio,
   }));
 
-  // When other locality filters are selected, limit the city options to those matching
-  const filteredCityOptions = useMemo(() => {
+  const baseFilteredMunicipios = useMemo(() => {
     const territoryLabel = territory ? Regioes[territory] : null;
     const faixaLabel = faixaPopulacional ? FaixaPopulacional[faixaPopulacional] : null;
 
-    return Object.entries(municipios)
-      .filter(([, m]) => {
-        if (territoryLabel && m.territorioDesenvolvimento !== territoryLabel) return false;
-        if (faixaLabel && m.faixaPopulacional !== faixaLabel) return false;
-        if (aglomerado && String(m.aglomerado) !== String(aglomerado)) return false;
-        if (gerencia) {
-          const gerencias = String(m.gerencia).split(',').map(g => g.trim());
-          if (!gerencias.includes(String(gerencia))) return false;
-        }
-        return true;
-      })
-      .map(([key, { nomeMunicipio }]) => ({ value: key, label: nomeMunicipio }));
+    return Object.values(municipios).filter(m => {
+      if (territoryLabel && m.territorioDesenvolvimento !== territoryLabel) return false;
+      if (faixaLabel && m.faixaPopulacional !== faixaLabel) return false;
+      if (aglomerado && String(m.aglomerado) !== String(aglomerado)) return false;
+      if (gerencia) {
+        const gerencias = String(m.gerencia).split(',').map(g => g.trim());
+        if (!gerencias.includes(String(gerencia))) return false;
+      }
+      return true;
+    });
   }, [territory, faixaPopulacional, aglomerado, gerencia]);
+
+  const filteredCityOptions = useMemo(() => {
+    return Object.entries(municipios)
+      .filter(([, m]) => baseFilteredMunicipios.includes(m))
+      .map(([key, { nomeMunicipio }]) => ({ value: key, label: nomeMunicipio }));
+  }, [baseFilteredMunicipios]);
+
+  const filteredTerritorioOptions = useMemo(() => {
+    const uniqueLabels = [...new Set(baseFilteredMunicipios.map(m => m.territorioDesenvolvimento).filter(Boolean))];
+    return Object.entries(Regioes)
+      .filter(([, label]) => uniqueLabels.includes(label))
+      .map(([id, label]) => ({ value: id, label }));
+  }, [baseFilteredMunicipios]);
+
+  const filteredFaixaPopulacionalOptions = useMemo(() => {
+    const uniqueLabels = [...new Set(baseFilteredMunicipios.map(m => m.faixaPopulacional).filter(Boolean))];
+    return Object.entries(FaixaPopulacional)
+      .filter(([, label]) => uniqueLabels.includes(label))
+      .map(([id, label]) => ({ value: id, label }));
+  }, [baseFilteredMunicipios]);
+
+  const filteredAglomeradoOptions = useMemo(() => {
+    return [...new Set(baseFilteredMunicipios.map(m => m.aglomerado).filter(a => a && a !== 'undefined'))]
+      .sort((a, b) => Number(a) - Number(b))
+      .map(a => ({ value: a, label: `Aglomerado ${a}` }));
+  }, [baseFilteredMunicipios]);
+
+  const filteredGerenciaOptions = useMemo(() => {
+    return [...new Set(
+      baseFilteredMunicipios
+        .map(m => m.gerencia)
+        .filter(g => g && g !== 'undefined')
+        .flatMap(g => (g.includes(',') ? g.split(',').map(x => x.trim()) : [g]))
+    )]
+      .sort((a, b) => Number(a) - Number(b))
+      .map(g => ({ value: g, label: `Gerência ${g}` }));
+  }, [baseFilteredMunicipios]);
 
   // If a city is selected, disable other locality filters
   const otherLocalityDisabled = !!city;
 
-  // If filters changed and the selected city is no longer in options, clear it
-  useEffect(() => {
-    if (city) {
-      const exists = filteredCityOptions.some(opt => opt.value === city);
-      if (!exists) {
-        setCity('');
+  // Effect to clear a filter if its value is no longer valid
+  const useClearInvalidFilter = (value, setter, options) => {
+    useEffect(() => {
+      if (value && options.length > 0) {
+        const exists = options.some(opt => opt.value === value);
+        if (!exists) {
+          setter('');
+        }
       }
-    }
-  }, [filteredCityOptions, city, setCity]);
+    }, [value, setter, options]);
+  };
 
-  // Compute options from mapping data so the dropdowns reflect actual values
-  const faixaPopulacionalOptions = Object.keys(FaixaPopulacional).map((key) => ({ value: key, label: FaixaPopulacional[key] }));
-
-  const aglomeradoOptions = [...new Set(Object.values(municipios).map(m => m.aglomerado).filter(a => a && a !== 'undefined'))]
-    .sort((a, b) => Number(a) - Number(b))
-    .map(a => ({ value: a, label: `Aglomerado ${a}` }));
-
-  const gerenciaOptions = [...new Set(
-    Object.values(municipios)
-      .map(m => m.gerencia)
-      .filter(g => g && g !== 'undefined')
-      .flatMap(g => (g.includes(',') ? g.split(',').map(x => x.trim()) : [g]))
-  )]
-    .sort((a, b) => Number(a) - Number(b))
-    .map(g => ({ value: g, label: `Gerência ${g}` }));
-
-  const territorioOptions = Object.keys(Regioes).map(key => ({ value: key, label: Regioes[key] }));
+  useClearInvalidFilter(city, setCity, filteredCityOptions);
+  useClearInvalidFilter(territory, setTerritory, filteredTerritorioOptions);
+  useClearInvalidFilter(faixaPopulacional, setFaixaPopulacional, filteredFaixaPopulacionalOptions);
+  useClearInvalidFilter(aglomerado, setAglomerado, filteredAglomeradoOptions);
+  useClearInvalidFilter(gerencia, setGerencia, filteredGerenciaOptions);
 
   return (
     <div className="filter-container">
@@ -161,7 +185,6 @@ function CensoEscolarFilterComponent({
             isMulti
             placeholder="Selecione as categorias"
             size="xs"
-            disabled={otherLocalityDisabled}
           />
         </div>
 
@@ -170,7 +193,7 @@ function CensoEscolarFilterComponent({
             id="faixaPopulacionalSelect"
             value={faixaPopulacional ? { value: faixaPopulacional, label: FaixaPopulacional[faixaPopulacional] } : null}
             onChange={(selectedOption) => setFaixaPopulacional(selectedOption ? selectedOption.value : '')}
-            options={faixaPopulacionalOptions}
+            options={filteredFaixaPopulacionalOptions}
             placeholder="Faixa Populacional"
             size="xs"
             isClearable
@@ -183,7 +206,7 @@ function CensoEscolarFilterComponent({
             id="aglomeradoSelect"
             value={aglomerado ? { value: aglomerado, label: `Aglomerado ${aglomerado}` } : null}
             onChange={(selectedOption) => setAglomerado(selectedOption ? selectedOption.value : '')}
-            options={aglomeradoOptions}
+            options={filteredAglomeradoOptions}
             placeholder="Aglomerado"
             size="xs"
             isClearable
@@ -196,7 +219,7 @@ function CensoEscolarFilterComponent({
             id="gerenciaSelect"
             value={gerencia ? { value: gerencia, label: `Gerência ${gerencia}` } : null}
             onChange={(selectedOption) => setGerencia(selectedOption ? selectedOption.value : '')}
-            options={gerenciaOptions}
+            options={filteredGerenciaOptions}
             placeholder="Gerência"
             size="xs"
             isClearable
@@ -209,7 +232,7 @@ function CensoEscolarFilterComponent({
             id="territorySelect"
             value={territory ? { value: territory, label: Regioes[territory] } : null}
             onChange={(selectedOption) => setTerritory(selectedOption ? selectedOption.value : '')}
-            options={territorioOptions}
+            options={filteredTerritorioOptions}
             placeholder="Território de Desenvolvimento"
             size="xs"
             isClearable

@@ -1,6 +1,6 @@
 import { Button, Typography } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useRef } from 'react';
 import '../../../../style/RevenueTableContainer.css';
 import '../../../../style/TableFilters.css';
 import { municipios, Regioes, FaixaPopulacional } from '../../../../utils/citiesMapping';
@@ -11,6 +11,7 @@ import CensoEscolarFilterComponent from './CensoEscolarFilterComponent.jsx';
 
 function CensoEscolarComponent() {
   const theme = useTheme();
+  const apiRef = useRef();
 
   const [isHistorical, setIsHistorical] = useState(false);
   const [city, setCity] = useState('');
@@ -41,8 +42,7 @@ function CensoEscolarComponent() {
     label: nomeMunicipio,
   }));
 
-  // Compute citiesList to pass to ApiContainer matching filters (used for historical/multi-city fetch)
-  const citiesList = Object.entries(municipios)
+  const citiesList = useMemo(() => Object.entries(municipios)
     .filter(([, m]) => {
       if (territory) {
         const territoryLabel = Regioes ? Regioes[territory] : null;
@@ -59,7 +59,7 @@ function CensoEscolarComponent() {
       }
       return true;
     })
-    .map(([key, value]) => [key, value]);
+    .map(([key, value]) => [key, value]), [territory, faixaPopulacional, aglomerado, gerencia]);
 
   const filterOptions = [
     { value: 'local_funcionamento', label: 'Local de Funcionamento' },
@@ -70,7 +70,6 @@ function CensoEscolarComponent() {
   ];
 
   const handleFilterClick = () => {
-    setIsLoading(true);
     setError(null);
     setData(null);
     setTitle('');
@@ -93,8 +92,20 @@ function CensoEscolarComponent() {
     }
     setTitle(fullTitle);
 
-    // Ativa a busca via ApiContainer
-    setIsLoading(true);
+    if (apiRef.current) {
+      apiRef.current.fetchData({
+        year,
+        isHistorical,
+        startYear,
+        endYear,
+        city,
+        territory,
+        faixaPopulacional,
+        aglomerado,
+        gerencia,
+        citiesList,
+      });
+    }
   };
 
   const handleClearFilters = () => {
@@ -175,64 +186,43 @@ function CensoEscolarComponent() {
         {!isLoading && !error && data && <CensoEscolarDataTable data={data} title={title} />}
 
         <ApiContainer
+          ref={apiRef}
           type="infraestrutura"
           basePath="censo-escolar"
-          year={year}
-          isHistorical={isHistorical}
-          startYear={startYear}
-          endYear={endYear}
-          city={city}
-          territory={territory}
-          faixaPopulacional={faixaPopulacional}
-          aglomerado={aglomerado}
-          gerencia={gerencia}
-          citiesList={citiesList}
-            onDataFetched={(fetchedData) => {
-              console.log('onDataFetched data:', fetchedData);
-              // Normalize shape: ApiContainer may return either:
-              // - { finalResult, allResults } (when multiple cities aggregated)
-              // - { result, metadata?, cityName? } (single API response)
-              // - an array or other shapes in edge cases
-              let normalized = null;
+          onDataFetched={(fetchedData) => {
+            console.log('onDataFetched data:', fetchedData);
+            let normalized = null;
 
-              if (!fetchedData) {
-                normalized = { result: [] };
-              } else if (Array.isArray(fetchedData)) {
-                // Unexpected array: wrap into result
-                normalized = { result: fetchedData };
-              } else if (fetchedData.finalResult && fetchedData.allResults) {
-                // The aggregated path returns { finalResult, allResults }
-                // where finalResult is the processed summary (may contain result inside)
-                if (fetchedData.finalResult && fetchedData.finalResult.result) {
-                  normalized = fetchedData.finalResult;
-                } else {
-                  // If finalResult is the direct result object
-                  normalized = { result: Array.isArray(fetchedData.finalResult) ? fetchedData.finalResult : [fetchedData.finalResult] };
-                }
-              } else if (fetchedData.result) {
-                normalized = fetchedData;
-              } else if (fetchedData.finalResult) {
-                // handle case where finalResult was passed directly
-                normalized = Array.isArray(fetchedData.finalResult) ? { result: fetchedData.finalResult } : { result: [fetchedData.finalResult] };
+            if (!fetchedData) {
+              normalized = { result: [] };
+            } else if (Array.isArray(fetchedData)) {
+              normalized = { result: fetchedData };
+            } else if (fetchedData.finalResult && fetchedData.allResults) {
+              if (fetchedData.finalResult && fetchedData.finalResult.result) {
+                normalized = fetchedData.finalResult;
               } else {
-                // Fallback: try to find a 'result' property inside nested objects
-                const maybeResult = fetchedData.result || fetchedData.data || null;
-                if (Array.isArray(maybeResult)) normalized = { result: maybeResult };
-                else normalized = { result: [] };
+                normalized = { result: Array.isArray(fetchedData.finalResult) ? fetchedData.finalResult : [fetchedData.finalResult] };
               }
+            } else if (fetchedData.result) {
+              normalized = fetchedData;
+            } else if (fetchedData.finalResult) {
+              normalized = Array.isArray(fetchedData.finalResult) ? { result: fetchedData.finalResult } : { result: [fetchedData.finalResult] };
+            } else {
+              const maybeResult = fetchedData.result || fetchedData.data || null;
+              if (Array.isArray(maybeResult)) normalized = { result: maybeResult };
+              else normalized = { result: [] };
+            }
 
-              // Ensure result is an array
-              if (!Array.isArray(normalized.result)) normalized.result = [];
+            if (!Array.isArray(normalized.result)) normalized.result = [];
 
-              setData(normalized);
-              setIsLoading(false);
-            }}
+            setData(normalized);
+            setIsLoading(false);
+          }}
           onError={(errMsg) => {
             setError(errMsg);
             setIsLoading(false);
           }}
           onLoading={setIsLoading}
-          triggerFetch={isLoading}
           selectedFilters={selectedFilters}
         />
       </div>
