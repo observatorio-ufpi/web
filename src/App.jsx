@@ -85,7 +85,7 @@ function App() {
             <Route path="indicadores" element={<ChartContainer />} />
             <Route path="indicadores-estaduais" element={<StateIndicatorsContainer />} />
             <Route path="dados-educacionais/basica" element={<ParentComponent />} />
-            <Route path="dados-educacionais/censo-escolar" element={<CensoEscolarComponent />} />
+            <Route path="dados-educacionais/condicoes-de-oferta" element={<CensoEscolarComponent />} />
             <Route path="dados-educacionais/superior" element={<FilterComponent />} />
             <Route path="dados-educacionais/taxas" element={<FiltrosRateComponent />} />
           </Route>

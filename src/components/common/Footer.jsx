@@ -9,6 +9,7 @@ const Footer = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-6 sm:gap-8">
           {/* Coluna 1: Redes sociais */}
           <div className="text-center sm:text-left lg:col-span-2">
+            <h3 className="font-bold text-lg mb-4">Nossos Contatos</h3>
             <div className="flex justify-center sm:justify-start space-x-4 mb-6">
               <a 
                 href="https://www.instagram.com/nuppege" 

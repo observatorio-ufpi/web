@@ -627,7 +627,7 @@ const QuemSomos = () => {
                  <FaGraduationCap />
                </div>
                <h3 className="text-lg font-semibold text-gray-800">
-                 GT Legislação
+                 GT Documentos
                </h3>
              </div>
            </div>
@@ -650,16 +650,32 @@ const QuemSomos = () => {
             {/* Lado Direito - Descrição */}
             <div className="text-left flex-1">
               <p className="text-lg text-gray-700 leading-relaxed mb-6">
-                O Núcleo de Estudos, Pesquisa e Extensão em Políticas e Gestão da Educação - NUPPEGE se constitui em um espaço de investigação sobre políticas educacionais de caráter interdisciplinar, interinstitucional e intercampi.
+                O Núcleo de Estudos, Pesquisas e Extensão em Políticas e Gestão da Educação (Nuppege) 
+                se constitui em um espaço de caráter interdisciplinar, interinstitucional e intercampi 
+                voltado às políticas educacionais. É um coletivo acadêmico vinculado à Universidade 
+                Federal do Piauí (UFPI), fundado em 1999 e institucionalizado em 2003 na UFPI e no 
+                Diretório dos Grupos de Pesquisa do Conselho Nacional de Desenvolvimento Científico 
+                e Tecnológico (CNPq).               
               </p>
               <p className="text-lg text-gray-700 leading-relaxed mb-6">
-                O NUPPEGE é composto por docentes, ativas (os) e aposentadas (os), estudantes da UFPI, da UESPI e do IFPI, além de profissionais e pessoas vinculadas a movimentos populares, sindicais e outros da sociedade civil que se identificam com os objetivos do Núcleo.
+                O NUPPEGE é composto por docentes, estudantes da UFPI, da UESPI e do IFPI, além 
+                de profissionais da educação básica e de pessoas vinculadas a movimentos populares e 
+                sindicais que se identificam com os objetivos do Núcleo. O Núcleo tem se debruçado 
+                sobre a temática política educacionais e gestão da educação, em âmbito da graduação e 
+                da pós-graduação, gerando vasta produção, expressa em teses, dissertações, relatórios de 
+                iniciação científica, trabalhos de conclusão de curso, artigos, livros e capítulos de livros 
+                e comunicações orais em eventos de âmbito internacional, nacional, regional, estadual e 
+                local.               
               </p>
               <p className="text-lg text-gray-700 leading-relaxed mb-6">
-                Criado em 1999 e institucionalizado em 2003, o NUPPEGE tem se debruçado sobre a temática política educacionais e gestão da educação, em âmbito da graduação e da pós-graduação, gerando vasta produção, expressa em teses, dissertações, relatórios de iniciação científica, trabalhos de conclusão de curso, artigos, livros e capítulos de livros e comunicações orais em eventos de âmbito internacional, nacional, regional, estadual e local.
-              </p>
-              <p className="text-lg text-gray-700 leading-relaxed">
-                O NUPPEGE, além de se dedicar ao ensino e à pesquisa, desenvolve atividades extensionistas sistemáticas relacionadas à defesa do direito à educação, como a participação na Campanha Nacional pelo Direito à Educação, a realização das Semanas de Ação Mundial, a representação no Fórum Municipal de Educação de Teresina e no Fórum Estadual do Piauí, assim como apoia a organização do Movimento Interfóruns da Educação Infantil no Piauí e outras ações em defesa do direito à educação.
+                Atua na articulação entre ensino, pesquisa e extensão, com foco na análise crítica das 
+                políticas educacionais e na defesa do direito à educação pública, gratuita e de qualidade 
+                social. Assim, o NUPPEGE, além de se dedicar ao ensino e à pesquisa, desenvolve 
+                atividades extensionistas sistemáticas relacionadas à defesa do direito à educação, como 
+                a participação na Campanha Nacional pelo Direito à Educação, a realização das Semanas 
+                de Ação Mundial, a representação no Fórum Municipal de Educação de Teresina e no 
+                Fórum Estadual do Piauí, assim como apoia a organização do Movimento Interfóruns da 
+                Educação Infantil no Piauí e outras ações em defesa do direito à educação.
               </p>
             </div>
           </div>

@@ -1,6 +1,6 @@
 import { Button, Typography } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useRef } from 'react';
 import '../../../../style/RevenueTableContainer.css';
 import '../../../../style/TableFilters.css';
 import { FaixaPopulacional, municipios, Regioes } from '../../../../utils/citiesMapping';
@@ -9,6 +9,7 @@ import ApiContainer from './ApiComponent.jsx';
 import ApiDataTable from './apiDataTable.jsx';
 
 function ParentComponent() {
+  const apiRef = useRef();
   const yearLimits = useMemo(() => ({
     enrollment: { min: 2007, max: 2024 },
     'school/count': { min: 2007, max: 2024 },
@@ -40,17 +41,10 @@ function ParentComponent() {
   const [startYear, setStartYear] = useState(yearLimits.enrollment.min);
   const [endYear, setEndYear] = useState(yearLimits.enrollment.max);
 
-  // Função para obter os limites de anos
   const getYearLimits = useMemo(() => {
     return yearLimits[type] || { min: 2007, max: 2022 };
   }, [type, yearLimits]);
 
-  // Função para obter os limites de anos para série histórica
-  const getHistoricalYearLimits = useMemo(() => {
-    return yearLimits[type] || { min: 2007, max: 2022 };
-  }, [type, yearLimits]);
-
-  // Usar getYearLimits para yearOptions
   const yearOptions = useMemo(() => {
     return Array.from(
       { length: getYearLimits.max - getYearLimits.min + 1 },
@@ -61,31 +55,19 @@ function ParentComponent() {
     }));
   }, [getYearLimits]);
 
-  // Atualizar os anos quando os limites mudarem
   useEffect(() => {
     setYear(getYearLimits.max);
     setStartYear(getYearLimits.min);
     setEndYear(getYearLimits.max);
   }, [getYearLimits]);
 
-
-
-
   const handleFilterClick = () => {
-    setIsLoading(true);
     setError(null);
     setData(null);
-    // Limpar o título antes de definir um novo
     setTitle('');
-
-    setIsHistorical(displayHistorical);
     setFilteredType(type);
-    setFilteredYear(year);
 
-    // Improved title generation logic
     const yearDisplay = displayHistorical ? `${startYear}-${endYear}` : year;
-
-    // Get the city name if a city is selected
     let locationName = "Piauí";
     if (city) {
       const selectedCity = municipios[city];
@@ -94,30 +76,19 @@ function ParentComponent() {
       }
     }
 
-    // Adicionar informações sobre os filtros selecionados
     let filterInfo = [];
-
-    // Adicionar território se selecionado
     if (territory) {
       filterInfo.push(`Território: ${Regioes[territory]}`);
     }
-
-    // Adicionar faixa populacional se selecionada
     if (faixaPopulacional) {
       filterInfo.push(`Faixa Populacional: ${FaixaPopulacional[faixaPopulacional]}`);
     }
-
-    // Adicionar aglomerado se selecionado
     if (aglomerado) {
       filterInfo.push(`Aglomerado: ${aglomerado}`);
     }
-
-    // Adicionar gerência se selecionada
     if (gerencia) {
       filterInfo.push(`Gerência: ${gerencia}`);
     }
-
-    // Adicionar filtros adicionais selecionados
     if (selectedFilters.length > 0) {
       const filterNames = selectedFilters.map(filter => {
         switch(filter.value) {
@@ -130,19 +101,32 @@ function ParentComponent() {
       filterInfo.push(`Filtros: ${filterNames.join(', ')}`);
     }
 
-    // Construir o título completo
     let fullTitle = `${titleMapping[type]} - ${locationName} (${yearDisplay})`;
-
-    // Adicionar informações de filtro se houver
     if (filterInfo.length > 0) {
       fullTitle += ` | ${filterInfo.join(' | ')}`;
     }
-
-    setTitle(type ? fullTitle : '');
-
+    setTitle(fullTitle);
+    
+    setIsHistorical(displayHistorical);
+    setFilteredYear(year);
     setIsEtapaSelected(selectedFilters.some(filter => filter.value === 'etapa'));
     setIsLocalidadeSelected(selectedFilters.some(filter => filter.value === 'localidade'));
     setIsDependenciaSelected(selectedFilters.some(filter => filter.value === 'dependencia'));
+
+    if (apiRef.current) {
+      apiRef.current.fetchData({
+        year,
+        isHistorical: displayHistorical,
+        startYear,
+        endYear,
+        city,
+        territory,
+        faixaPopulacional,
+        aglomerado,
+        gerencia,
+        citiesList: territory || faixaPopulacional || aglomerado || gerencia ? filteredCities : [],
+      });
+    }
   };
 
   const handleClearFilters = () => {
@@ -150,7 +134,7 @@ function ParentComponent() {
     setIsHistorical(false);
     setType('enrollment');
     setFilteredType('enrollment');
-    const limits = yearLimits['enrollment']; // usando enrollment pois é o tipo padrão
+    const limits = yearLimits['enrollment'];
     setStartYear(limits.min);
     setEndYear(limits.max);
     setYear(limits.max);
@@ -169,19 +153,16 @@ function ParentComponent() {
     setIsDependenciaSelected(false);
   };
 
-  const filteredCities = Object.entries(municipios).filter(([key, {
+  const filteredCities = Object.entries(municipios).filter(([, {
     territorioDesenvolvimento,
     faixaPopulacional: cityFaixaPopulacional,
     aglomerado: cityAglomerado,
     gerencia: cityGerencia
   }]) => {
-    // Verifica todas as condições selecionadas
     const matchesTerritory = !territory || territorioDesenvolvimento === Regioes[territory];
     const matchesFaixaPopulacional = !faixaPopulacional || cityFaixaPopulacional === FaixaPopulacional[faixaPopulacional];
     const matchesAglomerado = !aglomerado || cityAglomerado === aglomerado;
-    const matchesGerencia = !gerencia || cityGerencia === gerencia;
-
-    // Retorna true apenas se TODAS as condições selecionadas são atendidas
+    const matchesGerencia = !gerencia || String(cityGerencia).split(',').map(g => g.trim()).includes(String(gerencia));
     return matchesTerritory && matchesFaixaPopulacional && matchesAglomerado && matchesGerencia;
   });
 
@@ -190,7 +171,6 @@ function ParentComponent() {
     "school/count": "Número de escolas",
     class: "Número de turmas",
     teacher: "Número de docentes",
-    //auxiliar: "Número de auxiliares docentes",
     employees: "Número de funcionários"
   };
 
@@ -209,19 +189,15 @@ function ParentComponent() {
     label: value,
   }));
 
-  const gerenciaOptions = [...new Set(Object.values(municipios).map(m => m.gerencia))]
-    .flatMap(gerencia => gerencia.split(',').map(g => g.trim()))  // Separa os valores por vírgula
-    .filter(Boolean)  // Remove valores vazios
-    .sort((a, b) => parseInt(a) - parseInt(b))  // Ordenação numérica
+  const gerenciaOptions = [...new Set(Object.values(municipios).flatMap(m => String(m.gerencia).split(',').map(g => g.trim())).filter(Boolean))]
+    .sort((a, b) => parseInt(a) - parseInt(b))
     .map(gerencia => ({
       value: gerencia,
       label: 'Gerencia ' + gerencia.padStart(2, '0'),
     }));
 
-  const aglomeradoOptions = [...new Set(Object.values(municipios).map(m => m.aglomerado))]
-    .flatMap(aglomerado => aglomerado.split(',').map(a => a.trim()))  // Separa os valores por vírgula
-    .filter(Boolean)  // Remove valores vazios
-    .sort((a, b) => parseInt(a) - parseInt(b))  // Ordenação numérica
+  const aglomeradoOptions = [...new Set(Object.values(municipios).flatMap(m => String(m.aglomerado).split(',').map(a => a.trim())).filter(Boolean))]
+    .sort((a, b) => parseInt(a) - parseInt(b))
     .map(aglomerado => ({
       value: aglomerado,
       label: 'Aglomerado ' + aglomerado.padStart(2, '0'),
@@ -231,10 +207,6 @@ function ParentComponent() {
     value: key,
     label: nomeMunicipio,
   }));
-
-  const customStyles = {
-    menuPortal: (base) => ({ ...base, zIndex: 9999 }),
-  };
 
   const filterOptions = [
     { value: 'localidade', label: 'Localidade' },
@@ -248,7 +220,6 @@ function ParentComponent() {
     <div className="app-container">
       <div className="flex flex-col gap-4 p-0 m-0">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
-          {/* Tipo - Primeira coluna, primeira linha */}
           <div className="md:col-span-1">
             <label htmlFor="typeSelect" className="block text-sm font-medium text-gray-700 mb-1">Tipo:</label>
             <Select
@@ -264,7 +235,6 @@ function ParentComponent() {
             />
           </div>
 
-          {/* Ano - Segunda e terceira colunas, primeira linha */}
           <div className="md:col-span-2">
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
               <label className="flex items-center gap-2 cursor-pointer whitespace-nowrap">
@@ -290,8 +260,6 @@ function ParentComponent() {
                                              onChange={(selectedOption) => {
                          const newStartYear = selectedOption.value;
                          setStartYear(newStartYear);
-
-                         // Lógica normal: se ano inicial > ano final, ajustar ano final
                          if (newStartYear > endYear) {
                            setEndYear(newStartYear);
                          }
@@ -329,7 +297,6 @@ function ParentComponent() {
             </div>
           </div>
 
-          {/* Território - Primeira coluna, segunda linha */}
           <div className="md:col-span-1">
             <Select
               id="territorySelect"
@@ -344,7 +311,6 @@ function ParentComponent() {
             />
           </div>
 
-          {/* Faixa Populacional - Segunda coluna, segunda linha */}
           <div className="md:col-span-1">
             <Select
               id="faixaPopulacionalSelect"
@@ -359,7 +325,6 @@ function ParentComponent() {
             />
           </div>
 
-          {/* Aglomerado - Terceira coluna, segunda linha */}
           <div className="md:col-span-1">
             <Select
               id="aglomeradoSelect"
@@ -371,7 +336,6 @@ function ParentComponent() {
             />
           </div>
 
-          {/* Gerência - Primeira coluna, terceira linha */}
           <div className="md:col-span-1">
             <Select
               id="gerenciaSelect"
@@ -383,7 +347,6 @@ function ParentComponent() {
             />
           </div>
 
-          {/* Cidade - Segunda coluna, terceira linha */}
           <div className="md:col-span-1">
             <Select
               id="citySelect"
@@ -395,7 +358,6 @@ function ParentComponent() {
             />
           </div>
 
-          {/* Filtros Múltiplos - Terceira coluna, terceira linha */}
           <div className="md:col-span-1 flex flex-col justify-end">
             <div className="mb-3">
               <Select
@@ -477,21 +439,11 @@ function ParentComponent() {
         </div>
       ) : null}
       <ApiContainer
+        ref={apiRef}
         type={filteredType}
-        year={filteredYear || year}
-        isHistorical={isHistorical}
-        startYear={startYear}
-        endYear={endYear}
-        city={city}
-        territory={territory}
-        faixaPopulacional={faixaPopulacional}
-        aglomerado={aglomerado}
-        gerencia={gerencia}
-        citiesList={territory || faixaPopulacional || aglomerado || gerencia ? filteredCities : []}
         onDataFetched={setData}
         onError={setError}
         onLoading={setIsLoading}
-        triggerFetch={isLoading}
         selectedFilters={selectedFilters}
       />
       {!isLoading && !error && data && title ? (
@@ -504,7 +456,7 @@ function ParentComponent() {
           isHistorical={isHistorical}
           type={filteredType}
           year={filteredYear || year}
-          title={title} // Passando o título para o ApiDataTable
+          title={title}
         />
       ) : null}
     </div>

@@ -18,6 +18,7 @@ import { styled, useTheme } from '@mui/material/styles';
 import { FaEye } from 'react-icons/fa';
 import CustomPagination from "../../../helpers/CustomPagination";
 import TableExport from '../../../common/TableExport';
+import { Select } from '../../../ui';
 
 import { columnNameMap } from '../../../../utils/columnNameMap';
 
@@ -31,33 +32,72 @@ const CenteredTableCell = styled(TableCell)(() => ({
   whiteSpace: 'nowrap',
 }));
 
+const LeftAlignedTableCell = styled(TableCell)(() => ({
+  textAlign: 'left',
+  whiteSpace: 'nowrap',
+}));
+
+const RightAlignedTableCell = styled(TableCell)(() => ({
+  textAlign: 'right',
+  whiteSpace: 'nowrap',
+}));
+
+const dependenciaAdminMap = {
+  '1': 'Federal',
+  '2': 'Estadual',
+  '3': 'Municipal',
+  '4': 'Privada',
+};
+
+const localizacaoMap = {
+  '1': 'Urbana',
+  '2': 'Rural',
+};
+
 const formatBinary = (value) => {
-  if (value === 1) return 'Sim';
-  if (value === 0) return 'Não';
+  if (value === 1 || value === '1') return 'Sim';
+  if (value === 0 || value === '0') return 'Não';
   return '-';
 };
+
+const renderCellValue = (row, key) => {
+  const value = row[key];
+
+  if (key === 'TP_DEPENDENCIA') {
+    return dependenciaAdminMap[value] || '-';
+  }
+  if (key === 'TP_LOCALIZACAO') {
+    return localizacaoMap[value] || '-';
+  }
+
+  // Binary / coded fields
+  if (isBinary(key)) return formatBinary(value);
+
+  if (value === null || value === undefined) return '-';
+
+  // If it's an object, try common display properties
+  if (typeof value === 'object') {
+    if (Array.isArray(value)) return value.join(', ');
+    if (value.nome) return value.nome;
+    if (value.name) return value.name;
+    // fall back to JSON string to avoid React child error
+    try {
+      return JSON.stringify(value);
+    } catch (e) {
+      return '-';
+    }
+  }
+
+  return String(value);
+};
+
+// helper to detect binary-coded fields
+const isBinary = (key) =>
+  key && (key.startsWith('IN_') || (key.startsWith('TP_') && key !== 'TP_DEPENDENCIA' && key !== 'TP_LOCALIZACAO'));
 
 function CensoEscolarDataTable({ data, title }) {
   const theme = useTheme();
   const tableRef = useRef(null);
-
-  // 1️⃣ ADIÇÃO: Ordena os dados pelo ano para a série histórica
-  const sortedData = useMemo(() => {
-    if (!data || !data.result) return [];
-    // Usamos [...data.result] para criar uma cópia antes de ordenar
-    return [...data.result].sort((a, b) => a.ANO - b.ANO);
-  }, [data]);
-
-  if (!sortedData || sortedData.length === 0) {
-    return (
-      <Box sx={{ textAlign: 'center', padding: 3 }}>
-        <Typography variant="h6" sx={{ marginBottom: 2 }}>
-          {title}
-        </Typography>
-        <Typography variant="body1">Nenhum dado disponível</Typography>
-      </Box>
-    );
-  }
 
   const IDENTIFICATION_HEADERS = [
     'NO_ENTIDADE', 'ANO', 'CO_MUNICIPIO', 'NO_MUNICIPIO',
@@ -65,11 +105,14 @@ function CensoEscolarDataTable({ data, title }) {
   ];
 
   const allHeaders = useMemo(() => {
-    const keys = Object.keys(sortedData[0]);
+    if (!data || !data.result || data.result.length === 0) {
+      return [];
+    }
+    const keys = Object.keys(data.result[0]);
     const idCols = IDENTIFICATION_HEADERS.filter((col) => keys.includes(col));
-    const otherCols = keys.filter((col) => !IDENTIFICATION_HEADERS.includes(col) && col !== 'id');
+    const otherCols = keys.filter((col) => !IDENTIFICATION_HEADERS.includes(col) && col !== 'id' && col !== 'localidade');
     return [...idCols, ...otherCols];
-  }, [sortedData]);
+  }, [data]);
 
   const [visibleColumns, setVisibleColumns] = useState(allHeaders);
   const [anchorEl, setAnchorEl] = useState(null);
@@ -89,15 +132,13 @@ function CensoEscolarDataTable({ data, title }) {
     );
   };
 
-  const isBinary = (key) => key.startsWith('IN_') || key.startsWith('TP_');
   const displayedHeaders = allHeaders.filter((col) => visibleColumns.includes(col));
 
-  // 2️⃣ ALTERAÇÃO: Paginação agora usa os dados ordenados (sortedData)
-  const totalPages = Math.ceil(sortedData.length / limit);
+  const totalPages = Math.ceil(data.result.length / limit);
   const paginatedRows =
     limit === 1000
-      ? sortedData
-      : sortedData.slice((page - 1) * limit, page * limit);
+      ? data.result
+      : data.result.slice((page - 1) * limit, page * limit);
 
   const handlePageChange = (_, newPage) => setPage(newPage);
   const handleLimitChange = (event) => {
@@ -106,16 +147,15 @@ function CensoEscolarDataTable({ data, title }) {
     setPage(1);
   };
   
-  // 3️⃣ ALTERAÇÃO: Exportação agora usa os dados ordenados (sortedData)
   const exportData = useMemo(() => {
-    return sortedData.map(row => {
+    return data.result.map(row => {
       const newRow = {};
       allHeaders.forEach(header => {
-        newRow[header] = isBinary(header) ? formatBinary(row[header]) : row[header] ?? '';
+        newRow[header] = renderCellValue(row, header);
       });
       return newRow;
     });
-  }, [sortedData, allHeaders]);
+  }, [data, allHeaders]);
 
   const exportHeaders = useMemo(() => allHeaders, [allHeaders]);
 
@@ -126,6 +166,14 @@ function CensoEscolarDataTable({ data, title }) {
     });
     return displayNames;
   }, [allHeaders]);
+
+  if (!data || !data.result || data.result.length === 0) {
+    return (
+      <Box sx={{ padding: 2, textAlign: 'center' }}>
+        <Typography variant="h6">Nenhum dado disponível para exibição.</Typography>
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ padding: 2 }}>
@@ -193,23 +241,41 @@ function CensoEscolarDataTable({ data, title }) {
         <Table stickyHeader size="small">
           <TableHead sx={{ backgroundColor: theme.palette.action.hover }}>
             <TableRow>
-              {displayedHeaders.map((col) => (
-                <BoldTableCell key={col}>
-                  {columnNameMap[col] || col}
-                </BoldTableCell>
-              ))}
+              {displayedHeaders.map((col) => {
+                const isLeftAligned = col === 'NO_MUNICIPIO' || col === 'NO_ENTIDADE';
+                return (
+                  <BoldTableCell key={col} style={{ textAlign: isLeftAligned ? 'left' : 'right' }}>
+                    {columnNameMap[col] || col}
+                  </BoldTableCell>
+                );
+              })}
             </TableRow>
           </TableHead>
           <TableBody>
-            {paginatedRows.map((row, idx) => (
+            {paginatedRows && paginatedRows.length > 0 ? paginatedRows.map((row, idx) => (
               <TableRow key={idx} hover>
-                {displayedHeaders.map((key, i) => (
-                  <CenteredTableCell key={i}>
-                    {isBinary(key) ? formatBinary(row[key]) : row[key] ?? '-'}
-                  </CenteredTableCell>
-                ))}
+                {displayedHeaders.map((key, i) => {
+                  if (key === 'NO_MUNICIPIO' || key === 'NO_ENTIDADE') {
+                    return (
+                      <LeftAlignedTableCell key={i}>
+                        {renderCellValue(row, key)}
+                      </LeftAlignedTableCell>
+                    );
+                  }
+                  return (
+                    <RightAlignedTableCell key={i}>
+                      {renderCellValue(row, key)}
+                    </RightAlignedTableCell>
+                  );
+                })}
               </TableRow>
-            ))}
+            )) : (
+              <TableRow>
+                <CenteredTableCell colSpan={displayedHeaders.length}>
+                  Nenhum dado encontrado para os filtros selecionados.
+                </CenteredTableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </TableContainer>
