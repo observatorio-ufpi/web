@@ -28,8 +28,8 @@ const FilterComponent = ({
     faixaPopulacionalMunicipio: faixaPopulacionalMunicipio || '',
     aglomeradoMunicipio: aglomeradoMunicipio || '',
     gerenciaRegionalMunicipio: gerenciaRegionalMunicipio || '',
-    anoInicial: 2006, // Ano inicial padrão
-    anoFinal: new Date().getFullYear(), // Ano atual como padrão
+    anoInicial: 2007, // Ano inicial padrão
+    anoFinal: 2024, // Ano final padrão
   });
 
   // Converter os valores recebidos para o formato do react-select
@@ -120,7 +120,7 @@ const FilterComponent = ({
       label: `Gerência ${gerencia}`,
     }));
 
-  const anoOptions = Array.from({ length: 18 }, (_, i) => 2006 + i).map(ano => ({
+  const anoOptions = Array.from({ length: 18 }, (_, i) => 2007 + i).map(ano => ({
     value: ano,
     label: ano,
   }));

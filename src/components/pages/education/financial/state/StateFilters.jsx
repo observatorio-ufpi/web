@@ -42,7 +42,7 @@ const StateFilters = ({
             onStartYearChange={onStartYearChange}
             onEndYearChange={onEndYearChange}
             minYear={2007}
-            maxYear={2023}
+            maxYear={2024}
           />
         </div>
 

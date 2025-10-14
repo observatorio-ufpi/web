@@ -156,8 +156,8 @@ function ChartContainer() {
   const [totalPages, setTotalPages] = useState(1);
   const [hasInitialLoad, setHasInitialLoad] = useState(false);
   const [filters, setFilters] = useState({
-    anoInicial: 2006,
-    anoFinal: new Date().getFullYear(),
+    anoInicial: 2007,
+    anoFinal: 2024,
   });
 
   const fetchTableData = (customFilters = null) => {
