@@ -83,6 +83,9 @@ const ApiContainer = forwardRef(({
         if (territory) params.push(`territory=${encodeURIComponent(territory)}`);
         if (faixaPopulacional) params.push(`faixa_populacional=${encodeURIComponent(faixaPopulacional)}`);
         if (aglomerado) params.push(`aglomerado=${encodeURIComponent(aglomerado)}`);
+        if (gerencia && basePath !== 'censo-escolar') {
+          params.push(`gerencia=${encodeURIComponent(gerencia)}`);
+        }
 
         return `${baseUrl}?${params.join('&')}`;
       };
