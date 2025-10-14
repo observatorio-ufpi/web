@@ -83,7 +83,6 @@ const ApiContainer = forwardRef(({
         if (territory) params.push(`territory=${encodeURIComponent(territory)}`);
         if (faixaPopulacional) params.push(`faixa_populacional=${encodeURIComponent(faixaPopulacional)}`);
         if (aglomerado) params.push(`aglomerado=${encodeURIComponent(aglomerado)}`);
-        if (gerencia) params.push(`gerencia=${encodeURIComponent(gerencia)}`);
 
         return `${baseUrl}?${params.join('&')}`;
       };
@@ -200,7 +199,14 @@ const ApiContainer = forwardRef(({
 
           const finalResult = handleResults(allResults);
           console.log("Final Result:", finalResult);
-          onDataFetched({ finalResult, allResults });
+          
+          // CORREÇÃO: Para censo-escolar, retornar o finalResult diretamente
+          // Para outros casos, manter a estrutura { finalResult, allResults }
+          if (basePath === 'censo-escolar') {
+            onDataFetched(finalResult);
+          } else {
+            onDataFetched({ finalResult, allResults });
+          }
         } else {
           const filter = buildFilter(city);
           const url = buildUrl(filter);
