@@ -22,6 +22,7 @@ import FiltrosRateComponent from "./components/pages/education/rate/FiltrosRateC
 import ChartContainer from "./components/pages/education/financial/municipality/indicators/ChartContainer.jsx";
 import StateIndicatorsContainer from "./components/pages/education/financial/state/indicators/StateIndicatorsContainer.jsx";
 import AppLayout from "./components/layouts/AppLayout.jsx";
+import ScrollToTop from "./components/common/ScrollToTop.jsx";
 import theme from "./theme/muiTheme.jsx";
 import "./App.css";
 import { Typography } from '@mui/material';
@@ -69,6 +70,7 @@ function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Router>
+        <ScrollToTop />
         <Routes>
           {/* Layout da Homepage (com Navbar e Footer) */}
           <Route path="/" element={<AppWithLayout />} />

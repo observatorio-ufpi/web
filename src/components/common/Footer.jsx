@@ -17,7 +17,10 @@ const Footer = () => {
                 rel="noopener noreferrer"
                 className="text-purple-600 hover:text-purple-700 transition-colors"
               >
-                <FaInstagram className="text-2xl cursor-pointer" />
+                <div className="flex items-center space-x-2">
+                  <FaInstagram className="text-2xl cursor-pointer" />
+                  <p className="text-purple-600">@nuppege</p>
+                </div>
               </a>
             </div>
             <p className="text-purple-600">opepi@ufpi.edu.br</p>
@@ -57,12 +60,12 @@ const Footer = () => {
               <img
                 src="/images/logos/fapepi.png"
                 alt="FAPEPI"
-                className="h-12 md:h-16"
+                className="h-14 md:h-18"
               />
               <img
                 src="/images/logos/logo_lde.png"
                 alt="LDE"
-                className="h-8"
+                className="h-8 md:h-10"
               />
               <img
                 src="/images/logos/logo_cnpq.png"

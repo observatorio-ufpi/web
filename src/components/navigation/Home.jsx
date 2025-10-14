@@ -340,22 +340,19 @@ const Home = () => {
           
           <div className="feature-cards-container">
             {/* Dados Financeiros */}
-            <Card 
-              variant="elevated" 
-              className="feature-card border-2 border-green-500 cursor-pointer hover:shadow-lg transition-all duration-300" 
-              backgroundColor="var(--background-color)"
+            <div 
+              className="feature-card p-8 rounded-xl shadow-lg border-2 border-green-500 cursor-pointer hover:shadow-xl transition-all duration-300 hover:scale-105 text-center" 
+              style={{ backgroundColor: 'var(--background-color)' }}
               onClick={() => navigate('/municipios')}
             >
-              <Card.Content padding="default" className="text-center">
-                <div className="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <FaDollarSign className="text-green-600 text-2xl" />
-                </div>
-                <h3 className="text-xl font-bold mb-4 text-gray-800">Dados financeiros</h3>
-                <p className="text-gray-600 leading-relaxed">
-                  Dados sobre o financiamento da educação, com visualizações gráficas e análises.
-                </p>
-              </Card.Content>
-            </Card>
+              <div className="bg-green-100 w-16 h-10 rounded-full flex items-center justify-center mx-auto mb-6">
+                <FaDollarSign className="text-green-600 text-2xl" />
+              </div>
+              <h3 className="text-xl font-bold mb-4 text-gray-800">Dados financeiros</h3>
+              <p className="text-gray-600 leading-relaxed">
+                Dados sobre o financiamento da educação, com visualizações gráficas e análises.
+              </p>
+            </div>
 
             {/* Dados Educacionais */}
             <Card 
@@ -377,22 +374,19 @@ const Home = () => {
             </Card>
 
             {/* Repositório */}
-            <Card 
-              variant="elevated" 
-              className="feature-card border-2 border-gray-500 cursor-pointer hover:shadow-lg transition-all duration-300" 
-              backgroundColor="var(--background-color)"
-              onClick={() => navigate('/repositorio')}
+            <div 
+              className="feature-card p-8 rounded-xl shadow-lg border-2 border-gray-500 cursor-pointer hover:shadow-xl transition-all duration-300 hover:scale-105 text-center" 
+              style={{ backgroundColor: 'var(--background-color)' }}
+              onClick={() => window.location.href = 'https://opepi.pi.gov.br'}
             >
-              <Card.Content padding="default" className="text-center">
-                <div className="bg-gray-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <FaFileAlt className="text-gray-600 text-2xl" />
-                </div>
-                <h3 className="text-xl font-bold mb-4 text-gray-800">Repositório/Acervo</h3>
-                <p className="text-gray-600 leading-relaxed">
-                  Conjunto de documentos contendo a base legal, normativa e da produção científica que orienta a política educacional no Piauí e em seus 224 municípios.
-                </p>
-              </Card.Content>
-            </Card>
+              <div className="bg-gray-100 w-16 h-10 rounded-full flex items-center justify-center mx-auto mb-6">
+                <FaFileAlt className="text-gray-600 text-2xl" />
+              </div>
+              <h3 className="text-xl font-bold mb-4 text-gray-800">Repositório/Acervo</h3>
+              <p className="text-gray-600 leading-relaxed">
+                Conjunto de documentos contendo a base legal, normativa e da produção científica que orienta a política educacional no Piauí e em seus 224 municípios.
+              </p>
+            </div>
           </div>
         </div>
       </section>

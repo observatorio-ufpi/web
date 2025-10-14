@@ -12,7 +12,7 @@ const StateRevenueTableContainer = () => {
   const theme = useTheme();
   const [selectedTable, setSelectedTable] = useState('tabela1');
   const [startYear, setStartYear] = useState(2007);
-  const [endYear, setEndYear] = useState(2023);
+  const [endYear, setEndYear] = useState(2024);
   const [hasInitialLoad, setHasInitialLoad] = useState(false);
 
   // Usar o hook personalizado para gerenciar os dados (sem autoLoad)

@@ -63,6 +63,36 @@ export const calculateMonetaryCorrection = (
 };
 
 /**
+ * Fetches the latest available IPCA data to determine the maximum selectable date
+ * @returns {Promise<Date>} - Maximum available date for IPCA data
+ */
+export const getMaxIPCADate = async () => {
+  try {
+    const response = await fetch(
+      "https://api.bcb.gov.br/dados/serie/bcdata.sgs.10844/dados/ultimos/10?formato=json"
+    );
+    if (!response.ok) {
+      throw new Error("Failed to fetch latest IPCA data");
+    }
+    const data = await response.json();
+    
+    if (data && data.length > 0) {
+      // Get the latest date from the data
+      const latestDate = data[data.length - 1].data;
+      const [day, month, year] = latestDate.split("/");
+      return new Date(year, month - 1, day);
+    }
+    
+    // Fallback to current date if no data is available
+    return new Date();
+  } catch (error) {
+    console.error("Error fetching latest IPCA data:", error);
+    // Fallback to current date on error
+    return new Date();
+  }
+};
+
+/**
  * Gets the current date in DD/MM/YYYY format
  * @returns {string} - Current date string
  */

@@ -49,13 +49,8 @@ const AppLayout = () => {
         {/* Sidebar fixa */}
         <Sidebar />
         
-        {/* Conteúdo principal com margem dinâmica para a sidebar */}
-        <div 
-          className="transition-all duration-300"
-          style={{ 
-            marginLeft: isOpen ? '16rem' : '0rem'
-          }}
-        >
+        {/* Conteúdo principal */}
+        <div className={`transition-all duration-300 ${window.innerWidth >= 768 ? '' : 'w-full'}`} style={{ marginLeft: window.innerWidth >= 768 ? (isOpen ? '16rem' : '0rem') : '0rem' }}>
           {/* Área de conteúdo */}
           <main className="min-h-screen p-3 sm:p-4 md:p-6">
             <Outlet />

@@ -87,8 +87,8 @@ function RevenueTableContainer() {
     faixaPopulacionalMunicipio: '',
     aglomeradoMunicipio: '',
     gerenciaRegionalMunicipio: '',
-    anoInicial: 2006,
-    anoFinal: new Date().getFullYear(),
+    anoInicial: 2007,
+    anoFinal: 2024,
   });
   const [hasInitialLoad, setHasInitialLoad] = useState(false);
 
