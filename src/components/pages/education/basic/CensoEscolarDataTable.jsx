@@ -21,7 +21,6 @@ import TableExport from '../../../common/TableExport';
 import { Select } from '../../../ui';
 
 import { columnNameMap } from '../../../../utils/columnNameMap';
-import { Regioes } from '../../../../utils/citiesMapping';
 
 const BoldTableCell = styled(TableCell)(() => ({
   fontWeight: 'bold',
@@ -38,17 +37,41 @@ const LeftAlignedTableCell = styled(TableCell)(() => ({
   whiteSpace: 'nowrap',
 }));
 
+const RightAlignedTableCell = styled(TableCell)(() => ({
+  textAlign: 'right',
+  whiteSpace: 'nowrap',
+}));
+
+const dependenciaAdminMap = {
+  '1': 'Federal',
+  '2': 'Estadual',
+  '3': 'Municipal',
+  '4': 'Privada',
+};
+
+const localizacaoMap = {
+  '1': 'Urbana',
+  '2': 'Rural',
+};
+
 const formatBinary = (value) => {
-  if (value === 1) return 'Sim';
-  if (value === 0) return 'Não';
+  if (value === 1 || value === '1') return 'Sim';
+  if (value === 0 || value === '0') return 'Não';
   return '-';
 };
 
 const renderCellValue = (row, key) => {
-  // Binary / coded fields
-  if (isBinary(key)) return formatBinary(row[key]);
-
   const value = row[key];
+
+  if (key === 'TP_DEPENDENCIA') {
+    return dependenciaAdminMap[value] || '-';
+  }
+  if (key === 'TP_LOCALIZACAO') {
+    return localizacaoMap[value] || '-';
+  }
+
+  // Binary / coded fields
+  if (isBinary(key)) return formatBinary(value);
 
   if (value === null || value === undefined) return '-';
 
@@ -69,7 +92,8 @@ const renderCellValue = (row, key) => {
 };
 
 // helper to detect binary-coded fields
-const isBinary = (key) => key && (key.startsWith('IN_') || key.startsWith('TP_'));
+const isBinary = (key) =>
+  key && (key.startsWith('IN_') || (key.startsWith('TP_') && key !== 'TP_DEPENDENCIA' && key !== 'TP_LOCALIZACAO'));
 
 function CensoEscolarDataTable({ data, title }) {
   const theme = useTheme();
@@ -86,7 +110,7 @@ function CensoEscolarDataTable({ data, title }) {
     }
     const keys = Object.keys(data.result[0]);
     const idCols = IDENTIFICATION_HEADERS.filter((col) => keys.includes(col));
-    const otherCols = keys.filter((col) => !IDENTIFICATION_HEADERS.includes(col) && col !== 'id');
+    const otherCols = keys.filter((col) => !IDENTIFICATION_HEADERS.includes(col) && col !== 'id' && col !== 'localidade');
     return [...idCols, ...otherCols];
   }, [data]);
 
@@ -127,7 +151,7 @@ function CensoEscolarDataTable({ data, title }) {
     return data.result.map(row => {
       const newRow = {};
       allHeaders.forEach(header => {
-        newRow[header] = isBinary(header) ? formatBinary(row[header]) : row[header] ?? '';
+        newRow[header] = renderCellValue(row, header);
       });
       return newRow;
     });
@@ -217,11 +241,14 @@ function CensoEscolarDataTable({ data, title }) {
         <Table stickyHeader size="small">
           <TableHead sx={{ backgroundColor: theme.palette.action.hover }}>
             <TableRow>
-              {displayedHeaders.map((col) => (
-                <BoldTableCell key={col}>
-                  {columnNameMap[col] || col}
-                </BoldTableCell>
-              ))}
+              {displayedHeaders.map((col) => {
+                const isLeftAligned = col === 'NO_MUNICIPIO' || col === 'NO_ENTIDADE';
+                return (
+                  <BoldTableCell key={col} style={{ textAlign: isLeftAligned ? 'left' : 'right' }}>
+                    {columnNameMap[col] || col}
+                  </BoldTableCell>
+                );
+              })}
             </TableRow>
           </TableHead>
           <TableBody>
@@ -236,9 +263,9 @@ function CensoEscolarDataTable({ data, title }) {
                     );
                   }
                   return (
-                    <CenteredTableCell key={i}>
+                    <RightAlignedTableCell key={i}>
                       {renderCellValue(row, key)}
-                    </CenteredTableCell>
+                    </RightAlignedTableCell>
                   );
                 })}
               </TableRow>
