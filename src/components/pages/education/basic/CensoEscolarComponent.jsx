@@ -179,7 +179,7 @@ function CensoEscolarComponent() {
               color: theme.palette.primary.main,
             }}
           >
-            Selecione os filtros desejados e clique em "Filtrar" para montar uma consulta.
+            Selecione os filtros desejados e clique em "Mostrar Resultados" para montar uma consulta.
           </Typography>
         )}
 

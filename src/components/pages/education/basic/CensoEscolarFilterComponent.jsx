@@ -83,7 +83,7 @@ function CensoEscolarFilterComponent({
   const filteredAglomeradoOptions = useMemo(() => {
     return [...new Set(baseFilteredMunicipios.map(m => m.aglomerado).filter(a => a && a !== 'undefined'))]
       .sort((a, b) => Number(a) - Number(b))
-      .map(a => ({ value: a, label: `Aglomerado ${a}` }));
+      .map(a => ({ value: a, label: `AG ${a}` }));
   }, [baseFilteredMunicipios]);
 
   const filteredGerenciaOptions = useMemo(() => {
@@ -94,7 +94,7 @@ function CensoEscolarFilterComponent({
         .flatMap(g => (g.includes(',') ? g.split(',').map(x => x.trim()) : [g]))
     )]
       .sort((a, b) => Number(a) - Number(b))
-      .map(g => ({ value: g, label: `Gerência ${g}` }));
+      .map(g => ({ value: g, label: `${g}ª GRE` }));
   }, [baseFilteredMunicipios]);
 
   // If a city is selected, disable other locality filters
@@ -127,7 +127,7 @@ function CensoEscolarFilterComponent({
             value={(filteredCityOptions.length > 0 ? filteredCityOptions : cityOptions).find(option => option.value === city) || null}
             onChange={(selectedOption) => setCity(selectedOption ? selectedOption.value : '')}
             options={filteredCityOptions.length > 0 ? filteredCityOptions : cityOptions}
-            placeholder="Cidade"
+            placeholder="Município"
             size="xs"
             isClearable
           />
@@ -183,7 +183,7 @@ function CensoEscolarFilterComponent({
             onChange={(newValue) => setSelectedFilters(newValue)}
             options={filterOptions}
             isMulti
-            placeholder="Selecione as categorias"
+            placeholder="Aspectos da Infraestrutura"
             size="xs"
           />
         </div>
@@ -204,10 +204,10 @@ function CensoEscolarFilterComponent({
         <div className="filter-item filter-aglomerado">
           <Select
             id="aglomeradoSelect"
-            value={aglomerado ? { value: aglomerado, label: `Aglomerado ${aglomerado}` } : null}
+            value={aglomerado ? { value: aglomerado, label: `AG ${aglomerado}` } : null}
             onChange={(selectedOption) => setAglomerado(selectedOption ? selectedOption.value : '')}
             options={filteredAglomeradoOptions}
-            placeholder="Aglomerado"
+            placeholder="Aglomerado - AG"
             size="xs"
             isClearable
             disabled={otherLocalityDisabled}
@@ -217,10 +217,10 @@ function CensoEscolarFilterComponent({
         <div className="filter-item filter-gerencia">
           <Select
             id="gerenciaSelect"
-            value={gerencia ? { value: gerencia, label: `Gerência ${gerencia}` } : null}
+            value={gerencia ? { value: gerencia, label: `${gerencia}ª GRE` } : null}
             onChange={(selectedOption) => setGerencia(selectedOption ? selectedOption.value : '')}
             options={filteredGerenciaOptions}
-            placeholder="Gerência"
+            placeholder="Gerência Regional de Ensino - GRE"
             size="xs"
             isClearable
             disabled={otherLocalityDisabled}
@@ -247,7 +247,7 @@ function CensoEscolarFilterComponent({
             onClick={handleFilterClick}
             className="filter-button"
           >
-            Filtrar
+            Mostrar Resultados
           </Button>
 
           <Button

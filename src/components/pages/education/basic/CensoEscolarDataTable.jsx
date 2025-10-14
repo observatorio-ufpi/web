@@ -33,6 +33,11 @@ const CenteredTableCell = styled(TableCell)(() => ({
   whiteSpace: 'nowrap',
 }));
 
+const LeftAlignedTableCell = styled(TableCell)(() => ({
+  textAlign: 'left',
+  whiteSpace: 'nowrap',
+}));
+
 const formatBinary = (value) => {
   if (value === 1) return 'Sim';
   if (value === 0) return 'Não';
@@ -222,11 +227,20 @@ function CensoEscolarDataTable({ data, title }) {
           <TableBody>
             {paginatedRows && paginatedRows.length > 0 ? paginatedRows.map((row, idx) => (
               <TableRow key={idx} hover>
-                {displayedHeaders.map((key, i) => (
-                  <CenteredTableCell key={i}>
-                    {renderCellValue(row, key)}
-                  </CenteredTableCell>
-                ))}
+                {displayedHeaders.map((key, i) => {
+                  if (key === 'NO_MUNICIPIO' || key === 'NO_ENTIDADE') {
+                    return (
+                      <LeftAlignedTableCell key={i}>
+                        {renderCellValue(row, key)}
+                      </LeftAlignedTableCell>
+                    );
+                  }
+                  return (
+                    <CenteredTableCell key={i}>
+                      {renderCellValue(row, key)}
+                    </CenteredTableCell>
+                  );
+                })}
               </TableRow>
             )) : (
               <TableRow>

@@ -372,6 +372,7 @@ const Home = () => {
                 <p className="text-gray-600 leading-relaxed">
                   Dados e indicadores sobre educação básica e superior, com visualizações gráficas e análises.
                 </p>
+                
               </Card.Content>
             </Card>
 
@@ -692,6 +693,11 @@ const Home = () => {
                     <FaGraduationCap />
                     dados educacionais
                   </button>
+                  <div className="mt-3 pt-2 border-t border-gray-200">
+                    <p className="text-xs text-gray-500 text-center">
+                      Fonte: INEP
+                    </p>
+                  </div>
                 </Card.Content>
               </Card>
 
@@ -738,7 +744,14 @@ const Home = () => {
                             <span className="text-lg font-bold text-purple-600">2023</span>
                           </div>
                         </div>
+                        <div className="mt-3 pt-2 border-t border-gray-200">
+                          <p className="text-xs text-gray-500 text-center">
+                            Fonte: INEP
+                          </p>
                       </div>
+                        
+                      </div>
+                      
                     </>
                   )}
                   <button 
