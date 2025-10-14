@@ -17,7 +17,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { ptBR } from 'date-fns/locale';
 import * as XLSX from 'xlsx';
-import { fetchIPCAData, calculateMonetaryCorrection } from '../../../../../utils/bacenApi.jsx';
+import { fetchIPCAData, calculateMonetaryCorrection, getMaxIPCADate } from '../../../../../utils/bacenApi.jsx';
 import '../../../../../style/Buttons.css';
 
 const theme = createTheme({
@@ -62,12 +62,41 @@ const StateRevenueTable = ({ csvData, tableName, startYear, endYear, enableMonet
   const [loading, setLoading] = useState(false);
   const [targetDate, setTargetDate] = useState(new Date());
   const [correctedData, setCorrectedData] = useState(null);
+  const [maxDate, setMaxDate] = useState(null);
 
   useEffect(() => {
     if (csvData) {
       parseCSVData(csvData);
     }
   }, [csvData]); // Removido startYear e endYear das dependências
+
+  // Buscar data máxima disponível do IPCA
+  useEffect(() => {
+    const fetchMaxDate = async () => {
+      try {
+        const maxIPCADate = await getMaxIPCADate();
+        setMaxDate(maxIPCADate);
+        // Se a correção monetária estiver ativada, definir a data como a máxima disponível
+        if (useMonetaryCorrection) {
+          setTargetDate(maxIPCADate);
+        }
+      } catch (error) {
+        console.error("Erro ao buscar data máxima do IPCA:", error);
+        setMaxDate(new Date());
+      }
+    };
+
+    if (enableMonetaryCorrection) {
+      fetchMaxDate();
+    }
+  }, [enableMonetaryCorrection, useMonetaryCorrection]);
+
+  // Quando ativar a correção monetária, definir a data como a máxima disponível
+  useEffect(() => {
+    if (useMonetaryCorrection && maxDate) {
+      setTargetDate(maxDate);
+    }
+  }, [useMonetaryCorrection, maxDate]);
 
   // Aplicar correção monetária quando necessário
   useEffect(() => {
@@ -88,7 +117,7 @@ const StateRevenueTable = ({ csvData, tableName, startYear, endYear, enableMonet
           return;
         }
 
-        const startDate = `01/01/${Math.min(...years)}`;
+        const startDate = `31/12/${Math.min(...years)}`;
         const formattedTargetDate = targetDate.toLocaleDateString("pt-BR");
 
         // Buscar dados do IPCA
@@ -385,6 +414,7 @@ const StateRevenueTable = ({ csvData, tableName, startYear, endYear, enableMonet
                     onChange={handleDateChange}
                     renderInput={(params) => <TextField {...params} size="small" />}
                     inputFormat="dd/MM/yyyy"
+                    maxDate={maxDate}
                   />
                 </LocalizationProvider>
               )}

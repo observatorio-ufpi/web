@@ -15,6 +15,7 @@ import {
   fetchIPCAData,
   calculateMonetaryCorrection,
   getCurrentDate,
+  getMaxIPCADate,
 } from "../../../../../../utils/bacenApi";
 
 const StateChartComponent = ({
@@ -34,6 +35,7 @@ const StateChartComponent = ({
   const [useMonetaryCorrection, setUseMonetaryCorrection] = useState(false);
   const [loading, setLoading] = useState(false);
   const [targetDate, setTargetDate] = useState(new Date());
+  const [maxDate, setMaxDate] = useState(null);
 
   const colorPalette = [
     "#FF6384",
@@ -62,6 +64,34 @@ const StateChartComponent = ({
     "#F44336",
   ];
 
+  // Buscar data máxima disponível do IPCA
+  useEffect(() => {
+    const fetchMaxDate = async () => {
+      try {
+        const maxIPCADate = await getMaxIPCADate();
+        setMaxDate(maxIPCADate);
+        // Se a correção monetária estiver ativada, definir a data como a máxima disponível
+        if (useMonetaryCorrection) {
+          setTargetDate(maxIPCADate);
+        }
+      } catch (error) {
+        console.error("Erro ao buscar data máxima do IPCA:", error);
+        setMaxDate(new Date());
+      }
+    };
+
+    if (enableMonetaryCorrection) {
+      fetchMaxDate();
+    }
+  }, [enableMonetaryCorrection, useMonetaryCorrection]);
+
+  // Quando ativar a correção monetária, definir a data como a máxima disponível
+  useEffect(() => {
+    if (useMonetaryCorrection && maxDate) {
+      setTargetDate(maxDate);
+    }
+  }, [useMonetaryCorrection, maxDate]);
+
   useEffect(() => {
     const getData = async () => {
       try {
@@ -77,7 +107,7 @@ const StateChartComponent = ({
             })
             .filter(Boolean);
 
-          const startDate = `01/01/${Math.min(...years)}`;
+          const startDate = `31/12/${Math.min(...years)}`;
           const formattedTargetDate = targetDate.toLocaleDateString("pt-BR");
 
           // Fetch IPCA data
@@ -174,6 +204,7 @@ const StateChartComponent = ({
                   value={targetDate}
                   onChange={handleDateChange}
                   format="dd/MM/yyyy"
+                  maxDate={maxDate}
                   slotProps={{ 
                     textField: { 
                       size: "small",
