@@ -123,7 +123,7 @@ const StateChartComponent = ({
                 data: dataset.data.map((value, index) => {
                   const label = processedData.chartData.labels[index];
                   const year = label.match(/(\d{4})/)[1];
-                  const originalDate = `01/01/${year}`;
+                  const originalDate = `31/12/${year}`;
                   return calculateMonetaryCorrection(
                     value,
                     originalDate,

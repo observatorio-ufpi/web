@@ -131,7 +131,7 @@ const StateRevenueTable = ({ csvData, tableName, startYear, endYear, enableMonet
           Object.keys(data.valuesByTypeAndYear[type]).forEach(year => {
             const originalValue = data.valuesByTypeAndYear[type][year];
             if (typeof originalValue === 'number' && originalValue > 0) {
-              const originalDate = `01/01/${year}`;
+              const originalDate = `31/12/${year}`;
               corrected[type][year] = calculateMonetaryCorrection(
                 originalValue,
                 originalDate,

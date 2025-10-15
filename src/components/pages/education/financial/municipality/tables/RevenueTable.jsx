@@ -162,7 +162,7 @@ const RevenueTable = ({
             const originalValue = typeToRowToValue[type][key];
             if (typeof originalValue === 'number' && originalValue > 0) {
               const year = groupType === "ano" ? key : key;
-              const originalDate = `01/01/${year}`;
+              const originalDate = `31/12/${year}`;
               corrected[type][key] = calculateMonetaryCorrection(
                 originalValue,
                 originalDate,
