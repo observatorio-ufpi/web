@@ -1,7 +1,7 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { Button } from '@mui/material';
 import { Select } from '../../../ui';
-import { municipios } from '../../../../utils/citiesMapping';
+import { municipios, Regioes, FaixaPopulacional } from '../../../../utils/citiesMapping';
 import '../../../../style/TableFilters.css';
 
 function CensoEscolarFilterComponent({
@@ -20,6 +20,14 @@ function CensoEscolarFilterComponent({
   handleFilterClick,
   handleClearFilters,
   filterOptions,
+  faixaPopulacional,
+  setFaixaPopulacional,
+  aglomerado,
+  setAglomerado,
+  gerencia,
+  setGerencia,
+  territory,
+  setTerritory,
 }) {
   const yearOptions = useMemo(() => {
     return Array.from(
@@ -36,17 +44,92 @@ function CensoEscolarFilterComponent({
     label: nomeMunicipio,
   }));
 
+  const baseFilteredMunicipios = useMemo(() => {
+    const territoryLabel = territory ? Regioes[territory] : null;
+    const faixaLabel = faixaPopulacional ? FaixaPopulacional[faixaPopulacional] : null;
+
+    return Object.values(municipios).filter(m => {
+      if (territoryLabel && m.territorioDesenvolvimento !== territoryLabel) return false;
+      if (faixaLabel && m.faixaPopulacional !== faixaLabel) return false;
+      if (aglomerado && String(m.aglomerado) !== String(aglomerado)) return false;
+      if (gerencia) {
+        const gerencias = String(m.gerencia).split(',').map(g => g.trim());
+        if (!gerencias.includes(String(gerencia))) return false;
+      }
+      return true;
+    });
+  }, [territory, faixaPopulacional, aglomerado, gerencia]);
+
+  const filteredCityOptions = useMemo(() => {
+    return Object.entries(municipios)
+      .filter(([, m]) => baseFilteredMunicipios.includes(m))
+      .map(([key, { nomeMunicipio }]) => ({ value: key, label: nomeMunicipio }));
+  }, [baseFilteredMunicipios]);
+
+  const filteredTerritorioOptions = useMemo(() => {
+    const uniqueLabels = [...new Set(baseFilteredMunicipios.map(m => m.territorioDesenvolvimento).filter(Boolean))];
+    return Object.entries(Regioes)
+      .filter(([, label]) => uniqueLabels.includes(label))
+      .map(([id, label]) => ({ value: id, label }));
+  }, [baseFilteredMunicipios]);
+
+  const filteredFaixaPopulacionalOptions = useMemo(() => {
+    const uniqueLabels = [...new Set(baseFilteredMunicipios.map(m => m.faixaPopulacional).filter(Boolean))];
+    return Object.entries(FaixaPopulacional)
+      .filter(([, label]) => uniqueLabels.includes(label))
+      .map(([id, label]) => ({ value: id, label }));
+  }, [baseFilteredMunicipios]);
+
+  const filteredAglomeradoOptions = useMemo(() => {
+    return [...new Set(baseFilteredMunicipios.map(m => m.aglomerado).filter(a => a && a !== 'undefined'))]
+      .sort((a, b) => Number(a) - Number(b))
+      .map(a => ({ value: a, label: `AG ${a}` }));
+  }, [baseFilteredMunicipios]);
+
+  const filteredGerenciaOptions = useMemo(() => {
+    return [...new Set(
+      baseFilteredMunicipios
+        .map(m => m.gerencia)
+        .filter(g => g && g !== 'undefined')
+        .flatMap(g => (g.includes(',') ? g.split(',').map(x => x.trim()) : [g]))
+    )]
+      .sort((a, b) => Number(a) - Number(b))
+      .map(g => ({ value: g, label: `${g}ª GRE` }));
+  }, [baseFilteredMunicipios]);
+
+  // If a city is selected, disable other locality filters
+  const otherLocalityDisabled = !!city;
+
+  // Effect to clear a filter if its value is no longer valid
+  const useClearInvalidFilter = (value, setter, options) => {
+    useEffect(() => {
+      if (value && options.length > 0) {
+        const exists = options.some(opt => opt.value === value);
+        if (!exists) {
+          setter('');
+        }
+      }
+    }, [value, setter, options]);
+  };
+
+  useClearInvalidFilter(city, setCity, filteredCityOptions);
+  useClearInvalidFilter(territory, setTerritory, filteredTerritorioOptions);
+  useClearInvalidFilter(faixaPopulacional, setFaixaPopulacional, filteredFaixaPopulacionalOptions);
+  useClearInvalidFilter(aglomerado, setAglomerado, filteredAglomeradoOptions);
+  useClearInvalidFilter(gerencia, setGerencia, filteredGerenciaOptions);
+
   return (
     <div className="filter-container">
       <div className="filter-grid">
         <div className="filter-item filter-municipio">
           <Select
             id="citySelect"
-            value={cityOptions.find(option => option.value === city) || null}
+            value={(filteredCityOptions.length > 0 ? filteredCityOptions : cityOptions).find(option => option.value === city) || null}
             onChange={(selectedOption) => setCity(selectedOption ? selectedOption.value : '')}
-            options={cityOptions}
-            placeholder="Cidade"
+            options={filteredCityOptions.length > 0 ? filteredCityOptions : cityOptions}
+            placeholder="Município"
             size="xs"
+            isClearable
           />
         </div>
 
@@ -100,8 +183,60 @@ function CensoEscolarFilterComponent({
             onChange={(newValue) => setSelectedFilters(newValue)}
             options={filterOptions}
             isMulti
-            placeholder="Selecione as categorias"
+            placeholder="Aspectos da Infraestrutura"
             size="xs"
+          />
+        </div>
+
+        <div className="filter-item filter-faixa-populacional">
+          <Select
+            id="faixaPopulacionalSelect"
+            value={faixaPopulacional ? { value: faixaPopulacional, label: FaixaPopulacional[faixaPopulacional] } : null}
+            onChange={(selectedOption) => setFaixaPopulacional(selectedOption ? selectedOption.value : '')}
+            options={filteredFaixaPopulacionalOptions}
+            placeholder="Faixa Populacional"
+            size="xs"
+            isClearable
+            disabled={otherLocalityDisabled}
+          />
+        </div>
+
+        <div className="filter-item filter-aglomerado">
+          <Select
+            id="aglomeradoSelect"
+            value={aglomerado ? { value: aglomerado, label: `AG ${aglomerado}` } : null}
+            onChange={(selectedOption) => setAglomerado(selectedOption ? selectedOption.value : '')}
+            options={filteredAglomeradoOptions}
+            placeholder="Aglomerado - AG"
+            size="xs"
+            isClearable
+            disabled={otherLocalityDisabled}
+          />
+        </div>
+
+        <div className="filter-item filter-gerencia">
+          <Select
+            id="gerenciaSelect"
+            value={gerencia ? { value: gerencia, label: `${gerencia}ª GRE` } : null}
+            onChange={(selectedOption) => setGerencia(selectedOption ? selectedOption.value : '')}
+            options={filteredGerenciaOptions}
+            placeholder="Gerência Regional de Ensino - GRE"
+            size="xs"
+            isClearable
+            disabled={otherLocalityDisabled}
+          />
+        </div>
+
+        <div className="filter-item filter-territorio">
+          <Select
+            id="territorySelect"
+            value={territory ? { value: territory, label: Regioes[territory] } : null}
+            onChange={(selectedOption) => setTerritory(selectedOption ? selectedOption.value : '')}
+            options={filteredTerritorioOptions}
+            placeholder="Território de Desenvolvimento"
+            size="xs"
+            isClearable
+            disabled={otherLocalityDisabled}
           />
         </div>
 
@@ -112,7 +247,7 @@ function CensoEscolarFilterComponent({
             onClick={handleFilterClick}
             className="filter-button"
           >
-            Filtrar
+            Mostrar Resultados
           </Button>
 
           <Button
