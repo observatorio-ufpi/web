@@ -2,11 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { FaGraduationCap, FaSearch, FaBook, FaDollarSign, FaUsers, FaUniversity, FaTimes, FaCode, FaFreeCodeCamp, FaCodeBranch, FaCodepen } from 'react-icons/fa';
 import { MdSchool, MdPeople, MdScience } from 'react-icons/md';
 
+
 const QuemSomos = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [selectedCelula, setSelectedCelula] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedGT, setSelectedGT] = useState(null);
+  const [isGTModalOpen, setIsGTModalOpen] = useState(false);
 
   const photos = [
     {
@@ -69,162 +72,285 @@ const QuemSomos = () => {
       alt: "Legislação Teresina",
       title: "Legislação Teresina"
     },
+    
   ];
 
   // Dados das células de pesquisa
   const celulasData = {
-    gestao: {
-      id: 'gestao',
-      nome: 'Célula de Gestão de Sistemas e Unidades Escolares',
-      foto: '/images/celulas/celula_gestao_de_sistemas_e_unidades_escolares.png',
-      objetivo: 'Analisar o processo de formulação, implementação e avaliação das políticas educacionais para a gestão dos sistemas e unidades escolares nas redes de ensino público do Piauí, com foco nos modelos de gestão, programas e projetos desenvolvidos pelas secretarias estadual e municipais de educação.',
-      membros: [
-        'Maria do Socorro Soares - Doutora (UFPI Picos) - coordenação',
-        'Ana Adriana de Sá - Graduanda (UFPI Picos)',
-        'Cristiana Barra Teixeira - Doutora (UFPI Picos)',
-        'Johnny de Sousa Silva - Graduanda (UFPI Picos)',
-        'Maria Mônica Batista de Sousa - Graduanda (UFPI Picos)',
-        'Romildo de Castro Araújo - Doutor (UFPI Picos)'
-      ]
-    },
-    financiamento: {
-      id: 'financiamento',
-      nome: 'Célula de Financiamento da Educação',
-      foto: '/images/celulas/celula_financiamento_da_educacao.png',
-      objetivo: 'Investigar as políticas de financiamento e gestão da educação desenvolvidas no Piauí na perspectiva de analisar os processos de ampliação ou restrição dos direitos educacionais no Estado.',
-      membros: [
-        'Magna Jovita Gomes de Sales e Silva - Doutora em Educação (SEMEC/SEDUC) - coordenação',
-        'Silvania Uchôa de Castro - Doutora (SEDUC/UESPI) - coordenação',
-        'Cleide Ferreira Leão - Especialista (SEMEC)',
-        'Efigênia Alves Neres - Doutoranda (UFPI)',
-        'Francisco Ivan Assis de Araújo - Mestre (IFPI Piripiri)',
-        'Francislene Santos Castro - Doutora (SEMEC)',
-        'Gabrielle Alves Alencar - Graduanda (UFPI)',
-        'José Victor Almeida de Sousa - Graduando (UFPI)',
-        'Lucas Figueredo Soares - Graduando (UFPI)',
-        'Lucine Rodrigues Vasconcelos Borges de Almeida - Mestre (SEDUC)',
-        'Luís Carlos Sales - Doutor (UFPI)',
-        'Rosana Evangelista da Cruz - Doutora (UFPI)',
-        'Rosivaldo dos Santos Souza - Doutorando (UFPI)',
-        'Teodoro de Sousa Sampaio - Graduando (UFPI)',
-        'Valquira Macêdo Cantuaria - Doutora (SEMEC)',
-        'Vinícius Silva de Sousa - Mestrando (UFPI)'
-      ]
-    },
-    ensinoSuperior: {
-      id: 'ensinoSuperior',
-      nome: 'Célula de Ensino Superior',
-      foto: '/images/celulas/celula_ensino_superior.png',
-      objetivo: 'Analisar as políticas públicas para a educação superior e suas implicações nas Instituições de Ensino Superior – IES no Piauí.',
-      membros: [
-        'Maria da Penha Feitosa - Doutora (UFPI Floriano) - coordenação',
-        'Mônica Núbia Albuquerque Dias - Doutoranda (UFPI Floriano)',
-        'Geraldo do Nascimento Carvalho - Doutor (UFPI)'
-      ]
-    },
-    educacaoInfantil: {
-      id: 'educacaoInfantil',
-      nome: 'Célula de Educação Infantil',
-      foto: '/images/celulas/celula_educacao_infantil.png',
-      objetivo: 'Desenvolver pesquisas que investiguem como as políticas educacionais desenvolvidas no âmbito da educação infantil revelam o movimento/trajetória de luta da sociedade pelo direito à educação de crianças piauienses de zero a seis anos.',
-      membros: [
-        'Carmen Lucia de Sousa Lima - Doutora (UFPI) – coordenação',
-        'Valéria Madeira Martins Ribeiro - Mestra (UESPI) - coordenação',
-        'Alana Ravena Gomes da Silva - Graduanda (UESPI)',
-        'Cleuma Magalhães e Sousa - Mestre (UESPI)',
-        'Gerlândia Amorim da Silva - Especialista (UESPI)',
-        'Isabel Cristina da Silva Fontineles - Doutora (UESPI)',
-        'Karinne Williams Silva Lemos - Graduanda (UESPI)',
-        'Marcela Oliveira Castelo Branco - Especialista (NEUROGREEN)',
-        'Maria Alcioneia Brito Fontenele - Especialista (SEMEC)',
-        'Maria Carmem Bezerra Lima - Doutora (UESPI)',
-        'Maria de Jesus Rodrigues - Doutoranda (UFPI)',
-        'Marlon Araújo Carreiro - Mestrando (UFPI)',
-        'Mary Gracy e Silva Lima - Doutora (UESPI/CCM)',
-        'Michelle Morgana Gomes Fonseca Alcântara - Mestra (SEMEC)',
-        'Vinícius Silva de Sousa - Mestrando (UFPI)',
-        'Vitória Sousa Rodrigues - Especialista (UESPI)',
-        'Zélia Maria Carvalho e Silva - Doutoranda (UFPI/CAFS)'
-      ]
-    },
-    eja: {
-      id: 'eja',
-      nome: 'Célula de Educação de Jovens e Adultos',
-      foto: '/images/celulas/celula_educacao_jovens_e_adultos.png',
-      objetivo: 'Analisar as políticas públicas para a Educação de Jovens e Adultos – EJA no sistema público de educação no âmbito federal, estadual e municipal no Piauí, visando à produção de um diagnóstico dessa modalidade.',
-      membros: [
-        'Francislene Santos Castro - Doutora (SEMEC) – coordenação',
-        'Marlucia Lima de Sousa Meneses - Doutoranda (PUC-Brasília/SEDUC) - coordenação',
-        'Ana Paula Monteiro de Moura - Mestra (IFPI Floriano)',
-        'Andrea Martins - Doutora (UFPI)',
-        'Francisco das Chagas das Alves Rodrigues - Mestre (SEMEC)',
-        'Jefferson de Sales Oliveira - Mestre',
-        'Leia Soares da Silva - Mestra (IFPI)',
-        'Marli Clementino Gonçalves - Doutora (UFPI)'
-      ]
-    },
-    producaoConhecimento: {
-      id: 'producaoConhecimento',
-      nome: 'Célula de Produção do Conhecimento em Política Educacional',
-      foto: '/images/celulas/celula_producao_de_conhecimento.png',
-      objetivo: 'Investigar a constituição do campo política educacional no que se refere aos processos de produção e divulgação do conhecimento, indicando as tendências, potencialidades e desafios sobre a temática no Piauí.',
-      membros: [
-        'Enayde Fernandes Silva - Doutora (UFPI Picos) – coordenação',
-        'Maria de Jesus Rodrigues Duarte - Doutoranda (UFPI/SEMEC) - coordenação',
-        'Alan Fonseca dos Santos - Mestre (UESPI)',
-        'Ana Paula Monteiro de Moura - Mestra (IFPI Floriano)',
-        'Ana Sthefany Andrade Araújo - Graduanda (UESPI/Parnaíba)',
-        'Juliana Macedo de Carvalho Castelo Branco - Mestranda (UFPI/SEMEC)',
-        'Lucilene de Almeida Muniz - Graduanda (UESPI/Parnaíba)',
-        'Magna Jovita Gomes de Sales e Silva - Doutora (SEMEC/SEDUC)',
-        'Maria Clara de Sousa Costa - Doutoranda (UFPI)',
-        'Marli Clementino Gonçalves - Doutora (UFPI)',
-        'Marlucia Lima de Sousa Meneses - Doutoranda (PUC-BSB/SEDUC)',
-        'Rigoberto Veloso de Carvalho – Doutorando (Biblioteca Central UFPI)',
-        'Rosana Evangelista da Cruz - Doutora (UFPI)',
-        'Vinícius Silva de Sousa - Mestrando (UFPI)'
-      ]
-    },
-    educacaoCampo: {
-      id: 'educacaoCampo',
-      nome: 'Célula de Educação do Campo',
-      foto: '/images/celulas/celula_educacao_do_campo.png',
-      objetivo: 'Analisar o processo de materialização da política de Educação do Campo no Piauí no tocante à oferta, permanência, formação de educadores, gestão escolar e dos sistemas estadual e municipais, tendo em vista a qualidade social inscrita nos marcos fundacionais da política de Educação do Campo e na produção acadêmica e dos movimentos sociais do campo.',
-      membros: [
-        'Maria Clara de Sousa Costa - Doutoranda (UFPI) - coordenação',
-        'Lucineide Barros Medeiros - Doutora (UESPI) - coordenação',
-        'Jullyane Frazão Santana - Doutoranda (USP)',
-        'Adilson de Apiaim - Mestre (SEDUC)',
-        'Marli Clementino Gonçalves - Doutora (UFPI)',
-        'Kátia Cristina - Especialista (UESPI)',
-        'Messias Muniz - Especialista (UFPI)',
-        'Miriã Medeiros - Especialista (SEDUC)'
-      ]
-    },
-    avaliacao: {
-      id: 'avaliacao',
-      nome: 'Célula de Políticas de Avaliação Educacional',
-      foto: '/images/celulas/celula_politicas_avaliacao_educacional.png',
-      objetivo: 'Analisar os efeitos e implicações das políticas de avaliação educacional, em especial das avaliações externas, nos sistemas educacionais brasileiros diante do processo de ensino e aprendizagem desenvolvido nas unidades escolares.',
-      membros: [
-        'Luisa Xavier de Oliveira - Doutora (UFPI) - coordenação',
-        'Wirla Risany Lima Carvalho - Doutora (UFPI) - coordenação',
-        'Alan Fonseca dos Santos - Mestre (UESPI)',
-        'Ana Gabriele de Moura Rodrigues - Mestranda (UFPI)',
-        'Ateumice Maria do Nascimento - Especialista (SEMEC)',
-        'Cleudiana Maria de Oliveira Silva - Mestre (SEDUC)',
-        'Cleuma Magalhães e Sousa - Mestre (SEMEC)',
-        'Cleverson Moreira Lino - Doutorando (UFPI)',
-        'Dayane Martinelle da Silva Santos - Doutoranda (UFPI/SEMEC)',
-        'Diego Rael Ferreira Barbosa - Graduando (UFPI)',
-        'Eusilene da Rocha Ferreira - Doutoranda (UFPI/SEMEC)',
-        'Francisca Eudeilane da Silva Pereira - Mestra (SEDUC/SEMEC)',
-        'Sandra Regina Silva Garrido - Especialista (SEMEC)',
-        'Vanusa Gomes Soares - Mestra (SEMEC)',
-        'Vinícius Silva de Sousa - Mestrando (UFPI)'
-      ]
-    }
-  };
+  educacaoCampo: {
+    id: 'educacaoCampo',
+    nome: 'Célula de Educação do Campo',
+    foto: '/images/celulas/educacao_do_campo.jpg',
+    objetivo: 'Analisar o processo de materialização da política de Educação do Campo no Piauí no tocante à oferta, permanência, formação de educadores, gestão escolar e dos sistemas estadual e municipais, tendo em vista a qualidade social inscrita nos marcos fundacionais da política de Educação do Campo e na produção acadêmica e dos movimentos sociais do campo.',
+    membros: [
+      'Lucineide Barros Medeiros - Doutora em educação (UESPI) - coordenação',
+      'Maria Clara de Sousa Costa - Doutoranda em educação (UFPI) - coordenação',
+      'Adilson de Apiaim - Mestre em Sociedade e Cultura (SEDUC)',
+      'Jullyane Frazão Santana - Doutora em educação (UFPI)',
+      'Kátia Cristina Newton Bomfim Maciel - Especialista em Educação (UESPI)',
+      'Marli Clementino Gonçalves - Doutora em Educação (UFPI)',
+      'Messias Muniz – Mestre em Educação (UFPI)',
+      'Miriã Medeiros – Especialista em Educação (SEDUC)',
+      'Rosimery Vieira da Costa - Doutoranda em Educação (UFPI)'
+    ],
+  },
+  educacaoInfantil: {
+    id: 'educacaoInfantil',
+    nome: 'Célula de Educação Infantil',
+    foto: '/images/celulas/educacao_infatil.jpg.png',
+    objetivo: 'Desenvolver pesquisas que investiguem como as políticas educacionais desenvolvidas no âmbito da educação infantil revelam o movimento/trajetória de luta da sociedade pelo direito à educação de crianças piauienses de zero a seis anos.',
+    membros: [
+      'Carmen Lucia de Sousa Lima - Doutora em educação (UFPI) – coordenação',
+      'Valéria Madeira Martins Ribeiro - Mestra em educação (UESPI) – coordenação',
+      'Alana Ravena Gomes da Silva – Graduanda em Pedagogia (UESPI)',
+      'Aline Nobre da Silva Nunes - Pedagoga (SEMEC)',
+      'Cleuma Magalhães e Sousa - Mestre em educação (UESPI)',
+      'Gerlândia Amorim da Silva – Especialista em educação (UESPI)',
+      'Fabrícia Pereira Teles – Doutora em educação (UESPI Parnaíba)',
+      'Isabel Cristina da Silva Fontineles - Doutora em educação (UESPI)',
+      'Karinne Williams Silva Lemos - Graduanda em Pedagogia (UESPI)',
+      'Marcela Oliveira Castelo Branco - Especialista em educação (Neurogreen)',
+      'Maria Alcioneia Brito Fontenele – Especialista em educação (SEMEC)',
+      'Maria Carmem Bezerra Lima - Doutora em educação (UESPI/Picos)',
+      'Maria de Jesus Rodrigues - Doutoranda em Educação (UESPI)',
+      'Maria Valdinelha da Silva Alves - Pedagoga (Neuroaprender)',
+      'Mary Gracy e Silva Lima – Doutora em educação (UESPI)',
+      'Mateus Dantas de Farias Fonseca - Graduando em Pedagogia (UFPI)',
+      'Michelle Morgana Gomes Fonseca Alcântara - Mestra em Educação (SEMEC)',
+      'Rejania Rebelo Lustosa - Mestra (UNINASSAU)',
+      'Rusenilde Gomes da Cunha – Mestranda em educação (PUC-SP)',
+      'Vinícius Silva de Sousa - Mestrando em educação (UFPI)',
+      'Vitória Sousa Rodrigues - Especialista em educação (UESPI)',
+      'Zélia Maria Carvalho e Silva - Doutoranda em educação (UFPI/CAFS)'
+    ]
+  },
+  producaoConhecimento: {
+    id: 'producaoConhecimento',
+    nome: 'Célula de Produção do Conhecimento em Política Educacional',
+    foto: '/images/celulas/producao_do_conhecimento_em_politica_educacional.png',
+    objetivo: 'Investigar a constituição do campo política educacional no que se refere aos processos de produção e divulgação do conhecimento, indicando as tendências, potencialidades e desafios sobre a temática no Piauí.',
+    membros: [
+      'Enayde Fernandes Silva - Doutora em educação (UFPI Picos) – coordenação',
+      'Maria de Jesus Rodrigues Duarte - Doutoranda em educação (UFPI/SEMEC) - coordenação',
+      'Alan Fonseca dos Santos - Mestre em educação (UESPI/Bom Jesus)',
+      'Ana Paula Monteiro de Moura – Mestra em educação (IFPI Floriano)',
+      'Ana Sophia Meireles de Oliveira – Graduanda em Pedagogia (UFPI)',
+      'Ana Sthefany Andrade Araújo – Graduanda em Pedagogia (UFPI)',
+      'Cristina Maria dos Santos Costa - Graduanda em Biblioteconomia (UESPI)',
+      'Felipe Santiago Gomes da Silva - Graduando em Pedagogia (UFPI)',
+      'Francisco Williams de Assis Soares Gonçalves - Doutorando em Educação (UFPI)',
+      'Juliana Macedo de Carvalho Castelo Branco - Mestranda em educação (UFPI/SEMEC)',
+      'Letícia Rodrigues De França – Graduanda em Biblioteconomia (UESPI)',
+      'Luisa Xavier de Oliveira - Doutora em educação (UFPI)',
+      'Magna Jovita Gomes de Sales e Silva - Doutora em educação (SEMEC/SEDUC)',
+      'Maria Clara de Sousa Costa - Doutoranda em educação (UFPI)',
+      'Maria Rosília da Silva Araújo - Mestranda em Educação (UFPI/Semed - Altos)',
+      'Marli Clementino Gonçalves - Doutora em educação (UFPI)',
+      'Marlon Araújo Carreiro - Mestrando em Educação (UFPI)',
+      'Marlucia Lima de Sousa Meneses – Doutoranda em educação (PUC-BSB/SEDUC)',
+      'Rigoberto Veloso de Carvalho – Doutorando em Políticas Públicas (Biblioteca Central UFPI)',
+      'Rosana Evangelista da Cruz - Doutora em educação (UFPI)',
+      'Vinícius Silva de Sousa - Mestrando em educação (UFPI)',
+      'Ylanna Marcelly de Sousa Morais - Graduanda em Pedagogia (UFPI)'
+    ]
+  },
+  ensinoSuperior: {
+    id: 'ensinoSuperior',
+    nome: 'Célula de Ensino Superior',
+    foto: '/images/celulas/ensino_superior.jpg',
+    objetivo: 'Analisar as políticas públicas para a educação superior e suas implicações nas Instituições de Ensino Superior – IES no Piauí.',
+    membros: [
+      'Maria da Penha Feitosa - Doutora em educação (UFPI Floriano) - coordenação',
+      'Ana Paula Monteiro de Moura – Mestra em educação (IFPI Floriano)',
+      'Geraldo do Nascimento Carvalho - Doutor em educação (UFPI)',
+      'Jullyane Frazão Santana - Doutora em educação (UFPI)',
+      'Mônica Núbia Albuquerque Dias - Doutoranda em educação (UFPI Floriano)',
+      'Rute Glésia Lima Nolêto - Mestra em Educação Profissional e Tecnológica (IFPI – Floriano)'
+    ]
+  },
+  gestao: {
+    id: 'gestao',
+    nome: 'Célula de Gestão de Sistemas e Unidades Escolares',
+    foto: '/images/celulas/gestao_de_sistemas_e_unidades_escolares.jpg',
+    objetivo: 'Analisar o processo de formulação, implementação e avaliação das políticas educacionais para a gestão dos sistemas e unidades escolares nas redes de ensino público do Piauí, com foco nos modelos de gestão, programas e projetos desenvolvidos pelas secretarias estadual e municipais de educação.',
+    membros: [
+      'Maria do Socorro Soares - Doutora em educação (UFPI Picos) – coordenação',
+      'Ana Adriana de Sá - Graduanda em Pedagogia (UFPI Picos)',
+      'Cristiana Barra Teixeira - Doutora em educação (UFPI Picos)',
+      'Johnny de Sousa Silva – Graduando em Pedagogia (UFPI Picos)',
+      'José Italo Freitas Alves – Graduando em Pedagogia (UFPI Picos)',
+      'Maria Mônica Batista de Sousa - Graduanda em Pedagogia (UFPI Picos)',
+      'Romildo de Castro Araújo - Doutor em Educação (UFPI Picos)'
+    ]
+  },
+  avaliacao: {
+    id: 'avaliacao',
+    nome: 'Célula de Políticas de Avaliação Educacional',
+    foto: '/images/celulas/avaliacao_educacional.jpg',
+    objetivo: 'Analisar os efeitos e implicações das políticas de avaliação educacional, em especial das avaliações externas, nos sistemas educacionais brasileiros diante do processo de ensino e aprendizagem desenvolvido nas unidades escolares.',
+    membros: [
+      'Luisa Xavier de Oliveira - Doutora em educação (UFPI) - coordenação',
+      'Wirla Risany Lima Carvalho – Doutora em educação (UFPI) – coordenação',
+      'Alan Fonseca dos Santos - Mestre em educação (UESPI Bom Jesus)',
+      'Ana Gabriele de Moura Rodrigues – Mestranda em educação (UFPI)',
+      'Ateumice Maria do Nascimento - Especialista em educação (SEMEC)',
+      'Cleudiana Maria de Oliveira Silva - Mestre em educação (SEDUC)',
+      'Cleuma Magalhães e Sousa – Mestre em educação (SEMEC)',
+      'Cleverson Moreira Lino - Doutorando em educação (UFPI)',
+      'Dayane Martinelle da Silva Santos - Doutoranda em educação (UFPI/SEMEC)',
+      'Diego Rael Ferreira Barbosa - Graduando em Pedagogia (UFPI)',
+      'Estefania Lima da Frota - Especialista em educação (SMET)',
+      'Eusilene da Rocha Ferreira - Doutoranda em educação (UFPI/SEMEC)',
+      'Francisca Eudeilane da Silva Pereira - Mestra em educação (SEDUC/SEMEC)',
+      'Raimunda Nonata Paiva Andrade - Mestre em educação (SEMECT)',
+      'Sandra Regina Silva Garrido - Especialista em educação (SEMEC)',
+      'Vanusa Gomes Soares - Mestra em educação (SEMEC)',
+      'Vinícius Silva de Sousa - Mestrando em educação (UFPI)'
+    ]
+  },
+  financiamento: {
+    id: 'financiamento',
+    nome: 'Célula de Financiamento da Educação',
+    foto: '/images/celulas/finaciamento_da_educacao.jpg',
+    objetivo: 'Investigar as políticas de financiamento e gestão da educação desenvolvidas no Piauí na perspectiva de analisar os processos de ampliação ou restrição dos direitos educacionais no Estado.',
+    membros: [
+      'Magna Jovita Gomes de Sales e Silva - Doutora em educação (SEMEC/SEDUC) - coordenação',
+      'Silvania Uchôa de Castro - Doutora em educação (SEDUC/UESPI) - coordenação',
+      'Cleide Ferreira Leão - Especialista em educação (SEMEC)',
+      'Efigênia Alves Neres - Doutoranda em educação (UFPI)',
+      'Francisco Ivan Assis de Araújo - Mestre em educação (IFPI Piripiri)',
+      'Francislene Santos Castro - Doutora em educação (SEMEC)',
+      'Gabrielle Alves Alencar - Graduanda em educação (UFPI)',
+      'José Victor Almeida de Sousa - Graduando em Pedagogia (UFPI)',
+      'Lucas Figueredo Soares – Graduando em Pedagogia (UFPI)',
+      'Lucine Rodrigues Vasconcelos Borges de Almeida - Mestre em Educação (SEDUC)',
+      'Luís Carlos Sales - Doutor em Educação (UFPI)',
+      'Rosana Evangelista da Cruz - Doutora em Educação (UFPI)',
+      'Rosivaldo dos Santos Souza - Doutorando em Educação (UFPI)',
+      'Teodoro de Sousa Sampaio - Graduando em Pedagogia (UFPI)',
+      'Valquira Macêdo Cantuaria – Doutora em educação (SEMEC)',
+      'Vinícius Silva de Sousa - Mestrando em educação (UFPI)'
+    ]
+  },
+  eja: {
+    id: 'eja',
+    nome: 'Célula de Educação de Jovens e Adultos',
+    foto: '/images/celulas/educacao_de_jovens_e_adultos.jpg',
+    objetivo: 'Analisar as políticas públicas para a Educação de Jovens e Adultos – EJA no sistema público de educação no âmbito federal, estadual e municipal no Piauí, visando à produção de um diagnóstico dessa modalidade.',
+    membros: [
+      'Francislene Santos Castro - Doutora em educação (SEMEC) – coordenação',
+      'Marlucia Lima de Sousa Meneses - Doutoranda em educação (UCB/SEDUC) - coordenação',
+      'Ana Paula Monteiro de Moura – Mestra em educação (IFPI Floriano)',
+      'Andrea Martins – Doutora em educação (UFPI)',
+      'Francisco das Chagas das Alves Rodrigues - Mestre em educação (SEMEC)',
+      'Jefferson de Sales Oliveira – Mestre em educação',
+      'Leia Soares da Silva - Mestra em educação (IFPI)',
+      'Marli Clementino Gonçalves - Doutora em educação (UFPI)',
+      'Marlon Araújo Carreiro – Mestrado em Educação (UFPI)',
+      'Thathyany Freitas Miranda – Mestranda em Educação (UFPI)'
+    ]
+  }
+};
+
+const gtsData = {
+  dados: {
+    id: 'dados',
+    nome: 'GT Dados',
+    foto: '/images/grupos/gt_dados.jpg',
+    objetivo: 'Definir os indicadores, fontes e protocolos de análise dos dados educacionais e financeiros da Plataforma do Observatório da Política Educacional Piauiense e apoiar o GT Plataforma no desenvolvimento dos seus trabalhos',
+    membros: [
+      'Rosana Evangelista da Cruz - Doutora em Educação (UFPI) – Coordenação',
+      'Ana Sophia Meireles de Oliveira – Graduanda em Pedagogia (UFPI)',
+      'Efigênia Alves Neres - Doutoranda em Educação (UFPI)',
+      'Francislene Santos Castro - Doutora em Educação (SEMEC)',
+      'Gabrielle Alves Alencar - Graduanda em Letras (UFPI)',
+      'João Pedro de Assis Rodrigues - Graduando em Comunicação Social (UFPI)',
+      'José Victor Almeida de Sousa - Graduando em Pedagogia (UFPI)',
+      'Larisse Felipe Santiago - Graduanda em Pedagogia (UFPI)',
+      'Lucas Figueredo Soares - Graduando em Pedagogia (UFPI)',
+      'Lucine Rodrigues Vasconcelos Borges de Almeida - Mestre em Educação (SEDUC)',
+      'Luís Carlos Sales – Doutor em Educação (UFPI)',
+      'Magna Jovita Gomes de Sales e Silva - Doutora em Educação (SEMEC/SEDUC)',
+      'Maria Alcioneia Brito Fontenele – Especialista em Educação (SEMEC)',
+      'Marlon Araújo Carreiro – Mestrando em Educação (UFPI)',
+      'Rosivaldo dos Santos Souza – Doutorando em Educação (UFPI, SEDUC/BA-PE)',
+      'Silvania Uchôa de Castro – Doutora em Educação (SEMEC)',
+      'Teodoro de Sousa Sampaio - Graduando em Pedagogia (UFPI)',
+      'Vinícius Silva de Sousa – Mestrando em Educação (UFPI)'
+    ]
+  },
+  plataforma: {
+    id: 'plataforma',
+    nome: 'GT Plataforma',
+    foto: '/images/grupos/gt_plataforma.jpg',
+    objetivo: 'Constituir a Plataforma do Observatório da Política Educacional Piauiense',
+    membros: [
+      'Otílio Paulo da Silva Neto – Doutor em Ciência da Computação (IFPI) – Coordenação',
+      'Vinícius Pontes Machado – Doutor em Ciência da Computação (UFPI) – Coordenação',
+      'Thiago Alves – Doutor em Administração (LDE/UFG) - consultor',
+      'Ana Paula Monteiro de Moura - Mestre em Educação (IFPI- Floriano)',
+      'Antônio Anderson Lira da Silva – Graduando em Ciência da Computação (UFPI)',
+      'Hilton Ribeiro de Castro – Graduando em Matemática (UFPI)',
+      'Jaime Gabriel Alves Pereira – Graduando em Ciência da Computação (UFPI)',
+      'Luís Felipe Cabral Brito – Graduando em Ciência da Computação (UFPI)',
+      'Ramon Matheus da Silva Fernandes – Graduando em Ciência da Computação (UFPI)',
+      'Samara Feitosa de Sousa – Graduanda em Ciência da Computação (UFPI)'
+    ]
+  },
+  documentos: {
+    id: 'documentos',
+    nome: 'GT Documentos',
+    foto: '/images/grupos/gt_documentos.jpg',
+    objetivo: 'Pesquisar, extrair, sistematizar e alimentar a Plataforma do Observatório com os documentos sobre a política educacional piauiense – legislação, documentos orientadores e produção científica',
+    membros: [
+      { subtitulo: 'Equipe Parnaíba I', membros: [
+        'Samara de Oliveira Silva – doutora em Educação (UESPI) - coordenação',
+        'Ana Beatriz Lima da Silva - Graduanda em Pedagogia (UESPI)',
+        'Ana Carolina de Araujo Caldas - Graduanda em Pedagogia (UESPI)',
+        'Ana Kesya Soares Araújo - Graduanda em Pedagogia (UESPI)',
+        'Bianca Cordeiro Lessa - Graduanda em Pedagogia (UESPI)',
+        'Jheniffer Gomes Lima - Graduanda em Pedagogia (UESPI)',
+        'Maria Isabela Val de Oliveira - Graduanda em Pedagogia (UESPI)',
+        'Melissa Maria Gomes Carvalho - Graduanda em Pedagogia (UESPI)',
+        'Susy Silva dos Santos - Graduanda em Pedagogia (UESPI)',
+        'Vinicius José Veras do Nascimento - Graduando em Pedagogia (UESPI)',
+        'Vivianne Maria Araújo dos Santos - Graduanda em Pedagogia (UESPI)'
+      ]},
+      { subtitulo: 'Equipe Parnaíba II', membros: [
+        'Maria de Jesus Rodrigues Duarte - doutoranda em Educação (UFPI) - coordenação',
+        'Francisca Lima Maciel - Graduanda em Pedagogia (UESPI)',
+        'Gabriele Xavier Pereira – Graduanda em Pedagogia (UESPI)',
+        'Lucilene de Almeida Muniz - Graduanda em Pedagogia (UESPI)'
+      ]},
+      { subtitulo: 'Equipe de Teresina', membros: [
+        'Maria Clara de Sousa Costa – Doutoranda em Educação (UFPI) - coordenação',
+        'Maria de Jesus Rodrigues Duarte – Doutoranda em Educação (UFPI/SEMEC) – coordenação',
+        'Ana Sophia Meireles de Oliveira – Graduanda em Pedagogia (UFPI)',
+        'Ana Sthefany Andrade Araújo - Graduanda em Pedagogia (UFPI)',
+        'Andreia Martins - Doutora em Educação (UFPI)',
+        'Carmen Lucia de Sousa Lima – Doutora em Educação (UFPI)',
+        'Cristina Maria dos Santos Costa – Graduanda em Biblioteconomia (UESPI)',
+        'Felipe Santiago Gomes da Silva - Graduando em Pedagogia (UFPI)',
+        'Letícia Rodrigues De França – Graduanda em Biblioteconomia (UESPI)',
+        'Rigoberto Veloso de Carvalho – Doutorando em Políticas Públicas (Biblioteca Central UFPI)',
+        'Rosana Evangelista da Cruz - Doutora em Educação (UFPI)',
+        'Vinícius Silva de Sousa - Mestrando em Educação (UFPI)',
+        'Ylanna Marcelly de Sousa Morais - Graduanda em Pedagogia (UFPI)'
+      ]},
+      { subtitulo: 'Equipe Floriano', membros: [
+        'Romildo de Castro Araújo - Doutor em Educação (UFPI) - coordenação',
+        'Cristiana Barra Teixeira – Doutora em Educação (UFPI)',
+        'Johnny de Sousa Silva - Graduando em Pedagogia (UFPI)',
+        'José Ítalo Freitas Alves - Graduando em Pedagogia (UFPI)',
+        'Lygia Maria dos Santos Ferreira - Graduanda em Pedagogia (UFPI)',
+        'Maria do Socorro Soares – Doutora em Educação (UFPI)',
+        'Maria Mônica Batista de Sousa - Graduanda em Pedagogia (UFPI)',
+        'Maria Vitória Rodrigues Coutinho - Graduanda em Pedagogia (UFPI)',
+        'Yasmin Gabriela dos Santos - Graduanda em Pedagogia (UFPI)'
+      ]}
+    ]
+  }
+};
 
   // Calcular número total de slides (3 fotos por slide)
   const totalSlides = Math.ceil(photos.length / 3);
@@ -298,6 +424,53 @@ const QuemSomos = () => {
     setSelectedCelula(null);
   };
 
+  const openGTModal = (gtId) => {
+  setSelectedGT(gtsData[gtId]);
+  setIsGTModalOpen(true);
+};
+
+const closeGTModal = () => {
+  setIsGTModalOpen(false);
+  setSelectedGT(null);
+};
+
+const goToNextGT = () => {
+  const gtIds = Object.keys(gtsData);
+  const currentIndex = gtIds.indexOf(selectedGT.id);
+  const nextIndex = (currentIndex + 1) % gtIds.length;
+  setSelectedGT(gtsData[gtIds[nextIndex]]);
+};
+
+const goToPrevGT = () => {
+  const gtIds = Object.keys(gtsData);
+  const currentIndex = gtIds.indexOf(selectedGT.id);
+  const prevIndex = currentIndex === 0 ? gtIds.length - 1 : currentIndex - 1;
+  setSelectedGT(gtsData[gtIds[prevIndex]]);
+};
+
+useEffect(() => {
+  const handleKeyDown = (event) => {
+    if (!isGTModalOpen) return;
+    switch (event.key) {
+      case 'ArrowLeft':
+        event.preventDefault();
+        goToPrevGT();
+        break;
+      case 'ArrowRight':
+        event.preventDefault();
+        goToNextGT();
+        break;
+      case 'Escape':
+        event.preventDefault();
+        closeGTModal();
+        break;
+      default:
+        break;
+    }
+  };
+  document.addEventListener('keydown', handleKeyDown);
+  return () => document.removeEventListener('keydown', handleKeyDown);
+}, [isGTModalOpen, selectedGT]);
   // Navegação entre células no modal
   const goToNextCelula = () => {
     const celulaIds = Object.keys(celulasData);
@@ -585,54 +758,201 @@ const QuemSomos = () => {
       </section>
 
              {/* Grupos de Trabalho Section */}
-       <section className="py-20">
-         <div className="max-w-7xl mx-auto px-4 text-center">
-           <h3 className="text-3xl md:text-4xl font-bold text-black mb-16 italic">
-             Grupos de Trabalho
-           </h3>
-           
-           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-             {/* GT Dados */}
-             <div 
-               className="p-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-105" 
-               style={{ backgroundColor: 'var(--background-color)' }}
-             >
-               <div className="text-blue-600 text-3xl mb-4 flex justify-center">
-                 <FaSearch />
-               </div>
-               <h3 className="text-lg font-semibold text-gray-800">
-                 GT Dados
-               </h3>
-             </div>
+       {/* Grupos de Trabalho Section */}
+<section className="py-20">
+  <div className="max-w-7xl mx-auto px-4 text-center">
+    <h3 className="text-3xl md:text-4xl font-bold text-black mb-16 italic">
+      Grupos de Trabalho
+    </h3>
+    
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      {/* GT Dados */}
+      <div 
+        className="p-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-105" 
+        style={{ backgroundColor: 'var(--background-color)' }}
+        onClick={() => openGTModal('dados')}
+      >
+        <div className="text-blue-600 text-3xl mb-4 flex justify-center">
+          <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+          </svg>
+        </div>
+        <h3 className="text-lg font-semibold text-gray-800">
+          GT Dados
+        </h3>
+      </div>
 
-             {/* GT Plataforma */}
-             <div 
-               className="p-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-105" 
-               style={{ backgroundColor: 'var(--background-color)' }}
-             >
-               <div className="text-green-600 text-3xl mb-4 flex justify-center">
-                 <FaCode />
-               </div>
-               <h3 className="text-lg font-semibold text-gray-800">
-                 GT Plataforma
-               </h3>
-             </div>
+      {/* GT Plataforma */}
+      <div 
+        className="p-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-105" 
+        style={{ backgroundColor: 'var(--background-color)' }}
+        onClick={() => openGTModal('plataforma')}
+      >
+        <div className="text-green-600 text-3xl mb-4 flex justify-center">
+          <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M9.4 16.6L4.8 12l-1.4 1.4L9.4 19 21 7.4 19.6 6z"/>
+          </svg>
+        </div>
+        <h3 className="text-lg font-semibold text-gray-800">
+          GT Plataforma
+        </h3>
+      </div>
 
-             {/* GT Legislação */}
-             <div 
-               className="p-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-105" 
-               style={{ backgroundColor: 'var(--background-color)' }}
-             >
-               <div className="text-orange-600 text-3xl mb-4 flex justify-center">
-                 <FaGraduationCap />
-               </div>
-               <h3 className="text-lg font-semibold text-gray-800">
-                 GT Documentos
-               </h3>
-             </div>
-           </div>
-         </div>
-       </section>
+      {/* GT Documentos */}
+      <div 
+        className="p-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-105" 
+        style={{ backgroundColor: 'var(--background-color)' }}
+        onClick={() => openGTModal('documentos')}
+      >
+        <div className="text-orange-600 text-3xl mb-4 flex justify-center">
+          <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-8-6z"/>
+          </svg>
+        </div>
+        <h3 className="text-lg font-semibold text-gray-800">
+          GT Documentos
+        </h3>
+      </div>
+    </div>
+  </div>
+</section>
+
+{/* Modal dos GTs */}
+{isGTModalOpen && selectedGT && (
+  <div className="fixed inset-0 bg-black/30 backdrop-blur-md flex items-center justify-center z-50 p-4">
+    <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-2xl">
+      {/* Header do Modal com Foto */}
+      <div className="relative h-64 bg-gradient-to-r from-purple-600 to-blue-600">
+        {/* A IMAGEM DE FUNDO */}
+        <img
+          src={selectedGT.foto}
+          alt={selectedGT.nome}
+          className="w-full h-full object-contain"
+        />
+        {/* O OVERLAY */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+        
+        {/* O TÍTULO */}
+        <div className="absolute bottom-0 left-0 right-0 p-6">
+          <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">
+            {selectedGT.nome}
+          </h2>
+        </div>
+        
+        {/* Botão de fechar (copiado de antes) */}
+        <button
+          onClick={closeGTModal}
+          className="absolute top-4 right-4 bg-white/20 hover:bg-white/30 text-white rounded-full p-2 transition-all duration-200 hover:scale-110"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+
+        {/* Botões de navegação (copiado de antes) */}
+        <button
+          onClick={goToPrevGT}
+          className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/30 text-white rounded-full p-3 transition-all duration-200 hover:scale-110"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+
+        <button
+          onClick={goToNextGT}
+          className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/30 text-white rounded-full p-3 transition-all duration-200 hover:scale-110"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+
+      {/* Corpo do Modal */}
+      <div className="p-6 max-h-96 overflow-y-auto">
+        {/* Objetivo */}
+        <div className="mb-8">
+          <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
+            <svg className="w-5 h-5 text-purple-600 mr-2" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+            </svg>
+            Objetivo
+          </h3>
+          <p className="text-gray-700 leading-relaxed text-justify">
+            {selectedGT.objetivo}
+          </p>
+        </div>
+
+        {/* Membros */}
+        <div>
+          <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
+            <svg className="w-5 h-5 text-purple-600 mr-2" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+            </svg>
+            Membros
+          </h3>
+          <div className="space-y-3">
+            {selectedGT.id === 'documentos' ? (
+              selectedGT.membros.map((section, sectionIndex) => (
+                <div key={sectionIndex}>
+                  <h4 className="text-lg font-semibold text-purple-600 mb-3 mt-4">
+                    {section.subtitulo}
+                  </h4>
+                  {section.membros.map((membro, index) => (
+                    <div key={index} className="flex items-start">
+                      <div className="w-2 h-2 bg-purple-600 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                      <p className="text-gray-700 text-sm leading-relaxed">
+                        {membro}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              ))
+            ) : (
+              selectedGT.membros.map((membro, index) => (
+                <div key={index} className="flex items-start">
+                  <div className="w-2 h-2 bg-purple-600 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                  <p className="text-gray-700 text-sm leading-relaxed">
+                    {membro}
+                  </p>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Footer do Modal */}
+      <div className="bg-gray-50 px-6 py-4 border-t">
+        <div className="flex justify-between items-center">
+          {/* Indicadores de posição */}
+          <div className="flex space-x-2">
+            {Object.keys(gtsData).map((gtId) => (
+              <button
+                key={gtId}
+                onClick={() => setSelectedGT(gtsData[gtId])}
+                className={`w-3 h-3 rounded-full transition-all duration-200 ${
+                  selectedGT.id === gtId 
+                    ? 'bg-purple-600 scale-125' 
+                    : 'bg-gray-300 hover:bg-gray-400'
+                }`}
+              />
+            ))}
+          </div>
+
+          {/* Botão de fechar */}
+          <button
+            onClick={closeGTModal}
+            className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg transition-colors duration-200 font-medium"
+          >
+            Fechar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
 
              {/* Nuppege Section */}
        <section className="py-20">
@@ -761,7 +1081,7 @@ const QuemSomos = () => {
               <img
                 src={selectedCelula.foto}
                 alt={selectedCelula.nome}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-contain"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
               <div className="absolute bottom-0 left-0 right-0 p-6">
