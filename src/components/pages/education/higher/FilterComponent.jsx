@@ -360,7 +360,7 @@ function FilterComponent() {
               value={aglomeradoOptions.find(option => option.value === aglomerado) || null}
               onChange={(selectedOption) => setAglomerado(selectedOption ? selectedOption.value : '')}
               options={aglomeradoOptions}
-              placeholder="Aglomerado"
+              placeholder="Aglomerado - AG"
               size="xs"
               isClearable={true}
             />
@@ -373,7 +373,7 @@ function FilterComponent() {
               value={gerenciaOptions.find(option => option.value === gerencia) || null}
               onChange={(selectedOption) => setGerencia(selectedOption ? selectedOption.value : '')}
               options={gerenciaOptions}
-              placeholder="Gerência"
+              placeholder="Gerência Regional de Ensino - GRE"
               size="xs"
               isClearable={true}
             />
