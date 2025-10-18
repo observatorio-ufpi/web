@@ -6,7 +6,6 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import React from 'react';
 import { FaFileExcel, FaFilePdf } from 'react-icons/fa';
-import * as XLSX from 'xlsx';
 
 /**
  * Componente para exportar tabelas para PDF e Excel
@@ -48,48 +47,6 @@ const TableExport = ({
     return sanitizedTitle || fileName;
   };
 
-  // Função para preparar dados do gráfico baseado nos dados da tabela
-  const prepareChartData = () => {
-    if (chartData) return chartData;
-
-    if (!data || data.length === 0) return null;
-
-    // Detectar automaticamente se é gráfico de pizza ou barras baseado na estrutura dos dados
-    const firstRow = data[0];
-    const keys = Object.keys(firstRow);
-
-    // Se tem apenas duas colunas (nome e valor), é pizza
-    if (keys.length === 2) {
-      const nameKey = keys.find(key => typeof firstRow[key] === 'string');
-      const valueKey = keys.find(key => typeof firstRow[key] === 'number' || !isNaN(Number(firstRow[key])));
-
-      if (nameKey && valueKey) {
-        const pieChartData = {
-          type: 'pie',
-          categories: data.map(item => item[nameKey]),
-          series: [{
-            name: headerDisplayNames[valueKey] || valueKey,
-            data: data.map(item => Number(item[valueKey]) || 0)
-          }]
-        };
-        return pieChartData;
-      }
-    }
-
-    // Se tem mais colunas, é gráfico de barras
-    const nameKey = keys[0]; // Primeira coluna como categoria
-    const dataKeys = keys.slice(1).filter(key => key !== 'Total'); // Demais colunas como séries (exceto Total)
-
-    const barChartData = {
-      type: 'bar',
-      categories: data.map(item => item[nameKey]),
-      series: dataKeys.map(key => ({
-        name: headerDisplayNames[key] || key,
-        data: data.map(item => Number(item[key]) || 0)
-      }))
-    };
-    return barChartData;
-  };
 
   // Função para exportar para PDF
   const exportToPDF = async () => {
@@ -180,8 +137,6 @@ const TableExport = ({
       workbook.creator = 'Sistema de Observatório';
       workbook.created = new Date();
 
-      // Preparar dados do gráfico
-      const chartDataForExcel = prepareChartData();
 
       // Criar planilha de dados
       const dataWorksheet = workbook.addWorksheet('Dados');
@@ -219,45 +174,6 @@ const TableExport = ({
         column.width = 15;
       });
 
-      if (chartDataForExcel) {
-        // Criar planilha para dados do gráfico (apenas tabela)
-        const chartWorksheet = workbook.addWorksheet('Gráfico');
-
-        if (chartDataForExcel.type === 'pie') {
-          // Dados para gráfico de pizza
-          chartWorksheet.addRow(['Categoria', 'Valor']);
-          chartDataForExcel.categories.forEach((category, index) => {
-            const value = chartDataForExcel.series[0].data[index] || 0;
-            chartWorksheet.addRow([category, value]);
-          });
-        } else {
-          // Dados para gráfico de barras
-          const headerRow = ['Categoria', ...chartDataForExcel.series.map(s => s.name)];
-          chartWorksheet.addRow(headerRow);
-
-          chartDataForExcel.categories.forEach((category, index) => {
-            const row = [category];
-            chartDataForExcel.series.forEach(series => {
-              row.push(series.data[index] || 0);
-            });
-            chartWorksheet.addRow(row);
-          });
-        }
-
-        // Estilizar cabeçalhos da planilha de gráfico
-        const chartHeaderRow = chartWorksheet.getRow(1);
-        chartHeaderRow.font = { bold: true };
-        chartHeaderRow.fill = {
-          type: 'pattern',
-          pattern: 'solid',
-          fgColor: { argb: 'FF4CAF50' }
-        };
-
-        // Auto-ajustar largura das colunas
-        chartWorksheet.columns.forEach(column => {
-          column.width = 15;
-        });
-      }
 
       // Salvar arquivo
       const buffer = await workbook.xlsx.writeBuffer();

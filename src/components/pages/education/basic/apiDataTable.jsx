@@ -1396,6 +1396,10 @@ const ApiDataTable = ({
 
           if (!cityResult || cityResult.length === 0) return null;
 
+          // Criar referências específicas para esta cidade
+          const cityTableRef = React.createRef();
+          const cityChartRef = React.createRef();
+
           return (
             <div key={index} style={{ marginBottom: '2rem', border: '1px solid #ddd', borderRadius: '8px', padding: '1rem' }}>
               <h3 style={{ marginBottom: '1rem', color: '#333', borderBottom: '2px solid #007bff', paddingBottom: '0.5rem' }}>
@@ -1407,12 +1411,12 @@ const ApiDataTable = ({
                 headers={headers}
                 data={cityResult}
                 formatTotal={isRatioType(type)}
-                ref={React.createRef()}
+                ref={cityTableRef}
               />
 
               {/* Gráfico para esta cidade */}
               {cityResult.length > 0 && (
-                <div style={{ marginTop: '1rem' }}>
+                <div style={{ marginTop: '1rem' }} ref={cityChartRef}>
                   <EnhancedPieChart
                     data={cityResult.map(item => ({
                       name: item.education_level_mod_name || item.location_name || item.adm_dependency_detailed_name || item.contract_type_name || item.initial_training_name || item.age_range_name || 'N/A',
@@ -1431,7 +1435,8 @@ const ApiDataTable = ({
                 headerDisplayNames={HEADER_DISPLAY_NAMES}
                 fileName={`dados_${cityName.toLowerCase().replace(/\s+/g, '_')}`}
                 tableTitle={`Dados - ${cityName}`}
-                tableRef={React.createRef()}
+                tableRef={cityTableRef}
+                chartRef={cityChartRef}
               />
             </div>
           );
