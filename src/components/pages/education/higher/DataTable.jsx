@@ -1076,10 +1076,21 @@ const renderCrossTable = () => {
               {consolidateDataByCategory().length > 0 && (
                 <div style={{ marginTop: '1rem' }}>
                   <EnhancedPieChart
-                    data={consolidateDataByCategory().map(item => ({
-                      name: item.upper_education_mod_name || item.work_regime_name || item.initial_training_name || item.upper_adm_dependency_name || item.age_student_code_name || item.academic_level_name || 'N/A',
-                      value: Number(item.total) || 0
-                    }))}
+                    data={consolidateDataByCategory().map(item => {
+                      // Determinar qual campo usar baseado no filtro selecionado
+                      let name = 'N/A';
+                      if (isModalidadeSelected) name = item.upper_education_mod_name;
+                      else if (isRegimeSelected) name = item.work_regime_name;
+                      else if (isFormacaoDocenteSelected) name = item.initial_training_name;
+                      else if (isCategoriaAdministrativaSelected) name = item.upper_adm_dependency_name;
+                      else if (isFaixaEtariaSuperiorSelected) name = item.age_student_code_name;
+                      else if (isOrganizacaoAcademicaSelected) name = item.academic_level_name;
+
+                      return {
+                        name: name || 'N/A',
+                        value: Number(item.total) || 0
+                      };
+                    })}
                     title="Distribuição Consolidada"
                     height={500}
                   />

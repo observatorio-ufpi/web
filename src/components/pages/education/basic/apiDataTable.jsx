@@ -1351,6 +1351,9 @@ const ApiDataTable = ({
       if (isEtapaSelected) return 'education_level_mod_name';
       if (isLocalidadeSelected) return 'location_name';
       if (isDependenciaSelected) return 'adm_dependency_detailed_name';
+      if (isVinculoSelected) return 'contract_type_name';
+      if (isFormacaoDocenteSelected) return 'initial_training_name';
+      if (isFaixaEtariaSelected) return 'age_range_name';
       return 'total';
     };
 
@@ -1488,10 +1491,21 @@ const ApiDataTable = ({
               {consolidateDataByCategory().length > 0 && (
                 <div style={{ marginTop: '1rem' }}>
                   <EnhancedPieChart
-                    data={consolidateDataByCategory().map(item => ({
-                      name: item.etapa_name || item.localidade_name || item.dependencia_name || 'N/A',
-                      value: Number(item.total) || 0
-                    }))}
+                    data={consolidateDataByCategory().map(item => {
+                      // Determinar qual campo usar baseado no filtro selecionado
+                      let name = 'N/A';
+                      if (isEtapaSelected) name = item.education_level_mod_name;
+                      else if (isLocalidadeSelected) name = item.location_name;
+                      else if (isDependenciaSelected) name = item.adm_dependency_detailed_name;
+                      else if (isVinculoSelected) name = item.contract_type_name;
+                      else if (isFormacaoDocenteSelected) name = item.initial_training_name;
+                      else if (isFaixaEtariaSelected) name = item.age_range_name;
+
+                      return {
+                        name: name || 'N/A',
+                        value: Number(item.total) || 0
+                      };
+                    })}
                     title="Distribuição Consolidada"
                     height={500}
                   />
