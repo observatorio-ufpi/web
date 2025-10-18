@@ -17,7 +17,8 @@ import RpebCompositionCharts from "./RpebCompositionCharts";
 import FilterComponent from "../../../../../helpers/TableFilters";
 import Select from "../../../../../ui/Select";
 import { Loading } from "../../../../../ui";
-import { Typography } from "@mui/material";
+import { Typography, Button, Box } from "@mui/material";
+import { ExpandMore, ExpandLess } from '@mui/icons-material';
 
 // Opções para os selects
 const indicatorOptions = [
@@ -155,6 +156,7 @@ function ChartContainer() {
   const [limit, setLimit] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [hasInitialLoad, setHasInitialLoad] = useState(false);
+  const [filtersExpanded, setFiltersExpanded] = useState(false);
   const [filters, setFilters] = useState({
     anoInicial: 2007,
     anoFinal: 2024,
@@ -849,16 +851,34 @@ function ChartContainer() {
               fullWidth
             />
 
-            <Select
-              label="Tipo de Agrupamento:"
-              value={groupTypeOptions.find(option => option.value === groupType)}
-              onChange={(option) => handleGroupTypeChange({ target: { value: option.value } })}
-              options={groupTypeOptions}
-              placeholder="Selecione o tipo de agrupamento"
-              size="xs"
-              isClearable
-              fullWidth
-            />
+            <Box sx={{ display: 'flex', alignItems: 'end', gap: 2 }}>
+              <Select
+                label="Tipo de Agrupamento:"
+                value={groupTypeOptions.find(option => option.value === groupType)}
+                onChange={(option) => handleGroupTypeChange({ target: { value: option.value } })}
+                options={groupTypeOptions}
+                placeholder="Selecione o tipo de agrupamento"
+                size="xs"
+                isClearable
+                fullWidth
+              />
+              
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={filtersExpanded ? <ExpandLess /> : <ExpandMore />}
+                onClick={() => setFiltersExpanded(!filtersExpanded)}
+                sx={{
+                  minWidth: 'auto',
+                  padding: '8px 16px',
+                  whiteSpace: 'nowrap',
+                  height: 'fit-content',
+                  mb: 0.5
+                }}
+              >
+                {filtersExpanded ? 'Menos Filtros' : 'Mais Filtros'}
+              </Button>
+            </Box>
           </div>
 
           <FilterComponent
@@ -870,6 +890,7 @@ function ChartContainer() {
             gerenciaRegionalMunicipio={gerenciaRegionalMunicipio}
             anoInicial={filters.anoInicial}
             anoFinal={filters.anoFinal}
+            filtersExpanded={filtersExpanded}
           />
         </div>
 

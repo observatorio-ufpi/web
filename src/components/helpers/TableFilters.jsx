@@ -1,6 +1,8 @@
-import { Button } from '@mui/material';
+import { Button, Collapse, Box, Typography } from '@mui/material';
+import { ExpandMore, ExpandLess } from '@mui/icons-material';
 import React, { useEffect, useState } from 'react';
 import { Select } from '../ui';
+import YearRangeSlider from '../ui/YearRangeSlider';
 import { FaixaPopulacional, municipios, Regioes } from '../../utils/municipios.mapping';
 
 const findMunicipioCodigo = (nomeMunicipio) => {
@@ -18,6 +20,7 @@ const FilterComponent = ({
   gerenciaRegionalMunicipio,
   anoInicial,
   anoFinal,
+  filtersExpanded = false,
 }) => {
   // Referência para o portal dos menus dropdown
   const menuPortalTarget = typeof document !== 'undefined' ? document.body : null;
@@ -31,6 +34,9 @@ const FilterComponent = ({
     anoInicial: 2007, // Ano inicial padrão
     anoFinal: 2024, // Ano final padrão
   });
+
+  // Estado para o range slider
+  const [yearRange, setYearRange] = useState([2007, 2024]);
 
   // Converter os valores recebidos para o formato do react-select
   const [selectedMunicipioState, setSelectedMunicipio] = useState(
@@ -53,12 +59,6 @@ const FilterComponent = ({
   const [gerenciaState, setGerenciaRegionalMunicipio] = useState(
     gerenciaRegionalMunicipio && gerenciaRegionalMunicipio !== 'undefined' ? { value: gerenciaRegionalMunicipio, label: `${gerenciaRegionalMunicipio}ª GRE` } : null
   );
-  const [anoInicialState, setAnoInicial] = useState(
-    filters.anoInicial ? { value: filters.anoInicial, label: filters.anoInicial } : null
-  );
-  const [anoFinalState, setAnoFinal] = useState(
-    filters.anoFinal ? { value: filters.anoFinal, label: filters.anoFinal } : null
-  );
 
   useEffect(() => {
     setSelectedMunicipio(
@@ -73,8 +73,7 @@ const FilterComponent = ({
     setFaixaPopulacionalMunicipio(faixaPopulacionalMunicipio ? { value: faixaPopulacionalMunicipio, label: FaixaPopulacional[faixaPopulacionalMunicipio] } : null);
     setAglomeradoMunicipio(aglomeradoMunicipio && aglomeradoMunicipio !== 'undefined' ? { value: aglomeradoMunicipio, label: `AG ${aglomeradoMunicipio}` } : null);
     setGerenciaRegionalMunicipio(gerenciaRegionalMunicipio && gerenciaRegionalMunicipio !== 'undefined' ? { value: gerenciaRegionalMunicipio, label: `${gerenciaRegionalMunicipio}ª GRE` } : null);
-    setAnoInicial(anoInicial ? { value: anoInicial, label: anoInicial } : null);
-    setAnoFinal(anoFinal ? { value: anoFinal, label: anoFinal } : null);
+    setYearRange([anoInicial || 2007, anoFinal || 2024]);
   }, [selectedMunicipio, territorioDeDesenvolvimentoMunicipio, faixaPopulacionalMunicipio, aglomeradoMunicipio, gerenciaRegionalMunicipio, anoInicial, anoFinal]);
 
   const handleSearch = () => {
@@ -84,8 +83,8 @@ const FilterComponent = ({
       faixaPopulacionalMunicipio: faixaState ? faixaState.value : null,
       aglomeradoMunicipio: aglomeradoState ? aglomeradoState.value : null,
       gerenciaRegionalMunicipio: gerenciaState ? gerenciaState.value : null,
-      anoInicial: anoInicialState ? anoInicialState.value : null,
-      anoFinal: anoFinalState ? anoFinalState.value : null,
+      anoInicial: yearRange[0],
+      anoFinal: yearRange[1],
       loading: true,
     });
   };
@@ -120,101 +119,89 @@ const FilterComponent = ({
       label: `${gerencia}ª GRE`,
     }));
 
-  const anoOptions = Array.from({ length: 18 }, (_, i) => 2007 + i).map(ano => ({
-    value: ano,
-    label: ano,
-  }));
 
   return (
     <div className="flex flex-col gap-4 p-0 m-0">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
-        {/* Município - Primeira coluna, primeira linha */}
-        <div className="md:col-span-1">
-          <Select
-            value={selectedMunicipioState}
-            onChange={setSelectedMunicipio}
-            options={municipioOptions}
-            placeholder="Município"
-            size="xs"
-            isClearable
+      {/* Filtros recolhíveis */}
+      <Collapse in={filtersExpanded} timeout="auto" unmountOnExit>
+          <div className="md:col-span-3">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Município - Primeira coluna, primeira linha */}
+              <div className="md:col-span-1">
+                <Select
+                  value={selectedMunicipioState}
+                  onChange={setSelectedMunicipio}
+                  options={municipioOptions}
+                  placeholder="Município"
+                  size="xs"
+                  isClearable
+                />
+              </div>
+
+              {/* Território - Segunda e terceira colunas, primeira linha */}
+              <div className="md:col-span-2">
+                <Select
+                  value={territorioState}
+                  onChange={setTerritorioDeDesenvolvimentoMunicipio}
+                  options={Object.keys(Regioes).map(key => ({ value: key, label: Regioes[key] }))}
+                  placeholder="Território de Desenvolvimento"
+                  size="xs"
+                  isClearable
+                />
+              </div>
+
+              {/* Faixa Populacional - Primeira coluna, segunda linha */}
+              <div className="md:col-span-1">
+                <Select
+                  value={faixaState}
+                  onChange={setFaixaPopulacionalMunicipio}
+                  options={Object.keys(FaixaPopulacional).map(key => ({ value: key, label: FaixaPopulacional[key] }))}
+                  placeholder="Faixa Populacional"
+                  size="xs"
+                  isClearable
+                />
+              </div>
+
+              {/* Aglomerado - Segunda coluna, segunda linha */}
+              <div className="md:col-span-1">
+                <Select
+                  value={aglomeradoState}
+                  onChange={setAglomeradoMunicipio}
+                  options={aglomeradoOptions}
+                  placeholder="Aglomerado - AG"
+                  size="xs"
+                  isClearable
+                />
+              </div>
+
+              {/* Gerência - Terceira coluna, segunda linha */}
+              <div className="md:col-span-1">
+                <Select
+                  value={gerenciaState}
+                  onChange={setGerenciaRegionalMunicipio}
+                  options={gerenciaOptions}
+                  placeholder="Gerência Regional de Ensino - GRE"
+                  size="xs"
+                  isSearchable={false}
+                  isClearable
+                />
+              </div>
+            </div>
+          </div>
+      </Collapse>
+
+        {/* Período - Todas as colunas, primeira linha */}
+        <div className="md:col-span-3">
+          <YearRangeSlider
+            minYear={2007}
+            maxYear={2024}
+            value={yearRange}
+            onChange={setYearRange}
           />
         </div>
 
-        {/* Território - Segunda e terceira colunas, primeira linha */}
-        <div className="md:col-span-2">
-          <Select
-            value={territorioState}
-            onChange={setTerritorioDeDesenvolvimentoMunicipio}
-            options={Object.keys(Regioes).map(key => ({ value: key, label: Regioes[key] }))}
-            placeholder="Território de Desenvolvimento"
-            size="xs"
-            isClearable
-          />
-        </div>
-
-        {/* Faixa Populacional - Primeira coluna, segunda linha */}
-        <div className="md:col-span-1">
-          <Select
-            value={faixaState}
-            onChange={setFaixaPopulacionalMunicipio}
-            options={Object.keys(FaixaPopulacional).map(key => ({ value: key, label: FaixaPopulacional[key] }))}
-            placeholder="Faixa Populacional"
-            size="xs"
-            isClearable
-          />
-        </div>
-
-        {/* Aglomerado - Segunda coluna, segunda linha */}
-        <div className="md:col-span-1">
-          <Select
-            value={aglomeradoState}
-            onChange={setAglomeradoMunicipio}
-            options={aglomeradoOptions}
-            placeholder="Aglomerado - AG"
-            size="xs"
-            isClearable
-          />
-        </div>
-
-        {/* Gerência - Terceira coluna, segunda linha */}
-        <div className="md:col-span-1">
-          <Select
-            value={gerenciaState}
-            onChange={setGerenciaRegionalMunicipio}
-            options={gerenciaOptions}
-            placeholder="Gerência Regional de Ensino - GRE"
-            size="xs"
-            isSearchable={false}
-            isClearable
-          />
-        </div>
-
-        {/* Ano Inicial - Primeira coluna, terceira linha */}
-        <div className="md:col-span-1">
-          <Select
-            value={anoInicialState}
-            onChange={setAnoInicial}
-            options={anoOptions}
-            placeholder="Ano Inicial"
-            size="xs"
-            isClearable
-          />
-        </div>
-
-        {/* Ano Final - Segunda coluna, terceira linha */}
-        <div className="md:col-span-1">
-          <Select
-            value={anoFinalState}
-            onChange={setAnoFinal}
-            options={anoOptions}
-            placeholder="Ano Final"
-            size="xs"
-            isClearable
-          />
-        </div>
-
-        {/* Botão Filtrar - Terceira coluna, terceira linha */}
-        <div className="md:col-span-1 flex justify-end items-end">
+        {/* Botão Filtrar - Todas as colunas, segunda linha */}
+        <div className="md:col-span-3 flex justify-end mt-4">
           <Button
             variant="contained"
             onClick={handleSearch}
@@ -224,7 +211,6 @@ const FilterComponent = ({
           </Button>
         </div>
       </div>
-    </div>
   );
 };
 

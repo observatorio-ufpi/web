@@ -43,7 +43,8 @@ import FilterComponent from "../../../../../helpers/TableFilters.jsx";
 import RevenueTable from "./RevenueTable.jsx";
 import Select from "../../../../../ui/Select";
 import { Loading } from "../../../../../ui";
-import { Typography } from "@mui/material";
+import { Typography, Box } from "@mui/material";
+import { ExpandMore, ExpandLess } from '@mui/icons-material';
 
 // Opções para os selects
 const tableOptions = [
@@ -91,6 +92,7 @@ function RevenueTableContainer() {
     anoFinal: 2024,
   });
   const [hasInitialLoad, setHasInitialLoad] = useState(false);
+  const [filtersExpanded, setFiltersExpanded] = useState(false);
 
   const handlePageChange = (event, newPage) => {
     setPage(newPage);
@@ -373,16 +375,34 @@ function RevenueTableContainer() {
               fullWidth
             />
 
-            <Select
-              label="Tipo de Agrupamento:"
-              value={groupTypeOptions.find(option => option.value === groupType)}
-              onChange={(option) => handleGroupTypeChange({ target: { value: option.value } })}
-              options={groupTypeOptions}
-              placeholder="Selecione o tipo de agrupamento"
-              size="xs"
-              isClearable
-              fullWidth
-            />
+            <Box sx={{ display: 'flex', alignItems: 'end', gap: 2 }}>
+              <Select
+                label="Tipo de Agrupamento:"
+                value={groupTypeOptions.find(option => option.value === groupType)}
+                onChange={(option) => handleGroupTypeChange({ target: { value: option.value } })}
+                options={groupTypeOptions}
+                placeholder="Selecione o tipo de agrupamento"
+                size="xs"
+                isClearable
+                fullWidth
+              />
+              
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={filtersExpanded ? <ExpandLess /> : <ExpandMore />}
+                onClick={() => setFiltersExpanded(!filtersExpanded)}
+                sx={{
+                  minWidth: 'auto',
+                  padding: '8px 16px',
+                  whiteSpace: 'nowrap',
+                  height: 'fit-content',
+                  mb: 0.5
+                }}
+              >
+                {filtersExpanded ? 'Menos Filtros' : 'Mais Filtros'}
+              </Button>
+            </Box>
           </div>
 
           <FilterComponent
@@ -394,6 +414,7 @@ function RevenueTableContainer() {
             gerenciaRegionalMunicipio={gerenciaRegionalMunicipio}
             anoInicial={filters.anoInicial}
             anoFinal={filters.anoFinal}
+            filtersExpanded={filtersExpanded}
           />
         </div>
 
