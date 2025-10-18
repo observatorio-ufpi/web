@@ -106,6 +106,16 @@ function CensoEscolarFilterComponent({
   useClearInvalidFilter(aglomerado, setAglomerado, filteredAglomeradoOptions);
   useClearInvalidFilter(gerencia, setGerencia, filteredGerenciaOptions);
 
+  // Limpar filtros de localização quando um município específico é selecionado
+  useEffect(() => {
+    if (city) {
+      setTerritory('');
+      setFaixaPopulacional('');
+      setAglomerado('');
+      setGerencia('');
+    }
+  }, [city]);
+
   // Função para lidar com o clique do filtro incluindo os anos do range slider
   const handleFilterClickWithYears = () => {
     handleFilterClick({
@@ -218,7 +228,7 @@ function CensoEscolarFilterComponent({
               </div>
 
               {/* Cidade - Segunda e terceira colunas, segunda linha */}
-              <div className="md:col-span-2">
+              <div className="md:col-span-1">
                 <Select
                   id="citySelect"
                   value={(filteredCityOptions.length > 0 ? filteredCityOptions : cityOptions).find(option => option.value === city) || null}

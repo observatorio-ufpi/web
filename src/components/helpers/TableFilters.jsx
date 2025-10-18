@@ -1,6 +1,6 @@
 import { Button, Collapse, Box, Typography } from '@mui/material';
 import { ExpandMore, ExpandLess } from '@mui/icons-material';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { Select } from '../ui';
 import YearRangeSlider from '../ui/YearRangeSlider';
 import { FaixaPopulacional, municipios, Regioes } from '../../utils/municipios.mapping';
@@ -60,6 +60,93 @@ const FilterComponent = ({
     gerenciaRegionalMunicipio && gerenciaRegionalMunicipio !== 'undefined' ? { value: gerenciaRegionalMunicipio, label: `${gerenciaRegionalMunicipio}ª GRE` } : null
   );
 
+  // Lógica de filtros dependentes - baseado nos filtros de localização
+  const baseFilteredMunicipios = useMemo(() => {
+    const territorioLabel = territorioState ? Regioes[territorioState.value] : null;
+    const faixaLabel = faixaState ? FaixaPopulacional[faixaState.value] : null;
+
+    return Object.values(municipios).filter((m) => {
+      if (territorioLabel && m.territorioDesenvolvimento !== territorioLabel) return false;
+      if (faixaLabel && m.faixaPopulacional !== faixaLabel) return false;
+      if (aglomeradoState && String(m.aglomerado) !== String(aglomeradoState.value)) return false;
+      if (gerenciaState) {
+        const gerencias = String(m.gerencia).split(',').map((g) => g.trim());
+        if (!gerencias.includes(String(gerenciaState.value))) return false;
+      }
+      return true;
+    });
+  }, [territorioState, faixaState, aglomeradoState, gerenciaState]);
+
+  // Desabilitar outros filtros quando município específico é selecionado
+  const otherLocalityDisabled = !!selectedMunicipioState;
+
+  // Opções filtradas baseadas nos filtros de localização
+  const filteredMunicipioOptions = useMemo(() => {
+    return Object.entries(municipios)
+      .filter(([, m]) => baseFilteredMunicipios.includes(m))
+      .map(([key, { nomeMunicipio }]) => ({ value: key, label: nomeMunicipio }));
+  }, [baseFilteredMunicipios]);
+
+  const filteredTerritorioOptions = useMemo(() => {
+    const uniqueLabels = [...new Set(baseFilteredMunicipios.map((m) => m.territorioDesenvolvimento).filter(Boolean))];
+    return Object.entries(Regioes)
+      .filter(([, label]) => uniqueLabels.includes(label))
+      .map(([id, label]) => ({ value: id, label }));
+  }, [baseFilteredMunicipios]);
+
+  const filteredFaixaPopulacionalOptions = useMemo(() => {
+    const uniqueLabels = [...new Set(baseFilteredMunicipios.map((m) => m.faixaPopulacional).filter(Boolean))];
+    return Object.entries(FaixaPopulacional)
+      .filter(([, label]) => uniqueLabels.includes(label))
+      .map(([id, label]) => ({ value: id, label }));
+  }, [baseFilteredMunicipios]);
+
+  const filteredAglomeradoOptions = useMemo(() => {
+    return [...new Set(baseFilteredMunicipios.map((m) => m.aglomerado).filter((a) => a && a !== 'undefined'))]
+      .sort((a, b) => Number(a) - Number(b))
+      .map((a) => ({ value: a, label: `AG ${a}` }));
+  }, [baseFilteredMunicipios]);
+
+  const filteredGerenciaOptions = useMemo(() => {
+    return [...new Set(
+      baseFilteredMunicipios
+        .map((m) => m.gerencia)
+        .filter((g) => g && g !== 'undefined')
+        .flatMap((g) => (g.includes(',') ? g.split(',').map((x) => x.trim()) : [g]))
+    )]
+      .sort((a, b) => Number(a) - Number(b))
+      .map((g) => ({ value: g, label: `${g}ª GRE` }));
+  }, [baseFilteredMunicipios]);
+
+  // Função para limpar filtros inválidos quando as opções mudam
+  const useClearInvalidFilter = (value, setter, options) => {
+    useEffect(() => {
+      if (value && options.length > 0) {
+        const exists = options.some((opt) => opt.value === value);
+        if (!exists) {
+          setter(null);
+        }
+      }
+    }, [value, setter, options]);
+  };
+
+  // Aplicar limpeza de filtros inválidos
+  useClearInvalidFilter(selectedMunicipioState?.value, setSelectedMunicipio, filteredMunicipioOptions);
+  useClearInvalidFilter(territorioState?.value, setTerritorioDeDesenvolvimentoMunicipio, filteredTerritorioOptions);
+  useClearInvalidFilter(faixaState?.value, setFaixaPopulacionalMunicipio, filteredFaixaPopulacionalOptions);
+  useClearInvalidFilter(aglomeradoState?.value, setAglomeradoMunicipio, filteredAglomeradoOptions);
+  useClearInvalidFilter(gerenciaState?.value, setGerenciaRegionalMunicipio, filteredGerenciaOptions);
+
+  // Limpar filtros de localização quando um município específico é selecionado
+  useEffect(() => {
+    if (selectedMunicipioState) {
+      setTerritorioDeDesenvolvimentoMunicipio(null);
+      setFaixaPopulacionalMunicipio(null);
+      setAglomeradoMunicipio(null);
+      setGerenciaRegionalMunicipio(null);
+    }
+  }, [selectedMunicipioState]);
+
   useEffect(() => {
     setSelectedMunicipio(
       selectedMunicipio ?
@@ -89,35 +176,6 @@ const FilterComponent = ({
     });
   };
 
-  const municipioOptions = Object.keys(municipios).map((codigo) => ({
-    value: codigo,
-    label: municipios[codigo].nomeMunicipio,
-  }));
-
-  const aglomeradoOptions = [...new Set(Object.values(municipios).map(m => m.aglomerado).filter(aglomerado => aglomerado && aglomerado !== 'undefined'))]
-    .sort((a, b) => a - b) // Ordenar numericamente
-    .map(aglomerado => ({
-      value: aglomerado,
-      label: `AG ${aglomerado}`,
-    }));
-
-  const gerenciaOptions = [...new Set(
-    Object.values(municipios)
-      .map(m => m.gerencia)
-      .filter(gerencia => gerencia && gerencia !== 'undefined')
-      .flatMap(gerencia => {
-        // Se contém vírgula, separar em valores individuais
-        if (gerencia.includes(',')) {
-          return gerencia.split(',').map(g => g.trim());
-        }
-        return [gerencia];
-      })
-  )]
-    .sort((a, b) => a - b) // Ordenar numericamente
-    .map(gerencia => ({
-      value: gerencia,
-      label: `${gerencia}ª GRE`,
-    }));
 
 
   return (
@@ -126,27 +184,16 @@ const FilterComponent = ({
       <Collapse in={filtersExpanded} timeout="auto" unmountOnExit>
           <div className="md:col-span-3">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* Município - Primeira coluna, primeira linha */}
-              <div className="md:col-span-1">
-                <Select
-                  value={selectedMunicipioState}
-                  onChange={setSelectedMunicipio}
-                  options={municipioOptions}
-                  placeholder="Município"
-                  size="xs"
-                  isClearable
-                />
-              </div>
-
               {/* Território - Segunda e terceira colunas, primeira linha */}
-              <div className="md:col-span-2">
+              <div className="md:col-span-1">
                 <Select
                   value={territorioState}
                   onChange={setTerritorioDeDesenvolvimentoMunicipio}
-                  options={Object.keys(Regioes).map(key => ({ value: key, label: Regioes[key] }))}
+                  options={filteredTerritorioOptions}
                   placeholder="Território de Desenvolvimento"
                   size="xs"
                   isClearable
+                  disabled={otherLocalityDisabled}
                 />
               </div>
 
@@ -155,10 +202,11 @@ const FilterComponent = ({
                 <Select
                   value={faixaState}
                   onChange={setFaixaPopulacionalMunicipio}
-                  options={Object.keys(FaixaPopulacional).map(key => ({ value: key, label: FaixaPopulacional[key] }))}
+                  options={filteredFaixaPopulacionalOptions}
                   placeholder="Faixa Populacional"
                   size="xs"
                   isClearable
+                  disabled={otherLocalityDisabled}
                 />
               </div>
 
@@ -167,10 +215,11 @@ const FilterComponent = ({
                 <Select
                   value={aglomeradoState}
                   onChange={setAglomeradoMunicipio}
-                  options={aglomeradoOptions}
+                  options={filteredAglomeradoOptions}
                   placeholder="Aglomerado - AG"
                   size="xs"
                   isClearable
+                  disabled={otherLocalityDisabled}
                 />
               </div>
 
@@ -179,10 +228,23 @@ const FilterComponent = ({
                 <Select
                   value={gerenciaState}
                   onChange={setGerenciaRegionalMunicipio}
-                  options={gerenciaOptions}
+                  options={filteredGerenciaOptions}
                   placeholder="Gerência Regional de Ensino - GRE"
                   size="xs"
                   isSearchable={false}
+                  isClearable
+                  disabled={otherLocalityDisabled}
+                />
+              </div>
+
+              {/* Município - Primeira coluna, primeira linha */}
+              <div className="md:col-span-1">
+                <Select
+                  value={selectedMunicipioState}
+                  onChange={setSelectedMunicipio}
+                  options={filteredMunicipioOptions}
+                  placeholder="Município"
+                  size="xs"
                   isClearable
                 />
               </div>
