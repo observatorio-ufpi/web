@@ -48,10 +48,10 @@ const FilterComponent = ({
     faixaPopulacionalMunicipio ? { value: faixaPopulacionalMunicipio, label: FaixaPopulacional[faixaPopulacionalMunicipio] } : null
   );
   const [aglomeradoState, setAglomeradoMunicipio] = useState(
-    aglomeradoMunicipio && aglomeradoMunicipio !== 'undefined' ? { value: aglomeradoMunicipio, label: `Aglomerado ${aglomeradoMunicipio}` } : null
+    aglomeradoMunicipio && aglomeradoMunicipio !== 'undefined' ? { value: aglomeradoMunicipio, label: `AG ${aglomeradoMunicipio}` } : null
   );
   const [gerenciaState, setGerenciaRegionalMunicipio] = useState(
-    gerenciaRegionalMunicipio && gerenciaRegionalMunicipio !== 'undefined' ? { value: gerenciaRegionalMunicipio, label: `Gerência ${gerenciaRegionalMunicipio}` } : null
+    gerenciaRegionalMunicipio && gerenciaRegionalMunicipio !== 'undefined' ? { value: gerenciaRegionalMunicipio, label: `${gerenciaRegionalMunicipio}ª GRE` } : null
   );
   const [anoInicialState, setAnoInicial] = useState(
     filters.anoInicial ? { value: filters.anoInicial, label: filters.anoInicial } : null
@@ -71,8 +71,8 @@ const FilterComponent = ({
     );
     setTerritorioDeDesenvolvimentoMunicipio(territorioDeDesenvolvimentoMunicipio ? { value: territorioDeDesenvolvimentoMunicipio, label: Regioes[territorioDeDesenvolvimentoMunicipio] } : null);
     setFaixaPopulacionalMunicipio(faixaPopulacionalMunicipio ? { value: faixaPopulacionalMunicipio, label: FaixaPopulacional[faixaPopulacionalMunicipio] } : null);
-    setAglomeradoMunicipio(aglomeradoMunicipio && aglomeradoMunicipio !== 'undefined' ? { value: aglomeradoMunicipio, label: `Aglomerado ${aglomeradoMunicipio}` } : null);
-    setGerenciaRegionalMunicipio(gerenciaRegionalMunicipio && gerenciaRegionalMunicipio !== 'undefined' ? { value: gerenciaRegionalMunicipio, label: `Gerência ${gerenciaRegionalMunicipio}` } : null);
+    setAglomeradoMunicipio(aglomeradoMunicipio && aglomeradoMunicipio !== 'undefined' ? { value: aglomeradoMunicipio, label: `AG ${aglomeradoMunicipio}` } : null);
+    setGerenciaRegionalMunicipio(gerenciaRegionalMunicipio && gerenciaRegionalMunicipio !== 'undefined' ? { value: gerenciaRegionalMunicipio, label: `${gerenciaRegionalMunicipio}ª GRE` } : null);
     setAnoInicial(anoInicial ? { value: anoInicial, label: anoInicial } : null);
     setAnoFinal(anoFinal ? { value: anoFinal, label: anoFinal } : null);
   }, [selectedMunicipio, territorioDeDesenvolvimentoMunicipio, faixaPopulacionalMunicipio, aglomeradoMunicipio, gerenciaRegionalMunicipio, anoInicial, anoFinal]);
@@ -99,7 +99,7 @@ const FilterComponent = ({
     .sort((a, b) => a - b) // Ordenar numericamente
     .map(aglomerado => ({
       value: aglomerado,
-      label: `Aglomerado ${aglomerado}`,
+      label: `AG ${aglomerado}`,
     }));
 
   const gerenciaOptions = [...new Set(
@@ -117,7 +117,7 @@ const FilterComponent = ({
     .sort((a, b) => a - b) // Ordenar numericamente
     .map(gerencia => ({
       value: gerencia,
-      label: `Gerência ${gerencia}`,
+      label: `${gerencia}ª GRE`,
     }));
 
   const anoOptions = Array.from({ length: 18 }, (_, i) => 2007 + i).map(ano => ({
@@ -170,7 +170,7 @@ const FilterComponent = ({
             value={aglomeradoState}
             onChange={setAglomeradoMunicipio}
             options={aglomeradoOptions}
-            placeholder="Aglomerado"
+            placeholder="Aglomerado - AG"
             size="xs"
             isClearable
           />
@@ -182,7 +182,7 @@ const FilterComponent = ({
             value={gerenciaState}
             onChange={setGerenciaRegionalMunicipio}
             options={gerenciaOptions}
-            placeholder="Gerência"
+            placeholder="Gerência Regional de Ensino - GRE"
             size="xs"
             isSearchable={false}
             isClearable
