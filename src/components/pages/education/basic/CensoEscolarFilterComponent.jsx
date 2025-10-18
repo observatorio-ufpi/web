@@ -1,20 +1,14 @@
-import React, { useMemo, useEffect } from 'react';
-import { Button } from '@mui/material';
+import React, { useMemo, useEffect, useState } from 'react';
+import { Button, Collapse, Box } from '@mui/material';
+import { ExpandMore, ExpandLess } from '@mui/icons-material';
 import { Select } from '../../../ui';
+import YearRangeSlider from '../../../ui/YearRangeSlider';
 import { municipios, Regioes, FaixaPopulacional } from '../../../../utils/citiesMapping';
 
 
 function CensoEscolarFilterComponent({
-  isHistorical,
-  setIsHistorical,
   city,
   setCity,
-  year,
-  setYear,
-  startYear,
-  setStartYear,
-  endYear,
-  setEndYear,
   selectedFilters,
   setSelectedFilters,
   handleFilterClick,
@@ -29,12 +23,11 @@ function CensoEscolarFilterComponent({
   territory,
   setTerritory,
 }) {
-  const yearOptions = useMemo(() => {
-    return Array.from({ length: 2024 - 2007 + 1 }, (_, i) => 2007 + i).map((year) => ({
-      value: year,
-      label: year.toString(),
-    }));
-  }, []);
+  // Estado para controlar se os filtros estão expandidos
+  const [filtersExpanded, setFiltersExpanded] = useState(false);
+  
+  // Estado para o range slider
+  const [yearRange, setYearRange] = useState([2007, 2024]);
 
   const cityOptions = Object.entries(municipios).map(([key, { nomeMunicipio }]) => ({
     value: key,
@@ -113,154 +106,151 @@ function CensoEscolarFilterComponent({
   useClearInvalidFilter(aglomerado, setAglomerado, filteredAglomeradoOptions);
   useClearInvalidFilter(gerencia, setGerencia, filteredGerenciaOptions);
 
+  // Função para lidar com o clique do filtro incluindo os anos do range slider
+  const handleFilterClickWithYears = () => {
+    handleFilterClick({
+      selectedFilters,
+      city,
+      territory,
+      faixaPopulacional,
+      aglomerado,
+      gerencia,
+      startYear: yearRange[0],
+      endYear: yearRange[1],
+    });
+  };
+
   return (
     <div className="flex flex-col gap-4 p-0 m-0">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
-        {/* Tipo - Primeira coluna, primeira linha */}
-        <div className="md:col-span-1">
-          <label htmlFor="multiFilterSelect" className="block text-sm font-medium text-gray-700 mb-1">Tipo:</label>
-          <Select
-            id="multiFilterSelect"
-            value={selectedFilters}
-            onChange={(newValue) => setSelectedFilters(newValue)}
-            options={filterOptions}
-            isMulti
-            placeholder="Aspectos da Infraestrutura"
-            size="xs"
-          />
-        </div>
-
-        {/* Ano - Segunda e terceira colunas, primeira linha */}
-        <div className="md:col-span-2">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-            <label className="flex items-center gap-2 cursor-pointer whitespace-nowrap">
-              <input
-                type="checkbox"
-                checked={isHistorical}
-                onChange={(e) => setIsHistorical(e.target.checked)}
-                className="cursor-pointer"
+        {/* Tipo + Botão Mais Filtros - Primeira linha */}
+        <div className="md:col-span-3">
+          <div className="flex items-end gap-4">
+            <div className="flex-1">
+              <label htmlFor="multiFilterSelect" className="block text-sm font-medium text-gray-700 mb-1">Tipo:</label>
+              <Select
+                id="multiFilterSelect"
+                value={selectedFilters}
+                onChange={(newValue) => setSelectedFilters(newValue)}
+                options={filterOptions}
+                isMulti
+                placeholder="Aspectos da Infraestrutura"
+                size="xs"
               />
-              <span className="font-medium text-gray-700">Série Histórica</span>
-            </label>
-
-            {isHistorical ? (
-              <div className="flex flex-col sm:flex-row gap-3 flex-1 w-full">
-                <div className="flex-1">
-                  <label htmlFor="startYearSelect" className="block text-sm font-medium text-gray-700 mb-1">Ano Inicial:</label>
-                  <Select
-                    id="startYearSelect"
-                    value={yearOptions.find(option => option.value === startYear)}
-                    onChange={(selectedOption) => setStartYear(selectedOption.value)}
-                    options={yearOptions}
-                    placeholder="Ano Inicial"
-                    size="xs"
-                  />
-                </div>
-                <div className="flex-1">
-                  <label htmlFor="endYearSelect" className="block text-sm font-medium text-gray-700 mb-1">Ano Final:</label>
-                  <Select
-                    id="endYearSelect"
-                    value={yearOptions.find(option => option.value === endYear)}
-                    onChange={(selectedOption) => setEndYear(selectedOption.value)}
-                    options={yearOptions.filter(option => option.value >= startYear)}
-                    placeholder="Ano Final"
-                    size="xs"
-                  />
-                </div>
-              </div>
-            ) : (
-              <div className="flex-1 w-full">
-                <label htmlFor="yearSelect" className="block text-sm font-medium text-gray-700 mb-1">Ano:</label>
-                <Select
-                  id="yearSelect"
-                  value={yearOptions.find(option => option.value === year)}
-                  onChange={(selectedOption) => setYear(selectedOption.value)}
-                  options={yearOptions}
-                  placeholder="Ano"
-                  size="xs"
-                />
-              </div>
-            )}
+            </div>
+            
+            {/* Botão de toggle para filtros adicionais */}
+            <Button
+              variant="outlined"
+              size="small"
+              startIcon={filtersExpanded ? <ExpandLess /> : <ExpandMore />}
+              onClick={() => setFiltersExpanded(!filtersExpanded)}
+              sx={{
+                minWidth: 'auto',
+                padding: '8px 16px',
+                whiteSpace: 'nowrap',
+                height: 'fit-content',
+                mb: 0.5
+              }}
+            >
+              {filtersExpanded ? 'Menos Filtros' : 'Mais Filtros'}
+            </Button>
           </div>
         </div>
 
-        {/* Território - Primeira coluna, segunda linha */}
-        <div className="md:col-span-1">
-          <Select
-            id="territorySelect"
-            value={territory ? { value: territory, label: Regioes[territory] } : null}
-            onChange={(selectedOption) => setTerritory(selectedOption ? selectedOption.value : '')}
-            options={filteredTerritorioOptions}
-            placeholder="Território de Desenvolvimento"
-            size="xs"
-            isClearable
-            disabled={otherLocalityDisabled}
+        {/* Filtros recolhíveis */}
+        <Collapse in={filtersExpanded} timeout="auto" unmountOnExit>
+          <div className="md:col-span-3">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Território - Primeira coluna, primeira linha */}
+              <div className="md:col-span-1">
+                <Select
+                  id="territorySelect"
+                  value={territory ? { value: territory, label: Regioes[territory] } : null}
+                  onChange={(selectedOption) => setTerritory(selectedOption ? selectedOption.value : '')}
+                  options={filteredTerritorioOptions}
+                  placeholder="Território de Desenvolvimento"
+                  size="xs"
+                  isClearable
+                  disabled={otherLocalityDisabled}
+                />
+              </div>
+
+              {/* Faixa Populacional - Segunda coluna, primeira linha */}
+              <div className="md:col-span-1">
+                <Select
+                  id="faixaPopulacionalSelect"
+                  value={faixaPopulacional ? { value: faixaPopulacional, label: FaixaPopulacional[faixaPopulacional] } : null}
+                  onChange={(selectedOption) => setFaixaPopulacional(selectedOption ? selectedOption.value : '')}
+                  options={filteredFaixaPopulacionalOptions}
+                  placeholder="Faixa Populacional"
+                  size="xs"
+                  isClearable
+                  disabled={otherLocalityDisabled}
+                />
+              </div>
+
+              {/* Aglomerado - Terceira coluna, primeira linha */}
+              <div className="md:col-span-1">
+                <Select
+                  id="aglomeradoSelect"
+                  value={aglomerado ? { value: aglomerado, label: `AG ${aglomerado}` } : null}
+                  onChange={(selectedOption) => setAglomerado(selectedOption ? selectedOption.value : '')}
+                  options={filteredAglomeradoOptions}
+                  placeholder="Aglomerado - AG"
+                  size="xs"
+                  isClearable
+                  disabled={otherLocalityDisabled}
+                />
+              </div>
+
+              {/* Gerência - Primeira coluna, segunda linha */}
+              <div className="md:col-span-1">
+                <Select
+                  id="gerenciaSelect"
+                  value={gerencia ? { value: gerencia, label: `${gerencia}ª GRE` } : null}
+                  onChange={(selectedOption) => setGerencia(selectedOption ? selectedOption.value : '')}
+                  options={filteredGerenciaOptions}
+                  placeholder="Gerência Regional de Ensino - GRE"
+                  size="xs"
+                  isClearable
+                  disabled={otherLocalityDisabled}
+                />
+              </div>
+
+              {/* Cidade - Segunda e terceira colunas, segunda linha */}
+              <div className="md:col-span-2">
+                <Select
+                  id="citySelect"
+                  value={(filteredCityOptions.length > 0 ? filteredCityOptions : cityOptions).find(option => option.value === city) || null}
+                  onChange={(selectedOption) => setCity(selectedOption ? selectedOption.value : '')}
+                  options={filteredCityOptions.length > 0 ? filteredCityOptions : cityOptions}
+                  placeholder="Município"
+                  size="xs"
+                  isClearable
+                />
+              </div>
+            </div>
+          </div>
+        </Collapse>
+
+        {/* Período - Todas as colunas, terceira linha */}
+        <div className="md:col-span-3">
+          <YearRangeSlider
+            minYear={2007}
+            maxYear={2024}
+            value={yearRange}
+            onChange={setYearRange}
           />
         </div>
 
-        {/* Faixa Populacional - Segunda coluna, segunda linha */}
-        <div className="md:col-span-1">
-          <Select
-            id="faixaPopulacionalSelect"
-            value={faixaPopulacional ? { value: faixaPopulacional, label: FaixaPopulacional[faixaPopulacional] } : null}
-            onChange={(selectedOption) => setFaixaPopulacional(selectedOption ? selectedOption.value : '')}
-            options={filteredFaixaPopulacionalOptions}
-            placeholder="Faixa Populacional"
-            size="xs"
-            isClearable
-            disabled={otherLocalityDisabled}
-          />
-        </div>
-
-        {/* Aglomerado - Terceira coluna, segunda linha */}
-        <div className="md:col-span-1">
-          <Select
-            id="aglomeradoSelect"
-            value={aglomerado ? { value: aglomerado, label: `AG ${aglomerado}` } : null}
-            onChange={(selectedOption) => setAglomerado(selectedOption ? selectedOption.value : '')}
-            options={filteredAglomeradoOptions}
-            placeholder="Aglomerado - AG"
-            size="xs"
-            isClearable
-            disabled={otherLocalityDisabled}
-          />
-        </div>
-
-        {/* Gerência - Primeira coluna, terceira linha */}
-        <div className="md:col-span-1">
-          <Select
-            id="gerenciaSelect"
-            value={gerencia ? { value: gerencia, label: `${gerencia}ª GRE` } : null}
-            onChange={(selectedOption) => setGerencia(selectedOption ? selectedOption.value : '')}
-            options={filteredGerenciaOptions}
-            placeholder="Gerência Regional de Ensino - GRE"
-            size="xs"
-            isClearable
-            disabled={otherLocalityDisabled}
-          />
-        </div>
-
-        {/* Cidade - Segunda coluna, terceira linha */}
-        <div className="md:col-span-1">
-          <Select
-            id="citySelect"
-            value={(filteredCityOptions.length > 0 ? filteredCityOptions : cityOptions).find(option => option.value === city) || null}
-            onChange={(selectedOption) => setCity(selectedOption ? selectedOption.value : '')}
-            options={filteredCityOptions.length > 0 ? filteredCityOptions : cityOptions}
-            placeholder="Município"
-            size="xs"
-            isClearable
-          />
-        </div>
-
-        {/* Botões - Terceira coluna, terceira linha */}
-        <div className="md:col-span-1 flex flex-col justify-end">
-          <div className="flex flex-col sm:flex-row gap-3 justify-end">
+        {/* Botões - Todas as colunas, quarta linha */}
+        <div className="md:col-span-3 flex justify-end mt-4">
+          <div className="flex gap-3">
             <Button
               variant="contained"
               color="primary"
-              onClick={handleFilterClick}
-              className="w-full sm:w-auto"
+              onClick={handleFilterClickWithYears}
+              className="w-full md:w-auto min-w-[120px] px-4 py-1.5"
             >
               Mostrar Resultados
             </Button>
@@ -268,7 +258,7 @@ function CensoEscolarFilterComponent({
             <Button
               variant="contained"
               onClick={handleClearFilters}
-              className="w-full sm:w-auto"
+              className="w-full md:w-auto min-w-[120px] px-4 py-1.5"
               sx={{
                 backgroundColor: '#f0f0f0',
                 color: '#000',
@@ -282,7 +272,6 @@ function CensoEscolarFilterComponent({
           </div>
         </div>
       </div>
-    </div>
   );
 }
 

@@ -13,34 +13,17 @@ function CensoEscolarComponent() {
   const theme = useTheme();
   const apiRef = useRef();
 
-  const [isHistorical, setIsHistorical] = useState(false);
   const [city, setCity] = useState('');
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [title, setTitle] = useState('');
   const [selectedFilters, setSelectedFilters] = useState([]);
-  const [year, setYear] = useState(2024);
-  const [startYear, setStartYear] = useState(2007);
-  const [endYear, setEndYear] = useState(2024);
   const [territory, setTerritory] = useState('');
   const [faixaPopulacional, setFaixaPopulacional] = useState('');
   const [aglomerado, setAglomerado] = useState('');
   const [gerencia, setGerencia] = useState('');
 
-  const yearOptions = useMemo(
-    () =>
-      Array.from({ length: 2024 - 2007 + 1 }, (_, i) => 2007 + i).map((year) => ({
-        value: year,
-        label: year.toString(),
-      })),
-    []
-  );
-
-  const cityOptions = Object.entries(municipios).map(([key, { nomeMunicipio }]) => ({
-    value: key,
-    label: nomeMunicipio,
-  }));
 
   const citiesList = useMemo(() => Object.entries(municipios)
     .filter(([, m]) => {
@@ -69,12 +52,17 @@ function CensoEscolarComponent() {
     { value: 'materiais', label: 'Materiais' },
   ];
 
-  const handleFilterClick = () => {
+  const handleFilterClick = (filterData) => {
     setError(null);
     setData(null);
     setTitle('');
 
-    const yearDisplay = isHistorical ? `${startYear}-${endYear}` : year;
+    // Se filterData foi passado, usa os dados do range slider
+    const startYear = filterData?.startYear || 2007;
+    const endYear = filterData?.endYear || 2024;
+    const isHistorical = startYear !== endYear;
+    
+    const yearDisplay = isHistorical ? `${startYear}-${endYear}` : startYear;
     let locationName = 'Piauí';
     if (city && municipios[city]) {
       locationName = municipios[city].nomeMunicipio;
@@ -94,7 +82,7 @@ function CensoEscolarComponent() {
 
     if (apiRef.current) {
       apiRef.current.fetchData({
-        year,
+        year: startYear,
         isHistorical,
         startYear,
         endYear,
@@ -109,15 +97,11 @@ function CensoEscolarComponent() {
   };
 
   const handleClearFilters = () => {
-    setIsHistorical(false);
     setCity('');
     setData(null);
     setError(null);
     setTitle('');
     setSelectedFilters([]);
-    setYear(2024);
-    setStartYear(2007);
-    setEndYear(2024);
     setTerritory('');
     setFaixaPopulacional('');
     setAglomerado('');
@@ -128,23 +112,13 @@ function CensoEscolarComponent() {
     <div className="app-container">
       <div className="filters-section">
         <CensoEscolarFilterComponent
-          isHistorical={isHistorical}
-          setIsHistorical={setIsHistorical}
           city={city}
           setCity={setCity}
-          year={year}
-          setYear={setYear}
-          startYear={startYear}
-          setStartYear={setStartYear}
-          endYear={endYear}
-          setEndYear={setEndYear}
           selectedFilters={selectedFilters}
           setSelectedFilters={setSelectedFilters}
           handleFilterClick={handleFilterClick}
           handleClearFilters={handleClearFilters}
           filterOptions={filterOptions}
-          cityOptions={cityOptions}
-          yearOptions={yearOptions}
           territory={territory}
           setTerritory={setTerritory}
           faixaPopulacional={faixaPopulacional}
