@@ -1,22 +1,21 @@
-import React, { useState, useMemo, useRef } from 'react';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Button,
-  Menu,
-  MenuItem,
-  Checkbox,
-  FormControlLabel,
-  Box,
-  Typography,
+    Box,
+    Button,
+    Checkbox,
+    FormControlLabel,
+    Menu,
+    MenuItem,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    Typography,
 } from '@mui/material';
 import { styled, useTheme } from '@mui/material/styles';
+import React, { useMemo, useRef, useState } from 'react';
 import { FaEye } from 'react-icons/fa';
-import CustomPagination from "../../../helpers/CustomPagination";
 import TableExport from '../../../common/TableExport';
 import { Select } from '../../../ui';
 
@@ -146,7 +145,7 @@ function CensoEscolarDataTable({ data, title }) {
     setLimit(value);
     setPage(1);
   };
-  
+
   const exportData = useMemo(() => {
     return data.result.map(row => {
       const newRow = {};

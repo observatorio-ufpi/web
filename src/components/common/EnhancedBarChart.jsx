@@ -335,18 +335,18 @@ const EnhancedBarChart = ({
       <ResponsiveContainer width="100%" height={height}>
         <RechartsBarChart
           data={processedData}
-          margin={{ top: 20, right: 30, left: 40, bottom: 120 }}
+          margin={{ top: 20, right: 30, left: 50, bottom: 60 }}
         >
           <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
           <XAxis
             dataKey={xAxisKey}
             tick={<CustomXAxisTick />}
-            height={120}
+            height={60}
             interval={0}
             label={{
               value: 'Categoria',
               position: 'insideBottom',
-              offset: -5,
+              offset: -15,
               style: { textAnchor: 'middle', fontSize: 14, fontWeight: 'bold' }
             }}
           />
@@ -357,7 +357,7 @@ const EnhancedBarChart = ({
               value: 'Total',
               angle: -90,
               position: 'insideLeft',
-              offset: -20,
+              offset: -5,
               style: { textAnchor: 'middle', fontSize: 14, fontWeight: 'bold' }
             }}
           />
@@ -395,8 +395,8 @@ const EnhancedBarChart = ({
         flexWrap: 'wrap',
         justifyContent: 'center',
         gap: '12px',
-        marginTop: '25px',
-        padding: '20px',
+        marginTop: '10px',
+        padding: '15px',
         backgroundColor: '#f8f9fa',
         borderRadius: '8px',
         border: '1px solid #e9ecef',

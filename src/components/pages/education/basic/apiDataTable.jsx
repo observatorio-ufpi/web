@@ -7,10 +7,8 @@ import TablePagination from '@mui/material/TablePagination';
 import TableRow from '@mui/material/TableRow';
 import { ThemeProvider, createTheme, styled } from '@mui/material/styles';
 import React from 'react';
-import BarChart from '../../../common/BarChart';
 import EnhancedBarChart from '../../../common/EnhancedBarChart';
 import EnhancedPieChart from '../../../common/EnhancedPieChart';
-import PieChart from '../../../common/PieChart';
 import TableExport from '../../../common/TableExport';
 import HistoricalChart from '../HistoricalChart';
 
@@ -389,32 +387,46 @@ const hasNoData = (data, tableDataArray, municipioDataArray) => {
 // COMPONENTES REUTILIZÁVEIS
 // ==========================================
 
+// Componente para renderizar a fonte
+const SourceFooter = ({ source = "Laboratório de Dados Educacionais - LDE" }) => (
+  <div style={{
+    textAlign: 'right',
+    marginTop: '10px',
+    fontSize: '12px',
+    color: '#666',
+    fontStyle: 'italic'
+  }}>
+    Fonte: {source}
+  </div>
+);
+
 // Componente de tabela básica
-const BasicTable = ({ headers, data, formatTotal = false, sortField = null, ref }) => {
+const BasicTable = React.forwardRef(({ headers, data, formatTotal = false, sortField = null }, ref) => {
   const sortedData = sortField
     ? [...data].sort((a, b) => Number(a[sortField]) - Number(b[sortField]))
     : data;
 
   return (
-    <TableContainer sx={{ maxWidth: '100%', overflowX: 'auto', border: '2px solid #ccc', borderRadius: '4px' }} ref={ref}>
-      <Table sx={{ minWidth: 650 }} aria-label="data table" style={{ backgroundColor: theme.palette.background.default }}>
-        <StyledTableHead>
-          <TableRow>
-            {headers.map(header => (
-              <BoldTableCell key={header}>
-                {HEADER_DISPLAY_NAMES[header] || header}
-              </BoldTableCell>
-            ))}
-          </TableRow>
-        </StyledTableHead>
-        <TableBody>
-          {sortedData.map((item, index) => {
-            // Verifica se o item atual é a linha de Total
-            const isTotal = item.cityName === 'Total';
+    <>
+      <TableContainer sx={{ maxWidth: '100%', overflowX: 'auto', border: '2px solid #ccc', borderRadius: '4px' }} ref={ref}>
+        <Table sx={{ minWidth: 650 }} aria-label="data table" style={{ backgroundColor: theme.palette.background.default }}>
+          <StyledTableHead>
+            <TableRow>
+              {headers.map(header => (
+                <BoldTableCell key={header}>
+                  {HEADER_DISPLAY_NAMES[header] || header}
+                </BoldTableCell>
+              ))}
+            </TableRow>
+          </StyledTableHead>
+          <TableBody>
+            {sortedData.map((item, index) => {
+              // Verifica se o item atual é a linha de Total
+              const isTotal = item.cityName === 'Total';
 
-            return (
-              <TableRow key={index}>
-                                  {headers.map(header => (
+              return (
+                <TableRow key={index}>
+                  {headers.map(header => (
                     <TableCell
                       key={header}
                       align="center"
@@ -431,14 +443,17 @@ const BasicTable = ({ headers, data, formatTotal = false, sortField = null, ref 
                           : item[header]?.toString() || ''}
                     </TableCell>
                   ))}
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
-    </TableContainer>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </TableContainer>
+
+      <SourceFooter />
+    </>
   );
-};
+});
 
 // Componente de tabela com paginação
 const PaginatedTable = ({
@@ -503,6 +518,8 @@ const PaginatedTable = ({
         }
       />
       {note && <p>{note}</p>}
+
+      <SourceFooter />
     </>
   );
 };
@@ -603,6 +620,8 @@ const CrossTable = ({
           }
         />
       )}
+
+      <SourceFooter />
     </>
   );
 };
@@ -613,13 +632,14 @@ const ApiDataTable = ({
   isEtapaSelected,
   isLocalidadeSelected,
   isDependenciaSelected,
-  isVinculoSelected,
+  isVinculoSelected = false,
+  isFormacaoDocenteSelected = false,
+  isFaixaEtariaSelected = false,
   isHistorical,
   type,
-  isFormacaoDocenteSelected,
-  isFaixaEtariaSelected,
   year,
-  title = ''
+  title = '',
+  showConsolidated = false
 }) => {
   // Estados para paginação
   const [page, setPage] = React.useState(0);
@@ -662,8 +682,16 @@ const ApiDataTable = ({
   if (hasNoData(data, tableDataArray, municipioDataArray)) {
     return (
       <ThemeProvider theme={theme}>
-        <div>
-          Nenhum dado disponível
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          minHeight: '200px',
+          fontSize: '18px',
+          fontWeight: 'bold',
+          color: '#6c757d'
+        }}>
+          Nenhum dado disponível para os filtros selecionados
         </div>
       </ThemeProvider>
     );
@@ -671,6 +699,38 @@ const ApiDataTable = ({
 
   // Renderização de tabela histórica
   const renderHistoricalTable = () => {
+    // Se há dados de múltiplas cidades, renderizar cada cidade separadamente
+    if (municipioData && Array.isArray(municipioData) && municipioData.length > 0) {
+      return (
+        <div>
+          {municipioData.map((cityData, cityIndex) => {
+            const cityName = cityData.cityName || `Cidade ${cityIndex + 1}`;
+            const cityResult = cityData.result || [];
+
+            if (!cityResult || cityResult.length === 0) return null;
+
+            // Criar referência específica para esta cidade
+            const cityTableRef = React.createRef();
+            const cityChartRef = React.createRef();
+
+            return (
+              <div key={cityIndex} style={{ marginBottom: '2rem', border: '1px solid #ddd', borderRadius: '8px', padding: '1rem' }}>
+                <h3 style={{ marginBottom: '1rem', color: '#333', borderBottom: '2px solid #007bff', paddingBottom: '0.5rem' }}>
+                  {cityName}
+                </h3>
+                {renderHistoricalTableForCity(cityResult, cityTableRef, cityChartRef, cityName)}
+              </div>
+            );
+          })}
+        </div>
+      );
+    }
+
+    // Renderização normal para dados consolidados
+    return renderHistoricalTableForCity(data.result, tableRefs.historical, chartRef);
+  };
+
+  const renderHistoricalTableForCity = (resultData, tableRef, chartRef, cityName = null) => {
     // Determinar quais colunas extras precisamos baseado nos filtros
     const getExtraColumns = () => {
       if (isEtapaSelected) {
@@ -723,7 +783,7 @@ const ApiDataTable = ({
     if (!extraColumn) {
       // Para dados históricos simples (sem filtros)
       const yearMap = new Map();
-      data.result.forEach(item => {
+      resultData.forEach(item => {
         yearMap.set(item.year, (yearMap.get(item.year) || 0) + Number(item.total || 0));
       });
 
@@ -766,13 +826,16 @@ const ApiDataTable = ({
               </TableBody>
             </Table>
           </TableContainer>
+
+          <SourceFooter />
+
           <TableExport
             data={exportData}
             headers={exportHeaders}
             headerDisplayNames={headerDisplayNames}
-            fileName="dados_historicos"
-            tableTitle={title || "Dados Históricos"}
-            tableRef={tableRefs.historical}
+            fileName={cityName ? `dados_historicos_${cityName.toLowerCase().replace(/\s+/g, '_')}` : "dados_historicos"}
+            tableTitle={cityName ? `Dados Históricos - ${cityName}` : (title || "Dados Históricos")}
+            tableRef={tableRef}
           />
         </div>
       );
@@ -785,7 +848,7 @@ const ApiDataTable = ({
     const categoryIds = new Map();
 
     // Primeiro passo: organizar os dados
-    data.result.forEach(item => {
+    resultData.forEach(item => {
       const year = item.year;
       const categoryName = item[extraColumn.name];
       const categoryId = item[extraColumn.id];
@@ -816,7 +879,7 @@ const ApiDataTable = ({
     const exportData = [];
     sortedCategories.forEach(categoryId => {
       // Buscar o nome da categoria nos dados originais
-      const categoryItem = data.result.find(item => item[extraColumn.id] == categoryId);
+      const categoryItem = resultData.find(item => item[extraColumn.id] == categoryId);
       const categoryName = categoryItem ? categoryItem[extraColumn.name] : `ID ${categoryId}`;
       const row = { [extraColumn.label]: categoryName };
       sortedYears.forEach(year => {
@@ -851,7 +914,7 @@ const ApiDataTable = ({
                 .map(categoryId => {
                   const yearMap = categoryYearMap.get(categoryId);
                   // Buscar o nome da categoria nos dados originais
-                  const categoryItem = data.result.find(item => item[extraColumn.id] == categoryId);
+                  const categoryItem = resultData.find(item => item[extraColumn.id] == categoryId);
                   const categoryName = categoryItem ? categoryItem[extraColumn.name] : `ID ${categoryId}`;
 
                   return (
@@ -889,10 +952,13 @@ const ApiDataTable = ({
         {type === 'school/count' && isEtapaSelected && (
           <p>{ETAPA_ESCOLA_NOTE}</p>
         )}
+
+        <SourceFooter />
+
         {!(type === 'school/count' && isEtapaSelected) && (
           <div ref={chartRef}>
             <HistoricalChart
-              data={data}
+              data={{ result: resultData }}
               type={type}
               isEtapaSelected={isEtapaSelected}
               isLocalidadeSelected={isLocalidadeSelected}
@@ -908,9 +974,9 @@ const ApiDataTable = ({
             data={exportData}
             headers={exportHeaders}
             headerDisplayNames={headerDisplayNames}
-            fileName="dados_historicos"
-            tableTitle={title || "Dados Históricos"}
-            tableRef={tableRefs.historical}
+            fileName={cityName ? `dados_historicos_${cityName.toLowerCase().replace(/\s+/g, '_')}` : "dados_historicos"}
+            tableTitle={cityName ? `Dados Históricos - ${cityName}` : (title || "Dados Históricos")}
+            tableRef={tableRef}
             chartRef={chartRef}
           />
         </div>
@@ -1186,7 +1252,10 @@ const ApiDataTable = ({
         return null;
     }
 
-    // Preparar dados para exportação
+    // Calcular total para adicionar linha de total
+    const totalValue = tableData.reduce((sum, item) => sum + Number(item.total || 0), 0);
+
+    // Preparar dados para exportação incluindo linha de total
     const exportData = tableData.map(item => {
       const row = {};
       headers.forEach(header => {
@@ -1194,6 +1263,17 @@ const ApiDataTable = ({
       });
       return row;
     });
+
+    // Adicionar linha de total aos dados de exportação
+    const totalRow = {};
+    headers.forEach(header => {
+      if (header === 'total') {
+        totalRow[header] = totalValue;
+      } else {
+        totalRow[header] = 'Total';
+      }
+    });
+    exportData.push(totalRow);
 
     // Preparar headers para exportação
     const exportHeaders = headers;
@@ -1232,12 +1312,21 @@ const ApiDataTable = ({
                     ))}
                   </TableRow>
                 ))}
+              {/* Linha de total */}
+              <TableRow>
+                {headers.map(header => (
+                  <BoldTableCell key={header}>
+                    {header === 'total' && formatTotal
+                      ? `${Number(totalValue).toFixed(2)}%`
+                      : header === 'total'
+                        ? formatNumber(totalValue)
+                        : 'Total'}
+                  </BoldTableCell>
+                ))}
+              </TableRow>
             </TableBody>
           </Table>
         </TableContainer>
-
-        {/* Adicionar gráficos para tabelas simples */}
-        {!(type === 'school/count' && filterType === 'etapa') && renderSimpleTableCharts(filterType, tableData)}
 
         {usePagination && (
           <TablePagination
@@ -1270,6 +1359,11 @@ const ApiDataTable = ({
             {note}
           </div>
         )}
+
+        <SourceFooter />
+
+        {/* Adicionar gráficos para tabelas simples */}
+        {!(type === 'school/count' && filterType === 'etapa') && renderSimpleTableCharts(filterType, tableData)}
 
         <TableExport
           data={exportData}
@@ -1304,35 +1398,216 @@ const ApiDataTable = ({
     }
   };
 
+  // Função para determinar headers baseado nos filtros selecionados
+  const getHeadersForCityData = () => {
+    if (isEtapaSelected) return HEADERS.etapa;
+    if (isLocalidadeSelected) return HEADERS.localidade;
+    if (isDependenciaSelected) return HEADERS.dependencia;
+    return HEADERS.default;
+  };
+
+  // Função para consolidar dados mantendo categorias separadas
+  const consolidateDataByCategory = () => {
+    if (!municipioData || municipioData.length === 0) return [];
+
+    // Determinar qual campo usar baseado no filtro selecionado
+    const getCategoryField = () => {
+      if (isEtapaSelected) return 'education_level_mod_name';
+      if (isLocalidadeSelected) return 'location_name';
+      if (isDependenciaSelected) return 'adm_dependency_detailed_name';
+      if (isVinculoSelected) return 'contract_type_name';
+      if (isFormacaoDocenteSelected) return 'initial_training_name';
+      if (isFaixaEtariaSelected) return 'age_range_name';
+      return 'total';
+    };
+
+    const categoryField = getCategoryField();
+    const consolidatedMap = new Map();
+
+    // Consolidar dados de todas as cidades
+    municipioData.forEach(cityData => {
+      const cityResult = cityData.result || [];
+      cityResult.forEach(item => {
+        const category = item[categoryField] || 'N/A';
+        const total = Number(item.total) || 0;
+
+        if (consolidatedMap.has(category)) {
+          consolidatedMap.set(category, consolidatedMap.get(category) + total);
+        } else {
+          consolidatedMap.set(category, total);
+        }
+      });
+    });
+
+    // Converter Map para array
+    return Array.from(consolidatedMap.entries()).map(([category, total]) => ({
+      [categoryField]: category,
+      total: total
+    }));
+  };
+
+  // Função para renderizar dados individuais por cidade
+  const renderIndividualCityData = () => {
+    if (!municipioData || municipioData.length === 0) return null;
+
+    const headers = getHeadersForCityData();
+
+    return (
+      <div>
+        {municipioData.map((cityData, index) => {
+          const cityName = cityData.cityName || `Cidade ${index + 1}`;
+          const cityResult = cityData.result || [];
+
+          if (!cityResult || cityResult.length === 0) return null;
+
+          // Criar referências específicas para esta cidade
+          const cityTableRef = React.createRef();
+          const cityChartRef = React.createRef();
+
+          return (
+            <div key={index} style={{ marginBottom: '2rem', border: '1px solid #ddd', borderRadius: '8px', padding: '1rem' }}>
+              <h3 style={{ marginBottom: '1rem', color: '#333', borderBottom: '2px solid #007bff', paddingBottom: '0.5rem' }}>
+                {cityName}
+              </h3>
+
+              {/* Renderizar tabela para esta cidade */}
+              <BasicTable
+                headers={headers}
+                data={cityResult}
+                formatTotal={isRatioType(type)}
+                ref={cityTableRef}
+              />
+
+              {/* Gráfico para esta cidade */}
+              {cityResult.length > 0 && (
+                <div style={{ marginTop: '1rem' }} ref={cityChartRef}>
+                  <EnhancedPieChart
+                    data={cityResult.map(item => ({
+                      name: item.education_level_mod_name || item.location_name || item.adm_dependency_detailed_name || item.contract_type_name || item.initial_training_name || item.age_range_name || 'N/A',
+                      value: Number(item.total) || 0
+                    }))}
+                    title={`Distribuição - ${cityName}`}
+                    height={400}
+                  />
+                </div>
+              )}
+
+              {/* Exportação para esta cidade */}
+              <TableExport
+                data={cityResult}
+                headers={headers}
+                headerDisplayNames={HEADER_DISPLAY_NAMES}
+                fileName={`dados_${cityName.toLowerCase().replace(/\s+/g, '_')}`}
+                tableTitle={`Dados - ${cityName}`}
+                tableRef={cityTableRef}
+                chartRef={cityChartRef}
+              />
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
   // Determinar qual tipo de tabela renderizar
   const hasCrossFilters = (
     (isEtapaSelected && isLocalidadeSelected) ||
     (isEtapaSelected && isDependenciaSelected) ||
-    (isLocalidadeSelected && isDependenciaSelected) ||
-    (isEtapaSelected && isVinculoSelected) ||
-    (isLocalidadeSelected && isVinculoSelected) ||
-    (isDependenciaSelected && isVinculoSelected) ||
-    (isEtapaSelected && isFormacaoDocenteSelected) ||
-    (isLocalidadeSelected && isFormacaoDocenteSelected) ||
-    (isDependenciaSelected && isFormacaoDocenteSelected) ||
-    (isVinculoSelected && isFormacaoDocenteSelected)
+    (isLocalidadeSelected && isDependenciaSelected)
   );
 
-  const hasNoFilters = !isEtapaSelected && !isLocalidadeSelected && !isDependenciaSelected &&
-                     !isVinculoSelected && !isFormacaoDocenteSelected && !isFaixaEtariaSelected;
+  const hasNoFilters = !isEtapaSelected && !isLocalidadeSelected && !isDependenciaSelected;
+
+  // Verificar se há dados de múltiplas cidades (filtros territoriais)
+  const hasMultipleCities = municipioData && municipioData.length > 0;
+
+  // Verificar se há filtros territoriais combinados com outros filtros
+  const hasTerritorialWithOtherFilters = hasMultipleCities && (isEtapaSelected || isLocalidadeSelected || isDependenciaSelected);
+
 
   // Renderização principal
   return (
     <ThemeProvider theme={theme}>
       <div>
-        {isHistorical && (
-          <div>
-            {renderHistoricalTable()}
+            {/* Série Histórica - Dados individuais por cidade */}
+            {isHistorical && hasTerritorialWithOtherFilters && !showConsolidated && (
+              <div>
+                {renderHistoricalTable()}
+              </div>
+            )}
+
+            {/* Série Histórica - Dados consolidados */}
+            {isHistorical && hasTerritorialWithOtherFilters && showConsolidated && (
+              <div>
+                {renderHistoricalTableForCity(data.result, tableRefs.historical, chartRef)}
+              </div>
+            )}
+
+            {/* Série Histórica - Sem filtros territoriais */}
+            {isHistorical && !hasTerritorialWithOtherFilters && (
+              <div>
+                {renderHistoricalTable()}
+              </div>
+            )}
+
+            {/* Tabela cruzada */}
+            {!isHistorical && hasCrossFilters && renderCrossTable()}
+
+        {/* Dados individuais por cidade (quando há filtros territoriais combinados com outros filtros e não está em modo consolidado) */}
+        {!isHistorical && hasTerritorialWithOtherFilters && !showConsolidated && municipioDataArray.length > 0 && (
+          <div style={{ marginTop: '2rem' }}>
+            {renderIndividualCityData()}
           </div>
         )}
 
-        {/* Tabela cruzada */}
-        {!isHistorical && hasCrossFilters && renderCrossTable()}
+        {/* Dados consolidados (quando há filtros territoriais combinados com outros filtros e está em modo consolidado) */}
+        {!isHistorical && hasTerritorialWithOtherFilters && showConsolidated && municipioDataArray.length > 0 && (
+          <div style={{ marginTop: '2rem' }}>
+            {/* Tabela consolidada por categoria */}
+            <div>
+              <BasicTable
+                headers={getHeadersForCityData()}
+                data={consolidateDataByCategory()}
+                formatTotal={isRatioType(type)}
+                ref={tableRefs.default}
+              />
+
+              {/* Gráfico para dados consolidados */}
+              {consolidateDataByCategory().length > 0 && (
+                <div style={{ marginTop: '1rem' }}>
+                  <EnhancedPieChart
+                    data={consolidateDataByCategory().map(item => {
+                      // Determinar qual campo usar baseado no filtro selecionado
+                      let name = 'N/A';
+                      if (isEtapaSelected) name = item.education_level_mod_name;
+                      else if (isLocalidadeSelected) name = item.location_name;
+                      else if (isDependenciaSelected) name = item.adm_dependency_detailed_name;
+                      else if (isVinculoSelected) name = item.contract_type_name;
+                      else if (isFormacaoDocenteSelected) name = item.initial_training_name;
+                      else if (isFaixaEtariaSelected) name = item.age_range_name;
+
+                      return {
+                        name: name || 'N/A',
+                        value: Number(item.total) || 0
+                      };
+                    })}
+                    title="Distribuição Consolidada"
+                    height={500}
+                  />
+                </div>
+              )}
+
+              <TableExport
+                data={consolidateDataByCategory()}
+                headers={getHeadersForCityData()}
+                headerDisplayNames={HEADER_DISPLAY_NAMES}
+                fileName="dados_consolidados"
+                tableTitle={title || "Dados Consolidados"}
+                tableRef={tableRefs.default}
+              />
+            </div>
+          </div>
+        )}
 
         {/* Tabela simples (sem filtros) */}
         {!isHistorical && hasNoFilters && (
@@ -1357,7 +1632,7 @@ const ApiDataTable = ({
               </div>
             ))}
 
-            {/* Tabela de municípios */}
+            {/* Tabela de municípios consolidada */}
             {municipioDataArray.length > 0 && (
               <div>
                 <BasicTable
@@ -1373,30 +1648,19 @@ const ApiDataTable = ({
                 />
 
                 {/* Gráfico para municípios */}
-                {municipioDataArray.length > 0 && (
+                {municipioDataArray.length > 0 && municipioDataArray.some(item => item.total > 0) && (
                   <div style={{ marginTop: '1rem' }}>
-                    {municipioDataArray.length <= 10 ? (
-                      <PieChart
-                        data={municipioDataArray.map(item => ({
-                          name: item.cityName,
-                          value: item.total
-                        }))}
-                        title="Distribuição por Município"
-                        height={400}
-                      />
-                    ) : (
-                      <BarChart
-                        data={municipioDataArray.map(item => ({
-                          name: item.cityName,
-                          value: item.total
-                        }))}
-                        title="Dados por Município"
-                        height={400}
-                        xAxisKey="name"
-                        yAxisKey="value"
-                        showLegend={false}
-                      />
-                    )}
+                    <EnhancedBarChart
+                      data={[
+                        municipioDataArray.reduce((acc, item) => {
+                          acc[item.cityName] = item.total;
+                          return acc;
+                        }, { name: 'Municípios' })
+                      ]}
+                      title="Distribuição por Município"
+                      height={500}
+                      xAxisKey="name"
+                    />
                   </div>
                 )}
 
@@ -1420,14 +1684,11 @@ const ApiDataTable = ({
         )}
 
         {/* Tabelas simples com filtros individuais */}
-        {!isHistorical && !hasCrossFilters && (
+        {!isHistorical && !hasCrossFilters && !hasMultipleCities && (
           <>
             {isEtapaSelected && renderSimpleTable('etapa')}
             {isLocalidadeSelected && renderSimpleTable('localidade')}
             {isDependenciaSelected && renderSimpleTable('dependencia')}
-            {isVinculoSelected && renderSimpleTable('vinculo')}
-            {isFormacaoDocenteSelected && renderSimpleTable('formacaoDocente')}
-            {isFaixaEtariaSelected && renderSimpleTable('faixaEtaria')}
           </>
         )}
       </div>

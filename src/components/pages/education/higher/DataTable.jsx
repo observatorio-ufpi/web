@@ -6,8 +6,8 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import { ThemeProvider, createTheme, styled } from '@mui/material/styles';
 import React from 'react';
-import BarChart from '../../../common/BarChart';
-import PieChart from '../../../common/PieChart';
+import EnhancedBarChart from '../../../common/EnhancedBarChart';
+import EnhancedPieChart from '../../../common/EnhancedPieChart';
 import TableExport from '../../../common/TableExport';
 import HistoricalChart from '../HistoricalChart';
 
@@ -28,22 +28,35 @@ const theme = createTheme({
 
   const StyledTableHead = styled(TableHead)(({ theme }) => ({
     backgroundColor: theme.palette.background.tableHeader,
-  }));
+}));
 
-  const BoldTableCell = styled(TableCell)(({ theme }) => ({
-    fontWeight: 'bold',
-    minWidth: '8rem',
-    textAlign: 'center',
-    verticalAlign: 'middle',
-    '@media (max-width: 600px)': {
-      minWidth: '6rem',
-    },
-  }));
+const BoldTableCell = styled(TableCell)(({ theme }) => ({
+  fontWeight: 'bold',
+  minWidth: '8rem',
+  textAlign: 'center',
+  verticalAlign: 'middle',
+  '@media (max-width: 600px)': {
+    minWidth: '6rem',
+  },
+}));
 
   const CenteredTableCell = styled(TableCell)(({ theme }) => ({
     textAlign: 'center',
     verticalAlign: 'middle',
   }));
+
+// Componente para renderizar a fonte
+const SourceFooter = ({ source = "Microdados do Censo da Educação Superior/INEP" }) => (
+  <div style={{
+    textAlign: 'right',
+    marginTop: '10px',
+    fontSize: '12px',
+    color: '#666',
+    fontStyle: 'italic'
+  }}>
+    Fonte: {source}
+  </div>
+);
 
   const HEADERS = {
     // Cabeçalhos padrão
@@ -298,55 +311,73 @@ const processCrossTableData = (data, rowIdField, columnIdField, rowField, column
            municipioDataArray.every(arr => !Array.isArray(arr) || arr.length === 0);
   };
 
-  const BasicTable = ({ headers, data, formatTotal = false, sortField = null, ref }) => {
+  const BasicTable = React.forwardRef(({ headers, data, formatTotal = false, sortField = null, showTotal = false, totalValue = 0 }, ref) => {
     const sortedData = sortField
       ? [...data].sort((a, b) => Number(a[sortField]) - Number(b[sortField]))
       : data;
 
     return (
-      <TableContainer sx={{ maxWidth: '100%', overflowX: 'auto', border: '2px solid #ccc', borderRadius: '4px' }} ref={ref}>
-        <Table sx={{ minWidth: 650 }} aria-label="data table" style={{ backgroundColor: theme.palette.background.default }}>
-          <StyledTableHead>
-            <TableRow>
-              {headers.map(header => (
-                <BoldTableCell key={header}>
-                  {HEADER_DISPLAY_NAMES[header] || header}
-                </BoldTableCell>
-              ))}
-            </TableRow>
-          </StyledTableHead>
-          <TableBody>
-            {sortedData.map((item, index) => {
-              // Verifica se o item atual é a linha de Total
-              const isTotal = item.cityName === 'Total' || item.nome === 'Total';
+      <>
+        <TableContainer sx={{ maxWidth: '100%', overflowX: 'auto', border: '2px solid #ccc', borderRadius: '4px' }} ref={ref}>
+          <Table sx={{ minWidth: 650 }} aria-label="data table" style={{ backgroundColor: theme.palette.background.default }}>
+            <StyledTableHead>
+              <TableRow>
+                {headers.map(header => (
+                  <BoldTableCell key={header}>
+                    {HEADER_DISPLAY_NAMES[header] || header}
+                  </BoldTableCell>
+                ))}
+              </TableRow>
+            </StyledTableHead>
+            <TableBody>
+              {sortedData.map((item, index) => {
+                // Verifica se o item atual é a linha de Total
+                const isTotal = item.cityName === 'Total' || item.nome === 'Total';
 
-              return (
-                <TableRow key={index}>
+                return (
+                  <TableRow key={index}>
+                    {headers.map(header => (
+                      <TableCell
+                        key={header}
+                        align="center"
+                        sx={{
+                          fontWeight: isTotal ? 'bold' : 'normal',
+                          textAlign: 'center',
+                          verticalAlign: 'middle'
+                        }}
+                      >
+                        {header === 'total' && formatTotal
+                          ? `${Number(item[header] || 0).toFixed(2)}%`
+                          : header === 'total'
+                            ? formatNumber(item[header])
+                            : item[header]?.toString() || ''}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                );
+              })}
+              {/* Linha de total */}
+              {showTotal && (
+                <TableRow>
                   {headers.map(header => (
-                    <TableCell
-                      key={header}
-                      align="center"
-                      sx={{
-                        fontWeight: isTotal ? 'bold' : 'normal',
-                        textAlign: 'center',
-                        verticalAlign: 'middle'
-                      }}
-                    >
+                    <BoldTableCell key={header}>
                       {header === 'total' && formatTotal
-                        ? `${Number(item[header] || 0).toFixed(2)}%`
+                        ? `${Number(totalValue).toFixed(2)}%`
                         : header === 'total'
-                          ? formatNumber(item[header])
-                          : item[header]?.toString() || ''}
-                    </TableCell>
+                          ? formatNumber(totalValue)
+                          : 'Total'}
+                    </BoldTableCell>
                   ))}
                 </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
-      </TableContainer>
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+
+        <SourceFooter />
+      </>
     );
-  };
+  });
 
 const DataTable = ({
   data,
@@ -359,7 +390,8 @@ const DataTable = ({
   isCategoriaAdministrativaSelected,
   isFaixaEtariaSuperiorSelected,
   isOrganizacaoAcademicaSelected,
-  title = ''
+  title = '',
+  showConsolidated = false
 }) => {
 
   // Referências para as tabelas
@@ -376,6 +408,8 @@ const DataTable = ({
     cross: React.useRef(null)
   };
 
+  const chartRef = React.useRef(null);
+
   const tableDataArray = [data?.result || []];
   const municipioDataArray = municipioData?.map(m => ({
     cityName: m.cityName,
@@ -385,8 +419,16 @@ const DataTable = ({
   if (hasNoData(data, tableDataArray, municipioDataArray)) {
     return (
       <ThemeProvider theme={theme}>
-        <div>
-          Nenhum dado disponível
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          minHeight: '200px',
+          fontSize: '18px',
+          fontWeight: 'bold',
+          color: '#6c757d'
+        }}>
+          Nenhum dado disponível para os filtros selecionados
         </div>
       </ThemeProvider>
     );
@@ -394,6 +436,38 @@ const DataTable = ({
 
   // Renderização de tabela histórica
   const renderHistoricalTable = () => {
+    // Se há dados de múltiplas cidades, renderizar cada cidade separadamente
+    if (municipioData && Array.isArray(municipioData) && municipioData.length > 0) {
+      return (
+        <div>
+          {municipioData.map((cityData, cityIndex) => {
+            const cityName = cityData.cityName || `Cidade ${cityIndex + 1}`;
+            const cityResult = cityData.result || [];
+
+            if (!cityResult || cityResult.length === 0) return null;
+
+            // Criar referência específica para esta cidade
+            const cityTableRef = React.createRef();
+            const cityChartRef = React.createRef();
+
+            return (
+              <div key={cityIndex} style={{ marginBottom: '2rem', border: '1px solid #ddd', borderRadius: '8px', padding: '1rem' }}>
+                <h3 style={{ marginBottom: '1rem', color: '#333', borderBottom: '2px solid #007bff', paddingBottom: '0.5rem' }}>
+                  {cityName}
+                </h3>
+                {renderHistoricalTableForCity(cityResult, cityTableRef, cityChartRef, cityName)}
+              </div>
+            );
+          })}
+        </div>
+      );
+    }
+
+    // Renderização normal para dados consolidados
+    return renderHistoricalTableForCity(data.result, tableRefs.historical, chartRef);
+  };
+
+  const renderHistoricalTableForCity = (resultData, tableRef, chartRef, cityName = null) => {
     // Determinar quais colunas extras precisamos baseado nos filtros
     const getExtraColumns = () => {
       if (isModalidadeSelected) {
@@ -446,7 +520,7 @@ const DataTable = ({
     if (!extraColumn) {
       // Para dados históricos simples (sem filtros)
       const yearMap = new Map();
-      data.result.forEach(item => {
+      resultData.forEach(item => {
         yearMap.set(item.year, (yearMap.get(item.year) || 0) + Number(item.total || 0));
       });
 
@@ -477,13 +551,16 @@ const DataTable = ({
               </TableBody>
             </Table>
           </TableContainer>
+
+          <SourceFooter />
+
           <TableExport
             data={exportData}
             headers={['year', 'total']}
             headerDisplayNames={{ year: 'Ano', total: 'Total' }}
-            fileName="dados_historicos"
-            tableTitle={title || "Dados Históricos"}
-            tableRef={tableRefs.historical}
+            fileName={cityName ? `dados_historicos_${cityName.toLowerCase().replace(/\s+/g, '_')}` : "dados_historicos"}
+            tableTitle={cityName ? `Dados Históricos - ${cityName}` : (title || "Dados Históricos")}
+            tableRef={tableRef}
           />
         </div>
       );
@@ -496,7 +573,7 @@ const DataTable = ({
     const categoryIds = new Map();
 
     // Primeiro passo: organizar os dados
-    data.result.forEach(item => {
+    resultData.forEach(item => {
       const year = item.year;
       const categoryName = item[extraColumn.name];
       const categoryId = item[extraColumn.id];
@@ -563,9 +640,12 @@ const DataTable = ({
             </TableBody>
           </Table>
         </TableContainer>
+
+        <SourceFooter />
+
         <div style={{ marginTop: '1rem' }}>
           <HistoricalChart
-            data={data}
+            data={{ result: resultData }}
             type={type}
             isModalidadeSelected={isModalidadeSelected}
             isRegimeSelected={isRegimeSelected}
@@ -579,9 +659,9 @@ const DataTable = ({
           data={exportData}
           headers={exportHeaders}
           headerDisplayNames={headerDisplayNames}
-          fileName={`dados_historicos_por_${extraColumn.label.toLowerCase()}`}
-          tableTitle={title || `Dados Históricos por ${extraColumn.label}`}
-          tableRef={tableRefs.historical}
+          fileName={cityName ? `dados_historicos_${cityName.toLowerCase().replace(/\s+/g, '_')}` : `dados_historicos_por_${extraColumn.label.toLowerCase()}`}
+          tableTitle={cityName ? `Dados Históricos - ${cityName}` : (title || `Dados Históricos por ${extraColumn.label}`)}
+          tableRef={tableRef}
         />
       </div>
     );
@@ -725,19 +805,16 @@ const renderCrossTable = () => {
     return (
       <div style={{ marginTop: '1rem' }}>
         {usePieChart ? (
-          <PieChart
+          <EnhancedPieChart
             data={chartData}
             title={`Distribuição por ${chartTitle.replace('Dados por ', '')}`}
-            height={400}
+            height={500}
           />
         ) : (
-          <BarChart
+          <EnhancedPieChart
             data={chartData}
             title={chartTitle}
-            height={400}
-            xAxisKey="name"
-            yAxisKey="value"
-            showLegend={false}
+            height={500}
           />
         )}
       </div>
@@ -764,6 +841,119 @@ const renderCrossTable = () => {
     }
   };
 
+  // Função para determinar headers baseado nos filtros selecionados
+  const getHeadersForCityData = () => {
+    if (isModalidadeSelected) return HEADERS.modalidade;
+    if (isRegimeSelected) return HEADERS.regimeDeTrabalho;
+    if (isFormacaoDocenteSelected) return HEADERS.formacaoDocente;
+    if (isCategoriaAdministrativaSelected) return HEADERS.categoriaAdministrativa;
+    if (isFaixaEtariaSuperiorSelected) return HEADERS.faixaEtariaSuperior;
+    if (isOrganizacaoAcademicaSelected) return HEADERS.organizacaoAcademica;
+    return HEADERS.default;
+  };
+
+  // Função para consolidar dados mantendo categorias separadas
+  const consolidateDataByCategory = () => {
+    if (!municipioData || municipioData.length === 0) return [];
+
+    // Determinar qual campo usar baseado no filtro selecionado
+    const getCategoryField = () => {
+      if (isModalidadeSelected) return 'upper_education_mod_name';
+      if (isRegimeSelected) return 'work_regime_name';
+      if (isFormacaoDocenteSelected) return 'initial_training_name';
+      if (isCategoriaAdministrativaSelected) return 'upper_adm_dependency_name';
+      if (isFaixaEtariaSuperiorSelected) return 'age_student_code_name';
+      if (isOrganizacaoAcademicaSelected) return 'academic_level_name';
+      return 'total';
+    };
+
+    const categoryField = getCategoryField();
+    const consolidatedMap = new Map();
+
+    // Consolidar dados de todas as cidades
+    municipioData.forEach(cityData => {
+      const cityResult = cityData.result || [];
+      cityResult.forEach(item => {
+        const category = item[categoryField] || 'N/A';
+        const total = Number(item.total) || 0;
+
+        if (consolidatedMap.has(category)) {
+          consolidatedMap.set(category, consolidatedMap.get(category) + total);
+        } else {
+          consolidatedMap.set(category, total);
+        }
+      });
+    });
+
+    // Converter Map para array
+    return Array.from(consolidatedMap.entries()).map(([category, total]) => ({
+      [categoryField]: category,
+      total: total
+    }));
+  };
+
+  // Função para renderizar dados individuais por cidade
+  const renderIndividualCityData = () => {
+    if (!municipioData || municipioData.length === 0) return null;
+
+    const headers = getHeadersForCityData();
+
+    return (
+      <div>
+        {municipioData.map((cityData, index) => {
+          const cityName = cityData.cityName || `Cidade ${index + 1}`;
+          const cityResult = cityData.result || [];
+
+          if (!cityResult || cityResult.length === 0) return null;
+
+          // Criar referências específicas para esta cidade
+          const cityTableRef = React.createRef();
+          const cityChartRef = React.createRef();
+
+          return (
+            <div key={index} style={{ marginBottom: '2rem', border: '1px solid #ddd', borderRadius: '8px', padding: '1rem' }}>
+              <h3 style={{ marginBottom: '1rem', color: '#333', borderBottom: '2px solid #007bff', paddingBottom: '0.5rem' }}>
+                {cityName}
+              </h3>
+
+              {/* Renderizar tabela para esta cidade */}
+              <BasicTable
+                headers={headers}
+                data={cityResult}
+                ref={cityTableRef}
+              />
+
+              {/* Gráfico para esta cidade */}
+              {cityResult.length > 0 && (
+                <div style={{ marginTop: '1rem' }} ref={cityChartRef}>
+                  <EnhancedPieChart
+                    data={cityResult.map(item => ({
+                      name: item.upper_education_mod_name || item.work_regime_name || item.initial_training_name || item.upper_adm_dependency_name || item.age_student_code_name || item.academic_level_name || 'N/A',
+                      value: Number(item.total) || 0
+                    }))}
+                    title={`Distribuição - ${cityName}`}
+                    height={400}
+                  />
+                </div>
+              )}
+
+              {/* Exportação para esta cidade */}
+              <TableExport
+                data={cityResult}
+                headers={headers}
+                headerDisplayNames={HEADER_DISPLAY_NAMES}
+                fileName={`dados_${cityName.toLowerCase().replace(/\s+/g, '_')}`}
+                tableTitle={`Dados - ${cityName}`}
+                tableRef={cityTableRef}
+                chartRef={cityChartRef}
+              />
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
   // Função para renderizar gráficos para tabelas cruzadas
   const renderCrossTableCharts = (uniqueRows, uniqueColumns, cellValues, rowHeader) => {
     if (!uniqueRows || !uniqueColumns || uniqueRows.size === 0 || uniqueColumns.size === 0) {
@@ -788,10 +978,10 @@ const renderCrossTable = () => {
 
       return (
         <div style={{ marginTop: '1rem' }}>
-          <PieChart
+          <EnhancedPieChart
             data={firstRowData}
             title={`Distribuição - ${Array.from(uniqueRows.values())[0]}`}
-            height={400}
+            height={500}
           />
         </div>
       );
@@ -799,12 +989,11 @@ const renderCrossTable = () => {
 
     return (
       <div style={{ marginTop: '1rem' }}>
-        <BarChart
+        <EnhancedBarChart
           data={chartData}
           title={`Comparação por ${rowHeader}`}
-          height={400}
+          height={500}
           xAxisKey="name"
-          showLegend={true}
         />
       </div>
     );
@@ -848,6 +1037,29 @@ const renderCrossTable = () => {
         return null;
     }
 
+    // Calcular total para adicionar linha de total
+    const totalValue = tableData.reduce((sum, item) => sum + Number(item.total || 0), 0);
+
+    // Preparar dados para exportação incluindo linha de total
+    const exportData = tableData.map(item => {
+      const row = {};
+      headers.forEach(header => {
+        row[header] = item[header];
+      });
+      return row;
+    });
+
+    // Adicionar linha de total aos dados de exportação
+    const totalRow = {};
+    headers.forEach(header => {
+      if (header === 'total') {
+        totalRow[header] = totalValue;
+      } else {
+        totalRow[header] = 'Total';
+      }
+    });
+    exportData.push(totalRow);
+
     return (
       <div>
         <BasicTable
@@ -855,16 +1067,18 @@ const renderCrossTable = () => {
           data={tableData}
           sortField={sortField}
           formatTotal={formatTotal}
-          usePagination={usePagination}
-          note={note}
+          showTotal={true}
+          totalValue={totalValue}
           ref={tableRefs[filterType]}
         />
+
+        <SourceFooter />
 
         {/* Adicionar gráficos para tabelas simples */}
         {renderSimpleTableCharts(filterType, tableData)}
 
         <TableExport
-          data={tableData}
+          data={exportData}
           headers={headers}
           headerDisplayNames={HEADER_DISPLAY_NAMES}
           fileName={`dados_por_${filterType}`}
@@ -889,14 +1103,93 @@ const renderCrossTable = () => {
     (isOrganizacaoAcademicaSelected && isFormacaoDocenteSelected)
   );
 
+  // Verificar se há dados de múltiplas cidades (filtros territoriais)
+  const hasMultipleCities = municipioData && municipioData.length > 0;
+
+  // Verificar se há filtros territoriais combinados com outros filtros
+  const hasTerritorialWithOtherFilters = hasMultipleCities && (isModalidadeSelected || isRegimeSelected || isFormacaoDocenteSelected || isCategoriaAdministrativaSelected || isFaixaEtariaSuperiorSelected || isOrganizacaoAcademicaSelected);
+
   return (
     <ThemeProvider theme={theme}>
       <div>
-        {/* Tabela histórica */}
-        {isHistorical && renderHistoricalTable()}
+            {/* Série Histórica - Dados individuais por cidade */}
+            {isHistorical && hasTerritorialWithOtherFilters && !showConsolidated && (
+              <div>
+                {renderHistoricalTable()}
+              </div>
+            )}
 
-        {/* Tabela cruzada */}
-        {!isHistorical && hasCrossFilters && renderCrossTable()}
+            {/* Série Histórica - Dados consolidados */}
+            {isHistorical && hasTerritorialWithOtherFilters && showConsolidated && (
+              <div>
+                {renderHistoricalTableForCity(data.result, tableRefs.historical, chartRef)}
+              </div>
+            )}
+
+            {/* Série Histórica - Sem filtros territoriais */}
+            {isHistorical && !hasTerritorialWithOtherFilters && (
+              <div>
+                {renderHistoricalTable()}
+              </div>
+            )}
+
+            {/* Tabela cruzada */}
+            {!isHistorical && hasCrossFilters && renderCrossTable()}
+
+        {/* Dados individuais por cidade (quando há filtros territoriais combinados com outros filtros e não está em modo consolidado) */}
+        {!isHistorical && hasTerritorialWithOtherFilters && !showConsolidated && municipioDataArray.length > 0 && (
+          <div style={{ marginTop: '2rem' }}>
+            {renderIndividualCityData()}
+          </div>
+        )}
+
+        {/* Dados consolidados (quando há filtros territoriais combinados com outros filtros e está em modo consolidado) */}
+        {!isHistorical && hasTerritorialWithOtherFilters && showConsolidated && municipioDataArray.length > 0 && (
+          <div style={{ marginTop: '2rem' }}>
+            {/* Tabela consolidada por categoria */}
+            <div>
+              <BasicTable
+                headers={getHeadersForCityData()}
+                data={consolidateDataByCategory()}
+                ref={tableRefs.default}
+              />
+
+              {/* Gráfico para dados consolidados */}
+              {consolidateDataByCategory().length > 0 && (
+                <div style={{ marginTop: '1rem' }}>
+                  <EnhancedPieChart
+                    data={consolidateDataByCategory().map(item => {
+                      // Determinar qual campo usar baseado no filtro selecionado
+                      let name = 'N/A';
+                      if (isModalidadeSelected) name = item.upper_education_mod_name;
+                      else if (isRegimeSelected) name = item.work_regime_name;
+                      else if (isFormacaoDocenteSelected) name = item.initial_training_name;
+                      else if (isCategoriaAdministrativaSelected) name = item.upper_adm_dependency_name;
+                      else if (isFaixaEtariaSuperiorSelected) name = item.age_student_code_name;
+                      else if (isOrganizacaoAcademicaSelected) name = item.academic_level_name;
+
+                      return {
+                        name: name || 'N/A',
+                        value: Number(item.total) || 0
+                      };
+                    })}
+                    title="Distribuição Consolidada"
+                    height={500}
+                  />
+                </div>
+              )}
+
+              <TableExport
+                data={consolidateDataByCategory()}
+                headers={getHeadersForCityData()}
+                headerDisplayNames={HEADER_DISPLAY_NAMES}
+                fileName="dados_consolidados"
+                tableTitle={title || "Dados Consolidados"}
+                tableRef={tableRefs.default}
+              />
+            </div>
+          </div>
+        )}
 
         {/* Tabela simples (sem filtros) */}
         {!isHistorical && hasNoFilters && (
@@ -919,7 +1212,8 @@ const renderCrossTable = () => {
                 />
               </div>
             ))}
-            {/* Tabela de municípios */}
+
+            {/* Tabela de municípios consolidada */}
             {municipioDataArray.length > 0 && (
               <div>
                 <BasicTable
@@ -935,30 +1229,19 @@ const renderCrossTable = () => {
                 />
 
                 {/* Gráfico para municípios */}
-                {municipioDataArray.length > 0 && (
+                {municipioDataArray.length > 0 && municipioDataArray.some(item => item.total > 0) && (
                   <div style={{ marginTop: '1rem' }}>
-                    {municipioDataArray.length <= 10 ? (
-                      <PieChart
-                        data={municipioDataArray.map(item => ({
-                          name: item.cityName,
-                          value: item.total
-                        }))}
-                        title="Distribuição por Município"
-                        height={400}
-                      />
-                    ) : (
-                      <BarChart
-                        data={municipioDataArray.map(item => ({
-                          name: item.cityName,
-                          value: item.total
-                        }))}
-                        title="Dados por Município"
-                        height={400}
-                        xAxisKey="name"
-                        yAxisKey="value"
-                        showLegend={false}
-                      />
-                    )}
+                    <EnhancedBarChart
+                      data={[
+                        municipioDataArray.reduce((acc, item) => {
+                          acc[item.cityName] = item.total;
+                          return acc;
+                        }, { name: 'Municípios' })
+                      ]}
+                      title="Distribuição por Município"
+                      height={500}
+                      xAxisKey="name"
+                    />
                   </div>
                 )}
 
@@ -982,15 +1265,15 @@ const renderCrossTable = () => {
           </>
         )}
 
-        {/* Tabelas simples com filtros individuais */}
-        {!isHistorical && !hasCrossFilters && (
-          <>
-            {isModalidadeSelected && renderSimpleTable('modalidade')}
-            {isRegimeSelected && renderSimpleTable('regimeDeTrabalho')}
-            {isFormacaoDocenteSelected && renderSimpleTable('formacaoDocente')}
-            {isCategoriaAdministrativaSelected && renderSimpleTable('categoriaAdministrativa')}
-            {isFaixaEtariaSuperiorSelected && renderSimpleTable('faixaEtariaSuperior')}
-            {isOrganizacaoAcademicaSelected && renderSimpleTable('organizacaoAcademica')}
+            {/* Tabelas simples com filtros individuais */}
+            {!isHistorical && !hasCrossFilters && !hasMultipleCities && (
+              <>
+                {isModalidadeSelected && renderSimpleTable('modalidade')}
+                {isRegimeSelected && renderSimpleTable('regimeDeTrabalho')}
+                {isFormacaoDocenteSelected && renderSimpleTable('formacaoDocente')}
+                {isCategoriaAdministrativaSelected && renderSimpleTable('categoriaAdministrativa')}
+                {isFaixaEtariaSuperiorSelected && renderSimpleTable('faixaEtariaSuperior')}
+                {isOrganizacaoAcademicaSelected && renderSimpleTable('organizacaoAcademica')}
           </>
         )}
       </div>

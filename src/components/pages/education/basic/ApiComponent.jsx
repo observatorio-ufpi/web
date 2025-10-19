@@ -69,7 +69,7 @@ const ApiContainer = forwardRef(({
         }
 
         const baseUrl = `${import.meta.env.VITE_API_PUBLIC_URL}/${basePath}/${endpoint}`;
-        
+
         const params = [];
         if (dims) params.push(dims);
         params.push(`filter=${encodeURIComponent(filter)}`);
@@ -175,7 +175,9 @@ const ApiContainer = forwardRef(({
               result: allUniqueData
             };
 
-            onDataFetched(summedResults);
+            onDataFetched({ finalResult: summedResults, allResults });
+          } else if (citiesList.length === 0 && (territory || faixaPopulacional || aglomerado || gerencia)) {
+            onDataFetched({ finalResult: [], allResults: [] });
           } else {
             const filter = buildFilter(city);
             const url = buildUrl(filter);
@@ -202,7 +204,7 @@ const ApiContainer = forwardRef(({
 
           const finalResult = handleResults(allResults);
           console.log("Final Result:", finalResult);
-          
+
           // CORREÇÃO: Para censo-escolar, retornar o finalResult diretamente
           // Para outros casos, manter a estrutura { finalResult, allResults }
           if (basePath === 'censo-escolar') {
@@ -210,6 +212,8 @@ const ApiContainer = forwardRef(({
           } else {
             onDataFetched({ finalResult, allResults });
           }
+        } else if (citiesList.length === 0 && (territory || faixaPopulacional || aglomerado || gerencia)) {
+          onDataFetched({ finalResult: [], allResults: [] });
         } else {
           const filter = buildFilter(city);
           const url = buildUrl(filter);

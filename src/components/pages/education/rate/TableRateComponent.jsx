@@ -257,44 +257,61 @@ const processCrossTableData = (data, rowIdField, columnIdField, rowField, column
 // COMPONENTES REUTILIZÁVEIS
 // ==========================================
 
+// Componente para renderizar a fonte
+const SourceFooter = ({ source = "Laboratório de Dados Educacionais - LDE" }) => (
+  <div style={{
+    textAlign: 'right',
+    marginTop: '10px',
+    fontSize: '12px',
+    color: '#666',
+    fontStyle: 'italic'
+  }}>
+    Fonte: {source}
+  </div>
+);
+
 // Componente de tabela básica
 const BasicTable = ({ headers, data, formatTotal = false, ref }) => {
   return (
-    <TableContainer sx={{ maxWidth: '100%', overflowX: 'auto', border: '2px solid #ccc', borderRadius: '4px' }} ref={ref}>
-      <Table sx={{ minWidth: 650 }} aria-label="data table" style={{ backgroundColor: theme.palette.background.default }}>
-        <StyledTableHead>
-          <TableRow>
-            {headers.map(header => (
-              <BoldTableCell key={header}>
-                {HEADER_DISPLAY_NAMES[header] || header}
-              </BoldTableCell>
-            ))}
-          </TableRow>
-        </StyledTableHead>
-        <TableBody>
-          {data.map((item, index) => (
-            <TableRow key={index}>
+    <>
+      <TableContainer sx={{ maxWidth: '100%', overflowX: 'auto', border: '2px solid #ccc', borderRadius: '4px' }} ref={ref}>
+        <Table sx={{ minWidth: 650 }} aria-label="data table" style={{ backgroundColor: theme.palette.background.default }}>
+          <StyledTableHead>
+            <TableRow>
               {headers.map(header => (
-                <TableCell
-                  key={header}
-                  align="center"
-                  sx={{
-                    textAlign: 'center',
-                    verticalAlign: 'middle'
-                  }}
-                >
-                  {header === 'total' && formatTotal
-                    ? `${Number(item[header] || 0).toFixed(2)}%`
-                    : header === 'total'
-                      ? formatNumber(item[header])
-                      : item[header]?.toString() || ''}
-                </TableCell>
+                <BoldTableCell key={header}>
+                  {HEADER_DISPLAY_NAMES[header] || header}
+                </BoldTableCell>
               ))}
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </TableContainer>
+          </StyledTableHead>
+          <TableBody>
+            {data.map((item, index) => (
+              <TableRow key={index}>
+                {headers.map(header => (
+                  <TableCell
+                    key={header}
+                    align="center"
+                    sx={{
+                      textAlign: 'center',
+                      verticalAlign: 'middle'
+                    }}
+                  >
+                    {header === 'total' && formatTotal
+                      ? `${Number(item[header] || 0).toFixed(2).replace('.', ',')}%`
+                      : header === 'total'
+                        ? formatNumber(item[header])
+                        : item[header]?.toString() || ''}
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+
+      <SourceFooter />
+    </>
   );
 };
 
@@ -330,7 +347,7 @@ const PaginatedTable = ({
                   {headers.map(header => (
                     <CenteredTableCell key={header}>
                       {header === 'total' && formatTotal
-                        ? `${Number(item[header] || 0).toFixed(2)}%`
+                        ? `${Number(item[header] || 0).toFixed(2).replace('.', ',')}%`
                         : header === 'total'
                           ? formatNumber(item[header])
                           : item[header]?.toString() || ''}
@@ -354,6 +371,8 @@ const PaginatedTable = ({
           `${from}-${to} de ${count !== -1 ? count : `mais de ${to}`}`
         }
       />
+
+      <SourceFooter />
     </>
   );
 };
@@ -395,7 +414,7 @@ const CrossTable = ({
                 {Array.from(uniqueColumns.keys()).map(columnId => (
                   <CenteredTableCell key={columnId}>
                     {isRatioType(type)
-                      ? `${Number(cellValues.get(`${rowId}-${columnId}`) || 0).toFixed(2)}%`
+                      ? `${Number(cellValues.get(`${rowId}-${columnId}`) || 0).toFixed(2).replace('.', ',')}%`
                       : formatNumber(cellValues.get(`${rowId}-${columnId}`) || 0)}
                   </CenteredTableCell>
                 ))}
@@ -420,21 +439,6 @@ const CrossTable = ({
           </TableBody>
         </Table>
       </TableContainer>
-      <TableExport
-        data={Array.from(uniqueRows.entries()).map(([rowId, rowName]) => {
-          const rowData = { [rowHeader]: rowName };
-          Array.from(uniqueColumns.entries()).forEach(([colId, colName]) => {
-            rowData[colName] = cellValues.get(`${rowId}-${colId}`) || 0;
-          });
-          rowData.Total = rowTotals.get(rowId) || 0;
-          return rowData;
-        })}
-        headers={[rowHeader, ...Array.from(uniqueColumns.values()), 'Total']}
-        headerDisplayNames={{ [rowHeader]: rowHeader, Total: 'Total' }}
-        fileName="dados_cruzados"
-        tableTitle="Dados Cruzados"
-        tableRef={ref}
-      />
     </>
   );
 };
@@ -480,8 +484,16 @@ const TableRateComponent = ({
   if (hasNoData(data)) {
     return (
       <ThemeProvider theme={theme}>
-        <div>
-          Nenhum dado disponível
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          minHeight: '200px',
+          fontSize: '18px',
+          fontWeight: 'bold',
+          color: '#6c757d'
+        }}>
+          Nenhum dado disponível para os filtros selecionados
         </div>
       </ThemeProvider>
     );
@@ -561,7 +573,7 @@ const TableRateComponent = ({
                   {sortedYears.map(year => (
                     <CenteredTableCell key={year}>
                       {isRatioType(type)
-                        ? `${Number(yearMap.get(year) || 0).toFixed(2)}%`
+                        ? `${Number(yearMap.get(year) || 0).toFixed(2).replace('.', ',')}%`
                         : formatNumber(yearMap.get(year))}
                     </CenteredTableCell>
                   ))}
@@ -569,6 +581,9 @@ const TableRateComponent = ({
               </TableBody>
             </Table>
           </TableContainer>
+
+          <SourceFooter />
+
           <TableExport
             data={exportData}
             headers={exportHeaders}
@@ -648,7 +663,7 @@ const TableRateComponent = ({
                     {sortedYears.map(year => (
                       <CenteredTableCell key={year}>
                         {isRatioType(type)
-                          ? `${Number(yearMap.get(year) || 0).toFixed(2)}%`
+                          ? `${Number(yearMap.get(year) || 0).toFixed(2).replace('.', ',')}%`
                           : formatNumber(yearMap.get(year) || 0)}
                       </CenteredTableCell>
                     ))}
@@ -658,6 +673,9 @@ const TableRateComponent = ({
             </TableBody>
           </Table>
         </TableContainer>
+
+        <SourceFooter />
+
         <div ref={chartRef}>
           <HistoricalChart
             data={data}
@@ -765,7 +783,7 @@ const TableRateComponent = ({
     const chartTitle = getCrossTableTitle();
 
     return (
-      <div style={{ marginTop: '1rem' }} ref={crossChartRef}>
+      <div style={{ marginTop: '1rem' }}>
         <EnhancedBarChart
           data={chartData}
           title={chartTitle}
@@ -809,7 +827,10 @@ const TableRateComponent = ({
         return null;
     }
 
-    // Preparar dados para exportação
+    // Calcular total para adicionar linha de total
+    const totalValue = tableData.reduce((sum, item) => sum + Number(item.total || 0), 0);
+
+    // Preparar dados para exportação incluindo linha de total
     const exportData = tableData.map(item => {
       const row = {};
       headers.forEach(header => {
@@ -817,6 +838,17 @@ const TableRateComponent = ({
       });
       return row;
     });
+
+    // Adicionar linha de total aos dados de exportação
+    const totalRow = {};
+    headers.forEach(header => {
+      if (header === 'total') {
+        totalRow[header] = totalValue;
+      } else {
+        totalRow[header] = 'Total';
+      }
+    });
+    exportData.push(totalRow);
 
     // Preparar headers para exportação
     const exportHeaders = headers;
@@ -844,7 +876,7 @@ const TableRateComponent = ({
                   {headers.map(header => (
                     <CenteredTableCell key={header}>
                       {header === 'total' && formatTotal
-                        ? `${Number(item[header] || 0).toFixed(2)}%`
+                        ? `${Number(item[header] || 0).toFixed(2).replace('.', ',')}%`
                         : header === 'total'
                           ? formatNumber(item[header])
                           : item[header]?.toString() || ''}
@@ -852,9 +884,23 @@ const TableRateComponent = ({
                   ))}
                 </TableRow>
               ))}
+              {/* Linha de total */}
+              <TableRow>
+                {headers.map(header => (
+                  <BoldTableCell key={header}>
+                    {header === 'total' && formatTotal
+                      ? `${Number(totalValue).toFixed(2).replace('.', ',')}%`
+                      : header === 'total'
+                        ? formatNumber(totalValue)
+                        : 'Total'}
+                  </BoldTableCell>
+                ))}
+              </TableRow>
             </TableBody>
           </Table>
         </TableContainer>
+
+        <SourceFooter />
 
         {/* Adicionar gráficos para tabelas simples */}
         {renderSimpleTableCharts(filterType, tableData)}
@@ -948,8 +994,25 @@ const TableRateComponent = ({
           ref={tableRefs.cross}
         />
 
+        <SourceFooter />
+
         {/* Adicionar gráficos para tabelas cruzadas */}
-        {renderCrossTableCharts(uniqueRows, uniqueColumns, cellValues, config.rowHeader)}
+        <div ref={crossChartRef}>
+          {renderCrossTableCharts(uniqueRows, uniqueColumns, cellValues, config.rowHeader)}
+        </div>
+
+        {/* Botão de exportar após o gráfico */}
+        <div style={{ marginTop: '1rem' }}>
+          <TableExport
+            data={exportData}
+            headers={exportHeaders}
+            headerDisplayNames={headerDisplayNames}
+            fileName="dados_cruzados"
+            tableTitle="Dados Cruzados"
+            tableRef={tableRefs.cross}
+            chartRef={crossChartRef}
+          />
+        </div>
       </div>
     );
   };

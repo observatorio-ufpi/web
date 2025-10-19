@@ -1,4 +1,4 @@
-import { Button, Typography } from '@mui/material';
+import { Button, Switch, Typography } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import React, { useEffect, useMemo, useState, useRef } from 'react';
 import '../../../../style/RevenueTableContainer.css';
@@ -36,6 +36,7 @@ function ParentComponent() {
   const [isLocalidadeSelected, setIsLocalidadeSelected] = useState(false);
   const [isDependenciaSelected, setIsDependenciaSelected] = useState(false);
   const [displayHistorical, setDisplayHistorical] = useState(false);
+  const [showConsolidated, setShowConsolidated] = useState(false);
   const [year, setYear] = useState(yearLimits.enrollment.max);
   const [filteredYear, setFilteredYear] = useState(null);
   const [startYear, setStartYear] = useState(yearLimits.enrollment.min);
@@ -106,7 +107,7 @@ function ParentComponent() {
       fullTitle += ` | ${filterInfo.join(' | ')}`;
     }
     setTitle(fullTitle);
-    
+
     setIsHistorical(displayHistorical);
     setFilteredYear(year);
     setIsEtapaSelected(selectedFilters.some(filter => filter.value === 'etapa'));
@@ -162,7 +163,12 @@ function ParentComponent() {
     const matchesTerritory = !territory || territorioDesenvolvimento === Regioes[territory];
     const matchesFaixaPopulacional = !faixaPopulacional || cityFaixaPopulacional === FaixaPopulacional[faixaPopulacional];
     const matchesAglomerado = !aglomerado || cityAglomerado === aglomerado;
-    const matchesGerencia = !gerencia || String(cityGerencia).split(',').map(g => g.trim()).includes(String(gerencia));
+
+    // Para gerência, verificar se a gerencia selecionada está contida na string de gerencias da cidade
+    // (considerando que uma cidade pode ter múltiplas gerencias separadas por vírgula)
+    const matchesGerencia = !gerencia || cityGerencia.split(',').map(g => g.trim()).includes(gerencia);
+
+    // Retorna true apenas se TODAS as condições selecionadas são atendidas
     return matchesTerritory && matchesFaixaPopulacional && matchesAglomerado && matchesGerencia;
   });
 
@@ -193,14 +199,14 @@ function ParentComponent() {
     .sort((a, b) => parseInt(a) - parseInt(b))
     .map(gerencia => ({
       value: gerencia,
-      label: 'Gerencia ' + gerencia.padStart(2, '0'),
+      label: gerencia + 'ª GRE',
     }));
 
   const aglomeradoOptions = [...new Set(Object.values(municipios).flatMap(m => String(m.aglomerado).split(',').map(a => a.trim())).filter(Boolean))]
     .sort((a, b) => parseInt(a) - parseInt(b))
     .map(aglomerado => ({
       value: aglomerado,
-      label: 'Aglomerado ' + aglomerado.padStart(2, '0'),
+      label: 'AG ' + aglomerado,
     }));
 
   const cityOptions = filteredCities.map(([key, { nomeMunicipio }]) => ({
@@ -308,6 +314,7 @@ function ParentComponent() {
               options={territoryOptions}
               placeholder="Território de Desenvolvimento"
               size="xs"
+              isClearable={true}
             />
           </div>
 
@@ -322,6 +329,7 @@ function ParentComponent() {
               options={faixaPopulacionalOptions}
               placeholder="Faixa Populacional"
               size="xs"
+              isClearable={true}
             />
           </div>
 
@@ -331,8 +339,9 @@ function ParentComponent() {
               value={aglomeradoOptions.find(option => option.value === aglomerado) || null}
               onChange={(selectedOption) => setAglomerado(selectedOption ? selectedOption.value : '')}
               options={aglomeradoOptions}
-              placeholder="Aglomerado"
+              placeholder="Aglomerado - AG"
               size="xs"
+              isClearable={true}
             />
           </div>
 
@@ -342,8 +351,9 @@ function ParentComponent() {
               value={gerenciaOptions.find(option => option.value === gerencia) || null}
               onChange={(selectedOption) => setGerencia(selectedOption ? selectedOption.value : '')}
               options={gerenciaOptions}
-              placeholder="Gerencia"
+              placeholder="Gerência Regional de Ensino - GRE"
               size="xs"
+              isClearable={true}
             />
           </div>
 
@@ -353,12 +363,14 @@ function ParentComponent() {
               value={cityOptions.find(option => option.value === city) || null}
               onChange={(selectedOption) => setCity(selectedOption ? selectedOption.value : '')}
               options={cityOptions}
-              placeholder="Cidade"
+              placeholder="Município"
               size="xs"
+              isClearable={true}
             />
           </div>
 
-          <div className="md:col-span-1 flex flex-col justify-end">
+          {/* Filtros Múltiplos - Segunda coluna, terceira linha */}
+          <div className="md:col-span-1">
             <div className="mb-3">
               <Select
                 id="multiFilterSelect"
@@ -378,15 +390,40 @@ function ParentComponent() {
                 size="xs"
               />
             </div>
+          </div>
 
-            <div className="flex flex-col sm:flex-row gap-3 justify-end">
+          {/* Botões - Ocupa todo o espaço da linha */}
+          <div className="md:col-span-3 flex flex-col justify-end">
+            <div className="flex flex-col sm:flex-row gap-3 justify-end items-end">
+              {/* Toggle para modo consolidado (apenas quando há filtros territoriais combinados com outros filtros) */}
+              {(territory || faixaPopulacional || aglomerado || gerencia) && (isEtapaSelected || isLocalidadeSelected || isDependenciaSelected) && (
+                <div className="flex items-center space-x-2">
+                  <label className="flex items-center pb-2 space-x-2 cursor-pointer">
+                    <Switch
+                      checked={showConsolidated}
+                      onChange={(e) => setShowConsolidated(e.target.checked)}
+                      color="primary"
+                      size="small"
+                      sx={{
+                        '& .MuiSwitch-thumb': {
+                          backgroundColor: showConsolidated ? '#1976d2' : '#fafafa',
+                        },
+                        '& .MuiSwitch-track': {
+                          backgroundColor: showConsolidated ? '#1976d2' : '#ccc',
+                        },
+                      }}
+                    />
+                    <span className="text-gray-700">Mostrar dados consolidados</span>
+                  </label>
+                </div>
+              )}
               <Button
                 variant="contained"
                 color="primary"
                 onClick={handleFilterClick}
                 className="w-full sm:w-auto"
               >
-                Filtrar
+                Mostrar resultados
               </Button>
 
               <Button
@@ -456,7 +493,8 @@ function ParentComponent() {
           isHistorical={isHistorical}
           type={filteredType}
           year={filteredYear || year}
-          title={title}
+          title={title} // Passando o título para o ApiDataTable
+          showConsolidated={showConsolidated}
         />
       ) : null}
     </div>

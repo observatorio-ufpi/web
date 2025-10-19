@@ -1,6 +1,6 @@
 import React from 'react';
+import { FaArrowLeft, FaBars, FaDollarSign, FaGraduationCap, FaInfoCircle, FaTimes } from 'react-icons/fa';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { FaGraduationCap, FaDollarSign, FaInfoCircle, FaArrowLeft, FaBars, FaTimes } from 'react-icons/fa';
 import { useSidebar } from '../layouts/AppLayout';
 
 const Sidebar = () => {
@@ -109,7 +109,7 @@ const Sidebar = () => {
                   }`}
                 >
                   <FaGraduationCap className="mr-3 text-lg flex-shrink-0" />
-                  <span className={`${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>Ensino Superior</span>
+                  <span className={`${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>Educação Superior</span>
                 </Link>
               </li>
               <li>
@@ -122,7 +122,7 @@ const Sidebar = () => {
                   }`}
                 >
                   <FaGraduationCap className="mr-3 text-lg flex-shrink-0" />
-                  <span className={`${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>Taxas</span>
+                  <span className={`${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>Indicadores</span>
                 </Link>
               </li>
             </ul>

@@ -6,7 +6,6 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import React from 'react';
 import { FaFileExcel, FaFilePdf } from 'react-icons/fa';
-import * as XLSX from 'xlsx';
 
 /**
  * Componente para exportar tabelas para PDF e Excel
@@ -48,48 +47,34 @@ const TableExport = ({
     return sanitizedTitle || fileName;
   };
 
-  // Função para preparar dados do gráfico baseado nos dados da tabela
-  const prepareChartData = () => {
-    if (chartData) return chartData;
+  // Função para formatar números com vírgula no lugar de ponto
+  const formatNumberWithComma = (value) => {
+    if (value === null || value === undefined || value === '') return '';
 
-    if (!data || data.length === 0) return null;
+    // Se for string, verificar se já está formatado ou tem símbolos
+    const strValue = value.toString().trim();
 
-    // Detectar automaticamente se é gráfico de pizza ou barras baseado na estrutura dos dados
-    const firstRow = data[0];
-    const keys = Object.keys(firstRow);
-
-    // Se tem apenas duas colunas (nome e valor), é pizza
-    if (keys.length === 2) {
-      const nameKey = keys.find(key => typeof firstRow[key] === 'string');
-      const valueKey = keys.find(key => typeof firstRow[key] === 'number' || !isNaN(Number(firstRow[key])));
-
-      if (nameKey && valueKey) {
-        const pieChartData = {
-          type: 'pie',
-          categories: data.map(item => item[nameKey]),
-          series: [{
-            name: headerDisplayNames[valueKey] || valueKey,
-            data: data.map(item => Number(item[valueKey]) || 0)
-          }]
-        };
-        return pieChartData;
-      }
+    // Se já tem % no final, apenas substituir ponto por vírgula
+    if (strValue.includes('%')) {
+      return strValue.replace('.', ',');
     }
 
-    // Se tem mais colunas, é gráfico de barras
-    const nameKey = keys[0]; // Primeira coluna como categoria
-    const dataKeys = keys.slice(1).filter(key => key !== 'Total'); // Demais colunas como séries (exceto Total)
+    // Se já tem vírgula, retornar como está
+    if (strValue.includes(',') && !strValue.includes('.')) {
+      return strValue;
+    }
 
-    const barChartData = {
-      type: 'bar',
-      categories: data.map(item => item[nameKey]),
-      series: dataKeys.map(key => ({
-        name: headerDisplayNames[key] || key,
-        data: data.map(item => Number(item[key]) || 0)
-      }))
-    };
-    return barChartData;
+    // Tentar converter para número
+    const num = parseFloat(strValue.replace(',', '.').replace(/[^\d.-]/g, ''));
+    if (isNaN(num)) return strValue;
+
+    // Formatar com locale pt-BR (usa vírgula como separador decimal)
+    return num.toLocaleString('pt-BR', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2
+    });
   };
+
 
   // Função para exportar para PDF
   const exportToPDF = async () => {
@@ -118,7 +103,12 @@ const TableExport = ({
           // Verificar se a propriedade existe no objeto
           if (row.hasOwnProperty(header)) {
             const value = row[header];
-            tableRow.push(value !== undefined && value !== null ? value.toString() : '');
+            if (value !== undefined && value !== null) {
+              // Formatar números com vírgula
+              tableRow.push(formatNumberWithComma(value));
+            } else {
+              tableRow.push('');
+            }
           } else {
             tableRow.push('');
           }
@@ -150,8 +140,22 @@ const TableExport = ({
         // Calcular dimensões para o gráfico
         const pageWidth = pdf.internal.pageSize.getWidth();
         const pageHeight = pdf.internal.pageSize.getHeight();
-        const imgWidth = pageWidth - 80; // 40px de margem em cada lado
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+        // Verificar se o gráfico cabe na página
+        const maxWidth = pageWidth - 80; // 40px de margem em cada lado
+        const maxHeight = pageHeight - 80; // 40px de margem em cima e embaixo
+
+        let imgWidth, imgHeight;
+
+        if (canvas.width / canvas.height > maxWidth / maxHeight) {
+          // Gráfico é mais largo que alto - ajustar pela largura
+          imgWidth = maxWidth;
+          imgHeight = (canvas.height * imgWidth) / canvas.width;
+        } else {
+          // Gráfico é mais alto que largo - ajustar pela altura
+          imgHeight = maxHeight;
+          imgWidth = (canvas.width * imgHeight) / canvas.height;
+        }
 
         // Centralizar o gráfico na página
         const x = 40;
@@ -180,8 +184,6 @@ const TableExport = ({
       workbook.creator = 'Sistema de Observatório';
       workbook.created = new Date();
 
-      // Preparar dados do gráfico
-      const chartDataForExcel = prepareChartData();
 
       // Criar planilha de dados
       const dataWorksheet = workbook.addWorksheet('Dados');
@@ -204,11 +206,14 @@ const TableExport = ({
         const row = [];
         headers.forEach(header => {
           const value = item[header];
-          // Substituir valores vazios por 0 em colunas numéricas
-          if (header === 'total' || typeof value === 'number' || !isNaN(Number(value))) {
-            row.push(value === '' || value === null || value === undefined ? 0 : value);
+          // Formatar números com vírgula
+          if (value === '' || value === null || value === undefined) {
+            row.push('');
+          } else if (header === 'total' || typeof value === 'number' || !isNaN(Number(value))) {
+            // Se for número, formatar com vírgula
+            row.push(formatNumberWithComma(value));
           } else {
-            row.push(value || '');
+            row.push(value);
           }
         });
         dataWorksheet.addRow(row);
@@ -219,45 +224,6 @@ const TableExport = ({
         column.width = 15;
       });
 
-      if (chartDataForExcel) {
-        // Criar planilha para dados do gráfico (apenas tabela)
-        const chartWorksheet = workbook.addWorksheet('Gráfico');
-
-        if (chartDataForExcel.type === 'pie') {
-          // Dados para gráfico de pizza
-          chartWorksheet.addRow(['Categoria', 'Valor']);
-          chartDataForExcel.categories.forEach((category, index) => {
-            const value = chartDataForExcel.series[0].data[index] || 0;
-            chartWorksheet.addRow([category, value]);
-          });
-        } else {
-          // Dados para gráfico de barras
-          const headerRow = ['Categoria', ...chartDataForExcel.series.map(s => s.name)];
-          chartWorksheet.addRow(headerRow);
-
-          chartDataForExcel.categories.forEach((category, index) => {
-            const row = [category];
-            chartDataForExcel.series.forEach(series => {
-              row.push(series.data[index] || 0);
-            });
-            chartWorksheet.addRow(row);
-          });
-        }
-
-        // Estilizar cabeçalhos da planilha de gráfico
-        const chartHeaderRow = chartWorksheet.getRow(1);
-        chartHeaderRow.font = { bold: true };
-        chartHeaderRow.fill = {
-          type: 'pattern',
-          pattern: 'solid',
-          fgColor: { argb: 'FF4CAF50' }
-        };
-
-        // Auto-ajustar largura das colunas
-        chartWorksheet.columns.forEach(column => {
-          column.width = 15;
-        });
-      }
 
       // Salvar arquivo
       const buffer = await workbook.xlsx.writeBuffer();

@@ -25,7 +25,7 @@ function CensoEscolarFilterComponent({
 }) {
   // Estado para controlar se os filtros estão expandidos
   const [filtersExpanded, setFiltersExpanded] = useState(false);
-  
+
   // Estado para o range slider
   const [yearRange, setYearRange] = useState([2007, 2024]);
 
@@ -147,7 +147,7 @@ function CensoEscolarFilterComponent({
                 size="xs"
               />
             </div>
-            
+
             {/* Botão de toggle para filtros adicionais */}
             <Button
               variant="outlined"
