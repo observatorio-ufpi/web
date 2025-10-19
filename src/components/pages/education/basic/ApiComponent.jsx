@@ -83,12 +83,12 @@ function ApiContainer({
 
       // Construir URL base
       const baseUrl = `${import.meta.env.VITE_API_PUBLIC_URL}/${basePath}/${endpoint}`;
-      
+
       // Adicionar parâmetros
       const params = [];
       if (dims) params.push(dims);
       params.push(`filter=${encodeURIComponent(filter)}`);
-      
+
       return `${baseUrl}?${params.join('&')}`;
     };
 
@@ -186,7 +186,7 @@ function ApiContainer({
               result: allUniqueData
             };
 
-            onDataFetched(summedResults);
+            onDataFetched({ finalResult: summedResults, allResults });
           } else if (citiesList.length === 0 && (territory || faixaPopulacional || aglomerado || gerencia)) {
             onDataFetched({ finalResult: [], allResults: [] });
           } else {

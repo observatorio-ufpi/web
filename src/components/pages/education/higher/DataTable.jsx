@@ -45,6 +45,19 @@ const BoldTableCell = styled(TableCell)(({ theme }) => ({
     verticalAlign: 'middle',
   }));
 
+// Componente para renderizar a fonte
+const SourceFooter = ({ source = "Microdados do Censo da Educação Superior/INEP" }) => (
+  <div style={{
+    textAlign: 'right',
+    marginTop: '10px',
+    fontSize: '12px',
+    color: '#666',
+    fontStyle: 'italic'
+  }}>
+    Fonte: {source}
+  </div>
+);
+
   const HEADERS = {
     // Cabeçalhos padrão
     default: ['total'],
@@ -304,61 +317,65 @@ const processCrossTableData = (data, rowIdField, columnIdField, rowField, column
       : data;
 
     return (
-      <TableContainer sx={{ maxWidth: '100%', overflowX: 'auto', border: '2px solid #ccc', borderRadius: '4px' }} ref={ref}>
-        <Table sx={{ minWidth: 650 }} aria-label="data table" style={{ backgroundColor: theme.palette.background.default }}>
-          <StyledTableHead>
-            <TableRow>
-              {headers.map(header => (
-                <BoldTableCell key={header}>
-                  {HEADER_DISPLAY_NAMES[header] || header}
-                </BoldTableCell>
-              ))}
-            </TableRow>
-          </StyledTableHead>
-          <TableBody>
-            {sortedData.map((item, index) => {
-              // Verifica se o item atual é a linha de Total
-              const isTotal = item.cityName === 'Total' || item.nome === 'Total';
-
-              return (
-                <TableRow key={index}>
-                  {headers.map(header => (
-                    <TableCell
-                      key={header}
-                      align="center"
-                      sx={{
-                        fontWeight: isTotal ? 'bold' : 'normal',
-                        textAlign: 'center',
-                        verticalAlign: 'middle'
-                      }}
-                    >
-                      {header === 'total' && formatTotal
-                        ? `${Number(item[header] || 0).toFixed(2)}%`
-                        : header === 'total'
-                          ? formatNumber(item[header])
-                          : item[header]?.toString() || ''}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              );
-            })}
-            {/* Linha de total */}
-            {showTotal && (
+      <>
+        <TableContainer sx={{ maxWidth: '100%', overflowX: 'auto', border: '2px solid #ccc', borderRadius: '4px' }} ref={ref}>
+          <Table sx={{ minWidth: 650 }} aria-label="data table" style={{ backgroundColor: theme.palette.background.default }}>
+            <StyledTableHead>
               <TableRow>
                 {headers.map(header => (
                   <BoldTableCell key={header}>
-                    {header === 'total' && formatTotal
-                      ? `${Number(totalValue).toFixed(2)}%`
-                      : header === 'total'
-                        ? formatNumber(totalValue)
-                        : 'Total'}
+                    {HEADER_DISPLAY_NAMES[header] || header}
                   </BoldTableCell>
                 ))}
               </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
+            </StyledTableHead>
+            <TableBody>
+              {sortedData.map((item, index) => {
+                // Verifica se o item atual é a linha de Total
+                const isTotal = item.cityName === 'Total' || item.nome === 'Total';
+
+                return (
+                  <TableRow key={index}>
+                    {headers.map(header => (
+                      <TableCell
+                        key={header}
+                        align="center"
+                        sx={{
+                          fontWeight: isTotal ? 'bold' : 'normal',
+                          textAlign: 'center',
+                          verticalAlign: 'middle'
+                        }}
+                      >
+                        {header === 'total' && formatTotal
+                          ? `${Number(item[header] || 0).toFixed(2)}%`
+                          : header === 'total'
+                            ? formatNumber(item[header])
+                            : item[header]?.toString() || ''}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                );
+              })}
+              {/* Linha de total */}
+              {showTotal && (
+                <TableRow>
+                  {headers.map(header => (
+                    <BoldTableCell key={header}>
+                      {header === 'total' && formatTotal
+                        ? `${Number(totalValue).toFixed(2)}%`
+                        : header === 'total'
+                          ? formatNumber(totalValue)
+                          : 'Total'}
+                    </BoldTableCell>
+                  ))}
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+
+        <SourceFooter />
+      </>
     );
   });
 
@@ -391,6 +408,8 @@ const DataTable = ({
     cross: React.useRef(null)
   };
 
+  const chartRef = React.useRef(null);
+
   const tableDataArray = [data?.result || []];
   const municipioDataArray = municipioData?.map(m => ({
     cityName: m.cityName,
@@ -417,6 +436,38 @@ const DataTable = ({
 
   // Renderização de tabela histórica
   const renderHistoricalTable = () => {
+    // Se há dados de múltiplas cidades, renderizar cada cidade separadamente
+    if (municipioData && Array.isArray(municipioData) && municipioData.length > 0) {
+      return (
+        <div>
+          {municipioData.map((cityData, cityIndex) => {
+            const cityName = cityData.cityName || `Cidade ${cityIndex + 1}`;
+            const cityResult = cityData.result || [];
+
+            if (!cityResult || cityResult.length === 0) return null;
+
+            // Criar referência específica para esta cidade
+            const cityTableRef = React.createRef();
+            const cityChartRef = React.createRef();
+
+            return (
+              <div key={cityIndex} style={{ marginBottom: '2rem', border: '1px solid #ddd', borderRadius: '8px', padding: '1rem' }}>
+                <h3 style={{ marginBottom: '1rem', color: '#333', borderBottom: '2px solid #007bff', paddingBottom: '0.5rem' }}>
+                  {cityName}
+                </h3>
+                {renderHistoricalTableForCity(cityResult, cityTableRef, cityChartRef, cityName)}
+              </div>
+            );
+          })}
+        </div>
+      );
+    }
+
+    // Renderização normal para dados consolidados
+    return renderHistoricalTableForCity(data.result, tableRefs.historical, chartRef);
+  };
+
+  const renderHistoricalTableForCity = (resultData, tableRef, chartRef, cityName = null) => {
     // Determinar quais colunas extras precisamos baseado nos filtros
     const getExtraColumns = () => {
       if (isModalidadeSelected) {
@@ -469,7 +520,7 @@ const DataTable = ({
     if (!extraColumn) {
       // Para dados históricos simples (sem filtros)
       const yearMap = new Map();
-      data.result.forEach(item => {
+      resultData.forEach(item => {
         yearMap.set(item.year, (yearMap.get(item.year) || 0) + Number(item.total || 0));
       });
 
@@ -500,13 +551,16 @@ const DataTable = ({
               </TableBody>
             </Table>
           </TableContainer>
+
+          <SourceFooter />
+
           <TableExport
             data={exportData}
             headers={['year', 'total']}
             headerDisplayNames={{ year: 'Ano', total: 'Total' }}
-            fileName="dados_historicos"
-            tableTitle={title || "Dados Históricos"}
-            tableRef={tableRefs.historical}
+            fileName={cityName ? `dados_historicos_${cityName.toLowerCase().replace(/\s+/g, '_')}` : "dados_historicos"}
+            tableTitle={cityName ? `Dados Históricos - ${cityName}` : (title || "Dados Históricos")}
+            tableRef={tableRef}
           />
         </div>
       );
@@ -519,7 +573,7 @@ const DataTable = ({
     const categoryIds = new Map();
 
     // Primeiro passo: organizar os dados
-    data.result.forEach(item => {
+    resultData.forEach(item => {
       const year = item.year;
       const categoryName = item[extraColumn.name];
       const categoryId = item[extraColumn.id];
@@ -586,9 +640,12 @@ const DataTable = ({
             </TableBody>
           </Table>
         </TableContainer>
+
+        <SourceFooter />
+
         <div style={{ marginTop: '1rem' }}>
           <HistoricalChart
-            data={data}
+            data={{ result: resultData }}
             type={type}
             isModalidadeSelected={isModalidadeSelected}
             isRegimeSelected={isRegimeSelected}
@@ -602,9 +659,9 @@ const DataTable = ({
           data={exportData}
           headers={exportHeaders}
           headerDisplayNames={headerDisplayNames}
-          fileName={`dados_historicos_por_${extraColumn.label.toLowerCase()}`}
-          tableTitle={title || `Dados Históricos por ${extraColumn.label}`}
-          tableRef={tableRefs.historical}
+          fileName={cityName ? `dados_historicos_${cityName.toLowerCase().replace(/\s+/g, '_')}` : `dados_historicos_por_${extraColumn.label.toLowerCase()}`}
+          tableTitle={cityName ? `Dados Históricos - ${cityName}` : (title || `Dados Históricos por ${extraColumn.label}`)}
+          tableRef={tableRef}
         />
       </div>
     );
@@ -1015,6 +1072,8 @@ const renderCrossTable = () => {
           ref={tableRefs[filterType]}
         />
 
+        <SourceFooter />
+
         {/* Adicionar gráficos para tabelas simples */}
         {renderSimpleTableCharts(filterType, tableData)}
 
@@ -1053,8 +1112,26 @@ const renderCrossTable = () => {
   return (
     <ThemeProvider theme={theme}>
       <div>
-            {/* Tabela histórica */}
-            {isHistorical && renderHistoricalTable()}
+            {/* Série Histórica - Dados individuais por cidade */}
+            {isHistorical && hasTerritorialWithOtherFilters && !showConsolidated && (
+              <div>
+                {renderHistoricalTable()}
+              </div>
+            )}
+
+            {/* Série Histórica - Dados consolidados */}
+            {isHistorical && hasTerritorialWithOtherFilters && showConsolidated && (
+              <div>
+                {renderHistoricalTableForCity(data.result, tableRefs.historical, chartRef)}
+              </div>
+            )}
+
+            {/* Série Histórica - Sem filtros territoriais */}
+            {isHistorical && !hasTerritorialWithOtherFilters && (
+              <div>
+                {renderHistoricalTable()}
+              </div>
+            )}
 
             {/* Tabela cruzada */}
             {!isHistorical && hasCrossFilters && renderCrossTable()}

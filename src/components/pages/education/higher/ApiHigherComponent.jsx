@@ -153,7 +153,7 @@ function ApiHigherContainer({
               };
               console.log("Summed Results:", summedResults);
 
-              onDataFetched(summedResults);
+              onDataFetched({ finalResult: summedResults, allResults });
             } else if (citiesList.length === 0 && (territory || faixaPopulacional || aglomerado || gerencia)){
                 onDataFetched({ finalResult: [], allResults: [] });
             } else {

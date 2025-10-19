@@ -47,6 +47,34 @@ const TableExport = ({
     return sanitizedTitle || fileName;
   };
 
+  // Função para formatar números com vírgula no lugar de ponto
+  const formatNumberWithComma = (value) => {
+    if (value === null || value === undefined || value === '') return '';
+
+    // Se for string, verificar se já está formatado ou tem símbolos
+    const strValue = value.toString().trim();
+
+    // Se já tem % no final, apenas substituir ponto por vírgula
+    if (strValue.includes('%')) {
+      return strValue.replace('.', ',');
+    }
+
+    // Se já tem vírgula, retornar como está
+    if (strValue.includes(',') && !strValue.includes('.')) {
+      return strValue;
+    }
+
+    // Tentar converter para número
+    const num = parseFloat(strValue.replace(',', '.').replace(/[^\d.-]/g, ''));
+    if (isNaN(num)) return strValue;
+
+    // Formatar com locale pt-BR (usa vírgula como separador decimal)
+    return num.toLocaleString('pt-BR', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2
+    });
+  };
+
 
   // Função para exportar para PDF
   const exportToPDF = async () => {
@@ -75,7 +103,12 @@ const TableExport = ({
           // Verificar se a propriedade existe no objeto
           if (row.hasOwnProperty(header)) {
             const value = row[header];
-            tableRow.push(value !== undefined && value !== null ? value.toString() : '');
+            if (value !== undefined && value !== null) {
+              // Formatar números com vírgula
+              tableRow.push(formatNumberWithComma(value));
+            } else {
+              tableRow.push('');
+            }
           } else {
             tableRow.push('');
           }
@@ -107,8 +140,22 @@ const TableExport = ({
         // Calcular dimensões para o gráfico
         const pageWidth = pdf.internal.pageSize.getWidth();
         const pageHeight = pdf.internal.pageSize.getHeight();
-        const imgWidth = pageWidth - 80; // 40px de margem em cada lado
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+        // Verificar se o gráfico cabe na página
+        const maxWidth = pageWidth - 80; // 40px de margem em cada lado
+        const maxHeight = pageHeight - 80; // 40px de margem em cima e embaixo
+
+        let imgWidth, imgHeight;
+
+        if (canvas.width / canvas.height > maxWidth / maxHeight) {
+          // Gráfico é mais largo que alto - ajustar pela largura
+          imgWidth = maxWidth;
+          imgHeight = (canvas.height * imgWidth) / canvas.width;
+        } else {
+          // Gráfico é mais alto que largo - ajustar pela altura
+          imgHeight = maxHeight;
+          imgWidth = (canvas.width * imgHeight) / canvas.height;
+        }
 
         // Centralizar o gráfico na página
         const x = 40;
@@ -159,11 +206,14 @@ const TableExport = ({
         const row = [];
         headers.forEach(header => {
           const value = item[header];
-          // Substituir valores vazios por 0 em colunas numéricas
-          if (header === 'total' || typeof value === 'number' || !isNaN(Number(value))) {
-            row.push(value === '' || value === null || value === undefined ? 0 : value);
+          // Formatar números com vírgula
+          if (value === '' || value === null || value === undefined) {
+            row.push('');
+          } else if (header === 'total' || typeof value === 'number' || !isNaN(Number(value))) {
+            // Se for número, formatar com vírgula
+            row.push(formatNumberWithComma(value));
           } else {
-            row.push(value || '');
+            row.push(value);
           }
         });
         dataWorksheet.addRow(row);
