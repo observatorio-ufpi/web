@@ -401,7 +401,7 @@ const SourceFooter = ({ source = "Laboratório de Dados Educacionais - LDE" }) =
 );
 
 // Componente de tabela básica
-const BasicTable = React.forwardRef(({ headers, data, formatTotal = false, sortField = null }, ref) => {
+const BasicTable = React.forwardRef(({ headers, data, formatTotal = false, sortField = null, showTotal = false, totalValue = 0, showSource = false }, ref) => {
   const sortedData = sortField
     ? [...data].sort((a, b) => Number(a[sortField]) - Number(b[sortField]))
     : data;
@@ -446,11 +446,25 @@ const BasicTable = React.forwardRef(({ headers, data, formatTotal = false, sortF
                 </TableRow>
               );
             })}
+            {/* Linha de total opcional */}
+            {showTotal && (
+              <TableRow>
+                {headers.map(header => (
+                  <BoldTableCell key={header}>
+                    {header === 'total' && formatTotal
+                      ? `${Number(totalValue).toFixed(2)}%`
+                      : header === 'total'
+                        ? formatNumber(totalValue)
+                        : 'Total'}
+                  </BoldTableCell>
+                ))}
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </TableContainer>
 
-      <SourceFooter />
+      {showSource && <SourceFooter />}
     </>
   );
 });
@@ -1119,6 +1133,8 @@ const ApiDataTable = ({
           </Table>
         </TableContainer>
 
+        <SourceFooter />
+
         {/* Adicionar gráficos para tabelas cruzadas */}
         {!(type === 'school/count' && isEtapaSelected) && renderCrossTableCharts(uniqueRows, uniqueColumns, cellValues, config.rowHeader)}
 
@@ -1464,6 +1480,30 @@ const ApiDataTable = ({
           const cityTableRef = React.createRef();
           const cityChartRef = React.createRef();
 
+          // Se há cross filters, renderizar tabela cruzada para esta cidade
+          if (hasCrossFilters) {
+            const filters = { isEtapaSelected, isLocalidadeSelected, isDependenciaSelected, isVinculoSelected, isFormacaoDocenteSelected };
+            const config = getCrossTableConfig(filters, type, year);
+
+            if (!config) return null;
+
+            // Criar objeto data temporário com os dados desta cidade
+            const tempData = {
+              result: {
+                [config.dataKey]: cityResult
+              }
+            };
+
+            return (
+              <div key={index} style={{ marginBottom: '2rem', border: '1px solid #ddd', borderRadius: '8px', padding: '1rem' }}>
+                <h3 style={{ marginBottom: '1rem', color: '#333', borderBottom: '2px solid #007bff', paddingBottom: '0.5rem' }}>
+                  {cityName}
+                </h3>
+                {renderCrossTable(tempData, config)}
+              </div>
+            );
+          }
+
           return (
             <div key={index} style={{ marginBottom: '2rem', border: '1px solid #ddd', borderRadius: '8px', padding: '1rem' }}>
               <h3 style={{ marginBottom: '1rem', color: '#333', borderBottom: '2px solid #007bff', paddingBottom: '0.5rem' }}>
@@ -1475,6 +1515,9 @@ const ApiDataTable = ({
                 headers={headers}
                 data={cityResult}
                 formatTotal={isRatioType(type)}
+                showTotal={true}
+                totalValue={cityResult.reduce((sum, it) => sum + Number(it.total || 0), 0)}
+                showSource={true}
                 ref={cityTableRef}
               />
 
@@ -1550,8 +1593,8 @@ const ApiDataTable = ({
               </div>
             )}
 
-            {/* Tabela cruzada */}
-            {!isHistorical && hasCrossFilters && renderCrossTable()}
+            {/* Tabela cruzada consolidada - apenas quando não há filtros territoriais OU quando toggle está ativado */}
+            {!isHistorical && hasCrossFilters && (!hasTerritorialWithOtherFilters || showConsolidated) && renderCrossTable()}
 
         {/* Dados individuais por cidade (quando há filtros territoriais combinados com outros filtros e não está em modo consolidado) */}
         {!isHistorical && hasTerritorialWithOtherFilters && !showConsolidated && municipioDataArray.length > 0 && (
@@ -1561,7 +1604,7 @@ const ApiDataTable = ({
         )}
 
         {/* Dados consolidados (quando há filtros territoriais combinados com outros filtros e está em modo consolidado) */}
-        {!isHistorical && hasTerritorialWithOtherFilters && showConsolidated && municipioDataArray.length > 0 && (
+        {!isHistorical && hasTerritorialWithOtherFilters && showConsolidated && municipioDataArray.length > 0 && !hasCrossFilters && (
           <div style={{ marginTop: '2rem' }}>
             {/* Tabela consolidada por categoria */}
             <div>
@@ -1569,6 +1612,7 @@ const ApiDataTable = ({
                 headers={getHeadersForCityData()}
                 data={consolidateDataByCategory()}
                 formatTotal={isRatioType(type)}
+                showSource={true}
                 ref={tableRefs.default}
               />
 
@@ -1619,6 +1663,7 @@ const ApiDataTable = ({
                   headers={HEADERS.default}
                   data={tableData}
                   formatTotal={isRatioType(type)}
+                  showSource={true}
                   ref={tableRefs.default}
                 />
                 <TableExport
@@ -1644,6 +1689,7 @@ const ApiDataTable = ({
                       total: municipioDataArray.reduce((sum, item) => sum + item.total, 0),
                     },
                   ]}
+                  showSource={true}
                   ref={tableRefs.municipio}
                 />
 

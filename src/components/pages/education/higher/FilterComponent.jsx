@@ -28,7 +28,15 @@ function FilterComponent() {
   const [isCategoriaAdministrativaSelected, setIsCategoriaAdministrativaSelected] = useState(false);
   const [isFaixaEtariaSuperiorSelected, setIsFaixaEtariaSuperiorSelected] = useState(false);
   const [isOrganizacaoAcademicaSelected, setIsOrganizacaoAcademicaSelected] = useState(false);
+  const [isInstituicaoEnsinoSelected, setIsInstituicaoEnsinoSelected] = useState(false);
   const [showConsolidated, setShowConsolidated] = useState(false);
+
+  // Estados para armazenar os filtros aplicados na última busca
+  const [appliedTerritory, setAppliedTerritory] = useState('');
+  const [appliedFaixaPopulacional, setAppliedFaixaPopulacional] = useState('');
+  const [appliedAglomerado, setAppliedAglomerado] = useState('');
+  const [appliedGerencia, setAppliedGerencia] = useState('');
+  const [appliedSelectedFilters, setAppliedSelectedFilters] = useState([]);
 
 
   const yearLimits = useMemo(() => ({
@@ -111,6 +119,7 @@ function FilterComponent() {
           case 'categoriaAdministrativa': return 'Categoria Administrativa';
           case 'faixaEtariaSuperior': return 'Faixa Etária';
           case 'organizacaoAcademica': return 'Organização Acadêmica';
+          case 'instituicaoEnsino': return 'Instituição de Ensino';
           default: return filter.value;
         }
       });
@@ -131,6 +140,14 @@ function FilterComponent() {
     setIsCategoriaAdministrativaSelected(selectedFilters.some(filter => filter.value === 'categoriaAdministrativa'));
     setIsFaixaEtariaSuperiorSelected(selectedFilters.some(filter => filter.value === 'faixaEtariaSuperior'));
     setIsOrganizacaoAcademicaSelected(selectedFilters.some(filter => filter.value === 'organizacaoAcademica'));
+    setIsInstituicaoEnsinoSelected(selectedFilters.some(filter => filter.value === 'instituicaoEnsino'));
+
+    // Armazenar os filtros aplicados na última busca
+    setAppliedTerritory(territory);
+    setAppliedFaixaPopulacional(faixaPopulacional);
+    setAppliedAglomerado(aglomerado);
+    setAppliedGerencia(gerencia);
+    setAppliedSelectedFilters(selectedFilters);
   };
 
   const handleClearFilters = () => {
@@ -150,11 +167,18 @@ function FilterComponent() {
     setError(null);
     setTitle('');
     setSelectedFilters([]);
+
+    // Limpar também os filtros aplicados
+    setAppliedTerritory('');
+    setAppliedFaixaPopulacional('');
+    setAppliedAglomerado('');
+    setAppliedGerencia('');
+    setAppliedSelectedFilters([]);
   };
 
   const filterOptions = type === 'university_enrollment'
     ? [{ value: 'modalidade', label: 'Modalidade' }, { value: 'categoriaAdministrativa', label: 'Categoria Administrativa' }, { value: 'faixaEtariaSuperior', label: 'Faixa Etária' },
-       { value: 'organizacaoAcademica', label: 'Organização Acadêmica'}]
+       { value: 'organizacaoAcademica', label: 'Organização Acadêmica'}, { value: 'instituicaoEnsino', label: 'Instituição de Ensino' }]
     : type === 'university_teacher'
     ? [{ value: 'regimeDeTrabalho', label: 'Regime de Trabalho' }, { value: 'formacaoDocente', label: 'Formação Docente' }, { value: 'categoriaAdministrativa', label: 'Categoria Administrativa' }, { value: 'organizacaoAcademica', label: 'Organização Acadêmica'}]
     : type === 'course_count'
@@ -447,8 +471,8 @@ function FilterComponent() {
           {/* Botões - Ocupa todo o espaço da linha */}
           <div className="md:col-span-3 flex flex-col justify-end">
             <div className="flex flex-col sm:flex-row gap-3 justify-end items-end">
-              {/* Toggle para modo consolidado (apenas quando há filtros territoriais combinados com outros filtros) */}
-              {(territory || faixaPopulacional || aglomerado || gerencia) && (isModalidadeSelected || isRegimeSelected || isFormacaoDocenteSelected || isCategoriaAdministrativaSelected || isFaixaEtariaSuperiorSelected || isOrganizacaoAcademicaSelected) && (
+              {/* Toggle para modo consolidado (apenas quando há filtros territoriais combinados com outros filtros aplicados na última busca) */}
+              {(appliedTerritory || appliedFaixaPopulacional || appliedAglomerado || appliedGerencia) && (isModalidadeSelected || isRegimeSelected || isFormacaoDocenteSelected || isCategoriaAdministrativaSelected || isFaixaEtariaSuperiorSelected || isOrganizacaoAcademicaSelected || isInstituicaoEnsinoSelected) && (
                 <div className="flex items-center space-x-2">
                   <label className="flex items-center pb-2 space-x-2 cursor-pointer">
                     <Switch
@@ -556,6 +580,7 @@ function FilterComponent() {
           isCategoriaAdministrativaSelected={isCategoriaAdministrativaSelected}
           isFaixaEtariaSuperiorSelected={isFaixaEtariaSuperiorSelected}
           isOrganizacaoAcademicaSelected={isOrganizacaoAcademicaSelected}
+          isInstituicaoEnsinoSelected={isInstituicaoEnsinoSelected}
           title={title}
           showConsolidated={showConsolidated}
         />
