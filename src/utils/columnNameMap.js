@@ -1,5 +1,6 @@
 export const columnNameMap = {
   ANO: "Ano",
+  CO_ENTIDADE: 'Código da Entidade',
 
   // Indicador 1: Local de Funcionamento
   IN_LOCAL_FUNC_PREDIO_ESCOLAR: "Funciona em Prédio Escolar",
