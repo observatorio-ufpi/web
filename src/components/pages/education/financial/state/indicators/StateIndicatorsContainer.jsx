@@ -114,7 +114,7 @@ function StateIndicatorsContainer() {
                   onClick={handleLoadData}
                   className="w-full md:w-auto min-w-[120px] px-4 py-1.5"
                 >
-                  Filtrar
+                  Mostrar Resultados
                 </Button>
               </div>
             </div>

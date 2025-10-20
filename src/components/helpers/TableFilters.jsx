@@ -176,6 +176,26 @@ const FilterComponent = ({
     });
   };
 
+  const handleClearFilters = () => {
+    setSelectedMunicipio(null);
+    setTerritorioDeDesenvolvimentoMunicipio(null);
+    setFaixaPopulacionalMunicipio(null);
+    setAglomeradoMunicipio(null);
+    setGerenciaRegionalMunicipio(null);
+    setYearRange([2007, 2024]);
+    
+    onFilterChange({
+      codigoMunicipio: null,
+      territorioDeDesenvolvimentoMunicipio: null,
+      faixaPopulacionalMunicipio: null,
+      aglomeradoMunicipio: null,
+      gerenciaRegionalMunicipio: null,
+      anoInicial: 2007,
+      anoFinal: 2024,
+      loading: false,
+    });
+  };
+
 
 
   return (
@@ -262,14 +282,28 @@ const FilterComponent = ({
           />
         </div>
 
-        {/* Botão Filtrar - Todas as colunas, segunda linha */}
-        <div className="md:col-span-3 flex justify-end mt-4">
+        {/* Botões Filtrar e Limpar - Todas as colunas, segunda linha */}
+        <div className="md:col-span-3 flex justify-end gap-3 mt-4">
           <Button
             variant="contained"
             onClick={handleSearch}
             className="w-full md:w-auto min-w-[120px] px-4 py-1.5"
           >
-            Filtrar
+            Mostrar resultados
+          </Button>
+          <Button
+            variant="outlined"
+            onClick={handleClearFilters}
+            className="w-full md:w-auto min-w-[120px] px-4 py-1.5"
+            sx={{
+              backgroundColor: '#f0f0f0',
+              color: '#000',
+              '&:hover': {
+                backgroundColor: '#e0e0e0',
+              }
+            }}
+          >
+            Limpar
           </Button>
         </div>
       </div>
