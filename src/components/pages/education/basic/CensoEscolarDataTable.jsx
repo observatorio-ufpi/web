@@ -100,8 +100,7 @@ function CensoEscolarDataTable({ data, title }) {
   const tableRef = useRef(null);
 
   const IDENTIFICATION_HEADERS = [
-    'NO_ENTIDADE', 'ANO', 'CO_MUNICIPIO', 'NO_MUNICIPIO',
-    'SG_UF', 'TP_DEPENDENCIA', 'TP_LOCALIZACAO',
+    'ANO','NO_ENTIDADE', 'CO_ENTIDADE', 'NO_MUNICIPIO', 'CO_MUNICIPIO', 'TP_DEPENDENCIA', 'TP_LOCALIZACAO',
   ];
 
   const allHeaders = useMemo(() => {

@@ -125,72 +125,19 @@ const ApiContainer = forwardRef(({
         await new Promise((resolve) => setTimeout(resolve, 1000));
 
         if (isHistorical) {
-          if (citiesList.length > 0 && !city) {
-            const allResults = await Promise.all(
-              citiesList.map(async ([cityId, cityInfo]) => {
-                return fetchCityData(cityId, cityInfo.nomeMunicipio);
-              })
-            );
+          const filter = buildFilter(city);
+          const url = buildUrl(filter);
+          console.log('URL histórica:', url);
+          const response = await fetch(url);
 
-            const allUniqueData = [];
-            allResults.forEach(cityResult => {
-              cityResult.result.forEach(item => {
-                const existingItem = allUniqueData.find(existing => {
-                  if (existing.year !== item.year) return false;
-                  if (isEtapaSelected && existing.education_level_mod_id !== item.education_level_mod_id) return false;
-                  if (isLocalidadeSelected && existing.location_id !== item.location_id) return false;
-                  if (isDependenciaSelected && existing.adm_dependency_detailed_id !== item.adm_dependency_detailed_id) return false;
-                  if (isVinculoSelected && existing.contract_type_id !== item.contract_type_id) return false;
-                  if (isFormacaoDocenteSelected && existing.initial_training_id !== item.initial_training_id) return false;
-                  if (isFaixaEtariaSelected && existing.age_range_id !== item.age_range_id) return false;
-                  return true;
-                });
-
-                if (!existingItem) {
-                  allUniqueData.push({...item, total: 0});
-                }
-              });
-            });
-
-            allUniqueData.forEach(uniqueItem => {
-              allResults.forEach(cityResult => {
-                const matchingItem = cityResult.result.find(item => {
-                  if (item.year !== uniqueItem.year) return false;
-                  if (isEtapaSelected && item.education_level_mod_id !== uniqueItem.education_level_mod_id) return false;
-                  if (isLocalidadeSelected && item.location_id !== uniqueItem.location_id) return false;
-                  if (isDependenciaSelected && item.adm_dependency_detailed_id !== uniqueItem.adm_dependency_detailed_id) return false;
-                  if (isVinculoSelected && item.contract_type_id !== uniqueItem.contract_type_id) return false;
-                  if (isFormacaoDocenteSelected && item.initial_training_id !== uniqueItem.initial_training_id) return false;
-                  if (isFaixaEtariaSelected && item.age_range_id !== uniqueItem.age_range_id) return false;
-                  return true;
-                });
-
-                if (matchingItem) {
-                  uniqueItem.total += Number(matchingItem.total);
-                }
-              });
-            });
-
-            const summedResults = {
-              result: allUniqueData
-            };
-
-            onDataFetched(summedResults);
-          } else {
-            const filter = buildFilter(city);
-            const url = buildUrl(filter);
-            console.log('URL histórica:', url);
-            const response = await fetch(url);
-
-            if (!response.ok) {
-              const errorText = await response.text();
-              console.error('Erro na resposta da API:', errorText);
-              throw new Error(`Erro HTTP! Status: ${response.status}`);
-            }
-
-            const result = await response.json();
-            onDataFetched(result);
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Erro na resposta da API:', errorText);
+            throw new Error(`Erro HTTP! Status: ${response.status}`);
           }
+
+          const result = await response.json();
+          onDataFetched(result);
           return;
         }
 
