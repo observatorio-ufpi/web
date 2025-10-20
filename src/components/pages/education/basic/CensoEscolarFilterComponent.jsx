@@ -134,8 +134,8 @@ function CensoEscolarFilterComponent({
     <div className="flex flex-col gap-4 p-0 m-0">
         {/* Tipo + Botão Mais Filtros - Primeira linha */}
         <div className="md:col-span-3">
-          <div className="flex items-end gap-4">
-            <div className="flex-1">
+          <div className="flex flex-col lg:flex-row items-end gap-4">
+            <div className="w-full lg:flex-1">
               <label htmlFor="multiFilterSelect" className="block text-sm font-medium text-gray-700 mb-1">Tipo:</label>
               <Select
                 id="multiFilterSelect"
@@ -149,21 +149,23 @@ function CensoEscolarFilterComponent({
             </div>
 
             {/* Botão de toggle para filtros adicionais */}
-            <Button
-              variant="outlined"
-              size="small"
-              startIcon={filtersExpanded ? <ExpandLess /> : <ExpandMore />}
-              onClick={() => setFiltersExpanded(!filtersExpanded)}
-              sx={{
-                minWidth: 'auto',
-                padding: '8px 16px',
-                whiteSpace: 'nowrap',
-                height: 'fit-content',
-                mb: 0.5
-              }}
-            >
-              {filtersExpanded ? 'Menos Filtros' : 'Mais Filtros'}
-            </Button>
+            <div className="w-full lg:w-auto">
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={filtersExpanded ? <ExpandLess /> : <ExpandMore />}
+                onClick={() => setFiltersExpanded(!filtersExpanded)}
+                sx={{
+                  minWidth: 'auto',
+                  padding: '8px 16px',
+                  whiteSpace: 'nowrap',
+                  height: 'fit-content',
+                  width: { xs: '100%', lg: 'auto' }
+                }}
+              >
+                {filtersExpanded ? 'Menos Filtros' : 'Mais Filtros'}
+              </Button>
+            </div>
           </div>
         </div>
 

@@ -1,10 +1,12 @@
-import { Button, Switch, Typography } from '@mui/material';
+import { Button, Switch, Typography, Collapse } from '@mui/material';
+import { ExpandMore, ExpandLess } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
 import React, { useEffect, useMemo, useState, useRef } from 'react';
 import '../../../../style/RevenueTableContainer.css';
 import '../../../../style/TableFilters.css';
 import { FaixaPopulacional, municipios, Regioes } from '../../../../utils/citiesMapping';
 import { Loading, Select } from '../../../ui';
+import YearRangeSlider from '../../../ui/YearRangeSlider';
 import ApiContainer from './ApiComponent.jsx';
 import ApiDataTable from './apiDataTable.jsx';
 
@@ -41,6 +43,12 @@ function ParentComponent() {
   const [filteredYear, setFilteredYear] = useState(null);
   const [startYear, setStartYear] = useState(yearLimits.enrollment.min);
   const [endYear, setEndYear] = useState(yearLimits.enrollment.max);
+  
+  // Estado para controlar se os filtros estão expandidos
+  const [filtersExpanded, setFiltersExpanded] = useState(false);
+  
+  // Estado para o range slider
+  const [yearRange, setYearRange] = useState([2007, 2024]);
 
   const getYearLimits = useMemo(() => {
     return yearLimits[type] || { min: 2007, max: 2022 };
@@ -60,6 +68,7 @@ function ParentComponent() {
     setYear(getYearLimits.max);
     setStartYear(getYearLimits.min);
     setEndYear(getYearLimits.max);
+    setYearRange([getYearLimits.min, getYearLimits.max]);
   }, [getYearLimits]);
 
   const handleFilterClick = () => {
@@ -68,7 +77,9 @@ function ParentComponent() {
     setTitle('');
     setFilteredType(type);
 
-    const yearDisplay = displayHistorical ? `${startYear}-${endYear}` : year;
+    // Determina se é série histórica baseado no yearRange
+    const isHistoricalRange = yearRange[0] !== yearRange[1];
+    const yearDisplay = isHistoricalRange ? `${yearRange[0]}-${yearRange[1]}` : yearRange[0];
     let locationName = "Piauí";
     if (city) {
       const selectedCity = municipios[city];
@@ -107,19 +118,20 @@ function ParentComponent() {
       fullTitle += ` | ${filterInfo.join(' | ')}`;
     }
     setTitle(fullTitle);
-
-    setIsHistorical(displayHistorical);
-    setFilteredYear(year);
+    
+    setIsHistorical(isHistoricalRange);
+    setDisplayHistorical(isHistoricalRange);
+    setFilteredYear(yearRange[0]);
     setIsEtapaSelected(selectedFilters.some(filter => filter.value === 'etapa'));
     setIsLocalidadeSelected(selectedFilters.some(filter => filter.value === 'localidade'));
     setIsDependenciaSelected(selectedFilters.some(filter => filter.value === 'dependencia'));
 
     if (apiRef.current) {
       apiRef.current.fetchData({
-        year,
-        isHistorical: displayHistorical,
-        startYear,
-        endYear,
+        year: yearRange[0],
+        isHistorical: isHistoricalRange,
+        startYear: yearRange[0],
+        endYear: yearRange[1],
         city,
         territory,
         faixaPopulacional,
@@ -140,6 +152,7 @@ function ParentComponent() {
     setEndYear(limits.max);
     setYear(limits.max);
     setFilteredYear(null);
+    setYearRange([limits.min, limits.max]);
     setCity('');
     setTerritory('');
     setFaixaPopulacional('');
@@ -153,6 +166,93 @@ function ParentComponent() {
     setIsLocalidadeSelected(false);
     setIsDependenciaSelected(false);
   };
+
+  // Lógica de filtros dependentes - baseado nos filtros de localização
+  const baseFilteredMunicipios = useMemo(() => {
+    const territorioLabel = territory ? Regioes[territory] : null;
+    const faixaLabel = faixaPopulacional ? FaixaPopulacional[faixaPopulacional] : null;
+
+    return Object.values(municipios).filter((m) => {
+      if (territorioLabel && m.territorioDesenvolvimento !== territorioLabel) return false;
+      if (faixaLabel && m.faixaPopulacional !== faixaLabel) return false;
+      if (aglomerado && String(m.aglomerado) !== String(aglomerado)) return false;
+      if (gerencia) {
+        const gerencias = String(m.gerencia).split(',').map((g) => g.trim());
+        if (!gerencias.includes(String(gerencia))) return false;
+      }
+      return true;
+    });
+  }, [territory, faixaPopulacional, aglomerado, gerencia]);
+
+  // Desabilitar outros filtros quando município específico é selecionado
+  const otherLocalityDisabled = !!city;
+
+  // Opções filtradas baseadas nos filtros de localização
+  const filteredMunicipioOptions = useMemo(() => {
+    return Object.entries(municipios)
+      .filter(([, m]) => baseFilteredMunicipios.includes(m))
+      .map(([key, { nomeMunicipio }]) => ({ value: key, label: nomeMunicipio }));
+  }, [baseFilteredMunicipios]);
+
+  const filteredTerritorioOptions = useMemo(() => {
+    const uniqueLabels = [...new Set(baseFilteredMunicipios.map((m) => m.territorioDesenvolvimento).filter(Boolean))];
+    return Object.entries(Regioes)
+      .filter(([, label]) => uniqueLabels.includes(label))
+      .map(([id, label]) => ({ value: id, label }));
+  }, [baseFilteredMunicipios]);
+
+  const filteredFaixaPopulacionalOptions = useMemo(() => {
+    const uniqueLabels = [...new Set(baseFilteredMunicipios.map((m) => m.faixaPopulacional).filter(Boolean))];
+    return Object.entries(FaixaPopulacional)
+      .filter(([, label]) => uniqueLabels.includes(label))
+      .map(([id, label]) => ({ value: id, label }));
+  }, [baseFilteredMunicipios]);
+
+  const filteredAglomeradoOptions = useMemo(() => {
+    return [...new Set(baseFilteredMunicipios.map((m) => m.aglomerado).filter((a) => a && a !== 'undefined'))]
+      .sort((a, b) => Number(a) - Number(b))
+      .map((a) => ({ value: a, label: `AG ${a}` }));
+  }, [baseFilteredMunicipios]);
+
+  const filteredGerenciaOptions = useMemo(() => {
+    return [...new Set(
+      baseFilteredMunicipios
+        .map((m) => m.gerencia)
+        .filter((g) => g && g !== 'undefined')
+        .flatMap((g) => (g.includes(',') ? g.split(',').map((x) => x.trim()) : [g]))
+    )]
+      .sort((a, b) => Number(a) - Number(b))
+      .map((g) => ({ value: g, label: `${g}ª GRE` }));
+  }, [baseFilteredMunicipios]);
+
+  // Função para limpar filtros inválidos quando as opções mudam
+  const useClearInvalidFilter = (value, setter, options) => {
+    useEffect(() => {
+      if (value && options.length > 0) {
+        const exists = options.some((opt) => opt.value === value);
+        if (!exists) {
+          setter('');
+        }
+      }
+    }, [value, setter, options]);
+  };
+
+  // Aplicar limpeza de filtros inválidos
+  useClearInvalidFilter(city, setCity, filteredMunicipioOptions);
+  useClearInvalidFilter(territory, setTerritory, filteredTerritorioOptions);
+  useClearInvalidFilter(faixaPopulacional, setFaixaPopulacional, filteredFaixaPopulacionalOptions);
+  useClearInvalidFilter(aglomerado, setAglomerado, filteredAglomeradoOptions);
+  useClearInvalidFilter(gerencia, setGerencia, filteredGerenciaOptions);
+
+  // Limpar filtros de localização quando um município específico é selecionado
+  useEffect(() => {
+    if (city) {
+      setTerritory('');
+      setFaixaPopulacional('');
+      setAglomerado('');
+      setGerencia('');
+    }
+  }, [city]);
 
   const filteredCities = Object.entries(municipios).filter(([, {
     territorioDesenvolvimento,
@@ -225,171 +325,159 @@ function ParentComponent() {
   return (
     <div className="app-container">
       <div className="flex flex-col gap-4 p-0 m-0">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
-          <div className="md:col-span-1">
-            <label htmlFor="typeSelect" className="block text-sm font-medium text-gray-700 mb-1">Tipo:</label>
-            <Select
-              id="typeSelect"
-              value={typeOptions.find(option => option.value === type)}
-                             onChange={(selectedOption) => {
-                 setType(selectedOption.value);
-                 setSelectedFilters([]);
-               }}
-              options={typeOptions}
-              placeholder="Selecione o tipo"
-              size="xs"
-            />
+        
+          {/* Tipo + Filtros Múltiplos + Botão Mais Filtros - Primeira linha */}
+          <div className="md:col-span-3">
+            <div className="flex flex-col lg:flex-row items-end gap-4">
+              <div className="w-full lg:flex-1">
+                <label htmlFor="typeSelect" className="block text-sm font-medium text-gray-700 mb-1">Tipo:</label>
+                <Select
+                  id="typeSelect"
+                  value={typeOptions.find(option => option.value === type)}
+                  onChange={(selectedOption) => {
+                    setType(selectedOption.value);
+                    setSelectedFilters([]);
+                  }}
+                  options={typeOptions}
+                  placeholder="Selecione o tipo"
+                  size="xs"
+                />
+              </div>
+
+              <div className="w-full lg:flex-1">
+                <label htmlFor="multiFilterSelect" className="block text-sm font-medium text-gray-700 mb-1">Filtros:</label>
+                <Select
+                  id="multiFilterSelect"
+                  value={selectedFilters}
+                  onChange={(newValue, actionMeta) => {
+                    const isHistoricalRange = yearRange[0] !== yearRange[1];
+                    if (isHistoricalRange) {
+                      setSelectedFilters(newValue.slice(-1));
+                    } else if (newValue.length <= 2) {
+                      setSelectedFilters(newValue);
+                    } else {
+                      setSelectedFilters(newValue.slice(-2));
+                    }
+                  }}
+                  options={filterOptions}
+                  isMulti
+                  placeholder={yearRange[0] !== yearRange[1] ? "Selecione 1 filtro" : "Selecione até 2 filtros"}
+                  size="xs"
+                />
+              </div>
+              
+              {/* Botão de toggle para filtros adicionais */}
+              <div className="w-full lg:w-auto">
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon={filtersExpanded ? <ExpandLess /> : <ExpandMore />}
+                  onClick={() => setFiltersExpanded(!filtersExpanded)}
+                  sx={{
+                    minWidth: 'auto',
+                    padding: '8px 16px',
+                    whiteSpace: 'nowrap',
+                    height: 'fit-content',
+                    mb: 0.5,
+                    width: { xs: '100%', lg: 'auto' }
+                  }}
+                >
+                  {filtersExpanded ? 'Menos Filtros' : 'Mais Filtros'}
+                </Button>
+              </div>
+            </div>
           </div>
 
-          <div className="md:col-span-2">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-              <label className="flex items-center gap-2 cursor-pointer whitespace-nowrap">
-                <input
-                  type="checkbox"
-                  checked={displayHistorical}
-                                     onChange={(e) => {
-                     setDisplayHistorical(e.target.checked);
-                     setSelectedFilters([]);
-                   }}
-                  className="cursor-pointer"
-                />
-                <span className="font-medium text-gray-700">Série Histórica</span>
-              </label>
-
-              {displayHistorical ? (
-                <div className="flex flex-col sm:flex-row gap-3 flex-1 w-full">
-                  <div className="flex-1">
-                    <label htmlFor="startYearSelect" className="block text-sm font-medium text-gray-700 mb-1">Ano Inicial:</label>
-                    <Select
-                      id="startYearSelect"
-                      value={yearOptions.find(option => option.value === startYear)}
-                                             onChange={(selectedOption) => {
-                         const newStartYear = selectedOption.value;
-                         setStartYear(newStartYear);
-                         if (newStartYear > endYear) {
-                           setEndYear(newStartYear);
-                         }
-                       }}
-                                             options={yearOptions}
-                      placeholder="Ano Inicial"
-                      size="xs"
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <label htmlFor="endYearSelect" className="block text-sm font-medium text-gray-700 mb-1">Ano Final:</label>
-                    <Select
-                      id="endYearSelect"
-                      value={yearOptions.find(option => option.value === endYear)}
-                      onChange={(selectedOption) => setEndYear(selectedOption.value)}
-                                             options={yearOptions.filter(option => option.value >= startYear)}
-                      placeholder="Ano Final"
-                      size="xs"
-                    />
-                  </div>
-                </div>
-              ) : (
-                <div className="flex-1 w-full">
-                  <label htmlFor="yearSelect" className="block text-sm font-medium text-gray-700 mb-1">Ano:</label>
+          {/* Filtros recolhíveis */}
+          <Collapse in={filtersExpanded} timeout="auto" unmountOnExit>
+            <div className="md:col-span-3">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Território */}
+                <div className="md:col-span-1">
                   <Select
-                    id="yearSelect"
-                    value={yearOptions.find(option => option.value === year)}
-                    onChange={(selectedOption) => setYear(selectedOption.value)}
-                    options={yearOptions}
-                    placeholder="Ano"
+                    id="territorySelect"
+                    value={filteredTerritorioOptions.find(option => option.value === territory) || null}
+                    onChange={(selectedOption) => {
+                      setTerritory(selectedOption ? selectedOption.value : '');
+                      setCity('');
+                    }}
+                    options={filteredTerritorioOptions}
+                    placeholder="Território de Desenvolvimento"
                     size="xs"
+                    isClearable={true}
+                    disabled={otherLocalityDisabled}
                   />
                 </div>
-              )}
+
+                {/* Faixa Populacional */}
+                <div className="md:col-span-1">
+                  <Select
+                    id="faixaPopulacionalSelect"
+                    value={filteredFaixaPopulacionalOptions.find(option => option.value === faixaPopulacional) || null}
+                    onChange={(selectedOption) => {
+                      setFaixaPopulacional(selectedOption ? selectedOption.value : '');
+                      setCity('');
+                    }}
+                    options={filteredFaixaPopulacionalOptions}
+                    placeholder="Faixa Populacional"
+                    size="xs"
+                    isClearable={true}
+                    disabled={otherLocalityDisabled}
+                  />
+                </div>
+
+                {/* Aglomerado */}
+                <div className="md:col-span-1">
+                  <Select
+                    id="aglomeradoSelect"
+                    value={filteredAglomeradoOptions.find(option => option.value === aglomerado) || null}
+                    onChange={(selectedOption) => setAglomerado(selectedOption ? selectedOption.value : '')}
+                    options={filteredAglomeradoOptions}
+                    placeholder="Aglomerado - AG"
+                    size="xs"
+                    isClearable={true}
+                    disabled={otherLocalityDisabled}
+                  />
+                </div>
+
+                {/* Gerência */}
+                <div className="md:col-span-1">
+                  <Select
+                    id="gerenciaSelect"
+                    value={filteredGerenciaOptions.find(option => option.value === gerencia) || null}
+                    onChange={(selectedOption) => setGerencia(selectedOption ? selectedOption.value : '')}
+                    options={filteredGerenciaOptions}
+                    placeholder="Gerência Regional de Ensino - GRE"
+                    size="xs"
+                    isClearable={true}
+                    disabled={otherLocalityDisabled}
+                  />
+                </div>
+
+                {/* Cidade */}
+                <div className="md:col-span-1">
+                  <Select
+                    id="citySelect"
+                    value={filteredMunicipioOptions.find(option => option.value === city) || null}
+                    onChange={(selectedOption) => setCity(selectedOption ? selectedOption.value : '')}
+                    options={filteredMunicipioOptions}
+                    placeholder="Município"
+                    size="xs"
+                    isClearable={true}
+                  />
+                </div>
+              </div>
             </div>
-          </div>
+          </Collapse>
 
-          <div className="md:col-span-1">
-            <Select
-              id="territorySelect"
-              value={territoryOptions.find(option => option.value === territory) || null}
-              onChange={(selectedOption) => {
-                setTerritory(selectedOption ? selectedOption.value : '');
-                setCity('');
-              }}
-              options={territoryOptions}
-              placeholder="Território de Desenvolvimento"
-              size="xs"
-              isClearable={true}
+          {/* Período - Todas as colunas, terceira linha */}
+          <div className="md:col-span-3">
+            <YearRangeSlider
+              minYear={getYearLimits.min}
+              maxYear={getYearLimits.max}
+              value={yearRange}
+              onChange={setYearRange}
             />
-          </div>
-
-          <div className="md:col-span-1">
-            <Select
-              id="faixaPopulacionalSelect"
-              value={faixaPopulacionalOptions.find(option => option.value === faixaPopulacional) || null}
-              onChange={(selectedOption) => {
-                setFaixaPopulacional(selectedOption ? selectedOption.value : '');
-                setCity('');
-              }}
-              options={faixaPopulacionalOptions}
-              placeholder="Faixa Populacional"
-              size="xs"
-              isClearable={true}
-            />
-          </div>
-
-          <div className="md:col-span-1">
-            <Select
-              id="aglomeradoSelect"
-              value={aglomeradoOptions.find(option => option.value === aglomerado) || null}
-              onChange={(selectedOption) => setAglomerado(selectedOption ? selectedOption.value : '')}
-              options={aglomeradoOptions}
-              placeholder="Aglomerado - AG"
-              size="xs"
-              isClearable={true}
-            />
-          </div>
-
-          <div className="md:col-span-1">
-            <Select
-              id="gerenciaSelect"
-              value={gerenciaOptions.find(option => option.value === gerencia) || null}
-              onChange={(selectedOption) => setGerencia(selectedOption ? selectedOption.value : '')}
-              options={gerenciaOptions}
-              placeholder="Gerência Regional de Ensino - GRE"
-              size="xs"
-              isClearable={true}
-            />
-          </div>
-
-          <div className="md:col-span-1">
-            <Select
-              id="citySelect"
-              value={cityOptions.find(option => option.value === city) || null}
-              onChange={(selectedOption) => setCity(selectedOption ? selectedOption.value : '')}
-              options={cityOptions}
-              placeholder="Município"
-              size="xs"
-              isClearable={true}
-            />
-          </div>
-
-          {/* Filtros Múltiplos - Segunda coluna, terceira linha */}
-          <div className="md:col-span-1">
-            <div className="mb-3">
-              <Select
-                id="multiFilterSelect"
-                value={selectedFilters}
-                onChange={(newValue, actionMeta) => {
-                  if (displayHistorical) {
-                    setSelectedFilters(newValue.slice(-1));
-                  } else if (newValue.length <= 2) {
-                    setSelectedFilters(newValue);
-                  } else {
-                    setSelectedFilters(newValue.slice(-2));
-                  }
-                }}
-                options={filterOptions}
-                isMulti
-                placeholder={displayHistorical ? "Selecione 1 filtro" : "Selecione até 2 filtros"}
-                size="xs"
-              />
-            </div>
           </div>
 
           {/* Botões - Ocupa todo o espaço da linha */}
@@ -439,8 +527,7 @@ function ParentComponent() {
               </Button>
             </div>
           </div>
-                 </div>
-       </div>
+        </div>
 
 
        {isLoading && (
