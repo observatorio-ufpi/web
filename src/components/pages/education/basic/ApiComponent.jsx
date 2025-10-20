@@ -13,6 +13,8 @@ const ApiContainer = forwardRef(({
   useImperativeHandle(ref, () => ({
     fetchData: async (filters) => {
       const { year, isHistorical, startYear, endYear, state = "22", city, territory, faixaPopulacional, aglomerado, gerencia, citiesList } = filters;
+      
+      console.log('ApiComponent.fetchData - Filters received:', { year, isHistorical, startYear, endYear, citiesList: citiesList?.length });
 
       const isEtapaSelected = selectedFilters.some((filter) => filter.value === "etapa");
       const isLocalidadeSelected = selectedFilters.some((filter) => filter.value === "localidade");
@@ -22,9 +24,12 @@ const ApiContainer = forwardRef(({
       const isFaixaEtariaSelected = selectedFilters.some((filter) => filter.value === "faixaEtaria");
 
       const buildFilter = (cityId = null) => {
-        const yearFilter = isHistorical
-          ? `min_year:"${startYear}",max_year:"${endYear}"`
-          : `min_year:"${year}",max_year:"${year}"`;
+        let yearFilter;
+        if (isHistorical) {
+          yearFilter = `min_year:"${startYear}",max_year:"${endYear}"`;
+        } else {
+          yearFilter = `year:"${year}"`;
+        }
 
         return `${yearFilter},state:"${state}"${cityId ? `,city:"${cityId}"` : ""}`;
       };
@@ -74,12 +79,6 @@ const ApiContainer = forwardRef(({
         if (dims) params.push(dims);
         params.push(`filter=${encodeURIComponent(filter)}`);
 
-        const yearMatch = filter.match(/min_year:"?(\d{4})"?,?max_year:"?(\d{4})"?/);
-        if (yearMatch) {
-          params.push(`min_year=${encodeURIComponent(yearMatch[1])}`);
-          params.push(`max_year=${encodeURIComponent(yearMatch[2])}`);
-        }
-
         if (territory) params.push(`territory=${encodeURIComponent(territory)}`);
         if (faixaPopulacional) params.push(`faixa_populacional=${encodeURIComponent(faixaPopulacional)}`);
         if (aglomerado) params.push(`aglomerado=${encodeURIComponent(aglomerado)}`);
@@ -93,6 +92,7 @@ const ApiContainer = forwardRef(({
       const fetchCityData = async (cityId, cityName) => {
         const filter = buildFilter(cityId);
         const url = buildUrl(filter);
+        console.log('fetchCityData URL:', url, 'filter:', filter);
         const response = await fetch(url);
 
         if (!response.ok) {
@@ -108,13 +108,14 @@ const ApiContainer = forwardRef(({
 
       const handleResults = (allResults) => {
         if (basePath === 'censo-escolar') {
-          const combinedResult = { result: [] };
+          // Para censo-escolar, combinar todos os resultados em um único array
+          const combinedResult = [];
           allResults.forEach(res => {
-            if (res && res.result) {
-              combinedResult.result.push(...res.result);
+            if (res && res.result && Array.isArray(res.result)) {
+              combinedResult.push(...res.result);
             }
           });
-          return combinedResult;
+          return { result: combinedResult };
         }
         return processApiResults(allResults, selectedFilters);
       };
@@ -125,10 +126,30 @@ const ApiContainer = forwardRef(({
         await new Promise((resolve) => setTimeout(resolve, 1000));
 
         if (isHistorical) {
-          const filter = buildFilter(city);
-          const url = buildUrl(filter);
-          console.log('URL histórica:', url);
-          const response = await fetch(url);
+          if (citiesList.length > 0 && !city) {
+            // Múltiplas cidades em série histórica
+            console.log("Fetching historical data for multiple cities:", citiesList.length);
+            const allResults = await Promise.all(
+              citiesList.map(async ([cityId, cityInfo]) => {
+                return fetchCityData(cityId, cityInfo.nomeMunicipio);
+              })
+            );
+
+            const finalResult = handleResults(allResults);
+            console.log("Final Result (historical, multiple cities):", finalResult);
+            console.log("Total items:", finalResult.result.length);
+            
+            onDataFetched({ finalResult, allResults });
+          } else if (citiesList.length === 0 && (territory || faixaPopulacional || aglomerado || gerencia)) {
+            // Filtros que não retornam cidades
+            console.log("No cities match the filters");
+            onDataFetched({ finalResult: { result: [] }, allResults: [] });
+          } else {
+            // Uma cidade específica em série histórica
+            const filter = buildFilter(city);
+            const url = buildUrl(filter);
+            console.log('URL histórica (single city):', url);
+            const response = await fetch(url);
 
           if (!response.ok) {
             const errorText = await response.text();
@@ -136,31 +157,33 @@ const ApiContainer = forwardRef(({
             throw new Error(`Erro HTTP! Status: ${response.status}`);
           }
 
-          const result = await response.json();
-          onDataFetched(result);
+            const result = await response.json();
+            console.log("Single city result:", result);
+            onDataFetched(result);
+          }
           return;
         }
 
+        // NÃO é série histórica
         if (citiesList.length > 0 && !city) {
-          console.log("Cities List:", citiesList);
+          console.log("Fetching data for multiple cities (not historical):", citiesList.length);
           const allResults = await Promise.all(
             citiesList.map(([cityId, cityInfo]) => fetchCityData(cityId, cityInfo.nomeMunicipio))
           );
 
           const finalResult = handleResults(allResults);
-          console.log("Final Result:", finalResult);
-          
-          // CORREÇÃO: Para censo-escolar, retornar o finalResult diretamente
-          // Para outros casos, manter a estrutura { finalResult, allResults }
-          if (basePath === 'censo-escolar') {
-            onDataFetched(finalResult);
-          } else {
-            onDataFetched({ finalResult, allResults });
-          }
+          console.log("Final Result (multiple cities):", finalResult);
+          console.log("Total items:", finalResult.result.length);
+
+          onDataFetched({ finalResult, allResults });
+        } else if (citiesList.length === 0 && (territory || faixaPopulacional || aglomerado || gerencia)) {
+          console.log("No cities match the filters");
+          onDataFetched({ finalResult: { result: [] }, allResults: [] });
         } else {
+          // Uma cidade específica
           const filter = buildFilter(city);
           const url = buildUrl(filter);
-          console.log('URL:', url);
+          console.log('URL (single city):', url);
           const response = await fetch(url);
 
           if (!response.ok) {
@@ -170,8 +193,8 @@ const ApiContainer = forwardRef(({
           }
 
           const result = await response.json();
+          console.log("Single city result:", result);
           const allResults = [result];
-          console.log("All Results:", allResults);
           const finalResult = handleResults(allResults);
           console.log("API Result:", finalResult);
           onDataFetched(finalResult);

@@ -18,6 +18,7 @@ import { styled, useTheme } from '@mui/material/styles';
 import { FaEye } from 'react-icons/fa';
 import CustomPagination from "../../../helpers/CustomPagination";
 import TableExport from '../../../common/TableExport';
+import CustomPagination from '../../../helpers/CustomPagination'; // ← ADICIONE ESTA LINHA
 import { Select } from '../../../ui';
 
 import { columnNameMap } from '../../../../utils/columnNameMap';
