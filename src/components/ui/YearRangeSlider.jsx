@@ -45,19 +45,24 @@ const YearRangeSlider = ({
     const newValue = getValueFromPosition(e.clientX);
     const clampedValue = Math.max(minYear, Math.min(maxYear, newValue));
 
+    let newRange;
     if (isDragging === 'start') {
       const newStart = Math.min(clampedValue, localValue[1]);
-      setLocalValue([newStart, localValue[1]]);
-    } else if (isDragging === 'end') {
+      newRange = [newStart, localValue[1]];
+    } else { // isDragging === 'end'
       const newEnd = Math.max(clampedValue, localValue[0]);
-      setLocalValue([localValue[0], newEnd]);
+      newRange = [localValue[0], newEnd];
+    }
+    
+    setLocalValue(newRange);
+    if (onChange) {
+      onChange(newRange);
     }
   };
 
   const handleMouseUp = () => {
     if (isDragging) {
       setIsDragging(null);
-      // onChange já foi chamado durante o movimento, então não precisa chamar novamente
     }
   };
 
