@@ -25,7 +25,7 @@ function StateIndicatorsContainer() {
   const [selectedIndicator, setSelectedIndicator] = useState("revenueComposition");
   const [hasInitialLoad, setHasInitialLoad] = useState(false);
   const [startYear, setStartYear] = useState(2007);
-  const [endYear, setEndYear] = useState(2024);
+  const [endYear, setEndYear] = useState(2023);
 
   // Função para carregar dados dos CSVs
   const loadCSVData = async (indicatorType) => {
@@ -103,7 +103,7 @@ function StateIndicatorsContainer() {
                   onStartYearChange={handleStartYearChange}
                   onEndYearChange={handleEndYearChange}
                   minYear={2007}
-                  maxYear={2024}
+                  maxYear={2023}
                 />
               </div>
 

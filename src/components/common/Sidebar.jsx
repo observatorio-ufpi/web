@@ -144,7 +144,7 @@ const Sidebar = () => {
                   }`}
                 >
                   <FaDollarSign className="mr-3 text-lg flex-shrink-0" />
-                  <span className={`${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>Dados do Município</span>
+                  <span className={`${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>Dados Municipais</span>
                 </Link>
               </li>
               <li>
@@ -170,7 +170,7 @@ const Sidebar = () => {
                   }`}
                 >
                   <FaDollarSign className="mr-3 text-lg flex-shrink-0" />
-                  <span className={`${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>Dados do Estado</span>
+                  <span className={`${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>Dados Estaduais</span>
                 </Link>
               </li>
               <li>

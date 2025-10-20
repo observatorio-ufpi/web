@@ -1,6 +1,6 @@
 import Button from "@mui/material/Button";
 import { saveAs } from "file-saver";
-import * as JSZip from "jszip";
+import JSZip from "jszip";
 import React, { useState, useEffect } from "react";
 import * as XLSX from "xlsx";
 import { useTheme } from '@mui/material/styles';
@@ -48,17 +48,17 @@ import { ExpandMore, ExpandLess } from '@mui/icons-material';
 
 // Opções para os selects
 const tableOptions = [
-  { value: 'ownRevenues', label: 'Impostos Próprios' },
+  { value: 'ownRevenues', label: 'Receita de impostos próprios' },
   { value: 'constitutionalTransfersRevenue', label: 'Receita de transferências constitucionais e legais' },
   { value: 'municipalTaxesRevenues', label: 'Receita Líquida de Impostos do Município' },
   { value: 'additionalEducationRevenue', label: 'Receitas adicionais da educação no Município' },
-  { value: 'municipalFundebFundefComposition', label: 'Composição do Fundef/Fundeb no município' },
-  { value: 'complementationFundebFundef', label: 'Composição da complementação do Fundef/Fundeb' },
-  { value: 'constitutionalLimitMde', label: 'Limite constitucional em MDE no município' },
-  { value: 'expensesBasicEducationFundeb', label: 'Despesas de profissionais da educação básica do Fundef/Fundeb' },
-  { value: 'areasActivityExpense', label: 'Despesas em MDE por área de atuação' },
-  { value: 'basicEducationMinimalPotential', label: 'Receita potencial mínima da educação básica' },
-  { value: 'complementaryProtocol', label: 'Protocolo Complementar' },
+  { value: 'municipalFundebFundefComposition', label: 'Composição do Fundeb no Município' },
+  { value: 'complementationFundebFundef', label: 'Composição da complementação do Fundeb' },
+  { value: 'constitutionalLimitMde', label: 'Limite constitucional em MDE no Município' },
+  { value: 'expensesBasicEducationFundeb', label: 'Despesas com profissionais da Educação básica do Fundeb' },
+  // { value: 'areasActivityExpense', label: 'Despesas em MDE por área de atuação' },
+  { value: 'basicEducationMinimalPotential', label: 'Receita Potencial Mínima vinculada à Educação Básica (RPEB)'},
+  // { value: 'complementaryProtocol', label: 'Protocolo Complementar' },
 ];
 
 const groupTypeOptions = [

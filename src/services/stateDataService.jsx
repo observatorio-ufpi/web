@@ -164,5 +164,5 @@ export const stateIndicatorOptions = [
   { value: 'mde', label: 'Manutenção e Desenvolvimento do Ensino (MDE)' },
   { value: 'educationExpense', label: 'Despesas com Educação' },
   { value: 'additionalRevenue', label: 'Receitas Adicionais' },
-  { value: 'rpeb', label: 'Composição da RPEB' },
+  { value: 'rpeb', label: 'Composição da Receita Potencial de Educação (RPEB)' },
 ];

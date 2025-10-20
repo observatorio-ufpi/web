@@ -11,7 +11,7 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import { ThemeProvider, createTheme, styled, useTheme } from '@mui/material/styles';
-import { Box, FormControlLabel, Switch, TextField } from '@mui/material';
+import { Box, FormControlLabel, Switch, TextField, Typography } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
@@ -310,66 +310,56 @@ const StateRevenueTable = ({ csvData, tableName, startYear, endYear, enableMonet
 
   const downloadPDF = () => {
     const doc = new jsPDF();
-    
-    // Configurar título
-    doc.setFontSize(16);
-    doc.text(tableName, 14, 15);
-    doc.setFontSize(12);
-    doc.text('Dados do Estado', 14, 25);
-    
-    // Preparar cabeçalho e dados
-    const headers = ['Ano', ...data.types];
-    
-    // Preparar dados para a tabela
-    const tableData = data.years.map(year => [
-      year,
-      ...data.types.map(type => {
-        const value = finalDisplayData[type] && finalDisplayData[type][year] !== undefined 
-          ? finalDisplayData[type][year] 
-          : data.valuesByTypeAndYear[type][year];
-        return typeof value === 'number' 
-          ? value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-          : value || '-';
-      })
-    ]);
-    
-    // Gerar tabela
+    const headers = [
+      "Ano",
+      ...data.types,
+    ];
+
+    const dataForTable = data.years.map((year) => {
+      return [
+        `${year}`,
+        ...data.types.map((type) => {
+          const value = finalDisplayData[type] && finalDisplayData[type][year] !== undefined 
+            ? finalDisplayData[type][year] 
+            : data.valuesByTypeAndYear[type][year];
+          if (typeof value === 'number') {
+            return value.toLocaleString("pt-BR", {
+              style: "currency",
+              currency: "BRL",
+            });
+          } else {
+            return value || "-";
+          }
+        }),
+      ];
+    });
+
     doc.autoTable({
       head: [headers],
-      body: tableData,
-      startY: 35,
+      body: dataForTable,
+      startY: 20,
       styles: {
         fontSize: 8,
-        cellPadding: 3,
-        overflow: 'linebreak',
-      },
-      columnStyles: {
-        0: {
-          halign: 'left'
-        },
-        ...Array(data.types.length).fill().reduce((acc, _, i) => ({
-          ...acc,
-          [i + 1]: {
-            halign: 'right'
-          }
-        }), {})
+        cellPadding: 2,
       },
       headStyles: {
-        fillColor: [0, 76, 199],
-        halign: 'center',
-        fontSize: 9,
-        fontStyle: 'bold'
+        fillColor: [66, 66, 66],
+        textColor: 255,
+        fontStyle: "bold",
       },
-      theme: 'grid',
-      didDrawPage: function(data) {
+      alternateRowStyles: {
+        fillColor: [245, 245, 245],
+      },
+      theme: "grid",
+      didDrawPage: function (data) {
         // Ajusta automaticamente a largura das colunas baseado no conteúdo
         const columnWidth = doc.internal.pageSize.width / (headers.length + 1);
         data.table.columns.forEach((column) => {
           column.minWidth = columnWidth;
         });
-      }
+      },
     });
-    
+
     // Salvar PDF
     doc.save(`${tableName}_${startYear}-${endYear}.pdf`);
   };
@@ -485,6 +475,21 @@ const StateRevenueTable = ({ csvData, tableName, startYear, endYear, enableMonet
             <span className="button-text">PDF</span>
           </Button>
         </div>
+        
+        {/* Fonte dos dados */}
+        <Typography 
+          variant="caption" 
+          sx={{ 
+            display: 'block',
+            textAlign: 'right',
+            color: '#666',
+            fontSize: '12px',
+            fontStyle: 'italic',
+            marginTop: '8px'
+          }}
+        >
+          Fonte: RREO/SIOPE - FNDE
+        </Typography>
       </div>
     </ThemeProvider>
   );
