@@ -29,6 +29,7 @@ function ApiHigherContainer({
     const isCategoriaAdministrativaSelected = Array.isArray(selectedFilters) && selectedFilters.some((filter) => filter.value === "categoriaAdministrativa");
     const isFaixaEtariaSuperiorSelected = Array.isArray(selectedFilters) && selectedFilters.some((filter) => filter.value === "faixaEtariaSuperior");
     const isOrganizacaoAcademicaSelected = Array.isArray(selectedFilters) && selectedFilters.some((filter) => filter.value === "organizacaoAcademica");
+    const isInstituicaoEnsinoSelected = Array.isArray(selectedFilters) && selectedFilters.some((filter) => filter.value === "instituicaoEnsino");
 
     const buildFilter = (cityId = null) => {
         const yearFilter = isHistorical
@@ -63,6 +64,10 @@ function ApiHigherContainer({
 
       if (isOrganizacaoAcademicaSelected) {
         selectedDims.push("academic_level");
+      }
+
+      if (isInstituicaoEnsinoSelected) {
+        selectedDims.push("institution");
       }
 
       const endpoint = forceEndpoint || type;
@@ -119,6 +124,7 @@ function ApiHigherContainer({
                         if (isCategoriaAdministrativaSelected && item.upper_adm_dependency_id !== existing.upper_adm_dependency_id) return false;
                         if (isFaixaEtariaSuperiorSelected && item.age_student_code_id !== existing.age_student_code_id) return false;
                         if (isOrganizacaoAcademicaSelected && item.academic_level_id !== existing.academic_level_id) return false;
+                        if (isInstituicaoEnsinoSelected && item.institution_id !== existing.institution_id) return false;
                         return true;
                       });
 
@@ -139,6 +145,7 @@ function ApiHigherContainer({
                         if (isCategoriaAdministrativaSelected && item.upper_adm_dependency_id !== uniqueItem.upper_adm_dependency_id) return false;
                         if (isFaixaEtariaSuperiorSelected && item.age_student_code_id !== uniqueItem.age_student_code_id) return false;
                         if (isOrganizacaoAcademicaSelected && item.academic_level_id !== uniqueItem.academic_level_id) return false;
+                        if (isInstituicaoEnsinoSelected && item.institution_id !== uniqueItem.institution_id) return false;
                         return true;
                       });
 

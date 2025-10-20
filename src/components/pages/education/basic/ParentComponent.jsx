@@ -1,7 +1,7 @@
 import { Button, Switch, Typography, Collapse } from '@mui/material';
 import { ExpandMore, ExpandLess } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
-import React, { useEffect, useMemo, useState, useRef } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import '../../../../style/RevenueTableContainer.css';
 import '../../../../style/TableFilters.css';
 import { FaixaPopulacional, municipios, Regioes } from '../../../../utils/citiesMapping';
@@ -49,6 +49,13 @@ function ParentComponent() {
   
   // Estado para o range slider
   const [yearRange, setYearRange] = useState([2007, 2024]);
+
+  // Estados para armazenar os filtros aplicados na última busca
+  const [appliedTerritory, setAppliedTerritory] = useState('');
+  const [appliedFaixaPopulacional, setAppliedFaixaPopulacional] = useState('');
+  const [appliedAglomerado, setAppliedAglomerado] = useState('');
+  const [appliedGerencia, setAppliedGerencia] = useState('');
+  const [appliedSelectedFilters, setAppliedSelectedFilters] = useState([]);
 
   const getYearLimits = useMemo(() => {
     return yearLimits[type] || { min: 2007, max: 2022 };
@@ -126,6 +133,13 @@ function ParentComponent() {
     setIsLocalidadeSelected(selectedFilters.some(filter => filter.value === 'localidade'));
     setIsDependenciaSelected(selectedFilters.some(filter => filter.value === 'dependencia'));
 
+    // Armazenar os filtros aplicados na última busca
+    setAppliedTerritory(territory);
+    setAppliedFaixaPopulacional(faixaPopulacional);
+    setAppliedAglomerado(aglomerado);
+    setAppliedGerencia(gerencia);
+    setAppliedSelectedFilters(selectedFilters);
+
     if (apiRef.current) {
       apiRef.current.fetchData({
         year: yearRange[0],
@@ -165,6 +179,13 @@ function ParentComponent() {
     setIsEtapaSelected(false);
     setIsLocalidadeSelected(false);
     setIsDependenciaSelected(false);
+
+    // Limpar também os filtros aplicados
+    setAppliedTerritory('');
+    setAppliedFaixaPopulacional('');
+    setAppliedAglomerado('');
+    setAppliedGerencia('');
+    setAppliedSelectedFilters([]);
   };
 
   // Lógica de filtros dependentes - baseado nos filtros de localização
@@ -483,8 +504,8 @@ function ParentComponent() {
           {/* Botões - Ocupa todo o espaço da linha */}
           <div className="md:col-span-3 flex flex-col justify-end">
             <div className="flex flex-col sm:flex-row gap-3 justify-end items-end">
-              {/* Toggle para modo consolidado (apenas quando há filtros territoriais combinados com outros filtros) */}
-              {(territory || faixaPopulacional || aglomerado || gerencia) && (isEtapaSelected || isLocalidadeSelected || isDependenciaSelected) && (
+              {/* Toggle para modo consolidado (apenas quando há filtros territoriais combinados com outros filtros aplicados na última busca) */}
+              {(appliedTerritory || appliedFaixaPopulacional || appliedAglomerado || appliedGerencia) && (isEtapaSelected || isLocalidadeSelected || isDependenciaSelected) && (
                 <div className="flex items-center space-x-2">
                   <label className="flex items-center pb-2 space-x-2 cursor-pointer">
                     <Switch

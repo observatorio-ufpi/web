@@ -15,6 +15,7 @@ export function processResults(allResults, selectedFilters) {
   let isCategoriaAdministrativaSelected = false;
   let isFaixaEtariaSuperiorSelected = false;
   let isOrganizacaoAcademicaSelected = false;
+  let isInstituicaoEnsinoSelected = false;
 
 
   if (selectedFilters) {
@@ -29,6 +30,7 @@ export function processResults(allResults, selectedFilters) {
     isCategoriaAdministrativaSelected = selectedFilters.some((filter) => filter.value === "categoriaAdministrativa");
     isFaixaEtariaSuperiorSelected = selectedFilters.some((filter) => filter.value === "faixaEtariaSuperior");
     isOrganizacaoAcademicaSelected = selectedFilters.some((filter) => filter.value === "organizacaoAcademica");
+    isInstituicaoEnsinoSelected = selectedFilters.some((filter) => filter.value === "instituicaoEnsino");
   }
   // Inicializar objetos para armazenar totais
   const totalByEtapa = {};
@@ -42,6 +44,7 @@ export function processResults(allResults, selectedFilters) {
   const totalByCategoriaAdministrativa = {};
   const totalByFaixaEtariaSuperior = {};
   const totalByOrganizacaoAcademica = {};
+  const totalByInstituicaoEnsino = {};
   const crossedData = {};
   let totalSum = 0;
 
@@ -101,6 +104,19 @@ export function processResults(allResults, selectedFilters) {
         else if (isOrganizacaoAcademicaSelected && isFaixaEtariaSuperiorSelected) {
           processCrossedOrganizacaoAcademicaFaixaEtariaSuperior(crossedData, item);
         }
+        // Combinações com Instituição de Ensino
+        else if (isInstituicaoEnsinoSelected && isModalidadeSelected) {
+          processCrossedInstituicaoEnsinoModalidade(crossedData, item);
+        }
+        else if (isInstituicaoEnsinoSelected && isCategoriaAdministrativaSelected) {
+          processCrossedInstituicaoEnsinoCategoriaAdministrativa(crossedData, item);
+        }
+        else if (isInstituicaoEnsinoSelected && isOrganizacaoAcademicaSelected) {
+          processCrossedInstituicaoEnsinoOrganizacaoAcademica(crossedData, item);
+        }
+        else if (isInstituicaoEnsinoSelected && isFaixaEtariaSuperiorSelected) {
+          processCrossedInstituicaoEnsinoFaixaEtariaSuperior(crossedData, item);
+        }
         else if (isCategoriaAdministrativaSelected && isRegimeSelected) {
           processCrossedCategotiaRegimeDeTrabalho(crossedData, item);
         }
@@ -147,6 +163,9 @@ export function processResults(allResults, selectedFilters) {
         else if (isOrganizacaoAcademicaSelected) {
           processOrganizacaoAcademicaTotal(totalByOrganizacaoAcademica, item);
         }
+        else if (isInstituicaoEnsinoSelected) {
+          processInstituicaoEnsinoTotal(totalByInstituicaoEnsino, item);
+        }
         else {
           totalSum += item.total;
         }
@@ -158,8 +177,8 @@ export function processResults(allResults, selectedFilters) {
   return getFormattedResult(
     isEtapaSelected, isLocalidadeSelected, isDependenciaSelected,
     isVinculoSelected, isFormacaoDocenteSelected, isFaixaEtariaSelected,
-    isModalidadeSelected, isRegimeSelected, isCategoriaAdministrativaSelected, isFaixaEtariaSuperiorSelected, isOrganizacaoAcademicaSelected, crossedData, totalByEtapa, totalByLocalidade, totalByDependencia,
-    totalByVinculo, totalByFormacaoDocente, totalByFaixaEtaria, totalByModalidade, totalByRegime, totalByCategoriaAdministrativa, totalByFaixaEtariaSuperior, totalByOrganizacaoAcademica,
+    isModalidadeSelected, isRegimeSelected, isCategoriaAdministrativaSelected, isFaixaEtariaSuperiorSelected, isOrganizacaoAcademicaSelected, isInstituicaoEnsinoSelected, crossedData, totalByEtapa, totalByLocalidade, totalByDependencia,
+    totalByVinculo, totalByFormacaoDocente, totalByFaixaEtaria, totalByModalidade, totalByRegime, totalByCategoriaAdministrativa, totalByFaixaEtariaSuperior, totalByOrganizacaoAcademica, totalByInstituicaoEnsino,
     totalSum
   );
 }
@@ -445,6 +464,71 @@ function processCrossedOrganizacaoAcademicaFormacaoDocente(crossedData, item) {
   crossedData[crossKey].total += item.total;
 }
 
+// ====== IES Cross Processors ======
+function processCrossedInstituicaoEnsinoModalidade(crossedData, item) {
+  const instId = item.institution_id ?? item.instituicao_ensino_id ?? item.codigo_ies;
+  if (instId == null || item.upper_education_mod_id == null) return;
+  const crossKey = `${instId}-${item.upper_education_mod_id}`;
+  if (!crossedData[crossKey]) {
+    crossedData[crossKey] = {
+      institution_id: Number(instId),
+      institution_name: item.institution_name ?? item.instituicao_ensino_name ?? String(instId),
+      upper_education_mod_id: item.upper_education_mod_id,
+      upper_education_mod_name: item.upper_education_mod_name,
+      total: 0,
+    };
+  }
+  crossedData[crossKey].total += item.total;
+}
+
+function processCrossedInstituicaoEnsinoCategoriaAdministrativa(crossedData, item) {
+  const instId = item.institution_id ?? item.instituicao_ensino_id ?? item.codigo_ies;
+  if (instId == null || item.upper_adm_dependency_id == null) return;
+  const crossKey = `${instId}-${item.upper_adm_dependency_id}`;
+  if (!crossedData[crossKey]) {
+    crossedData[crossKey] = {
+      institution_id: Number(instId),
+      institution_name: item.institution_name ?? item.instituicao_ensino_name ?? String(instId),
+      upper_adm_dependency_id: item.upper_adm_dependency_id,
+      upper_adm_dependency_name: item.upper_adm_dependency_name,
+      total: 0,
+    };
+  }
+  crossedData[crossKey].total += item.total;
+}
+
+function processCrossedInstituicaoEnsinoOrganizacaoAcademica(crossedData, item) {
+  const instId = item.institution_id ?? item.instituicao_ensino_id ?? item.codigo_ies;
+  if (instId == null || item.academic_level_id == null) return;
+  const crossKey = `${instId}-${item.academic_level_id}`;
+  if (!crossedData[crossKey]) {
+    crossedData[crossKey] = {
+      institution_id: Number(instId),
+      institution_name: item.institution_name ?? item.instituicao_ensino_name ?? String(instId),
+      academic_level_id: item.academic_level_id,
+      academic_level_name: item.academic_level_name,
+      total: 0,
+    };
+  }
+  crossedData[crossKey].total += item.total;
+}
+
+function processCrossedInstituicaoEnsinoFaixaEtariaSuperior(crossedData, item) {
+  const instId = item.institution_id ?? item.instituicao_ensino_id ?? item.codigo_ies;
+  if (instId == null || item.age_student_code_id == null) return;
+  const crossKey = `${instId}-${item.age_student_code_id}`;
+  if (!crossedData[crossKey]) {
+    crossedData[crossKey] = {
+      institution_id: Number(instId),
+      institution_name: item.institution_name ?? item.instituicao_ensino_name ?? String(instId),
+      age_student_code_id: item.age_student_code_id,
+      age_student_code_name: item.age_student_code_name,
+      total: 0,
+    };
+  }
+  crossedData[crossKey].total += item.total;
+}
+
 // Funções auxiliares para processamento de totais individuais
 function processEtapaTotal(totalByEtapa, item) {
   if (!totalByEtapa[item.education_level_mod_id]) {
@@ -556,12 +640,25 @@ function processOrganizacaoAcademicaTotal(totalByOrganizacaoAcademica, item) {
   totalByOrganizacaoAcademica[item.academic_level_id].total += item.total;
 }
 
+function processInstituicaoEnsinoTotal(totalByInstituicaoEnsino, item) {
+  const id = item.institution_id ?? item.instituicao_ensino_id ?? item.codigo_ies;
+  const name = item.institution_name ?? item.instituicao_ensino_name ?? item.nome_ies;
+  if (id == null) return;
+  if (!totalByInstituicaoEnsino[id]) {
+    totalByInstituicaoEnsino[id] = {
+      total: 0,
+      name: name
+    };
+  }
+  totalByInstituicaoEnsino[id].total += item.total;
+}
+
 // Função para formatar o resultado final
 function getFormattedResult(
   isEtapaSelected, isLocalidadeSelected, isDependenciaSelected,
   isVinculoSelected, isFormacaoDocenteSelected, isFaixaEtariaSelected,
-  isModalidadeSelected, isRegimeSelected, isCategoriaAdministrativaSelected, isFaixaEtariaSuperiorSelected, isOrganizacaoAcademicaSelected, crossedData, totalByEtapa, totalByLocalidade, totalByDependencia,
-  totalByVinculo, totalByFormacaoDocente, totalByFaixaEtaria, totalByModalidade, totalByRegime, totalByCategoriaAdministrativa, totalByFaixaEtariaSuperior, totalByOrganizacaoAcademica,
+  isModalidadeSelected, isRegimeSelected, isCategoriaAdministrativaSelected, isFaixaEtariaSuperiorSelected, isOrganizacaoAcademicaSelected, isInstituicaoEnsinoSelected, crossedData, totalByEtapa, totalByLocalidade, totalByDependencia,
+  totalByVinculo, totalByFormacaoDocente, totalByFaixaEtaria, totalByModalidade, totalByRegime, totalByCategoriaAdministrativa, totalByFaixaEtariaSuperior, totalByOrganizacaoAcademica, totalByInstituicaoEnsino,
   totalSum
 ) {
   if (isLocalidadeSelected && isDependenciaSelected) {
@@ -623,6 +720,20 @@ function getFormattedResult(
   }
   if (isOrganizacaoAcademicaSelected && isFormacaoDocenteSelected) {
     return { result: { byOrganizacaoAcademicaAndFormacaoDocente: Object.values(crossedData) } };
+  }
+
+  // ====== IES Cross Returns ======
+  if (isInstituicaoEnsinoSelected && isModalidadeSelected) {
+    return { result: { byInstitutionAndModalidade: Object.values(crossedData) } };
+  }
+  if (isInstituicaoEnsinoSelected && isCategoriaAdministrativaSelected) {
+    return { result: { byInstitutionAndCategoriaAdministrativa: Object.values(crossedData) } };
+  }
+  if (isInstituicaoEnsinoSelected && isOrganizacaoAcademicaSelected) {
+    return { result: { byInstitutionAndOrganizacaoAcademica: Object.values(crossedData) } };
+  }
+  if (isInstituicaoEnsinoSelected && isFaixaEtariaSuperiorSelected) {
+    return { result: { byInstitutionAndFaixaEtariaSuperior: Object.values(crossedData) } };
   }
 
   if (isEtapaSelected) {
@@ -730,6 +841,16 @@ function getFormattedResult(
       result: Object.entries(totalByOrganizacaoAcademica).map(([id, { total, name }]) => ({
         academic_level_id: id,
         academic_level_name: name,
+        total
+      }))
+    };
+  }
+
+  if (isInstituicaoEnsinoSelected) {
+    return {
+      result: Object.entries(totalByInstituicaoEnsino).map(([id, { total, name }]) => ({
+        institution_id: Number(id),
+        institution_name: name,
         total
       }))
     };

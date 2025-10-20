@@ -68,7 +68,8 @@ const SourceFooter = ({ source = "Microdados do Censo da Educação Superior/INE
     formacaoDocente: ['initial_training_name', 'total'],
     categoriaAdministrativa: ['upper_adm_dependency_name', 'total'],
     faixaEtariaSuperior: ['age_student_code_name', 'total'],
-    organizacaoAcademica: ['academic_level_name', 'total']
+    organizacaoAcademica: ['academic_level_name', 'total'],
+    instituicaoEnsino: ['institution_name', 'total']
   };
 
   const HEADER_DISPLAY_NAMES = {
@@ -79,7 +80,8 @@ const SourceFooter = ({ source = "Microdados do Censo da Educação Superior/INE
     initial_training_name: 'Formação Docente',
     upper_adm_dependency_name: 'Categoria Administrativa',
     age_student_code_name: 'Faixa Etária',
-    academic_level_name: 'Organização Acadêmica'
+    academic_level_name: 'Organização Acadêmica',
+    institution_name: 'Instituição de Ensino'
   };
 
   const CROSS_TABLE_CONFIGS = {
@@ -182,11 +184,52 @@ const SourceFooter = ({ source = "Microdados do Censo da Educação Superior/INE
         columnIdField: 'initial_training_id',
         rowHeader: 'Organização Acadêmica'
       }
-    }
+    },
+    // Novas combinações envolvendo Instituição de Ensino
+    instituicaoEnsinoModalidade: {
+      dataKey: 'byInstitutionAndModalidade',
+      configs: {
+        rowField: 'institution_name',
+        rowIdField: 'institution_id',
+        columnField: 'upper_education_mod_name',
+        columnIdField: 'upper_education_mod_id',
+        rowHeader: 'Instituição de Ensino',
+      },
+    },
+    instituicaoEnsinoCategoriaAdministrativa: {
+      dataKey: 'byInstitutionAndCategoriaAdministrativa',
+      configs: {
+        rowField: 'institution_name',
+        rowIdField: 'institution_id',
+        columnField: 'upper_adm_dependency_name',
+        columnIdField: 'upper_adm_dependency_id',
+        rowHeader: 'Instituição de Ensino',
+      },
+    },
+    instituicaoEnsinoOrganizacaoAcademica: {
+      dataKey: 'byInstitutionAndOrganizacaoAcademica',
+      configs: {
+        rowField: 'institution_name',
+        rowIdField: 'institution_id',
+        columnField: 'academic_level_name',
+        columnIdField: 'academic_level_id',
+        rowHeader: 'Instituição de Ensino',
+      },
+    },
+    instituicaoEnsinoFaixaEtariaSuperior: {
+      dataKey: 'byInstitutionAndFaixaEtariaSuperior',
+      configs: {
+        rowField: 'institution_name',
+        rowIdField: 'institution_id',
+        columnField: 'age_student_code_name',
+        columnIdField: 'age_student_code_id',
+        rowHeader: 'Instituição de Ensino',
+      },
+    },
   };
 
   const getCrossTableConfig = (filters) => {
-    const { isModalidadeSelected, isRegimeSelected, isFormacaoDocenteSelected, isCategoriaAdministrativaSelected, isFaixaEtariaSuperiorSelected, isOrganizacaoAcademicaSelected } = filters;
+    const { isModalidadeSelected, isRegimeSelected, isFormacaoDocenteSelected, isCategoriaAdministrativaSelected, isFaixaEtariaSuperiorSelected, isOrganizacaoAcademicaSelected, isInstituicaoEnsinoSelected } = filters;
 
     if (isModalidadeSelected && isFaixaEtariaSuperiorSelected) {
       return {dataKey: CROSS_TABLE_CONFIGS.modalidadeFaixaEtariaSuperior.dataKey,
@@ -211,6 +254,19 @@ const SourceFooter = ({ source = "Microdados do Censo da Educação Superior/INE
     if (isOrganizacaoAcademicaSelected && isFaixaEtariaSuperiorSelected) {
       return {dataKey: CROSS_TABLE_CONFIGS.organizacaoAcademicaFaixaEtariaSuperior.dataKey,
         ...CROSS_TABLE_CONFIGS.organizacaoAcademicaFaixaEtariaSuperior.configs}
+    }
+    // Combinações com Instituição de Ensino
+    if (isInstituicaoEnsinoSelected && isModalidadeSelected) {
+      return { dataKey: CROSS_TABLE_CONFIGS.instituicaoEnsinoModalidade.dataKey, ...CROSS_TABLE_CONFIGS.instituicaoEnsinoModalidade.configs };
+    }
+    if (isInstituicaoEnsinoSelected && isCategoriaAdministrativaSelected) {
+      return { dataKey: CROSS_TABLE_CONFIGS.instituicaoEnsinoCategoriaAdministrativa.dataKey, ...CROSS_TABLE_CONFIGS.instituicaoEnsinoCategoriaAdministrativa.configs };
+    }
+    if (isInstituicaoEnsinoSelected && isOrganizacaoAcademicaSelected) {
+      return { dataKey: CROSS_TABLE_CONFIGS.instituicaoEnsinoOrganizacaoAcademica.dataKey, ...CROSS_TABLE_CONFIGS.instituicaoEnsinoOrganizacaoAcademica.configs };
+    }
+    if (isInstituicaoEnsinoSelected && isFaixaEtariaSuperiorSelected) {
+      return { dataKey: CROSS_TABLE_CONFIGS.instituicaoEnsinoFaixaEtariaSuperior.dataKey, ...CROSS_TABLE_CONFIGS.instituicaoEnsinoFaixaEtariaSuperior.configs };
     }
     if (isCategoriaAdministrativaSelected && isRegimeSelected) {
       return {dataKey: CROSS_TABLE_CONFIGS.categoriaAdministrativaRegime.dataKey,
@@ -304,14 +360,19 @@ const processCrossTableData = (data, rowIdField, columnIdField, rowField, column
                         !data?.result?.byCategoriaAdministrativaAndRegime?.length &&
                         !data?.result?.byCategoriaAdministrativaAndFormacaoDocente?.length &&
                         !data?.result?.byOrganizacaoAcademicaAndRegime?.length &&
-                        !data?.result?.byOrganizacaoAcademicaAndFormacaoDocente?.length;
+                        !data?.result?.byOrganizacaoAcademicaAndFormacaoDocente?.length &&
+                        // Novas combinações com Instituição de Ensino
+                        !data?.result?.byInstitutionAndModalidade?.length &&
+                        !data?.result?.byInstitutionAndCategoriaAdministrativa?.length &&
+                        !data?.result?.byInstitutionAndOrganizacaoAcademica?.length &&
+                        !data?.result?.byInstitutionAndFaixaEtariaSuperior?.length;
 
     return noFilterData && noCrossData &&
            tableDataArray.every(arr => !Array.isArray(arr) || arr.length === 0) &&
            municipioDataArray.every(arr => !Array.isArray(arr) || arr.length === 0);
   };
 
-  const BasicTable = React.forwardRef(({ headers, data, formatTotal = false, sortField = null, showTotal = false, totalValue = 0 }, ref) => {
+  const BasicTable = React.forwardRef(({ headers, data, formatTotal = false, sortField = null, showTotal = false, totalValue = 0, showSource = false }, ref) => {
     const sortedData = sortField
       ? [...data].sort((a, b) => Number(a[sortField]) - Number(b[sortField]))
       : data;
@@ -374,7 +435,7 @@ const processCrossTableData = (data, rowIdField, columnIdField, rowField, column
           </Table>
         </TableContainer>
 
-        <SourceFooter />
+        {showSource && <SourceFooter />}
       </>
     );
   });
@@ -390,6 +451,7 @@ const DataTable = ({
   isCategoriaAdministrativaSelected,
   isFaixaEtariaSuperiorSelected,
   isOrganizacaoAcademicaSelected,
+  isInstituicaoEnsinoSelected,
   title = '',
   showConsolidated = false
 }) => {
@@ -411,10 +473,16 @@ const DataTable = ({
   const chartRef = React.useRef(null);
 
   const tableDataArray = [data?.result || []];
-  const municipioDataArray = municipioData?.map(m => ({
-    cityName: m.cityName,
-    total: m.result?.[0]?.total || 0,
-  }));
+
+  // Calcular o total correto para cada município somando todos os itens do result
+  const municipioDataArray = municipioData?.map(m => {
+    const cityResult = m.result || [];
+    const totalSum = cityResult.reduce((sum, item) => sum + (Number(item.total) || 0), 0);
+    return {
+      cityName: m.cityName,
+      total: totalSum,
+    };
+  });
 
   if (hasNoData(data, tableDataArray, municipioDataArray)) {
     return (
@@ -510,6 +578,13 @@ const DataTable = ({
           id: 'academic_level',
           name: 'academic_level_name',
           label: 'Organização Acadêmica'
+        };
+      }
+      if (isInstituicaoEnsinoSelected) {
+        return {
+          id: 'institution_id',
+          name: 'institution_name',
+          label: 'Instituição de Ensino'
         };
       }
       return null;
@@ -643,18 +718,20 @@ const DataTable = ({
 
         <SourceFooter />
 
-        <div style={{ marginTop: '1rem' }}>
-          <HistoricalChart
-            data={{ result: resultData }}
-            type={type}
-            isModalidadeSelected={isModalidadeSelected}
-            isRegimeSelected={isRegimeSelected}
-            isCategoriaAdministrativaSelected={isCategoriaAdministrativaSelected}
-            isFaixaEtariaSuperiorSelected={isFaixaEtariaSuperiorSelected}
-            isOrganizacaoAcademicaSelected={isOrganizacaoAcademicaSelected}
-            isFormacaoDocenteSelected={isFormacaoDocenteSelected}
-          />
-        </div>
+        {!isInstituicaoEnsinoSelected && (
+          <div style={{ marginTop: '1rem' }}>
+            <HistoricalChart
+              data={{ result: resultData }}
+              type={type}
+              isModalidadeSelected={isModalidadeSelected}
+              isRegimeSelected={isRegimeSelected}
+              isCategoriaAdministrativaSelected={isCategoriaAdministrativaSelected}
+              isFaixaEtariaSuperiorSelected={isFaixaEtariaSuperiorSelected}
+              isOrganizacaoAcademicaSelected={isOrganizacaoAcademicaSelected}
+              isFormacaoDocenteSelected={isFormacaoDocenteSelected}
+            />
+          </div>
+        )}
         <TableExport
           data={exportData}
           headers={exportHeaders}
@@ -669,13 +746,14 @@ const DataTable = ({
 
 
   // Renderização de tabela cruzada
-const renderCrossTable = () => {
-  const filters = { isModalidadeSelected, isRegimeSelected, isCategoriaAdministrativaSelected, isFaixaEtariaSuperiorSelected, isOrganizacaoAcademicaSelected };
-  const config = getCrossTableConfig(filters);
+const renderCrossTable = (customData = null, customConfig = null) => {
+  const filters = { isModalidadeSelected, isRegimeSelected, isCategoriaAdministrativaSelected, isFaixaEtariaSuperiorSelected, isOrganizacaoAcademicaSelected, isInstituicaoEnsinoSelected };
+  const config = customConfig || getCrossTableConfig(filters);
 
   if (!config) return null;
 
-  const crossedData = data?.result?.[config.dataKey] || [];
+  const dataSource = customData || data;
+  const crossedData = (dataSource?.result && Array.isArray(dataSource.result[config.dataKey]) ? dataSource.result[config.dataKey] : (Array.isArray(dataSource?.[config.dataKey]) ? dataSource[config.dataKey] : []));
 
   // Processamento de dados cruzados
   const { uniqueRows, uniqueColumns, cellValues, rowTotals, columnTotals } = processCrossTableData(
@@ -753,8 +831,10 @@ const renderCrossTable = () => {
         </Table>
       </TableContainer>
 
-      {/* Adicionar gráficos para tabelas cruzadas */}
-      {renderCrossTableCharts(uniqueRows, uniqueColumns, cellValues, config.rowHeader)}
+      <SourceFooter />
+
+      {/* Gráficos desabilitados quando há filtro por Instituição de Ensino */}
+      {!isInstituicaoEnsinoSelected && renderCrossTableCharts(uniqueRows, uniqueColumns, cellValues, config.rowHeader)}
 
       <TableExport
         data={exportData}
@@ -770,6 +850,7 @@ const renderCrossTable = () => {
 
   // Função para renderizar gráficos para tabelas simples
   const renderSimpleTableCharts = (filterType, tableData) => {
+    if (filterType === 'instituicaoEnsino') return null;
     if (!tableData || tableData.length === 0) return null;
 
     // Mapear os campos corretos para cada tipo de filtro
@@ -785,12 +866,14 @@ const renderCrossTable = () => {
           return 'upper_adm_dependency_name';
         case 'faixaEtariaSuperior':
           return 'age_student_code_name';
-        case 'organizacaoAcademica':
-          return 'academic_level_name';
-        default:
-          return Object.keys(tableData[0] || {}).find(key => key !== 'total');
-      }
-    };
+      case 'organizacaoAcademica':
+        return 'academic_level_name';
+      case 'instituicaoEnsino':
+        return 'institution_name';
+      default:
+        return Object.keys(tableData[0] || {}).find(key => key !== 'total');
+    }
+  };
 
     const fieldName = getFieldName(filterType);
     const chartData = tableData.map(item => ({
@@ -836,6 +919,8 @@ const renderCrossTable = () => {
         return 'Dados por Faixa Etária';
       case 'organizacaoAcademica':
         return 'Dados por Organização Acadêmica';
+      case 'instituicaoEnsino':
+        return 'Dados por Instituição de Ensino';
       default:
         return `Dados por ${filterType}`;
     }
@@ -849,6 +934,7 @@ const renderCrossTable = () => {
     if (isCategoriaAdministrativaSelected) return HEADERS.categoriaAdministrativa;
     if (isFaixaEtariaSuperiorSelected) return HEADERS.faixaEtariaSuperior;
     if (isOrganizacaoAcademicaSelected) return HEADERS.organizacaoAcademica;
+    if (isInstituicaoEnsinoSelected) return HEADERS.instituicaoEnsino;
     return HEADERS.default;
   };
 
@@ -864,6 +950,7 @@ const renderCrossTable = () => {
       if (isCategoriaAdministrativaSelected) return 'upper_adm_dependency_name';
       if (isFaixaEtariaSuperiorSelected) return 'age_student_code_name';
       if (isOrganizacaoAcademicaSelected) return 'academic_level_name';
+      if (isInstituicaoEnsinoSelected) return 'institution_name';
       return 'total';
     };
 
@@ -892,6 +979,61 @@ const renderCrossTable = () => {
     }));
   };
 
+  // Função para consolidar dados cruzados de múltiplas cidades
+  const consolidateCrossTableData = () => {
+    if (!municipioData || municipioData.length === 0) return null;
+
+    // Primeiro, vamos coletar todos os dados de todas as cidades
+    const allData = [];
+    municipioData.forEach(cityData => {
+      const cityResult = cityData.result || [];
+      cityResult.forEach(item => {
+        allData.push(item);
+      });
+    });
+
+    // Agrupar e somar por combinação de dimensões
+    const consolidatedMap = new Map();
+
+    allData.forEach(item => {
+      // Criar chave única baseada nas dimensões (exceto total)
+      let key = '';
+
+      if (isInstituicaoEnsinoSelected) {
+        key += `inst_${item.institution_id || 'na'}_${item.institution_name || 'N/A'}`;
+      }
+      if (isModalidadeSelected) {
+        key += `_mod_${item.upper_education_mod_id || 'na'}_${item.upper_education_mod_name || 'N/A'}`;
+      }
+      if (isCategoriaAdministrativaSelected) {
+        key += `_cat_${item.upper_adm_dependency_id || 'na'}_${item.upper_adm_dependency_name || 'N/A'}`;
+      }
+      if (isOrganizacaoAcademicaSelected) {
+        key += `_org_${item.academic_level_id || 'na'}_${item.academic_level_name || 'N/A'}`;
+      }
+      if (isFaixaEtariaSuperiorSelected) {
+        key += `_fx_${item.age_student_code_id || 'na'}_${item.age_student_code_name || 'N/A'}`;
+      }
+      if (isRegimeSelected) {
+        key += `_reg_${item.work_regime_id || 'na'}_${item.work_regime_name || 'N/A'}`;
+      }
+      if (isFormacaoDocenteSelected) {
+        key += `_form_${item.initial_training_id || 'na'}_${item.initial_training_name || 'N/A'}`;
+      }
+
+      const total = Number(item.total) || 0;
+
+      if (consolidatedMap.has(key)) {
+        const existing = consolidatedMap.get(key);
+        existing.total += total;
+      } else {
+        consolidatedMap.set(key, { ...item, total });
+      }
+    });
+
+    return Array.from(consolidatedMap.values());
+  };
+
   // Função para renderizar dados individuais por cidade
   const renderIndividualCityData = () => {
     if (!municipioData || municipioData.length === 0) return null;
@@ -910,6 +1052,32 @@ const renderCrossTable = () => {
           const cityTableRef = React.createRef();
           const cityChartRef = React.createRef();
 
+          // Se há cross-filters, renderizar tabela cruzada para esta cidade
+          if (hasCrossFilters) {
+            const filters = { isModalidadeSelected, isRegimeSelected, isCategoriaAdministrativaSelected, isFaixaEtariaSuperiorSelected, isOrganizacaoAcademicaSelected, isInstituicaoEnsinoSelected };
+            const config = getCrossTableConfig(filters);
+
+            if (!config) {
+              return null;
+            }
+
+            // Criar objeto data temporário com os dados desta cidade
+            const tempData = {
+              result: {
+                [config.dataKey]: cityResult
+              }
+            };
+
+            return (
+              <div key={index} style={{ marginBottom: '2rem', border: '1px solid #ddd', borderRadius: '8px', padding: '1rem' }}>
+                <h3 style={{ marginBottom: '1rem', color: '#333', borderBottom: '2px solid #007bff', paddingBottom: '0.5rem' }}>
+                  {cityName}
+                </h3>
+                {renderCrossTable(tempData, config)}
+              </div>
+            );
+          }
+
           return (
             <div key={index} style={{ marginBottom: '2rem', border: '1px solid #ddd', borderRadius: '8px', padding: '1rem' }}>
               <h3 style={{ marginBottom: '1rem', color: '#333', borderBottom: '2px solid #007bff', paddingBottom: '0.5rem' }}>
@@ -920,15 +1088,18 @@ const renderCrossTable = () => {
               <BasicTable
                 headers={headers}
                 data={cityResult}
+                showTotal={true}
+                totalValue={cityResult.reduce((sum, item) => sum + (Number(item.total) || 0), 0)}
+                showSource={true}
                 ref={cityTableRef}
               />
 
               {/* Gráfico para esta cidade */}
-              {cityResult.length > 0 && (
+              {cityResult.length > 0 && !isInstituicaoEnsinoSelected && (
                 <div style={{ marginTop: '1rem' }} ref={cityChartRef}>
                   <EnhancedPieChart
                     data={cityResult.map(item => ({
-                      name: item.upper_education_mod_name || item.work_regime_name || item.initial_training_name || item.upper_adm_dependency_name || item.age_student_code_name || item.academic_level_name || 'N/A',
+                      name: item.upper_education_mod_name || item.work_regime_name || item.initial_training_name || item.upper_adm_dependency_name || item.age_student_code_name || item.academic_level_name || item.institution_name || 'N/A',
                       value: Number(item.total) || 0
                     }))}
                     title={`Distribuição - ${cityName}`}
@@ -1005,43 +1176,49 @@ const renderCrossTable = () => {
     switch (filterType) {
       case 'modalidade':
         headers = HEADERS.modalidade;
-        tableData = data.result;
+        tableData = Array.isArray(data?.result) ? data.result : [];
         sortField = 'upper_education_mod_id';
         break;
       case 'regimeDeTrabalho':
         headers = HEADERS.regimeDeTrabalho;
-        tableData = data.result;
+        tableData = Array.isArray(data?.result) ? data.result : [];
         sortField = 'work_regime_id';
         break;
       case 'formacaoDocente':
         headers = HEADERS.formacaoDocente;
-        tableData = data.result;
+        tableData = Array.isArray(data?.result) ? data.result : [];
         sortField = 'initial_training_id';
         break;
       case 'categoriaAdministrativa':
         headers = HEADERS.categoriaAdministrativa;
-        tableData = data.result;
+        tableData = Array.isArray(data?.result) ? data.result : [];
         sortField = 'upper_adm_dependency_id';
         break;
       case 'faixaEtariaSuperior':
         headers = HEADERS.faixaEtariaSuperior;
-        tableData = data.result;
+        tableData = Array.isArray(data?.result) ? data.result : [];
         sortField = 'age_student_code';
         break;
       case 'organizacaoAcademica':
         headers = HEADERS.organizacaoAcademica;
-        tableData = data.result;
+        tableData = Array.isArray(data?.result) ? data.result : [];
         sortField = 'academic_level';
+        break;
+      case 'instituicaoEnsino':
+        headers = HEADERS.instituicaoEnsino;
+        tableData = Array.isArray(data?.result) ? data.result : [];
+        sortField = 'institution_id';
         break;
       default:
         return null;
     }
 
     // Calcular total para adicionar linha de total
-    const totalValue = tableData.reduce((sum, item) => sum + Number(item.total || 0), 0);
+    const safeRows = Array.isArray(tableData) ? tableData : [];
+    const totalValue = safeRows.reduce((sum, item) => sum + Number(item.total || 0), 0);
 
     // Preparar dados para exportação incluindo linha de total
-    const exportData = tableData.map(item => {
+    const exportData = safeRows.map(item => {
       const row = {};
       headers.forEach(header => {
         row[header] = item[header];
@@ -1069,10 +1246,9 @@ const renderCrossTable = () => {
           formatTotal={formatTotal}
           showTotal={true}
           totalValue={totalValue}
+          showSource={true}
           ref={tableRefs[filterType]}
         />
-
-        <SourceFooter />
 
         {/* Adicionar gráficos para tabelas simples */}
         {renderSimpleTableCharts(filterType, tableData)}
@@ -1089,7 +1265,7 @@ const renderCrossTable = () => {
     );
   };
 
-  const hasNoFilters = !isModalidadeSelected && !isRegimeSelected && !isFormacaoDocenteSelected && !isCategoriaAdministrativaSelected && !isFaixaEtariaSuperiorSelected && !isOrganizacaoAcademicaSelected;
+  const hasNoFilters = !isModalidadeSelected && !isRegimeSelected && !isFormacaoDocenteSelected && !isCategoriaAdministrativaSelected && !isFaixaEtariaSuperiorSelected && !isOrganizacaoAcademicaSelected && !isInstituicaoEnsinoSelected;
   const hasCrossFilters = (
     (isModalidadeSelected && isFaixaEtariaSuperiorSelected) ||
     (isModalidadeSelected && isOrganizacaoAcademicaSelected) ||
@@ -1100,14 +1276,19 @@ const renderCrossTable = () => {
     (isCategoriaAdministrativaSelected && isRegimeSelected) ||
     (isCategoriaAdministrativaSelected && isFormacaoDocenteSelected) ||
     (isOrganizacaoAcademicaSelected && isRegimeSelected) ||
-    (isOrganizacaoAcademicaSelected && isFormacaoDocenteSelected)
+    (isOrganizacaoAcademicaSelected && isFormacaoDocenteSelected) ||
+    // Combinações com Instituição de Ensino
+    (isInstituicaoEnsinoSelected && isModalidadeSelected) ||
+    (isInstituicaoEnsinoSelected && isCategoriaAdministrativaSelected) ||
+    (isInstituicaoEnsinoSelected && isOrganizacaoAcademicaSelected) ||
+    (isInstituicaoEnsinoSelected && isFaixaEtariaSuperiorSelected)
   );
 
   // Verificar se há dados de múltiplas cidades (filtros territoriais)
   const hasMultipleCities = municipioData && municipioData.length > 0;
 
   // Verificar se há filtros territoriais combinados com outros filtros
-  const hasTerritorialWithOtherFilters = hasMultipleCities && (isModalidadeSelected || isRegimeSelected || isFormacaoDocenteSelected || isCategoriaAdministrativaSelected || isFaixaEtariaSuperiorSelected || isOrganizacaoAcademicaSelected);
+  const hasTerritorialWithOtherFilters = hasMultipleCities && (isModalidadeSelected || isRegimeSelected || isFormacaoDocenteSelected || isCategoriaAdministrativaSelected || isFaixaEtariaSuperiorSelected || isOrganizacaoAcademicaSelected || isInstituicaoEnsinoSelected);
 
   return (
     <ThemeProvider theme={theme}>
@@ -1133,8 +1314,8 @@ const renderCrossTable = () => {
               </div>
             )}
 
-            {/* Tabela cruzada */}
-            {!isHistorical && hasCrossFilters && renderCrossTable()}
+            {/* Tabela cruzada - NÃO exibir quando há filtros territoriais com outros filtros */}
+            {!isHistorical && hasCrossFilters && !hasTerritorialWithOtherFilters && renderCrossTable()}
 
         {/* Dados individuais por cidade (quando há filtros territoriais combinados com outros filtros e não está em modo consolidado) */}
         {!isHistorical && hasTerritorialWithOtherFilters && !showConsolidated && municipioDataArray.length > 0 && (
@@ -1146,48 +1327,75 @@ const renderCrossTable = () => {
         {/* Dados consolidados (quando há filtros territoriais combinados com outros filtros e está em modo consolidado) */}
         {!isHistorical && hasTerritorialWithOtherFilters && showConsolidated && municipioDataArray.length > 0 && (
           <div style={{ marginTop: '2rem' }}>
-            {/* Tabela consolidada por categoria */}
-            <div>
-              <BasicTable
-                headers={getHeadersForCityData()}
-                data={consolidateDataByCategory()}
-                ref={tableRefs.default}
-              />
+            {/* Se há cross-filters, renderizar tabela cruzada consolidada */}
+            {hasCrossFilters ? (
+              <div>
+                {/* Criar objeto data temporário com os dados consolidados */}
+                {(() => {
+                  const consolidatedData = consolidateCrossTableData();
+                  const filters = { isModalidadeSelected, isRegimeSelected, isCategoriaAdministrativaSelected, isFaixaEtariaSuperiorSelected, isOrganizacaoAcademicaSelected, isInstituicaoEnsinoSelected };
+                  const config = getCrossTableConfig(filters);
 
-              {/* Gráfico para dados consolidados */}
-              {consolidateDataByCategory().length > 0 && (
-                <div style={{ marginTop: '1rem' }}>
-                  <EnhancedPieChart
-                    data={consolidateDataByCategory().map(item => {
-                      // Determinar qual campo usar baseado no filtro selecionado
-                      let name = 'N/A';
-                      if (isModalidadeSelected) name = item.upper_education_mod_name;
-                      else if (isRegimeSelected) name = item.work_regime_name;
-                      else if (isFormacaoDocenteSelected) name = item.initial_training_name;
-                      else if (isCategoriaAdministrativaSelected) name = item.upper_adm_dependency_name;
-                      else if (isFaixaEtariaSuperiorSelected) name = item.age_student_code_name;
-                      else if (isOrganizacaoAcademicaSelected) name = item.academic_level_name;
+                  if (!config || !consolidatedData) {
+                    return <div>Não há dados para exibir</div>;
+                  }
 
-                      return {
-                        name: name || 'N/A',
-                        value: Number(item.total) || 0
-                      };
-                    })}
-                    title="Distribuição Consolidada"
-                    height={500}
-                  />
-                </div>
-              )}
+                  // Processar dados para formato de tabela cruzada
+                  const tempData = {
+                    result: {
+                      [config.dataKey]: consolidatedData
+                    }
+                  };
 
-              <TableExport
-                data={consolidateDataByCategory()}
-                headers={getHeadersForCityData()}
-                headerDisplayNames={HEADER_DISPLAY_NAMES}
-                fileName="dados_consolidados"
-                tableTitle={title || "Dados Consolidados"}
-                tableRef={tableRefs.default}
-              />
-            </div>
+                  return renderCrossTable(tempData, config);
+                })()}
+              </div>
+            ) : (
+              /* Tabela consolidada simples (apenas uma dimensão) */
+              <div>
+                <BasicTable
+                  headers={getHeadersForCityData()}
+                  data={consolidateDataByCategory()}
+                  showSource={true}
+                  ref={tableRefs.default}
+                />
+
+                {/* Gráfico para dados consolidados */}
+                {consolidateDataByCategory().length > 0 && !isInstituicaoEnsinoSelected && (
+                  <div style={{ marginTop: '1rem' }}>
+                    <EnhancedPieChart
+                      data={consolidateDataByCategory().map(item => {
+                        // Determinar qual campo usar baseado no filtro selecionado
+                        let name = 'N/A';
+                        if (isModalidadeSelected) name = item.upper_education_mod_name;
+                        else if (isRegimeSelected) name = item.work_regime_name;
+                        else if (isFormacaoDocenteSelected) name = item.initial_training_name;
+                        else if (isCategoriaAdministrativaSelected) name = item.upper_adm_dependency_name;
+                        else if (isFaixaEtariaSuperiorSelected) name = item.age_student_code_name;
+                        else if (isOrganizacaoAcademicaSelected) name = item.academic_level_name;
+                        else if (isInstituicaoEnsinoSelected) name = item.institution_name;
+
+                        return {
+                          name: name || 'N/A',
+                          value: Number(item.total) || 0
+                        };
+                      })}
+                      title="Distribuição Consolidada"
+                      height={500}
+                    />
+                  </div>
+                )}
+
+                <TableExport
+                  data={consolidateDataByCategory()}
+                  headers={getHeadersForCityData()}
+                  headerDisplayNames={HEADER_DISPLAY_NAMES}
+                  fileName="dados_consolidados"
+                  tableTitle={title || "Dados Consolidados"}
+                  tableRef={tableRefs.default}
+                />
+              </div>
+            )}
           </div>
         )}
 
@@ -1200,6 +1408,7 @@ const renderCrossTable = () => {
                 <BasicTable
                   headers={HEADERS.default}
                   data={tableData}
+                  showSource={true}
                   ref={tableRefs.default}
                 />
                 <TableExport
@@ -1225,6 +1434,7 @@ const renderCrossTable = () => {
                       total: municipioDataArray.reduce((sum, item) => sum + item.total, 0),
                     },
                   ]}
+                  showSource={true}
                   ref={tableRefs.municipio}
                 />
 
@@ -1274,6 +1484,7 @@ const renderCrossTable = () => {
                 {isCategoriaAdministrativaSelected && renderSimpleTable('categoriaAdministrativa')}
                 {isFaixaEtariaSuperiorSelected && renderSimpleTable('faixaEtariaSuperior')}
                 {isOrganizacaoAcademicaSelected && renderSimpleTable('organizacaoAcademica')}
+                {isInstituicaoEnsinoSelected && renderSimpleTable('instituicaoEnsino')}
           </>
         )}
       </div>
