@@ -8,6 +8,10 @@
 /.pnp
 .pnp.js
 
+#prisma
+prisma/generated/
+prisma/educacao/generated
+
 # testing
 /coverage
 
