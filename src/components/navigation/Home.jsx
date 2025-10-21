@@ -377,7 +377,7 @@ const Home = () => {
             <div 
               className="feature-card p-8 rounded-xl shadow-lg border-2 border-gray-500 cursor-pointer hover:shadow-xl transition-all duration-300 hover:scale-105 text-center" 
               style={{ backgroundColor: 'var(--background-color)' }}
-              onClick={() => window.location.href = 'https://opepi.pi.gov.br'}
+              onClick={() => window.location.href = 'https://repositorio.opepi.pi.gov.br'}
             >
               <div className="bg-gray-100 w-16 h-10 rounded-full flex items-center justify-center mx-auto mb-6">
                 <FaFileAlt className="text-gray-600 text-2xl" />

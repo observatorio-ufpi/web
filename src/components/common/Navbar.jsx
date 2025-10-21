@@ -58,9 +58,9 @@ const Navbar = () => {
                   quem somos
                 </Link>
                 <Link 
-                  to="/repositorio" 
+                  to="https://repositorio.opepi.pi.gov.br" 
                   className={`px-3 py-1 rounded-full text-sm font-medium transition-all duration-200 ${
-                    isActive('/repositorio') 
+                    isActive('https://repositorio.opepi.pi.gov.br') 
                       ? 'text-purple-600 bg-purple-100' 
                       : 'text-gray-600 hover:text-gray-900'
                   }`}
