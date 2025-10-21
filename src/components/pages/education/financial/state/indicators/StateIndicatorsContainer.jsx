@@ -112,6 +112,11 @@ function StateIndicatorsContainer() {
                 <Button
                   variant="contained"
                   onClick={handleLoadData}
+                  disabled={selectedIndicator === "publicFinances" || 
+                           selectedIndicator === "financingCapacity" || 
+                           selectedIndicator === "fundebResources" || 
+                           selectedIndicator === "resourceApplicationControl" || 
+                           selectedIndicator === "educationInvestment"}
                   className="w-full md:w-auto min-w-[120px] px-4 py-1.5"
                 >
                   Mostrar Resultados
@@ -140,19 +145,57 @@ function StateIndicatorsContainer() {
           )}
 
           {!loading && !error && !apiData && !hasInitialLoad && (
-            <Typography 
-              variant="body1" 
-              sx={{ 
-                textAlign: 'center',
-                fontSize: '18px',
-                fontWeight: 'bold',
-                margin: '20px auto',
-                maxWidth: '400px',
-                color: theme.palette.primary.main
-              }}
-            >
-              Selecione o indicador desejado e clique em "Filtrar" para visualizar os dados.
-            </Typography>
+            <>
+              {/* Mostrar mensagem de desenvolvimento imediatamente */}
+              {(selectedIndicator === "publicFinances" || 
+                selectedIndicator === "financingCapacity" || 
+                selectedIndicator === "fundebResources" || 
+                selectedIndicator === "resourceApplicationControl" || 
+                selectedIndicator === "educationInvestment") ? (
+                <div style={{ 
+                  textAlign: 'center', 
+                  padding: '60px 20px',
+                  backgroundColor: '#f8f9fa',
+                  borderRadius: '8px',
+                  border: '2px dashed #dee2e6',
+                  margin: '20px 0'
+                }}>
+                  <Typography 
+                    variant="h4" 
+                    sx={{ 
+                      color: '#6c757d',
+                      fontWeight: 'bold',
+                      marginBottom: '16px'
+                    }}
+                  >
+                    🚧 Em Desenvolvimento
+                  </Typography>
+                  <Typography 
+                    variant="body1" 
+                    sx={{ 
+                      color: '#6c757d',
+                      fontSize: '16px'
+                    }}
+                  >
+                    Este indicador está sendo desenvolvido e estará disponível em breve.
+                  </Typography>
+                </div>
+              ) : (
+                <Typography 
+                  variant="body1" 
+                  sx={{ 
+                    textAlign: 'center',
+                    fontSize: '18px',
+                    fontWeight: 'bold',
+                    margin: '20px auto',
+                    maxWidth: '400px',
+                    color: theme.palette.primary.main
+                  }}
+                >
+                  Selecione o indicador desejado e clique em "Filtrar" para visualizar os dados.
+                </Typography>
+              )}
+            </>
           )}
 
           {!loading && !error && !apiData && hasInitialLoad && (

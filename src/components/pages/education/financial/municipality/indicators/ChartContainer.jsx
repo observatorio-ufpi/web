@@ -26,9 +26,9 @@ const indicatorOptions = [
   { value: 'expensesBasicEducationFundeb', label: 'Percentual do fundeb nos profissionais de educação básica' },
   { value: 'revenueComposition', label: 'Composição das Receitas Impostos e Transferências Constitucionais e Legais [%]' },
   { value: 'financingCapacity', label: 'Capacidade de Financiamento' },
-  // { value: 'rpebComposition', label: 'Composição da Receita Potencial da Educação Básica [%]' },
-  // { value: 'resourcesApplicationControl', label: 'Controle da Aplicação de Recursos' },
-  // { value: 'educationExpenseComposition', label: 'Composição das Despesas em Educação [%]' },
+  { value: 'rpebComposition', label: 'Composição da Receita Potencial da Educação Básica [%]' },
+  { value: 'resourcesApplicationControl', label: 'Controle da Aplicação de Recursos' },
+  { value: 'educationExpenseComposition', label: 'Composição das Despesas em Educação [%]' },
 ];
 
 const groupTypeOptions = [
@@ -881,17 +881,22 @@ function ChartContainer() {
             </Box>
           </div>
 
-          <FilterComponent
-            onFilterChange={handleFilterChange}
-            selectedMunicipio={selectedMunicipio}
-            territorioDeDesenvolvimentoMunicipio={territorioDeDesenvolvimentoMunicipio}
-            faixaPopulacionalMunicipio={faixaPopulacionalMunicipio}
-            aglomeradoMunicipio={aglomeradoMunicipio}
-            gerenciaRegionalMunicipio={gerenciaRegionalMunicipio}
-            anoInicial={filters.anoInicial}
-            anoFinal={filters.anoFinal}
-            filtersExpanded={filtersExpanded}
-          />
+          {/* Desabilitar filtros para indicadores em desenvolvimento */}
+          {!(selectedTable === "rpebComposition" || 
+            selectedTable === "resourcesApplicationControl" || 
+            selectedTable === "educationExpenseComposition") && (
+            <FilterComponent
+              onFilterChange={handleFilterChange}
+              selectedMunicipio={selectedMunicipio}
+              territorioDeDesenvolvimentoMunicipio={territorioDeDesenvolvimentoMunicipio}
+              faixaPopulacionalMunicipio={faixaPopulacionalMunicipio}
+              aglomeradoMunicipio={aglomeradoMunicipio}
+              gerenciaRegionalMunicipio={gerenciaRegionalMunicipio}
+              anoInicial={filters.anoInicial}
+              anoFinal={filters.anoFinal}
+              filtersExpanded={filtersExpanded}
+            />
+          )}
         </div>
 
         <hr className="divider" />
@@ -912,19 +917,55 @@ function ChartContainer() {
           )}
 
           {!loading && !error && !apiData && !hasInitialLoad && (
-            <Typography 
-            variant="body1" 
-            sx={{ 
-              textAlign: 'center',
-              fontSize: '18px',
-              fontWeight: 'bold',
-              margin: '20px auto',
-              maxWidth: '400px',
-              color: theme.palette.primary.main
-            }}
-          >
-            Selecione os filtros desejados e clique em "Filtrar" para montar uma consulta.
-          </Typography>
+            <>
+              {/* Mostrar mensagem de desenvolvimento imediatamente */}
+              {(selectedTable === "rpebComposition" || 
+                selectedTable === "resourcesApplicationControl" || 
+                selectedTable === "educationExpenseComposition") ? (
+                <div style={{ 
+                  textAlign: 'center', 
+                  padding: '60px 20px',
+                  backgroundColor: '#f8f9fa',
+                  borderRadius: '8px',
+                  border: '2px dashed #dee2e6',
+                  margin: '20px 0'
+                }}>
+                  <Typography 
+                    variant="h4" 
+                    sx={{ 
+                      color: '#6c757d',
+                      fontWeight: 'bold',
+                      marginBottom: '16px'
+                    }}
+                  >
+                    🚧 Em Desenvolvimento
+                  </Typography>
+                  <Typography 
+                    variant="body1" 
+                    sx={{ 
+                      color: '#6c757d',
+                      fontSize: '16px'
+                    }}
+                  >
+                    Este indicador está sendo desenvolvido e estará disponível em breve.
+                  </Typography>
+                </div>
+              ) : (
+                <Typography 
+                  variant="body1" 
+                  sx={{ 
+                    textAlign: 'center',
+                    fontSize: '18px',
+                    fontWeight: 'bold',
+                    margin: '20px auto',
+                    maxWidth: '400px',
+                    color: theme.palette.primary.main
+                  }}
+                >
+                  Selecione os filtros desejados e clique em "Filtrar" para montar uma consulta.
+                </Typography>
+              )}
+            </>
           )}
 
           {!loading && !error && !apiData && hasInitialLoad && (
@@ -966,18 +1007,6 @@ function ChartContainer() {
 
               {selectedTable === "financingCapacity" && (
                 <FinancingCapacityCharts data={apiData} />
-              )}
-
-              {selectedTable === "resourcesApplicationControl" && (
-                <ResourcesApplicationControlCharts data={apiData} />
-              )}
-
-              {selectedTable === "rpebComposition" && (
-                <RpebCompositionCharts data={apiData} />
-              )}
-
-              {selectedTable === "educationExpenseComposition" && (
-                <EducationExpenseCompositionCharts data={apiData} />
               )}
 
               <CustomPagination

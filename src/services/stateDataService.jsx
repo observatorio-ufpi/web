@@ -165,4 +165,9 @@ export const stateIndicatorOptions = [
   { value: 'educationExpense', label: 'Despesas com Educação' },
   { value: 'additionalRevenue', label: 'Receitas Adicionais' },
   { value: 'rpeb', label: 'Composição da Receita Potencial de Educação (RPEB)' },
+  { value: 'publicFinances', label: 'Indicadores de Finanças Públicas' },
+  { value: 'financingCapacity', label: 'Capacidade de Financiamento' },
+  { value: 'fundebResources', label: 'Indicadores dos Recursos do Fundeb' },
+  { value: 'resourceApplicationControl', label: 'Controle da Aplicação dos Recursos' },
+  { value: 'educationInvestment', label: 'Investimento em Educação' },
 ];
