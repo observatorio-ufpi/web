@@ -2,6 +2,7 @@ import { Button, Typography, Box } from '@mui/material';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useTheme } from '@mui/material/styles';
 import { Select } from '../../../ui';
+import YearRangeSlider from '../../../ui/YearRangeSlider';
 import '../../../../style/RevenueTableContainer.css';
 import '../../../../style/TableFilters.css';
 import ApiRateContainer from './ApiRateComponent.jsx';
@@ -35,6 +36,9 @@ function FiltrosRateComponent() {
   const [filteredYear, setFilteredYear] = useState(null);
   const [startYear, setStartYear] = useState(yearLimits.pop_out_school.min);
   const [endYear, setEndYear] = useState(yearLimits.pop_out_school.max);
+  
+  // Estado para o range slider
+  const [yearRange, setYearRange] = useState([2019, 2023]);
 
   // Função para obter os limites de anos
   const getYearLimits = useMemo(() => {
@@ -76,14 +80,17 @@ function FiltrosRateComponent() {
       setYear(2023); // Ano mais recente disponível
       setStartYear(2019);
       setEndYear(2023);
+      setYearRange([2019, 2023]);
     } else if (type === 'instruction_level') {
       setYear(2023); // Ano mais recente disponível
       setStartYear(2016);
       setEndYear(2023);
+      setYearRange([2016, 2023]);
     } else {
       setYear(getYearLimits.max);
       setStartYear(getYearLimits.min);
       setEndYear(getYearLimits.max);
+      setYearRange([getYearLimits.min, getYearLimits.max]);
     }
   }, [getYearLimits, type]);
 
@@ -113,12 +120,14 @@ function FiltrosRateComponent() {
     // Limpar o título antes de definir um novo
     setTitle('');
 
-    setIsHistorical(displayHistorical);
+    // Determina se é série histórica baseado no yearRange
+    const isHistoricalRange = yearRange[0] !== yearRange[1];
+    const yearDisplay = isHistoricalRange ? `${yearRange[0]}-${yearRange[1]}` : yearRange[0];
+    
+    setIsHistorical(isHistoricalRange);
+    setDisplayHistorical(isHistoricalRange);
     setFilteredType(type);
-    setFilteredYear(year);
-
-    // Improved title generation logic
-    const yearDisplay = displayHistorical ? `${startYear}-${endYear}` : year;
+    setFilteredYear(yearRange[0]);
 
     // Para taxas, sempre usar "Piauí" como localização
     const locationName = "Piauí";
@@ -166,6 +175,7 @@ function FiltrosRateComponent() {
     setEndYear(limits.max);
     setYear(limits.max);
     setFilteredYear(null);
+    setYearRange([limits.min, limits.max]);
     setData(null);
     setError(null);
     setTitle('');
@@ -214,154 +224,114 @@ function FiltrosRateComponent() {
   return (
     <div className="app-container">
       <div className="flex flex-col gap-4 p-0 m-0">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
-          {/* Tipo - Primeira coluna, primeira linha */}
-          <div className="md:col-span-1">
-            <label htmlFor="typeSelect" className="block text-sm font-medium text-gray-700 mb-1">Tipo:</label>
-            <Select
-              id="typeSelect"
-              value={typeOptions.find(option => option.value === type)}
-              onChange={(selectedOption) => {
-                setType(selectedOption.value);
-                setSelectedFilters([]);
-              }}
-              options={typeOptions}
-              placeholder="Selecione o tipo"
-              size="xs"
-            />
-          </div>
-
-          {/* Ano - Segunda e terceira colunas, primeira linha */}
-          <div className="md:col-span-2">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-              <label className="flex items-center gap-2 cursor-pointer whitespace-nowrap">
-                <input
-                  type="checkbox"
-                  checked={displayHistorical}
-                  onChange={(e) => {
-                    setDisplayHistorical(e.target.checked);
+        
+          {/* Tipo + Filtros + Informações - Primeira linha */}
+          <div className="md:col-span-3">
+            <div className="flex flex-col lg:flex-row items-start gap-4">
+              <div className="w-full lg:flex-1">
+                <label htmlFor="typeSelect" className="block text-sm font-medium text-gray-700 mb-1">Tipo:</label>
+                <Select
+                  id="typeSelect"
+                  value={typeOptions.find(option => option.value === type)}
+                  onChange={(selectedOption) => {
+                    setType(selectedOption.value);
                     setSelectedFilters([]);
                   }}
-                  className="cursor-pointer"
+                  options={typeOptions}
+                  placeholder="Selecione o tipo"
+                  size="xs"
                 />
-                <span className="font-medium text-gray-700">Série Histórica</span>
-              </label>
-            
-              {displayHistorical ? (
-                <div className="flex flex-col sm:flex-row gap-3 flex-1 w-full">
-                  <div className="flex-1">
-                    <label htmlFor="startYearSelect" className="block text-sm font-medium text-gray-700 mb-1">Ano Inicial:</label>
-                    <Select
-                      id="startYearSelect"
-                      value={yearOptions.find(option => option.value === startYear)}
-                      onChange={(selectedOption) => {
-                        setStartYear(selectedOption.value);
-                        if (selectedOption.value > endYear) {
-                          setEndYear(selectedOption.value);
-                        }
-                      }}
-                      options={yearOptions}
-                      placeholder="Ano Inicial"
-                      size="xs"
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <label htmlFor="endYearSelect" className="block text-sm font-medium text-gray-700 mb-1">Ano Final:</label>
-                    <Select
-                      id="endYearSelect"
-                      value={yearOptions.find(option => option.value === endYear)}
-                      onChange={(selectedOption) => setEndYear(selectedOption.value)}
-                      options={yearOptions.filter(option => option.value >= startYear)}
-                      placeholder="Ano Final"
-                      size="xs"
-                    />
-                  </div>
-                </div>
-              ) : (
-                <div className="flex-1 w-full">
-                  <label htmlFor="yearSelect" className="block text-sm font-medium text-gray-700 mb-1">Ano:</label>
-                  <Select
-                    id="yearSelect"
-                    value={yearOptions.find(option => option.value === year)}
-                    onChange={(selectedOption) => setYear(selectedOption.value)}
-                    options={yearOptions}
-                    placeholder="Ano"
-                    size="xs"
-                  />
-                </div>
-              )}
+              </div>
+
+              <div className="w-full lg:flex-1">
+                <label htmlFor="multiFilterSelect" className="block text-sm font-medium text-gray-700 mb-1">Filtros:</label>
+                <Select
+                  id="multiFilterSelect"
+                  value={selectedFilters}
+                  onChange={(newValue, actionMeta) => {
+                    if (type === 'instruction_level') {
+                      // Para instruction_level, garantir que instruction_level esteja sempre selecionado
+                      const instructionLevelFilter = { value: 'instruction_level', label: 'Nível de Instrução (Obrigatório)' };
+
+                      if (newValue.length === 0) {
+                        setSelectedFilters([instructionLevelFilter]);
+                      } else if (!newValue.some(filter => filter.value === 'instruction_level')) {
+                        setSelectedFilters([instructionLevelFilter, ...newValue.slice(-1)]);
+                      } else {
+                        setSelectedFilters(newValue.slice(-3)); // Máximo 3 filtros
+                      }
+                    } else if (type === 'iliteracy_rate' || type === 'superior_education_conclusion_tax' || type === 'basic_education_conclusion') {
+                      // Para os novos tipos, permitir até 2 filtros sem obrigatoriedade
+                      if (newValue.length <= 2) {
+                        setSelectedFilters(newValue);
+                      } else {
+                        setSelectedFilters(newValue.slice(-2));
+                      }
+                    } else {
+                      const isHistoricalRange = yearRange[0] !== yearRange[1];
+                      if (isHistoricalRange) {
+                        setSelectedFilters(newValue.slice(-1));
+                      } else if (newValue.length <= 2) {
+                        setSelectedFilters(newValue);
+                      } else {
+                        setSelectedFilters(newValue.slice(-2));
+                      }
+                    }
+                  }}
+                  options={filterOptions}
+                  isMulti
+                  placeholder={yearRange[0] !== yearRange[1] ? "Selecione 1 filtro" : "Selecione até 2 filtros"}
+                  size="xs"
+                />
+              </div>
+
+              <div className="w-full lg:flex-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Informações:</label>
+                <Box sx={{ 
+                  width: '100%',
+                  color: theme.palette.text.secondary,
+                  fontSize: '0.85em',
+                  padding: '10px',
+                  backgroundColor: '#f8f9fa',
+                  borderRadius: '8px',
+                  border: '1px solid #e9ecef',
+                  minHeight: '40px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  wordWrap: 'break-word',
+                  overflowWrap: 'break-word'
+                }}>
+                  {type === 'pop_out_school'
+                    ? <span>Para população fora da escola, os dados estão disponíveis apenas para consulta consolidada do estado do Piauí <span style={{ color: '#ff6b6b' }}>e é obrigatório selecionar faixa etaria para consulta</span>.</span>
+                    : type === 'adjusted_liquid_frequency'
+                    ? <span>Para frequência líquida ajustada, os dados estão disponíveis apenas para consulta consolidada do estado do Piauí <span style={{ color: '#ff6b6b' }}>e é obrigatório selecionar faixa etaria para consulta</span>.</span>
+                    : type === 'iliteracy_rate'
+                    ? <span>Para taxa de analfabetismo, os dados estão disponíveis apenas para consulta consolidada do estado do Piauí. Você pode selecionar faixa etária e/ou localidade como filtros opcionais.</span>
+                    : type === 'superior_education_conclusion_tax'
+                    ? <span>Para taxa de conclusão do ensino superior, os dados estão disponíveis apenas para consulta consolidada do estado do Piauí. Você pode selecionar faixa etária e/ou localidade como filtros opcionais.</span>
+                    : type === 'basic_education_conclusion'
+                    ? <span>Para taxa de conclusão do ensino básico, os dados estão disponíveis apenas para consulta consolidada do estado do Piauí. Você pode selecionar faixa etária e/ou localidade como filtros opcionais.</span>
+                    : type === 'instruction_level'
+                    ? <span>Para nível de instrução, os dados estão disponíveis apenas para consulta consolidada do estado do Piauí <span style={{ color: '#ff6b6b' }}>e é obrigatório selecionar nível de instrução para consulta</span>. Você pode combinar com localidade e/ou faixa etária.</span>
+                    : <span>Selecione um tipo para ver as informações específicas.</span>}
+                </Box>
+              </div>
             </div>
           </div>
 
-          {/* Filtros Múltiplos - Primeira coluna, segunda linha */}
-          <div className="md:col-span-1">
-            <Select
-              id="multiFilterSelect"
-              value={selectedFilters}
-              onChange={(newValue, actionMeta) => {
-                if (type === 'instruction_level') {
-                  // Para instruction_level, garantir que instruction_level esteja sempre selecionado
-                  const instructionLevelFilter = { value: 'instruction_level', label: 'Nível de Instrução (Obrigatório)' };
-
-                  if (newValue.length === 0) {
-                    setSelectedFilters([instructionLevelFilter]);
-                  } else if (!newValue.some(filter => filter.value === 'instruction_level')) {
-                    setSelectedFilters([instructionLevelFilter, ...newValue.slice(-1)]);
-                  } else {
-                    setSelectedFilters(newValue.slice(-3)); // Máximo 3 filtros
-                  }
-                } else if (type === 'iliteracy_rate' || type === 'superior_education_conclusion_tax' || type === 'basic_education_conclusion') {
-                  // Para os novos tipos, permitir até 2 filtros sem obrigatoriedade
-                  if (newValue.length <= 2) {
-                    setSelectedFilters(newValue);
-                  } else {
-                    setSelectedFilters(newValue.slice(-2));
-                  }
-                } else if (displayHistorical) {
-                  setSelectedFilters(newValue.slice(-1));
-                } else if (newValue.length <= 2) {
-                  setSelectedFilters(newValue);
-                } else {
-                  setSelectedFilters(newValue.slice(-2));
-                }
-              }}
-              options={filterOptions}
-              isMulti
-              placeholder={displayHistorical ? "Selecione 1 filtro" : "Selecione até 2 filtros"}
-              size="xs"
+          {/* Período - Todas as colunas, segunda linha */}
+          <div className="md:col-span-3">
+            <YearRangeSlider
+              minYear={getYearLimits.min}
+              maxYear={getYearLimits.max}
+              value={yearRange}
+              onChange={setYearRange}
             />
           </div>
 
-          {/* Instruções - Segunda e terceira colunas, segunda linha */}
-          <div className="md:col-span-2">
-            <Box sx={{ 
-              width: '100%',
-              color: theme.palette.text.secondary,
-              fontSize: '0.85em',
-              padding: '10px',
-              backgroundColor: '#f8f9fa',
-              borderRadius: '8px',
-              border: '1px solid #e9ecef'
-            }}>
-              {type === 'pop_out_school'
-                ? <span>Para população fora da escola, os dados estão disponíveis apenas para consulta consolidada do estado do Piauí <span style={{ color: '#ff6b6b' }}>e é obrigatório selecionar faixa etaria para consulta</span>.</span>
-                : type === 'adjusted_liquid_frequency'
-                ? <span>Para frequência líquida ajustada, os dados estão disponíveis apenas para consulta consolidada do estado do Piauí <span style={{ color: '#ff6b6b' }}>e é obrigatório selecionar faixa etaria para consulta</span>.</span>
-                : type === 'iliteracy_rate'
-                ? <span>Para taxa de analfabetismo, os dados estão disponíveis apenas para consulta consolidada do estado do Piauí. Você pode selecionar faixa etária e/ou localidade como filtros opcionais.</span>
-                : type === 'superior_education_conclusion_tax'
-                ? <span>Para taxa de conclusão do ensino superior, os dados estão disponíveis apenas para consulta consolidada do estado do Piauí. Você pode selecionar faixa etária e/ou localidade como filtros opcionais.</span>
-                : type === 'basic_education_conclusion'
-                ? <span>Para taxa de conclusão do ensino básico, os dados estão disponíveis apenas para consulta consolidada do estado do Piauí. Você pode selecionar faixa etária e/ou localidade como filtros opcionais.</span>
-                : type === 'instruction_level'
-                ? <span>Para nível de instrução, os dados estão disponíveis apenas para consulta consolidada do estado do Piauí <span style={{ color: '#ff6b6b' }}>e é obrigatório selecionar nível de instrução para consulta</span>. Você pode combinar com localidade e/ou faixa etária.</span>
-                : <span>Selecione um tipo para ver as informações específicas.</span>}
-            </Box>
-          </div>
-
-          {/* Botões - Primeira coluna, terceira linha */}
-          <div className="md:col-span-1 flex justify-start">
-            <div className="flex flex-col sm:flex-row gap-3">
+          {/* Botões - Ocupa todo o espaço da linha */}
+          <div className="md:col-span-3 flex flex-col justify-end">
+            <div className="flex flex-col sm:flex-row gap-3 justify-end items-end">
               <Button
                 variant="contained"
                 color="primary"
@@ -385,7 +355,6 @@ function FiltrosRateComponent() {
             </div>
           </div>
         </div>
-      </div>
 
       <hr className="divider" />
 
@@ -422,10 +391,10 @@ function FiltrosRateComponent() {
 
       <ApiRateContainer
         type={filteredType}
-        year={filteredYear || year}
-        isHistorical={isHistorical}
-        startYear={startYear}
-        endYear={endYear}
+        year={yearRange[0]}
+        isHistorical={yearRange[0] !== yearRange[1]}
+        startYear={yearRange[0]}
+        endYear={yearRange[1]}
         onDataFetched={setData}
         onError={setError}
         onLoading={setIsLoading}
@@ -440,9 +409,9 @@ function FiltrosRateComponent() {
           isLocalidadeSelected={isLocalidadeSelected}
           isFaixaEtariaSelected={isFaixaEtariaSelected}
           isInstructionLevelSelected={isInstructionLevelSelected}
-          isHistorical={isHistorical}
+          isHistorical={yearRange[0] !== yearRange[1]}
           type={filteredType}
-          year={filteredYear || year}
+          year={yearRange[0]}
           title={title}
         />
       ) : null}

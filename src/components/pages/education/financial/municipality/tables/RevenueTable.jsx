@@ -189,6 +189,25 @@ const RevenueTable = ({
   // Usar dados corrigidos se disponíveis, senão usar dados originais
   const finalDisplayData = correctedData || typeToRowToValue;
 
+  // Função para determinar se um tipo deve ser formatado como porcentagem
+  const isPercentageType = (type) => {
+    return type === "% aplicado em MDE" || type === "% aplicado com profissionais da Educação Básica";
+  };
+
+  // Função para formatar valores baseado no tipo
+  const formatValue = (value, type) => {
+    if (value === undefined || value === null) return "-";
+    
+    if (isPercentageType(type)) {
+      return `${value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`;
+    } else {
+      return value.toLocaleString("pt-BR", {
+        style: "currency",
+        currency: "BRL",
+      });
+    }
+  };
+
   const downloadExcel = () => {
     if (groupType === "municipio") {
       const wb = XLSX.utils.book_new();
@@ -202,6 +221,7 @@ const RevenueTable = ({
                 finalDisplayData[type] &&
                 finalDisplayData[type][row] !== undefined
               ) {
+                // Para Excel, manter valores numéricos para formatação adequada
                 return finalDisplayData[type][row];
               } else {
                 return "-";
@@ -228,6 +248,7 @@ const RevenueTable = ({
                 finalDisplayData[type] &&
                 finalDisplayData[type][row] !== undefined
               ) {
+                // Para Excel, manter valores numéricos para formatação adequada
                 return finalDisplayData[type][row];
               } else {
                 return "-";
@@ -260,10 +281,7 @@ const RevenueTable = ({
             finalDisplayData[type] &&
             finalDisplayData[type][row] !== undefined
           ) {
-            return finalDisplayData[type][row].toLocaleString("pt-BR", {
-              style: "currency",
-              currency: "BRL",
-            });
+            return formatValue(finalDisplayData[type][row], type);
           } else {
             return "-";
           }
@@ -433,10 +451,7 @@ const RevenueTable = ({
                       <CenteredTableCell key={type} align="center">
                         {finalDisplayData[type] &&
                         finalDisplayData[type][row] !== undefined
-                          ? finalDisplayData[type][row].toLocaleString(
-                              "pt-BR",
-                              { style: "currency", currency: "BRL" }
-                            )
+                          ? formatValue(finalDisplayData[type][row], type)
                           : "-"}
                       </CenteredTableCell>
                     ))}
@@ -503,6 +518,21 @@ const RevenueTable = ({
             <span className="button-text">PDF</span>
           </Button>
         </div>
+        
+        {/* Fonte dos dados */}
+        <Typography 
+          variant="caption" 
+          sx={{ 
+            display: 'block',
+            textAlign: 'right',
+            color: '#666',
+            fontSize: '12px',
+            fontStyle: 'italic',
+            marginTop: '8px'
+          }}
+        >
+          Fonte: RREO/SIOPE - FNDE
+        </Typography>
       </div>
     </ThemeProvider>
   );

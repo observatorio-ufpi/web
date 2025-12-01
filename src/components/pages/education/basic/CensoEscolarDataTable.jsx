@@ -14,9 +14,10 @@ import {
     Typography,
 } from '@mui/material';
 import { styled, useTheme } from '@mui/material/styles';
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useMemo, useRef, useState, useEffect } from 'react';
 import { FaEye } from 'react-icons/fa';
 import TableExport from '../../../common/TableExport';
+import CustomPagination from '../../../helpers/CustomPagination'; // ← ADICIONE ESTA LINHA
 import { Select } from '../../../ui';
 
 import { columnNameMap } from '../../../../utils/columnNameMap';
@@ -99,8 +100,7 @@ function CensoEscolarDataTable({ data, title }) {
   const tableRef = useRef(null);
 
   const IDENTIFICATION_HEADERS = [
-    'NO_ENTIDADE', 'ANO', 'CO_MUNICIPIO', 'NO_MUNICIPIO',
-    'SG_UF', 'TP_DEPENDENCIA', 'TP_LOCALIZACAO',
+    'ANO','NO_ENTIDADE', 'CO_ENTIDADE', 'NO_MUNICIPIO', 'CO_MUNICIPIO', 'TP_DEPENDENCIA', 'TP_LOCALIZACAO',
   ];
 
   const allHeaders = useMemo(() => {
@@ -108,12 +108,15 @@ function CensoEscolarDataTable({ data, title }) {
       return [];
     }
     const keys = Object.keys(data.result[0]);
-    const idCols = IDENTIFICATION_HEADERS.filter((col) => keys.includes(col));
     const otherCols = keys.filter((col) => !IDENTIFICATION_HEADERS.includes(col) && col !== 'id' && col !== 'localidade');
-    return [...idCols, ...otherCols];
+    return [...IDENTIFICATION_HEADERS, ...otherCols];
   }, [data]);
 
   const [visibleColumns, setVisibleColumns] = useState(allHeaders);
+
+  useEffect(() => {
+    setVisibleColumns(allHeaders);
+  }, [allHeaders]);
   const [anchorEl, setAnchorEl] = useState(null);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);

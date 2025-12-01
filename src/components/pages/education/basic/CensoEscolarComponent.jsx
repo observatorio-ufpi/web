@@ -24,7 +24,6 @@ function CensoEscolarComponent() {
   const [aglomerado, setAglomerado] = useState('');
   const [gerencia, setGerencia] = useState('');
 
-
   const citiesList = useMemo(() => Object.entries(municipios)
     .filter(([, m]) => {
       if (territory) {
@@ -53,15 +52,19 @@ function CensoEscolarComponent() {
   ];
 
   const handleFilterClick = (filterData) => {
+    console.log('handleFilterClick received filterData:', filterData);
+    
     setError(null);
     setData(null);
     setTitle('');
 
-    // Se filterData foi passado, usa os dados do range slider
+    // Extrair os anos do filterData
     const startYear = filterData?.startYear || 2007;
     const endYear = filterData?.endYear || 2024;
     const isHistorical = startYear !== endYear;
-    
+
+    console.log('CensoEscolarComponent - Years:', { startYear, endYear, isHistorical });
+
     const yearDisplay = isHistorical ? `${startYear}-${endYear}` : startYear;
     let locationName = 'Piauí';
     if (city && municipios[city]) {
@@ -81,6 +84,7 @@ function CensoEscolarComponent() {
     setTitle(fullTitle);
 
     if (apiRef.current) {
+      // Passar os anos corretamente para o fetchData
       apiRef.current.fetchData({
         year: startYear,
         isHistorical,
@@ -106,6 +110,44 @@ function CensoEscolarComponent() {
     setFaixaPopulacional('');
     setAglomerado('');
     setGerencia('');
+  };
+
+  // Função para normalizar os dados recebidos da API
+  const normalizeData = (fetchedData) => {
+    console.log('Raw fetchedData:', fetchedData);
+
+    if (!fetchedData) {
+      return { result: [] };
+    }
+
+    // Se já é um array, envolver em objeto
+    if (Array.isArray(fetchedData)) {
+      return { result: fetchedData };
+    }
+
+    // Se tem .result direto, retornar como está
+    if (fetchedData.result && Array.isArray(fetchedData.result)) {
+      return fetchedData;
+    }
+
+    // Se tem finalResult e allResults (múltiplas cidades)
+    if (fetchedData.finalResult) {
+      // Se finalResult é um objeto com .result
+      if (fetchedData.finalResult.result && Array.isArray(fetchedData.finalResult.result)) {
+        return fetchedData.finalResult;
+      }
+      // Se finalResult é um array
+      if (Array.isArray(fetchedData.finalResult)) {
+        return { result: fetchedData.finalResult };
+      }
+      // Se finalResult é um objeto simples
+      if (typeof fetchedData.finalResult === 'object') {
+        return { result: [fetchedData.finalResult] };
+      }
+    }
+
+    // Se chegou aqui, retornar vazio
+    return { result: [] };
   };
 
   return (
@@ -165,29 +207,12 @@ function CensoEscolarComponent() {
           basePath="censo-escolar"
           onDataFetched={(fetchedData) => {
             console.log('onDataFetched data:', fetchedData);
-            let normalized = null;
 
-            if (!fetchedData) {
-              normalized = { result: [] };
-            } else if (Array.isArray(fetchedData)) {
-              normalized = { result: fetchedData };
-            } else if (fetchedData.finalResult && fetchedData.allResults) {
-              if (fetchedData.finalResult && fetchedData.finalResult.result) {
-                normalized = fetchedData.finalResult;
-              } else {
-                normalized = { result: Array.isArray(fetchedData.finalResult) ? fetchedData.finalResult : [fetchedData.finalResult] };
-              }
-            } else if (fetchedData.result) {
-              normalized = fetchedData;
-            } else if (fetchedData.finalResult) {
-              normalized = Array.isArray(fetchedData.finalResult) ? { result: fetchedData.finalResult } : { result: [fetchedData.finalResult] };
-            } else {
-              const maybeResult = fetchedData.result || fetchedData.data || null;
-              if (Array.isArray(maybeResult)) normalized = { result: maybeResult };
-              else normalized = { result: [] };
-            }
+            // Normalizar os dados
+            const normalized = normalizeData(fetchedData);
 
-            if (!Array.isArray(normalized.result)) normalized.result = [];
+            console.log('Normalized data:', normalized);
+            console.log('Result array length:', normalized.result?.length || 0);
 
             setData(normalized);
             setIsLoading(false);

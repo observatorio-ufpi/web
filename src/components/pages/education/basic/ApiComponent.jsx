@@ -14,6 +14,8 @@ const ApiContainer = forwardRef(({
     fetchData: async (filters) => {
       const { year, isHistorical, startYear, endYear, state = "22", city, territory, faixaPopulacional, aglomerado, gerencia, citiesList } = filters;
 
+      console.log('ApiComponent.fetchData - Filters received:', { year, isHistorical, startYear, endYear, citiesList: citiesList?.length });
+
       const isEtapaSelected = selectedFilters.some((filter) => filter.value === "etapa");
       const isLocalidadeSelected = selectedFilters.some((filter) => filter.value === "localidade");
       const isDependenciaSelected = selectedFilters.some((filter) => filter.value === "dependencia");
@@ -23,9 +25,10 @@ const ApiContainer = forwardRef(({
       const isMunicipioSelected = selectedFilters.some((filter) => filter.value === "municipio");
 
       const buildFilter = (cityId = null) => {
-        const yearFilter = isHistorical
-          ? `min_year:"${startYear}",max_year:"${endYear}"`
-          : `min_year:"${year}",max_year:"${year}"`;
+        // IMPORTANTE: Respeitar startYear e endYear do range slider
+        // Se isHistorical, usar o range completo
+        // Se não é histórico, ainda assim respeitar o range selecionado
+        const yearFilter = `min_year:"${startYear}",max_year:"${endYear}"`;
 
         return `${yearFilter},state:"${state}"${cityId ? `,city:"${cityId}"` : ""}`;
       };
@@ -97,6 +100,7 @@ const ApiContainer = forwardRef(({
       const fetchCityData = async (cityId, cityName) => {
         const filter = buildFilter(cityId);
         const url = buildUrl(filter);
+        console.log('fetchCityData URL:', url, 'filter:', filter);
         const response = await fetch(url);
 
         if (!response.ok) {
@@ -112,13 +116,14 @@ const ApiContainer = forwardRef(({
 
       const handleResults = (allResults) => {
         if (basePath === 'censo-escolar') {
-          const combinedResult = { result: [] };
+          // Para censo-escolar, combinar todos os resultados em um único array
+          const combinedResult = [];
           allResults.forEach(res => {
-            if (res && res.result) {
-              combinedResult.result.push(...res.result);
+            if (res && res.result && Array.isArray(res.result)) {
+              combinedResult.push(...res.result);
             }
           });
-          return combinedResult;
+          return { result: combinedResult };
         }
         return processApiResults(allResults, selectedFilters);
       };
@@ -130,6 +135,8 @@ const ApiContainer = forwardRef(({
 
         if (isHistorical) {
           if (citiesList.length > 0 && !city) {
+            // Múltiplas cidades em série histórica
+            console.log("Fetching historical data for multiple cities:", citiesList.length);
             const allResults = await Promise.all(
               citiesList.map(async ([cityId, cityInfo]) => {
                 return fetchCityData(cityId, cityInfo.nomeMunicipio);
@@ -182,12 +189,22 @@ const ApiContainer = forwardRef(({
             };
 
             onDataFetched({ finalResult: summedResults, allResults });
+            if (basePath === 'censo-escolar') {
+              const finalResult = handleResults(allResults);
+              console.log("Final Result (historical, multiple cities):", finalResult);
+              console.log("Total items:", finalResult.result.length);
+
+              onDataFetched({ finalResult, allResults });
+            }
           } else if (citiesList.length === 0 && (territory || faixaPopulacional || aglomerado || gerencia)) {
-            onDataFetched({ finalResult: [], allResults: [] });
+            // Filtros que não retornam cidades
+            console.log("No cities match the filters");
+            onDataFetched({ finalResult: { result: [] }, allResults: [] });
           } else {
+            // Uma cidade específica em série histórica
             const filter = buildFilter(city);
             const url = buildUrl(filter);
-            console.log('URL histórica:', url);
+            console.log('URL histórica (single city):', url);
             const response = await fetch(url);
 
             if (!response.ok) {
@@ -197,33 +214,32 @@ const ApiContainer = forwardRef(({
             }
 
             const result = await response.json();
+            console.log("Single city result:", result);
             onDataFetched(result);
           }
           return;
         }
 
+        // NÃO é série histórica
         if (citiesList.length > 0 && !city) {
-          console.log("Cities List:", citiesList);
+          console.log("Fetching data for multiple cities (not historical):", citiesList.length);
           const allResults = await Promise.all(
             citiesList.map(([cityId, cityInfo]) => fetchCityData(cityId, cityInfo.nomeMunicipio))
           );
 
           const finalResult = handleResults(allResults);
-          console.log("Final Result:", finalResult);
+          console.log("Final Result (multiple cities):", finalResult);
+          console.log("Total items:", finalResult.result.length);
 
-          // CORREÇÃO: Para censo-escolar, retornar o finalResult diretamente
-          // Para outros casos, manter a estrutura { finalResult, allResults }
-          if (basePath === 'censo-escolar') {
-            onDataFetched(finalResult);
-          } else {
-            onDataFetched({ finalResult, allResults });
-          }
+          onDataFetched({ finalResult, allResults });
         } else if (citiesList.length === 0 && (territory || faixaPopulacional || aglomerado || gerencia)) {
-          onDataFetched({ finalResult: [], allResults: [] });
+          console.log("No cities match the filters");
+          onDataFetched({ finalResult: { result: [] }, allResults: [] });
         } else {
+          // Uma cidade específica
           const filter = buildFilter(city);
           const url = buildUrl(filter);
-          console.log('URL:', url);
+          console.log('URL (single city):', url);
           const response = await fetch(url);
 
           if (!response.ok) {
@@ -233,8 +249,8 @@ const ApiContainer = forwardRef(({
           }
 
           const result = await response.json();
+          console.log("Single city result:", result);
           const allResults = [result];
-          console.log("All Results:", allResults);
           const finalResult = handleResults(allResults);
           console.log("API Result:", finalResult);
           onDataFetched(finalResult);
