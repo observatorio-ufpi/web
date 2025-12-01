@@ -30,6 +30,7 @@ function ApiHigherContainer({
     const isFaixaEtariaSuperiorSelected = Array.isArray(selectedFilters) && selectedFilters.some((filter) => filter.value === "faixaEtariaSuperior");
     const isOrganizacaoAcademicaSelected = Array.isArray(selectedFilters) && selectedFilters.some((filter) => filter.value === "organizacaoAcademica");
     const isInstituicaoEnsinoSelected = Array.isArray(selectedFilters) && selectedFilters.some((filter) => filter.value === "instituicaoEnsino");
+    const isMunicipioSelected = Array.isArray(selectedFilters) && selectedFilters.some((filter) => filter.value === "municipio");
 
     const buildFilter = (cityId = null) => {
         const yearFilter = isHistorical
@@ -68,6 +69,10 @@ function ApiHigherContainer({
 
       if (isInstituicaoEnsinoSelected) {
         selectedDims.push("institution");
+      }
+
+      if (isMunicipioSelected) {
+        selectedDims.push("municipality");
       }
 
       const endpoint = forceEndpoint || type;
@@ -125,6 +130,7 @@ function ApiHigherContainer({
                         if (isFaixaEtariaSuperiorSelected && item.age_student_code_id !== existing.age_student_code_id) return false;
                         if (isOrganizacaoAcademicaSelected && item.academic_level_id !== existing.academic_level_id) return false;
                         if (isInstituicaoEnsinoSelected && item.institution_id !== existing.institution_id) return false;
+                        if (isMunicipioSelected && item.municipality_id !== existing.municipality_id) return false;
                         return true;
                       });
 
@@ -146,6 +152,7 @@ function ApiHigherContainer({
                         if (isFaixaEtariaSuperiorSelected && item.age_student_code_id !== uniqueItem.age_student_code_id) return false;
                         if (isOrganizacaoAcademicaSelected && item.academic_level_id !== uniqueItem.academic_level_id) return false;
                         if (isInstituicaoEnsinoSelected && item.institution_id !== uniqueItem.institution_id) return false;
+                        if (isMunicipioSelected && item.municipality_id !== uniqueItem.municipality_id) return false;
                         return true;
                       });
 
@@ -197,11 +204,40 @@ function ApiHigherContainer({
             if (!response.ok) throw new Error(`Erro HTTP! Status: ${response.status}`);
 
             const result = await response.json();
-            const allResults = [result];
-            console.log("All Results:", allResults);
-            const finalResult = handleResults(allResults);
-            console.log("AQui API Result:", finalResult);
-            onDataFetched(finalResult);
+            console.log("API Result:", result);
+
+            // Se o backend já retornou dados cruzados (byMunicipioAnd..., byInstitutionAnd..., etc),
+            // não precisamos processar novamente - os dados já vêm prontos
+            const hasCrossData = result.byMunicipioAndModalidade ||
+                                 result.byMunicipioAndCategoriaAdministrativa ||
+                                 result.byMunicipioAndOrganizacaoAcademica ||
+                                 result.byMunicipioAndFaixaEtariaSuperior ||
+                                 result.byInstitutionAndModalidade ||
+                                 result.byInstitutionAndCategoriaAdministrativa ||
+                                 result.byInstitutionAndOrganizacaoAcademica ||
+                                 result.byInstitutionAndFaixaEtariaSuperior ||
+                                 // Outras combinações do backend
+                                 result.byModalidadeAndFaixaEtariaSuperior ||
+                                 result.byModalidadeAndOrganizacaoAcademica ||
+                                 result.byModalidadeAndCategoriaAdministrativa ||
+                                 result.byCategoriaAdministrativaAndFaixaEtariaSuperior ||
+                                 result.byCategoriaAdministrativaAndOrganizacaoAcademica ||
+                                 result.byOrganizacaoAcademicaAndFaixaEtariaSuperior ||
+                                 result.byCategoriaAdministrativaAndRegime ||
+                                 result.byCategoriaAdministrativaAndFormacaoDocente ||
+                                 result.byOrganizacaoAcademicaAndRegime ||
+                                 result.byOrganizacaoAcademicaAndFormacaoDocente;
+
+            if (hasCrossData) {
+              // Dados já vêm prontos do backend
+              onDataFetched(result);
+            } else {
+              // Processar dados para agregação
+              const allResults = [result];
+              const finalResult = handleResults(allResults);
+              console.log("Processed API Result:", finalResult);
+              onDataFetched(finalResult);
+            }
           }
 
           onError(null);

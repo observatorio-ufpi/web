@@ -1,6 +1,8 @@
+// import { Download as DownloadIcon } from '@mui/icons-material';
 import { Button, Switch, Typography } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+// import { exportBasicEducationTable } from '../../../../services/exportTableService.jsx';
 import '../../../../style/RevenueTableContainer.css';
 import '../../../../style/TableFilters.css';
 import { FaixaPopulacional, municipios, Regioes } from '../../../../utils/citiesMapping';
@@ -35,6 +37,7 @@ function ParentComponent() {
   const [isEtapaSelected, setIsEtapaSelected] = useState(false);
   const [isLocalidadeSelected, setIsLocalidadeSelected] = useState(false);
   const [isDependenciaSelected, setIsDependenciaSelected] = useState(false);
+  const [isMunicipioSelected, setIsMunicipioSelected] = useState(false);
   const [displayHistorical, setDisplayHistorical] = useState(false);
   const [showConsolidated, setShowConsolidated] = useState(false);
   const [year, setYear] = useState(yearLimits.enrollment.max);
@@ -103,6 +106,7 @@ function ParentComponent() {
           case 'etapa': return 'Etapa de Ensino';
           case 'localidade': return 'Localidade';
           case 'dependencia': return 'Dependência Administrativa';
+          case 'municipio': return 'Município';
           default: return filter.value;
         }
       });
@@ -120,6 +124,7 @@ function ParentComponent() {
     setIsEtapaSelected(selectedFilters.some(filter => filter.value === 'etapa'));
     setIsLocalidadeSelected(selectedFilters.some(filter => filter.value === 'localidade'));
     setIsDependenciaSelected(selectedFilters.some(filter => filter.value === 'dependencia'));
+    setIsMunicipioSelected(selectedFilters.some(filter => filter.value === 'municipio'));
 
     // Armazenar os filtros aplicados na última busca
     setAppliedTerritory(territory);
@@ -144,6 +149,45 @@ function ParentComponent() {
     }
   };
 
+  // const handleExportTable = async () => {
+  //   // Validações
+  //   if (selectedFilters.length !== 1) {
+  //     alert('Por favor, selecione exatamente UM filtro para exportar o tabelão.');
+  //     return;
+  //   }
+
+  //   const filterMap = {
+  //     'etapa': 'etapa',
+  //     'localidade': 'localidade',
+  //     'dependencia': 'dependencia'
+  //   };
+
+  //   const selectedFilter = selectedFilters[0].value;
+  //   const filterValue = filterMap[selectedFilter];
+
+  //   if (!filterValue) {
+  //     alert('Filtro inválido para exportação.');
+  //     return;
+  //   }
+
+  //   try {
+  //     setIsLoading(true);
+
+  //     // Se for série histórica, passar objeto com startYear e endYear
+  //     const yearParam = displayHistorical
+  //       ? { startYear, endYear }
+  //       : year;
+
+  //     await exportBasicEducationTable(type, filterValue, yearParam);
+  //     alert('Tabelão exportado com sucesso!');
+  //   } catch (error) {
+  //     console.error('Erro ao exportar:', error);
+  //     alert('Erro ao exportar tabelão. Tente novamente.');
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
+
   const handleClearFilters = () => {
     setDisplayHistorical(false);
     setIsHistorical(false);
@@ -166,6 +210,7 @@ function ParentComponent() {
     setIsEtapaSelected(false);
     setIsLocalidadeSelected(false);
     setIsDependenciaSelected(false);
+    setIsMunicipioSelected(false);
 
     // Limpar também os filtros aplicados
     setAppliedTerritory('');
@@ -239,6 +284,7 @@ function ParentComponent() {
     { value: 'localidade', label: 'Localidade' },
     ...(type !== 'employees' ? [{ value: 'etapa', label: 'Etapa' }] : []),
     { value: 'dependencia', label: 'Dependência Administrativa' },
+    { value: 'municipio', label: 'Município' },
   ];
 
   const theme = useTheme();
@@ -417,7 +463,7 @@ function ParentComponent() {
           <div className="md:col-span-3 flex flex-col justify-end">
             <div className="flex flex-col sm:flex-row gap-3 justify-end items-end">
               {/* Toggle para modo consolidado (apenas quando há filtros territoriais combinados com outros filtros aplicados na última busca) */}
-              {(appliedTerritory || appliedFaixaPopulacional || appliedAglomerado || appliedGerencia) && (isEtapaSelected || isLocalidadeSelected || isDependenciaSelected) && (
+              {(appliedTerritory || appliedFaixaPopulacional || appliedAglomerado || appliedGerencia) && (isEtapaSelected || isLocalidadeSelected || isDependenciaSelected) && !isMunicipioSelected && (
                 <div className="flex items-center space-x-2">
                   <label className="flex items-center pb-2 space-x-2 cursor-pointer">
                     <Switch
@@ -446,6 +492,18 @@ function ParentComponent() {
               >
                 Mostrar resultados
               </Button>
+
+              {/* <Button
+                variant="contained"
+                color="success"
+                onClick={handleExportTable}
+                disabled={selectedFilters.length !== 1}
+                startIcon={<DownloadIcon />}
+                className="w-full sm:w-auto"
+                title={selectedFilters.length !== 1 ? 'Selecione exatamente 1 filtro' : 'Exportar tabelão para Excel'}
+              >
+                Exportar Tabelão
+              </Button> */}
 
               <Button
                 style={{
@@ -511,6 +569,7 @@ function ParentComponent() {
           isEtapaSelected={isEtapaSelected}
           isLocalidadeSelected={isLocalidadeSelected}
           isDependenciaSelected={isDependenciaSelected}
+          isMunicipioSelected={isMunicipioSelected}
           isHistorical={isHistorical}
           type={filteredType}
           year={filteredYear || year}

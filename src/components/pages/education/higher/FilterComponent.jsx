@@ -1,6 +1,8 @@
+// import { Download as DownloadIcon } from '@mui/icons-material';
 import { Button, Switch, Typography } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import React, { useEffect, useMemo, useState } from 'react';
+// import { exportHigherEducationTable } from '../../../../services/exportTableService.jsx';
 import '../../../../style/RevenueTableContainer.css';
 import '../../../../style/TableFilters.css';
 import { FaixaPopulacional, municipios, Regioes } from '../../../../utils/citiesMapping';
@@ -29,6 +31,7 @@ function FilterComponent() {
   const [isFaixaEtariaSuperiorSelected, setIsFaixaEtariaSuperiorSelected] = useState(false);
   const [isOrganizacaoAcademicaSelected, setIsOrganizacaoAcademicaSelected] = useState(false);
   const [isInstituicaoEnsinoSelected, setIsInstituicaoEnsinoSelected] = useState(false);
+  const [isMunicipioSelected, setIsMunicipioSelected] = useState(false);
   const [showConsolidated, setShowConsolidated] = useState(false);
 
   // Estados para armazenar os filtros aplicados na última busca
@@ -120,6 +123,7 @@ function FilterComponent() {
           case 'faixaEtariaSuperior': return 'Faixa Etária';
           case 'organizacaoAcademica': return 'Organização Acadêmica';
           case 'instituicaoEnsino': return 'Instituição de Ensino';
+          case 'municipio': return 'Município';
           default: return filter.value;
         }
       });
@@ -141,6 +145,7 @@ function FilterComponent() {
     setIsFaixaEtariaSuperiorSelected(selectedFilters.some(filter => filter.value === 'faixaEtariaSuperior'));
     setIsOrganizacaoAcademicaSelected(selectedFilters.some(filter => filter.value === 'organizacaoAcademica'));
     setIsInstituicaoEnsinoSelected(selectedFilters.some(filter => filter.value === 'instituicaoEnsino'));
+    setIsMunicipioSelected(selectedFilters.some(filter => filter.value === 'municipio'));
 
     // Armazenar os filtros aplicados na última busca
     setAppliedTerritory(territory);
@@ -149,6 +154,33 @@ function FilterComponent() {
     setAppliedGerencia(gerencia);
     setAppliedSelectedFilters(selectedFilters);
   };
+
+  // const handleExportTable = async () => {
+  //   // Validações
+  //   if (selectedFilters.length !== 1) {
+  //     alert('Por favor, selecione exatamente UM filtro para exportar o tabelão.');
+  //     return;
+  //   }
+
+  //   const selectedFilter = selectedFilters[0].value;
+
+  //   try {
+  //     setIsLoading(true);
+
+  //     // Se for série histórica, passar objeto com startYear e endYear
+  //     const yearParam = displayHistorical
+  //       ? { startYear, endYear }
+  //       : year;
+
+  //     await exportHigherEducationTable(type, selectedFilter, yearParam);
+  //     alert('Tabelão exportado com sucesso!');
+  //   } catch (error) {
+  //     console.error('Erro ao exportar:', error);
+  //     alert('Erro ao exportar tabelão. Tente novamente.');
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
 
   const handleClearFilters = () => {
     setDisplayHistorical(false);
@@ -178,12 +210,12 @@ function FilterComponent() {
 
   const filterOptions = type === 'university_enrollment'
     ? [{ value: 'modalidade', label: 'Modalidade' }, { value: 'categoriaAdministrativa', label: 'Categoria Administrativa' }, { value: 'faixaEtariaSuperior', label: 'Faixa Etária' },
-       { value: 'organizacaoAcademica', label: 'Organização Acadêmica'}, { value: 'instituicaoEnsino', label: 'Instituição de Ensino' }]
+       { value: 'organizacaoAcademica', label: 'Organização Acadêmica'}, { value: 'instituicaoEnsino', label: 'Instituição de Ensino' }, { value: 'municipio', label: 'Município' }]
     : type === 'university_teacher'
-    ? [{ value: 'regimeDeTrabalho', label: 'Regime de Trabalho' }, { value: 'formacaoDocente', label: 'Formação Docente' }, { value: 'categoriaAdministrativa', label: 'Categoria Administrativa' }, { value: 'organizacaoAcademica', label: 'Organização Acadêmica'}]
+    ? [{ value: 'regimeDeTrabalho', label: 'Regime de Trabalho' }, { value: 'formacaoDocente', label: 'Formação Docente' }, { value: 'categoriaAdministrativa', label: 'Categoria Administrativa' }, { value: 'organizacaoAcademica', label: 'Organização Acadêmica'}, { value: 'municipio', label: 'Município' }]
     : type === 'course_count'
-    ?[{ value: 'modalidade', label: 'Modalidade' }, { value: 'categoriaAdministrativa', label: 'Categoria Administrativa' }, { value: 'organizacaoAcademica', label: 'Organização Acadêmica'}]
-    : [{ value: 'categoriaAdministrativa', label: 'Categoria Administrativa' }, { value: 'organizacaoAcademica', label: 'Organização Acadêmica'}];
+    ?[{ value: 'modalidade', label: 'Modalidade' }, { value: 'categoriaAdministrativa', label: 'Categoria Administrativa' }, { value: 'organizacaoAcademica', label: 'Organização Acadêmica'}, { value: 'municipio', label: 'Município' }]
+    : [{ value: 'categoriaAdministrativa', label: 'Categoria Administrativa' }, { value: 'organizacaoAcademica', label: 'Organização Acadêmica'}, { value: 'municipio', label: 'Município' }];
 
   const titleMapping = {
     "university/count": "Número de intituições de ensino superior",
@@ -472,7 +504,7 @@ function FilterComponent() {
           <div className="md:col-span-3 flex flex-col justify-end">
             <div className="flex flex-col sm:flex-row gap-3 justify-end items-end">
               {/* Toggle para modo consolidado (apenas quando há filtros territoriais combinados com outros filtros aplicados na última busca) */}
-              {(appliedTerritory || appliedFaixaPopulacional || appliedAglomerado || appliedGerencia) && (isModalidadeSelected || isRegimeSelected || isFormacaoDocenteSelected || isCategoriaAdministrativaSelected || isFaixaEtariaSuperiorSelected || isOrganizacaoAcademicaSelected || isInstituicaoEnsinoSelected) && (
+              {(appliedTerritory || appliedFaixaPopulacional || appliedAglomerado || appliedGerencia) && (isModalidadeSelected || isRegimeSelected || isFormacaoDocenteSelected || isCategoriaAdministrativaSelected || isFaixaEtariaSuperiorSelected || isOrganizacaoAcademicaSelected || isInstituicaoEnsinoSelected) && !isMunicipioSelected && (
                 <div className="flex items-center space-x-2">
                   <label className="flex items-center pb-2 space-x-2 cursor-pointer">
                     <Switch
@@ -501,6 +533,18 @@ function FilterComponent() {
               >
                 Mostrar resultados
               </Button>
+
+              {/* <Button
+                variant="contained"
+                color="success"
+                onClick={handleExportTable}
+                disabled={selectedFilters.length !== 1}
+                startIcon={<DownloadIcon />}
+                className="w-full sm:w-auto"
+                title={selectedFilters.length !== 1 ? 'Selecione exatamente 1 filtro' : 'Exportar tabelão para Excel'}
+              >
+                Exportar Tabelão
+              </Button> */}
 
               <Button
                 style={{
@@ -581,6 +625,7 @@ function FilterComponent() {
           isFaixaEtariaSuperiorSelected={isFaixaEtariaSuperiorSelected}
           isOrganizacaoAcademicaSelected={isOrganizacaoAcademicaSelected}
           isInstituicaoEnsinoSelected={isInstituicaoEnsinoSelected}
+          isMunicipioSelected={isMunicipioSelected}
           title={title}
           showConsolidated={showConsolidated}
         />

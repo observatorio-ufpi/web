@@ -1,4 +1,4 @@
-import React, { useImperativeHandle, forwardRef } from "react";
+import { forwardRef, useImperativeHandle } from "react";
 import { processResults as processApiResults } from "../../../../services/dataProcessors";
 
 const ApiContainer = forwardRef(({
@@ -20,6 +20,7 @@ const ApiContainer = forwardRef(({
       const isVinculoSelected = selectedFilters.some((filter) => filter.value === "vinculo");
       const isFormacaoDocenteSelected = selectedFilters.some((filter) => filter.value === "formacaoDocente");
       const isFaixaEtariaSelected = selectedFilters.some((filter) => filter.value === "faixaEtaria");
+      const isMunicipioSelected = selectedFilters.some((filter) => filter.value === "municipio");
 
       const buildFilter = (cityId = null) => {
         const yearFilter = isHistorical
@@ -50,6 +51,9 @@ const ApiContainer = forwardRef(({
           }
           if (isFaixaEtariaSelected) {
             selectedDims.push("age_range");
+          }
+          if (isMunicipioSelected) {
+            selectedDims.push("municipality");
           }
         } else if (basePath === 'censo-escolar') {
           selectedDims = selectedFilters.map(filter => filter.value);
@@ -143,6 +147,7 @@ const ApiContainer = forwardRef(({
                   if (isVinculoSelected && existing.contract_type_id !== item.contract_type_id) return false;
                   if (isFormacaoDocenteSelected && existing.initial_training_id !== item.initial_training_id) return false;
                   if (isFaixaEtariaSelected && existing.age_range_id !== item.age_range_id) return false;
+                  if (isMunicipioSelected && existing.municipality_id !== item.municipality_id) return false;
                   return true;
                 });
 
@@ -162,6 +167,7 @@ const ApiContainer = forwardRef(({
                   if (isVinculoSelected && item.contract_type_id !== uniqueItem.contract_type_id) return false;
                   if (isFormacaoDocenteSelected && item.initial_training_id !== uniqueItem.initial_training_id) return false;
                   if (isFaixaEtariaSelected && item.age_range_id !== uniqueItem.age_range_id) return false;
+                  if (isMunicipioSelected && item.municipality_id !== uniqueItem.municipality_id) return false;
                   return true;
                 });
 

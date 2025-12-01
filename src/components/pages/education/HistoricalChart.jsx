@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import {
-  CartesianGrid,
-  Line,
-  LineChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis
+    CartesianGrid,
+    Line,
+    LineChart,
+    ResponsiveContainer,
+    Tooltip,
+    XAxis,
+    YAxis
 } from 'recharts';
 
 const HistoricalChart = ({
@@ -18,6 +18,7 @@ const HistoricalChart = ({
   isVinculoSelected,
   isFormacaoDocenteSelected,
   isFaixaEtariaSelected,
+  isMunicipioSelected,
   isInstructionLevelSelected,
   // Filtros para educação superior (seguindo padrão do rate e basic)
   isModalidadeSelected,
@@ -64,6 +65,7 @@ const HistoricalChart = ({
     if (isVinculoSelected) return { id: 'contract_type_id', name: 'contract_type_name', label: 'Vínculo' };
     if (isFormacaoDocenteSelected) return { id: 'initial_training_id', name: 'initial_training_name', label: 'Formação Docente' };
     if (isFaixaEtariaSelected) return { id: 'age_range_id', name: 'age_range_name', label: 'Faixa Etária' };
+    if (isMunicipioSelected) return { id: 'municipality_id', name: 'municipality_name', label: 'Município' };
     if (isInstructionLevelSelected) return { id: 'instruction_level_id', name: 'instruction_level_name', label: 'Nível de Instrução' };
 
     // Educação Superior (seguindo padrão do DataTable.jsx)
