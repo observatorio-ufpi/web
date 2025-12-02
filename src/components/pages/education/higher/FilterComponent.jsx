@@ -1,7 +1,8 @@
-import { Button, Switch, Typography, Collapse } from '@mui/material';
-import { ExpandMore, ExpandLess } from '@mui/icons-material';
+import { ExpandLess, ExpandMore } from '@mui/icons-material';
+import { Button, Collapse, Switch, Typography } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import React, { useEffect, useMemo, useState } from 'react';
+// import { exportHigherEducationTable } from '../../../../services/exportTableService.jsx';
 import '../../../../style/RevenueTableContainer.css';
 import '../../../../style/TableFilters.css';
 import { FaixaPopulacional, municipios, Regioes } from '../../../../utils/citiesMapping';
@@ -31,11 +32,12 @@ function FilterComponent() {
   const [isFaixaEtariaSuperiorSelected, setIsFaixaEtariaSuperiorSelected] = useState(false);
   const [isOrganizacaoAcademicaSelected, setIsOrganizacaoAcademicaSelected] = useState(false);
   const [isInstituicaoEnsinoSelected, setIsInstituicaoEnsinoSelected] = useState(false);
+  const [isMunicipioSelected, setIsMunicipioSelected] = useState(false);
   const [showConsolidated, setShowConsolidated] = useState(false);
-  
+
   // Estado para controlar se os filtros estão expandidos
   const [filtersExpanded, setFiltersExpanded] = useState(false);
-  
+
   // Estado para o range slider
   const [yearRange, setYearRange] = useState([2020, 2023]);
 
@@ -88,7 +90,7 @@ function FilterComponent() {
     // Determina se é série histórica baseado no yearRange
     const isHistoricalRange = yearRange[0] !== yearRange[1];
     const yearDisplay = isHistoricalRange ? `${yearRange[0]}-${yearRange[1]}` : yearRange[0];
-    
+
     setIsHistorical(isHistoricalRange);
     setDisplayHistorical(isHistoricalRange);
 
@@ -132,6 +134,7 @@ function FilterComponent() {
           case 'faixaEtariaSuperior': return 'Faixa Etária';
           case 'organizacaoAcademica': return 'Organização Acadêmica';
           case 'instituicaoEnsino': return 'Instituição de Ensino';
+          case 'municipio': return 'Município';
           default: return filter.value;
         }
       });
@@ -153,6 +156,7 @@ function FilterComponent() {
     setIsFaixaEtariaSuperiorSelected(selectedFilters.some(filter => filter.value === 'faixaEtariaSuperior'));
     setIsOrganizacaoAcademicaSelected(selectedFilters.some(filter => filter.value === 'organizacaoAcademica'));
     setIsInstituicaoEnsinoSelected(selectedFilters.some(filter => filter.value === 'instituicaoEnsino'));
+    setIsMunicipioSelected(selectedFilters.some(filter => filter.value === 'municipio'));
 
     // Armazenar os filtros aplicados na última busca
     setAppliedTerritory(territory);
@@ -161,6 +165,33 @@ function FilterComponent() {
     setAppliedGerencia(gerencia);
     setAppliedSelectedFilters(selectedFilters);
   };
+
+  // const handleExportTable = async () => {
+  //   // Validações
+  //   if (selectedFilters.length !== 1) {
+  //     alert('Por favor, selecione exatamente UM filtro para exportar o tabelão.');
+  //     return;
+  //   }
+
+  //   const selectedFilter = selectedFilters[0].value;
+
+  //   try {
+  //     setIsLoading(true);
+
+  //     // Se for série histórica, passar objeto com startYear e endYear
+  //     const yearParam = displayHistorical
+  //       ? { startYear, endYear }
+  //       : year;
+
+  //     await exportHigherEducationTable(type, selectedFilter, yearParam);
+  //     alert('Tabelão exportado com sucesso!');
+  //   } catch (error) {
+  //     console.error('Erro ao exportar:', error);
+  //     alert('Erro ao exportar tabelão. Tente novamente.');
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
 
   const handleClearFilters = () => {
     setDisplayHistorical(false);
@@ -191,12 +222,12 @@ function FilterComponent() {
 
   const filterOptions = type === 'university_enrollment'
     ? [{ value: 'modalidade', label: 'Modalidade' }, { value: 'categoriaAdministrativa', label: 'Categoria Administrativa' }, { value: 'faixaEtariaSuperior', label: 'Faixa Etária' },
-       { value: 'organizacaoAcademica', label: 'Organização Acadêmica'}, { value: 'instituicaoEnsino', label: 'Instituição de Ensino' }]
+       { value: 'organizacaoAcademica', label: 'Organização Acadêmica'}, { value: 'instituicaoEnsino', label: 'Instituição de Ensino' }, { value: 'municipio', label: 'Município' }]
     : type === 'university_teacher'
-    ? [{ value: 'regimeDeTrabalho', label: 'Regime de Trabalho' }, { value: 'formacaoDocente', label: 'Formação Docente' }, { value: 'categoriaAdministrativa', label: 'Categoria Administrativa' }, { value: 'organizacaoAcademica', label: 'Organização Acadêmica'}]
+    ? [{ value: 'regimeDeTrabalho', label: 'Regime de Trabalho' }, { value: 'formacaoDocente', label: 'Formação Docente' }, { value: 'categoriaAdministrativa', label: 'Categoria Administrativa' }, { value: 'organizacaoAcademica', label: 'Organização Acadêmica'}, { value: 'municipio', label: 'Município' }]
     : type === 'course_count'
-    ?[{ value: 'modalidade', label: 'Modalidade' }, { value: 'categoriaAdministrativa', label: 'Categoria Administrativa' }, { value: 'organizacaoAcademica', label: 'Organização Acadêmica'}]
-    : [{ value: 'categoriaAdministrativa', label: 'Categoria Administrativa' }, { value: 'organizacaoAcademica', label: 'Organização Acadêmica'}];
+    ?[{ value: 'modalidade', label: 'Modalidade' }, { value: 'categoriaAdministrativa', label: 'Categoria Administrativa' }, { value: 'organizacaoAcademica', label: 'Organização Acadêmica'}, { value: 'municipio', label: 'Município' }]
+    : [{ value: 'categoriaAdministrativa', label: 'Categoria Administrativa' }, { value: 'organizacaoAcademica', label: 'Organização Acadêmica'}, { value: 'municipio', label: 'Município' }];
 
   const titleMapping = {
     "university/count": "Número de intituições de ensino superior",
@@ -358,80 +389,80 @@ function FilterComponent() {
   return (
     <div className="app-container">
       <div className="flex flex-col gap-4 p-0 m-0">
-        
+
           {/* Tipo + Filtros Múltiplos + Botão Mais Filtros - Primeira linha */}
           <div className="md:col-span-3">
             <div className="flex flex-col lg:flex-row items-end gap-4">
               <div className="w-full lg:flex-1">
-                <label htmlFor="typeSelect" className="block text-sm font-medium text-gray-700 mb-1">Tipo:</label>
-                <Select
-                  id="typeSelect"
-                  value={typeOptions.find(option => option.value === type)}
-                  onChange={(selectedOption) => {
-                    setType(selectedOption.value);
-                    setSelectedFilters([]);
-                    // Se mudou para docentes, garantir que não há filtros selecionados
-                    if (selectedOption.value === 'university_teacher') {
-                      setSelectedFilters([]);
-                    }
-                  }}
-                  options={typeOptions}
-                  placeholder="Selecione o tipo"
-                  size="xs"
-                />
-              </div>
+            <label htmlFor="typeSelect" className="block text-sm font-medium text-gray-700 mb-1">Tipo:</label>
+            <Select
+              id="typeSelect"
+              value={typeOptions.find(option => option.value === type)}
+              onChange={(selectedOption) => {
+                setType(selectedOption.value);
+                setSelectedFilters([]);
+                // Se mudou para docentes, garantir que não há filtros selecionados
+                if (selectedOption.value === 'university_teacher') {
+                  setSelectedFilters([]);
+                }
+              }}
+              options={typeOptions}
+              placeholder="Selecione o tipo"
+              size="xs"
+            />
+          </div>
 
               <div className="w-full lg:flex-1">
                 <label htmlFor="multiFilterSelect" className="block text-sm font-medium text-gray-700 mb-1">Filtros:</label>
-                <Select
-                  id="multiFilterSelect"
-                  value={selectedFilters}
-                  onChange={(newValue) => {
-                    // Para docentes (university_teacher), permitir apenas um filtro por vez
-                    if (type === 'university_teacher') {
-                      setSelectedFilters(newValue.slice(-1)); // Manter apenas o último selecionado
-                      return;
-                    }
+              <Select
+                id="multiFilterSelect"
+                value={selectedFilters}
+                onChange={(newValue) => {
+                  // Para docentes (university_teacher), permitir apenas um filtro por vez
+                  if (type === 'university_teacher') {
+                    setSelectedFilters(newValue.slice(-1)); // Manter apenas o último selecionado
+                    return;
+                  }
 
-                    // Validação para impedir combinação de regime + formação docente (para outros tipos)
-                    const hasRegime = newValue.some(filter => filter.value === 'regimeDeTrabalho');
-                    const hasFormacao = newValue.some(filter => filter.value === 'formacaoDocente');
+                  // Validação para impedir combinação de regime + formação docente (para outros tipos)
+                  const hasRegime = newValue.some(filter => filter.value === 'regimeDeTrabalho');
+                  const hasFormacao = newValue.some(filter => filter.value === 'formacaoDocente');
 
-                    if (hasRegime && hasFormacao) {
-                      // Se está tentando adicionar os dois, manter apenas o último selecionado
-                      const lastSelected = newValue[newValue.length - 1];
-                      if (lastSelected.value === 'regimeDeTrabalho') {
-                        // Removeu formação docente, manter regime
-                        setSelectedFilters(newValue.filter(f => f.value !== 'formacaoDocente'));
-                      } else {
-                        // Removeu regime, manter formação docente
-                        setSelectedFilters(newValue.filter(f => f.value !== 'regimeDeTrabalho'));
-                      }
-                      return;
+                  if (hasRegime && hasFormacao) {
+                    // Se está tentando adicionar os dois, manter apenas o último selecionado
+                    const lastSelected = newValue[newValue.length - 1];
+                    if (lastSelected.value === 'regimeDeTrabalho') {
+                      // Removeu formação docente, manter regime
+                      setSelectedFilters(newValue.filter(f => f.value !== 'formacaoDocente'));
+                    } else {
+                      // Removeu regime, manter formação docente
+                      setSelectedFilters(newValue.filter(f => f.value !== 'regimeDeTrabalho'));
                     }
+                    return;
+                  }
 
                     const isHistoricalRange = yearRange[0] !== yearRange[1];
                     if (isHistoricalRange) {
-                      setSelectedFilters(newValue.slice(-1));
-                    } else if (newValue.length <= 2) {
-                      setSelectedFilters(newValue);
-                    } else {
-                      setSelectedFilters(newValue.slice(-2));
-                    }
-                  }}
-                  options={filterOptions}
-                  isMulti
-                  placeholder={
-                    type === 'university_teacher'
-                      ? "Selecione 1 filtro (docentes)"
-                      : yearRange[0] !== yearRange[1]
-                        ? "Selecione 1 filtro"
-                        : "Selecione até 2 filtros"
+                    setSelectedFilters(newValue.slice(-1));
+                  } else if (newValue.length <= 2) {
+                    setSelectedFilters(newValue);
+                  } else {
+                    setSelectedFilters(newValue.slice(-2));
                   }
-                  size="xs"
-                />
-              </div>
-              
+                }}
+                options={filterOptions}
+                isMulti
+                placeholder={
+                  type === 'university_teacher'
+                    ? "Selecione 1 filtro (docentes)"
+                      : yearRange[0] !== yearRange[1]
+                      ? "Selecione 1 filtro"
+                      : "Selecione até 2 filtros"
+                }
+                size="xs"
+              />
+            </div>
+
               {/* Botão de toggle para filtros adicionais */}
               <div className="w-full lg:w-auto">
                 <Button
@@ -550,7 +581,7 @@ function FilterComponent() {
           <div className="md:col-span-3 flex flex-col justify-end">
             <div className="flex flex-col sm:flex-row gap-3 justify-end items-end">
               {/* Toggle para modo consolidado (apenas quando há filtros territoriais combinados com outros filtros aplicados na última busca) */}
-              {(appliedTerritory || appliedFaixaPopulacional || appliedAglomerado || appliedGerencia) && (isModalidadeSelected || isRegimeSelected || isFormacaoDocenteSelected || isCategoriaAdministrativaSelected || isFaixaEtariaSuperiorSelected || isOrganizacaoAcademicaSelected || isInstituicaoEnsinoSelected) && (
+              {(appliedTerritory || appliedFaixaPopulacional || appliedAglomerado || appliedGerencia) && (isModalidadeSelected || isRegimeSelected || isFormacaoDocenteSelected || isCategoriaAdministrativaSelected || isFaixaEtariaSuperiorSelected || isOrganizacaoAcademicaSelected || isInstituicaoEnsinoSelected) && !isMunicipioSelected && (
                 <div className="flex items-center space-x-2">
                   <label className="flex items-center pb-2 space-x-2 cursor-pointer">
                     <Switch
@@ -580,6 +611,18 @@ function FilterComponent() {
                 Mostrar resultados
               </Button>
 
+              {/* <Button
+                variant="contained"
+                color="success"
+                onClick={handleExportTable}
+                disabled={selectedFilters.length !== 1}
+                startIcon={<DownloadIcon />}
+                className="w-full sm:w-auto"
+                title={selectedFilters.length !== 1 ? 'Selecione exatamente 1 filtro' : 'Exportar tabelão para Excel'}
+              >
+                Exportar Tabelão
+              </Button> */}
+
               <Button
                 style={{
                   backgroundColor: '#f0f0f0',
@@ -591,9 +634,9 @@ function FilterComponent() {
               >
                 Limpar
               </Button>
-            </div>
           </div>
         </div>
+      </div>
 
       <hr className="divider" />
 
@@ -658,6 +701,7 @@ function FilterComponent() {
           isFaixaEtariaSuperiorSelected={isFaixaEtariaSuperiorSelected}
           isOrganizacaoAcademicaSelected={isOrganizacaoAcademicaSelected}
           isInstituicaoEnsinoSelected={isInstituicaoEnsinoSelected}
+          isMunicipioSelected={isMunicipioSelected}
           title={title}
           showConsolidated={showConsolidated}
         />

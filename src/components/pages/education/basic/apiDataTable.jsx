@@ -62,7 +62,7 @@ const HEADERS = {
   default: ['total'],
 
   // Cabeçalhos para município
-  municipio: ['cityName', 'total'],
+  municipio: ['municipality_name', 'total'],
 
   // Cabeçalhos para etapa
   etapa: ['education_level_mod_name', 'total'],
@@ -87,6 +87,7 @@ const HEADERS = {
 const HEADER_DISPLAY_NAMES = {
   total: 'Total',
   cityName: 'Município',
+  municipality_name: 'Município',
   education_level_mod_name: 'Etapa',
   location_name: 'Localidade',
   adm_dependency_detailed_name: 'Dependência Administrativa',
@@ -215,6 +216,42 @@ const CROSS_TABLE_CONFIGS = {
       columnIdField: 'initial_training_id',
       rowHeader: 'Etapa'
     }
+  },
+
+  // Município x Etapa
+  municipioEtapa: {
+    dataKey: 'byMunicipioAndEtapa',
+    config: {
+      rowField: 'municipality_name',
+      rowIdField: 'municipality_id',
+      columnField: 'education_level_mod_name',
+      columnIdField: 'education_level_mod_id',
+      rowHeader: 'Município'
+    }
+  },
+
+  // Município x Dependência
+  municipioDependencia: {
+    dataKey: 'byMunicipioAndDependencia',
+    config: {
+      rowField: 'municipality_name',
+      rowIdField: 'municipality_id',
+      columnField: 'adm_dependency_detailed_name',
+      columnIdField: 'adm_dependency_detailed_id',
+      rowHeader: 'Município'
+    }
+  },
+
+  // Município x Localidade
+  municipioLocalidade: {
+    dataKey: 'byMunicipioAndLocalidade',
+    config: {
+      rowField: 'municipality_name',
+      rowIdField: 'municipality_id',
+      columnField: 'location_name',
+      columnIdField: 'location_id',
+      rowHeader: 'Município'
+    }
   }
 };
 
@@ -236,7 +273,7 @@ const formatNumber = (value) => {
 
 // Obtém a configuração para tabela cruzada com base nos filtros selecionados
 const getCrossTableConfig = (filters, type, year) => {
-  const { isEtapaSelected, isLocalidadeSelected, isDependenciaSelected, isVinculoSelected, isFormacaoDocenteSelected } = filters;
+  const { isEtapaSelected, isLocalidadeSelected, isDependenciaSelected, isVinculoSelected, isFormacaoDocenteSelected, isMunicipioSelected } = filters;
 
   if (isEtapaSelected && isLocalidadeSelected) {
     return {
@@ -308,6 +345,28 @@ const getCrossTableConfig = (filters, type, year) => {
     };
   }
 
+  // Configurações com municipality
+  if (isMunicipioSelected && isEtapaSelected) {
+    return {
+      dataKey: CROSS_TABLE_CONFIGS.municipioEtapa.dataKey,
+      ...CROSS_TABLE_CONFIGS.municipioEtapa.config
+    };
+  }
+
+  if (isMunicipioSelected && isDependenciaSelected) {
+    return {
+      dataKey: CROSS_TABLE_CONFIGS.municipioDependencia.dataKey,
+      ...CROSS_TABLE_CONFIGS.municipioDependencia.config
+    };
+  }
+
+  if (isMunicipioSelected && isLocalidadeSelected) {
+    return {
+      dataKey: CROSS_TABLE_CONFIGS.municipioLocalidade.dataKey,
+      ...CROSS_TABLE_CONFIGS.municipioLocalidade.config
+    };
+  }
+
   return null;
 };
 
@@ -376,7 +435,10 @@ const hasNoData = (data, tableDataArray, municipioDataArray) => {
                       !data?.result?.byLocalidadeAndFormacaoDocente?.length &&
                       !data?.result?.byDependenciaAndFormacaoDocente?.length &&
                       !data?.result?.byVinculoAndFormacaoDocente?.length &&
-                      !data?.result?.byEtapaAndFormacaoDocente?.length;
+                      !data?.result?.byEtapaAndFormacaoDocente?.length &&
+                      !data?.result?.byMunicipioAndLocalidade?.length &&
+                      !data?.result?.byMunicipioAndEtapa?.length &&
+                      !data?.result?.byMunicipioAndDependencia?.length;
 
   return noFilterData && noCrossData &&
          tableDataArray.every(arr => !Array.isArray(arr) || arr.length === 0) &&
@@ -401,10 +463,19 @@ const SourceFooter = ({ source = "Laboratório de Dados Educacionais - LDE" }) =
 );
 
 // Componente de tabela básica
-const BasicTable = React.forwardRef(({ headers, data, formatTotal = false, sortField = null, showTotal = false, totalValue = 0, showSource = false }, ref) => {
+const BasicTable = React.forwardRef(({ headers, data, formatTotal = false, sortField = null, showTotal = false, totalValue = 0, showSource = false, usePagination = false, page = 0, rowsPerPage = 10, handleChangePage = null, handleChangeRowsPerPage = null }, ref) => {
   const sortedData = sortField
     ? [...data].sort((a, b) => Number(a[sortField]) - Number(b[sortField]))
     : data;
+
+  // Separar dados paginados e linha de total
+  // Verificar se há linha de total nos dados originais
+  const totalRow = sortedData.find(item => item.cityName === 'Total' || item.nome === 'Total');
+  const dataWithoutTotal = sortedData.filter(item => item.cityName !== 'Total' && item.nome !== 'Total');
+
+  const dataToShow = usePagination
+    ? dataWithoutTotal.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+    : sortedData;
 
   return (
     <>
@@ -420,9 +491,9 @@ const BasicTable = React.forwardRef(({ headers, data, formatTotal = false, sortF
             </TableRow>
           </StyledTableHead>
           <TableBody>
-            {sortedData.map((item, index) => {
+            {dataToShow.map((item, index) => {
               // Verifica se o item atual é a linha de Total
-              const isTotal = item.cityName === 'Total';
+              const isTotal = item.cityName === 'Total' || item.nome === 'Total';
 
               return (
                 <TableRow key={index}>
@@ -447,7 +518,7 @@ const BasicTable = React.forwardRef(({ headers, data, formatTotal = false, sortF
               );
             })}
             {/* Linha de total opcional */}
-            {showTotal && (
+            {showTotal && !usePagination && (
               <TableRow>
                 {headers.map(header => (
                   <BoldTableCell key={header}>
@@ -463,6 +534,22 @@ const BasicTable = React.forwardRef(({ headers, data, formatTotal = false, sortF
           </TableBody>
         </Table>
       </TableContainer>
+
+      {usePagination && handleChangePage && handleChangeRowsPerPage && (
+        <TablePagination
+          component="div"
+          count={dataWithoutTotal.length}
+          page={page}
+          onPageChange={handleChangePage}
+          rowsPerPage={rowsPerPage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+          rowsPerPageOptions={[5, 10, 25, 50]}
+          labelRowsPerPage="Linhas por página:"
+          labelDisplayedRows={({ from, to, count }) =>
+            `${from}-${to} de ${count !== -1 ? count : `mais de ${to}`}`
+          }
+        />
+      )}
 
       {showSource && <SourceFooter />}
     </>
@@ -649,6 +736,7 @@ const ApiDataTable = ({
   isVinculoSelected = false,
   isFormacaoDocenteSelected = false,
   isFaixaEtariaSelected = false,
+  isMunicipioSelected = false,
   isHistorical,
   type,
   year,
@@ -789,6 +877,13 @@ const ApiDataTable = ({
           label: 'Faixa Etária'
         };
       }
+      if (isMunicipioSelected) {
+        return {
+          id: 'municipality_id',
+          name: 'municipality_name',
+          label: 'Município'
+        };
+      }
       return null;
     };
 
@@ -923,8 +1018,10 @@ const ApiDataTable = ({
             </StyledTableHead>
             <TableBody>
               {sortedCategories
-                .slice(type === 'school/count' && isEtapaSelected ? page * rowsPerPage : 0,
-                      type === 'school/count' && isEtapaSelected ? page * rowsPerPage + rowsPerPage : undefined)
+                .slice(
+                  (type === 'school/count' && isEtapaSelected) || isMunicipioSelected ? page * rowsPerPage : 0,
+                  (type === 'school/count' && isEtapaSelected) || isMunicipioSelected ? page * rowsPerPage + rowsPerPage : undefined
+                )
                 .map(categoryId => {
                   const yearMap = categoryYearMap.get(categoryId);
                   // Buscar o nome da categoria nos dados originais
@@ -948,7 +1045,7 @@ const ApiDataTable = ({
           </Table>
         </TableContainer>
 
-        {type === 'school/count' && isEtapaSelected && (
+        {((type === 'school/count' && isEtapaSelected) || isMunicipioSelected) && (
           <TablePagination
             component="div"
             count={sortedCategories.length}
@@ -969,7 +1066,7 @@ const ApiDataTable = ({
 
         <SourceFooter />
 
-        {!(type === 'school/count' && isEtapaSelected) && (
+        {!(type === 'school/count' && isEtapaSelected) && !isMunicipioSelected && (
           <div ref={chartRef}>
             <HistoricalChart
               data={{ result: resultData }}
@@ -980,6 +1077,7 @@ const ApiDataTable = ({
               isVinculoSelected={isVinculoSelected}
               isFormacaoDocenteSelected={isFormacaoDocenteSelected}
               isFaixaEtariaSelected={isFaixaEtariaSelected}
+              isMunicipioSelected={isMunicipioSelected}
             />
           </div>
         )}
@@ -1007,6 +1105,7 @@ const ApiDataTable = ({
     if (isVinculoSelected) selectedFilters.push('Vínculo');
     if (isFormacaoDocenteSelected) selectedFilters.push('Formação Docente');
     if (isFaixaEtariaSelected) selectedFilters.push('Faixa Etária');
+    if (isMunicipioSelected) selectedFilters.push('Município');
 
     if (selectedFilters.length === 2) {
       return `Combinação: ${selectedFilters[0]} × ${selectedFilters[1]}`;
@@ -1045,13 +1144,14 @@ const ApiDataTable = ({
   };
 
   // Renderização de tabela cruzada
-  const renderCrossTable = () => {
-    const filters = { isEtapaSelected, isLocalidadeSelected, isDependenciaSelected, isVinculoSelected, isFormacaoDocenteSelected };
-    const config = getCrossTableConfig(filters, type, year);
+  const renderCrossTable = (tempData = null, tempConfig = null) => {
+    const filters = { isEtapaSelected, isLocalidadeSelected, isDependenciaSelected, isVinculoSelected, isFormacaoDocenteSelected, isMunicipioSelected };
+    const config = tempConfig || getCrossTableConfig(filters, type, year);
 
     if (!config) return null;
 
-    const crossedData = data?.result?.[config.dataKey] || [];
+    const dataSource = tempData || data;
+    const crossedData = dataSource?.result?.[config.dataKey] || [];
 
     // Processamento de dados cruzados
     const { uniqueRows, uniqueColumns, cellValues, rowTotals, columnTotals } = processCrossTableData(
@@ -1136,7 +1236,7 @@ const ApiDataTable = ({
         <SourceFooter />
 
         {/* Adicionar gráficos para tabelas cruzadas */}
-        {!(type === 'school/count' && isEtapaSelected) && renderCrossTableCharts(uniqueRows, uniqueColumns, cellValues, config.rowHeader)}
+        {!(type === 'school/count' && isEtapaSelected) && !isMunicipioSelected && renderCrossTableCharts(uniqueRows, uniqueColumns, cellValues, config.rowHeader)}
 
         <TableExport
           data={exportData}
@@ -1185,6 +1285,8 @@ const ApiDataTable = ({
           return 'initial_training_name';
         case 'faixaEtaria':
           return 'age_range_name';
+        case 'municipio':
+          return 'municipality_name';
         default:
           return Object.keys(tableData[0] || {}).find(key => key !== 'total');
       }
@@ -1264,6 +1366,14 @@ const ApiDataTable = ({
         formatTotal = true;
         break;
 
+      case 'municipio':
+        headers = HEADERS.municipio;
+        tableData = data.result;
+        sortField = 'municipality_id';
+        formatTotal = false;
+        usePagination = true;
+        break;
+
       default:
         return null;
     }
@@ -1313,8 +1423,10 @@ const ApiDataTable = ({
             </StyledTableHead>
             <TableBody>
               {tableData
-                .slice(type === 'school/count' && isEtapaSelected ? page * rowsPerPage : 0,
-                      type === 'school/count' && isEtapaSelected ? page * rowsPerPage + rowsPerPage : undefined)
+                .slice(
+                  (type === 'school/count' && isEtapaSelected) || filterType === 'municipio' ? page * rowsPerPage : 0,
+                  (type === 'school/count' && isEtapaSelected) || filterType === 'municipio' ? page * rowsPerPage + rowsPerPage : undefined
+                )
                 .map((item, index) => (
                   <TableRow key={index}>
                     {headers.map(header => (
@@ -1328,18 +1440,20 @@ const ApiDataTable = ({
                     ))}
                   </TableRow>
                 ))}
-              {/* Linha de total */}
-              <TableRow>
-                {headers.map(header => (
-                  <BoldTableCell key={header}>
-                    {header === 'total' && formatTotal
-                      ? `${Number(totalValue).toFixed(2)}%`
-                      : header === 'total'
-                        ? formatNumber(totalValue)
-                        : 'Total'}
-                  </BoldTableCell>
-                ))}
-              </TableRow>
+              {/* Linha de total - não mostrar quando há paginação para município */}
+              {!(filterType === 'municipio' && usePagination) && (
+                <TableRow>
+                  {headers.map(header => (
+                    <BoldTableCell key={header}>
+                      {header === 'total' && formatTotal
+                        ? `${Number(totalValue).toFixed(2)}%`
+                        : header === 'total'
+                          ? formatNumber(totalValue)
+                          : 'Total'}
+                    </BoldTableCell>
+                  ))}
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </TableContainer>
@@ -1379,7 +1493,7 @@ const ApiDataTable = ({
         <SourceFooter />
 
         {/* Adicionar gráficos para tabelas simples */}
-        {!(type === 'school/count' && filterType === 'etapa') && renderSimpleTableCharts(filterType, tableData)}
+        {!(type === 'school/count' && filterType === 'etapa') && filterType !== 'municipio' && renderSimpleTableCharts(filterType, tableData)}
 
         <TableExport
           data={exportData}
@@ -1409,6 +1523,8 @@ const ApiDataTable = ({
         return 'Dados por Formação Docente';
       case 'faixaEtaria':
         return 'Dados por Faixa Etária';
+      case 'municipio':
+        return 'Dados por Município';
       default:
         return `Dados por ${filterType}`;
     }
@@ -1419,6 +1535,7 @@ const ApiDataTable = ({
     if (isEtapaSelected) return HEADERS.etapa;
     if (isLocalidadeSelected) return HEADERS.localidade;
     if (isDependenciaSelected) return HEADERS.dependencia;
+    if (isMunicipioSelected) return HEADERS.municipio;
     return HEADERS.default;
   };
 
@@ -1434,6 +1551,7 @@ const ApiDataTable = ({
       if (isVinculoSelected) return 'contract_type_name';
       if (isFormacaoDocenteSelected) return 'initial_training_name';
       if (isFaixaEtariaSelected) return 'age_range_name';
+      if (isMunicipioSelected) return 'municipality_name';
       return 'total';
     };
 
@@ -1482,7 +1600,7 @@ const ApiDataTable = ({
 
           // Se há cross filters, renderizar tabela cruzada para esta cidade
           if (hasCrossFilters) {
-            const filters = { isEtapaSelected, isLocalidadeSelected, isDependenciaSelected, isVinculoSelected, isFormacaoDocenteSelected };
+            const filters = { isEtapaSelected, isLocalidadeSelected, isDependenciaSelected, isVinculoSelected, isFormacaoDocenteSelected, isMunicipioSelected };
             const config = getCrossTableConfig(filters, type, year);
 
             if (!config) return null;
@@ -1522,11 +1640,11 @@ const ApiDataTable = ({
               />
 
               {/* Gráfico para esta cidade */}
-              {cityResult.length > 0 && (
+              {cityResult.length > 0 && !isMunicipioSelected && (
                 <div style={{ marginTop: '1rem' }} ref={cityChartRef}>
                   <EnhancedPieChart
                     data={cityResult.map(item => ({
-                      name: item.education_level_mod_name || item.location_name || item.adm_dependency_detailed_name || item.contract_type_name || item.initial_training_name || item.age_range_name || 'N/A',
+                      name: item.education_level_mod_name || item.location_name || item.adm_dependency_detailed_name || item.contract_type_name || item.initial_training_name || item.age_range_name || item.municipality_name || 'N/A',
                       value: Number(item.total) || 0
                     }))}
                     title={`Distribuição - ${cityName}`}
@@ -1556,16 +1674,19 @@ const ApiDataTable = ({
   const hasCrossFilters = (
     (isEtapaSelected && isLocalidadeSelected) ||
     (isEtapaSelected && isDependenciaSelected) ||
-    (isLocalidadeSelected && isDependenciaSelected)
+    (isLocalidadeSelected && isDependenciaSelected) ||
+    (isMunicipioSelected && isEtapaSelected) ||
+    (isMunicipioSelected && isDependenciaSelected) ||
+    (isMunicipioSelected && isLocalidadeSelected)
   );
 
-  const hasNoFilters = !isEtapaSelected && !isLocalidadeSelected && !isDependenciaSelected;
+  const hasNoFilters = !isEtapaSelected && !isLocalidadeSelected && !isDependenciaSelected && !isMunicipioSelected;
 
   // Verificar se há dados de múltiplas cidades (filtros territoriais)
   const hasMultipleCities = municipioData && municipioData.length > 0;
 
   // Verificar se há filtros territoriais combinados com outros filtros
-  const hasTerritorialWithOtherFilters = hasMultipleCities && (isEtapaSelected || isLocalidadeSelected || isDependenciaSelected);
+  const hasTerritorialWithOtherFilters = hasMultipleCities && (isEtapaSelected || isLocalidadeSelected || isDependenciaSelected || isMunicipioSelected);
 
 
   // Renderização principal
@@ -1617,7 +1738,7 @@ const ApiDataTable = ({
               />
 
               {/* Gráfico para dados consolidados */}
-              {consolidateDataByCategory().length > 0 && (
+              {consolidateDataByCategory().length > 0 && !isMunicipioSelected && (
                 <div style={{ marginTop: '1rem' }}>
                   <EnhancedPieChart
                     data={consolidateDataByCategory().map(item => {
@@ -1629,6 +1750,7 @@ const ApiDataTable = ({
                       else if (isVinculoSelected) name = item.contract_type_name;
                       else if (isFormacaoDocenteSelected) name = item.initial_training_name;
                       else if (isFaixaEtariaSelected) name = item.age_range_name;
+                      else if (isMunicipioSelected) name = item.municipality_name;
 
                       return {
                         name: name || 'N/A',
@@ -1690,25 +1812,14 @@ const ApiDataTable = ({
                     },
                   ]}
                   showSource={true}
+                  usePagination={true}
+                  page={page}
+                  rowsPerPage={rowsPerPage}
+                  handleChangePage={handleChangePage}
+                  handleChangeRowsPerPage={handleChangeRowsPerPage}
                   ref={tableRefs.municipio}
                 />
 
-                {/* Gráfico para municípios */}
-                {municipioDataArray.length > 0 && municipioDataArray.some(item => item.total > 0) && (
-                  <div style={{ marginTop: '1rem' }}>
-                    <EnhancedBarChart
-                      data={[
-                        municipioDataArray.reduce((acc, item) => {
-                          acc[item.cityName] = item.total;
-                          return acc;
-                        }, { name: 'Municípios' })
-                      ]}
-                      title="Distribuição por Município"
-                      height={500}
-                      xAxisKey="name"
-                    />
-                  </div>
-                )}
 
                 <TableExport
                   data={[
@@ -1735,6 +1846,7 @@ const ApiDataTable = ({
             {isEtapaSelected && renderSimpleTable('etapa')}
             {isLocalidadeSelected && renderSimpleTable('localidade')}
             {isDependenciaSelected && renderSimpleTable('dependencia')}
+            {isMunicipioSelected && renderSimpleTable('municipio')}
           </>
         )}
       </div>

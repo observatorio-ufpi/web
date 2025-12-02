@@ -1,4 +1,4 @@
-import React, { useImperativeHandle, forwardRef } from "react";
+import { forwardRef, useImperativeHandle } from "react";
 import { processResults as processApiResults } from "../../../../services/dataProcessors";
 
 const ApiContainer = forwardRef(({
@@ -13,7 +13,7 @@ const ApiContainer = forwardRef(({
   useImperativeHandle(ref, () => ({
     fetchData: async (filters) => {
       const { year, isHistorical, startYear, endYear, state = "22", city, territory, faixaPopulacional, aglomerado, gerencia, citiesList } = filters;
-      
+
       console.log('ApiComponent.fetchData - Filters received:', { year, isHistorical, startYear, endYear, citiesList: citiesList?.length });
 
       const isEtapaSelected = selectedFilters.some((filter) => filter.value === "etapa");
@@ -22,6 +22,7 @@ const ApiContainer = forwardRef(({
       const isVinculoSelected = selectedFilters.some((filter) => filter.value === "vinculo");
       const isFormacaoDocenteSelected = selectedFilters.some((filter) => filter.value === "formacaoDocente");
       const isFaixaEtariaSelected = selectedFilters.some((filter) => filter.value === "faixaEtaria");
+      const isMunicipioSelected = selectedFilters.some((filter) => filter.value === "municipio");
 
       const buildFilter = (cityId = null) => {
         // IMPORTANTE: Respeitar startYear e endYear do range slider
@@ -53,6 +54,9 @@ const ApiContainer = forwardRef(({
           }
           if (isFaixaEtariaSelected) {
             selectedDims.push("age_range");
+          }
+          if (isMunicipioSelected) {
+            selectedDims.push("municipality");
           }
         } else if (basePath === 'censo-escolar') {
           selectedDims = selectedFilters.map(filter => filter.value);
@@ -139,11 +143,59 @@ const ApiContainer = forwardRef(({
               })
             );
 
-            const finalResult = handleResults(allResults);
-            console.log("Final Result (historical, multiple cities):", finalResult);
-            console.log("Total items:", finalResult.result.length);
-            
-            onDataFetched({ finalResult, allResults });
+            const allUniqueData = [];
+            allResults.forEach(cityResult => {
+              cityResult.result.forEach(item => {
+                const existingItem = allUniqueData.find(existing => {
+                  if (existing.year !== item.year) return false;
+                  if (isEtapaSelected && existing.education_level_mod_id !== item.education_level_mod_id) return false;
+                  if (isLocalidadeSelected && existing.location_id !== item.location_id) return false;
+                  if (isDependenciaSelected && existing.adm_dependency_detailed_id !== item.adm_dependency_detailed_id) return false;
+                  if (isVinculoSelected && existing.contract_type_id !== item.contract_type_id) return false;
+                  if (isFormacaoDocenteSelected && existing.initial_training_id !== item.initial_training_id) return false;
+                  if (isFaixaEtariaSelected && existing.age_range_id !== item.age_range_id) return false;
+                  if (isMunicipioSelected && existing.municipality_id !== item.municipality_id) return false;
+                  return true;
+                });
+
+                if (!existingItem) {
+                  allUniqueData.push({...item, total: 0});
+                }
+              });
+            });
+
+            allUniqueData.forEach(uniqueItem => {
+              allResults.forEach(cityResult => {
+                const matchingItem = cityResult.result.find(item => {
+                  if (item.year !== uniqueItem.year) return false;
+                  if (isEtapaSelected && item.education_level_mod_id !== uniqueItem.education_level_mod_id) return false;
+                  if (isLocalidadeSelected && item.location_id !== uniqueItem.location_id) return false;
+                  if (isDependenciaSelected && item.adm_dependency_detailed_id !== uniqueItem.adm_dependency_detailed_id) return false;
+                  if (isVinculoSelected && item.contract_type_id !== uniqueItem.contract_type_id) return false;
+                  if (isFormacaoDocenteSelected && item.initial_training_id !== uniqueItem.initial_training_id) return false;
+                  if (isFaixaEtariaSelected && item.age_range_id !== uniqueItem.age_range_id) return false;
+                  if (isMunicipioSelected && item.municipality_id !== uniqueItem.municipality_id) return false;
+                  return true;
+                });
+
+                if (matchingItem) {
+                  uniqueItem.total += Number(matchingItem.total);
+                }
+              });
+            });
+
+            const summedResults = {
+              result: allUniqueData
+            };
+
+            onDataFetched({ finalResult: summedResults, allResults });
+            if (basePath === 'censo-escolar') {
+              const finalResult = handleResults(allResults);
+              console.log("Final Result (historical, multiple cities):", finalResult);
+              console.log("Total items:", finalResult.result.length);
+
+              onDataFetched({ finalResult, allResults });
+            }
           } else if (citiesList.length === 0 && (territory || faixaPopulacional || aglomerado || gerencia)) {
             // Filtros que não retornam cidades
             console.log("No cities match the filters");
