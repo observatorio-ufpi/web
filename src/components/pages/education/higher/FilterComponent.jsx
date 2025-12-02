@@ -1,5 +1,5 @@
-import { Button, Switch, Typography, Collapse } from '@mui/material';
-import { ExpandMore, ExpandLess } from '@mui/icons-material';
+import { ExpandLess, ExpandMore } from '@mui/icons-material';
+import { Button, Collapse, Switch, Typography } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import React, { useEffect, useMemo, useState } from 'react';
 // import { exportHigherEducationTable } from '../../../../services/exportTableService.jsx';
@@ -394,74 +394,74 @@ function FilterComponent() {
           <div className="md:col-span-3">
             <div className="flex flex-col lg:flex-row items-end gap-4">
               <div className="w-full lg:flex-1">
-                <label htmlFor="typeSelect" className="block text-sm font-medium text-gray-700 mb-1">Tipo:</label>
-                <Select
-                  id="typeSelect"
-                  value={typeOptions.find(option => option.value === type)}
-                  onChange={(selectedOption) => {
-                    setType(selectedOption.value);
-                    setSelectedFilters([]);
-                    // Se mudou para docentes, garantir que não há filtros selecionados
-                    if (selectedOption.value === 'university_teacher') {
-                      setSelectedFilters([]);
-                    }
-                  }}
-                  options={typeOptions}
-                  placeholder="Selecione o tipo"
-                  size="xs"
-                />
-              </div>
+            <label htmlFor="typeSelect" className="block text-sm font-medium text-gray-700 mb-1">Tipo:</label>
+            <Select
+              id="typeSelect"
+              value={typeOptions.find(option => option.value === type)}
+              onChange={(selectedOption) => {
+                setType(selectedOption.value);
+                setSelectedFilters([]);
+                // Se mudou para docentes, garantir que não há filtros selecionados
+                if (selectedOption.value === 'university_teacher') {
+                  setSelectedFilters([]);
+                }
+              }}
+              options={typeOptions}
+              placeholder="Selecione o tipo"
+              size="xs"
+            />
+          </div>
 
               <div className="w-full lg:flex-1">
                 <label htmlFor="multiFilterSelect" className="block text-sm font-medium text-gray-700 mb-1">Filtros:</label>
-                <Select
-                  id="multiFilterSelect"
-                  value={selectedFilters}
-                  onChange={(newValue) => {
-                    // Para docentes (university_teacher), permitir apenas um filtro por vez
-                    if (type === 'university_teacher') {
-                      setSelectedFilters(newValue.slice(-1)); // Manter apenas o último selecionado
-                      return;
-                    }
+              <Select
+                id="multiFilterSelect"
+                value={selectedFilters}
+                onChange={(newValue) => {
+                  // Para docentes (university_teacher), permitir apenas um filtro por vez
+                  if (type === 'university_teacher') {
+                    setSelectedFilters(newValue.slice(-1)); // Manter apenas o último selecionado
+                    return;
+                  }
 
-                    // Validação para impedir combinação de regime + formação docente (para outros tipos)
-                    const hasRegime = newValue.some(filter => filter.value === 'regimeDeTrabalho');
-                    const hasFormacao = newValue.some(filter => filter.value === 'formacaoDocente');
+                  // Validação para impedir combinação de regime + formação docente (para outros tipos)
+                  const hasRegime = newValue.some(filter => filter.value === 'regimeDeTrabalho');
+                  const hasFormacao = newValue.some(filter => filter.value === 'formacaoDocente');
 
-                    if (hasRegime && hasFormacao) {
-                      // Se está tentando adicionar os dois, manter apenas o último selecionado
-                      const lastSelected = newValue[newValue.length - 1];
-                      if (lastSelected.value === 'regimeDeTrabalho') {
-                        // Removeu formação docente, manter regime
-                        setSelectedFilters(newValue.filter(f => f.value !== 'formacaoDocente'));
-                      } else {
-                        // Removeu regime, manter formação docente
-                        setSelectedFilters(newValue.filter(f => f.value !== 'regimeDeTrabalho'));
-                      }
-                      return;
+                  if (hasRegime && hasFormacao) {
+                    // Se está tentando adicionar os dois, manter apenas o último selecionado
+                    const lastSelected = newValue[newValue.length - 1];
+                    if (lastSelected.value === 'regimeDeTrabalho') {
+                      // Removeu formação docente, manter regime
+                      setSelectedFilters(newValue.filter(f => f.value !== 'formacaoDocente'));
+                    } else {
+                      // Removeu regime, manter formação docente
+                      setSelectedFilters(newValue.filter(f => f.value !== 'regimeDeTrabalho'));
                     }
+                    return;
+                  }
 
                     const isHistoricalRange = yearRange[0] !== yearRange[1];
                     if (isHistoricalRange) {
-                      setSelectedFilters(newValue.slice(-1));
-                    } else if (newValue.length <= 2) {
-                      setSelectedFilters(newValue);
-                    } else {
-                      setSelectedFilters(newValue.slice(-2));
-                    }
-                  }}
-                  options={filterOptions}
-                  isMulti
-                  placeholder={
-                    type === 'university_teacher'
-                      ? "Selecione 1 filtro (docentes)"
-                      : yearRange[0] !== yearRange[1]
-                        ? "Selecione 1 filtro"
-                        : "Selecione até 2 filtros"
+                    setSelectedFilters(newValue.slice(-1));
+                  } else if (newValue.length <= 2) {
+                    setSelectedFilters(newValue);
+                  } else {
+                    setSelectedFilters(newValue.slice(-2));
                   }
-                  size="xs"
-                />
-              </div>
+                }}
+                options={filterOptions}
+                isMulti
+                placeholder={
+                  type === 'university_teacher'
+                    ? "Selecione 1 filtro (docentes)"
+                      : yearRange[0] !== yearRange[1]
+                      ? "Selecione 1 filtro"
+                      : "Selecione até 2 filtros"
+                }
+                size="xs"
+              />
+            </div>
 
               {/* Botão de toggle para filtros adicionais */}
               <div className="w-full lg:w-auto">
@@ -634,9 +634,9 @@ function FilterComponent() {
               >
                 Limpar
               </Button>
-            </div>
           </div>
         </div>
+      </div>
 
       <hr className="divider" />
 

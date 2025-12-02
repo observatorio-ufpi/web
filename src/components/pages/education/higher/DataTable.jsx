@@ -3,6 +3,7 @@ import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
 import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
+import TablePagination from '@mui/material/TablePagination';
 import TableRow from '@mui/material/TableRow';
 import { ThemeProvider, createTheme, styled } from '@mui/material/styles';
 import React from 'react';
@@ -454,10 +455,19 @@ const processCrossTableData = (data, rowIdField, columnIdField, rowField, column
            municipioDataArray.every(arr => !Array.isArray(arr) || arr.length === 0);
   };
 
-  const BasicTable = React.forwardRef(({ headers, data, formatTotal = false, sortField = null, showTotal = false, totalValue = 0, showSource = false }, ref) => {
+  const BasicTable = React.forwardRef(({ headers, data, formatTotal = false, sortField = null, showTotal = false, totalValue = 0, showSource = false, usePagination = false, page = 0, rowsPerPage = 10, handleChangePage = null, handleChangeRowsPerPage = null }, ref) => {
     const sortedData = sortField
       ? [...data].sort((a, b) => Number(a[sortField]) - Number(b[sortField]))
       : data;
+
+    // Separar dados paginados e linha de total
+    // Verificar se há linha de total nos dados originais
+    const totalRow = sortedData.find(item => item.cityName === 'Total' || item.nome === 'Total');
+    const dataWithoutTotal = sortedData.filter(item => item.cityName !== 'Total' && item.nome !== 'Total');
+
+    const dataToShow = usePagination
+      ? dataWithoutTotal.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+      : sortedData;
 
     return (
       <>
@@ -473,7 +483,7 @@ const processCrossTableData = (data, rowIdField, columnIdField, rowField, column
               </TableRow>
             </StyledTableHead>
             <TableBody>
-              {sortedData.map((item, index) => {
+              {dataToShow.map((item, index) => {
                 // Verifica se o item atual é a linha de Total
                 const isTotal = item.cityName === 'Total' || item.nome === 'Total';
 
@@ -500,7 +510,7 @@ const processCrossTableData = (data, rowIdField, columnIdField, rowField, column
                 );
               })}
               {/* Linha de total */}
-              {showTotal && (
+              {showTotal && !usePagination && (
                 <TableRow>
                   {headers.map(header => (
                     <BoldTableCell key={header}>
@@ -516,6 +526,22 @@ const processCrossTableData = (data, rowIdField, columnIdField, rowField, column
             </TableBody>
           </Table>
         </TableContainer>
+
+        {usePagination && handleChangePage && handleChangeRowsPerPage && (
+          <TablePagination
+            component="div"
+            count={dataWithoutTotal.length}
+            page={page}
+            onPageChange={handleChangePage}
+            rowsPerPage={rowsPerPage}
+            onRowsPerPageChange={handleChangeRowsPerPage}
+            rowsPerPageOptions={[5, 10, 25, 50]}
+            labelRowsPerPage="Linhas por página:"
+            labelDisplayedRows={({ from, to, count }) =>
+              `${from}-${to} de ${count !== -1 ? count : `mais de ${to}`}`
+            }
+          />
+        )}
 
         {showSource && <SourceFooter />}
       </>
@@ -539,6 +565,10 @@ const DataTable = ({
   showConsolidated = false
 }) => {
 
+  // Estados para paginação
+  const [page, setPage] = React.useState(0);
+  const [rowsPerPage, setRowsPerPage] = React.useState(10);
+
   // Referências para as tabelas
   const tableRefs = {
     historical: React.useRef(null),
@@ -554,6 +584,15 @@ const DataTable = ({
   };
 
   const chartRef = React.useRef(null);
+
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
 
   const tableDataArray = [data?.result || []];
 
@@ -788,23 +827,44 @@ const DataTable = ({
               </TableRow>
             </StyledTableHead>
             <TableBody>
-              {sortedCategories.map(category => {
-                const yearMap = categoryYearMap.get(category);
+              {sortedCategories
+                .slice(
+                  isMunicipioSelected ? page * rowsPerPage : 0,
+                  isMunicipioSelected ? page * rowsPerPage + rowsPerPage : undefined
+                )
+                .map(category => {
+                  const yearMap = categoryYearMap.get(category);
 
-                return (
-                  <TableRow key={category}>
-                    <CenteredTableCell>{category}</CenteredTableCell>
-                    {sortedYears.map(year => (
-                      <CenteredTableCell key={year}>
-                        {formatNumber(yearMap.get(year) || 0)}
-                      </CenteredTableCell>
-                    ))}
-                  </TableRow>
-                );
-              })}
+                  return (
+                    <TableRow key={category}>
+                      <CenteredTableCell>{category}</CenteredTableCell>
+                      {sortedYears.map(year => (
+                        <CenteredTableCell key={year}>
+                          {formatNumber(yearMap.get(year) || 0)}
+                        </CenteredTableCell>
+                      ))}
+                    </TableRow>
+                  );
+                })}
             </TableBody>
           </Table>
         </TableContainer>
+
+        {isMunicipioSelected && (
+          <TablePagination
+            component="div"
+            count={sortedCategories.length}
+            page={page}
+            onPageChange={handleChangePage}
+            rowsPerPage={rowsPerPage}
+            onRowsPerPageChange={handleChangeRowsPerPage}
+            rowsPerPageOptions={[5, 10, 25, 50]}
+            labelRowsPerPage="Linhas por página:"
+            labelDisplayedRows={({ from, to, count }) =>
+              `${from}-${to} de ${count !== -1 ? count : `mais de ${to}`}`
+            }
+          />
+        )}
 
         <SourceFooter />
 
@@ -1327,6 +1387,7 @@ const renderCrossTable = (customData = null, customConfig = null) => {
         headers = HEADERS.municipioApi;
         tableData = Array.isArray(data?.result) ? data.result : [];
         sortField = 'municipality_id';
+        usePagination = true;
         break;
       default:
         return null;
@@ -1363,9 +1424,14 @@ const renderCrossTable = (customData = null, customConfig = null) => {
           data={tableData}
           sortField={sortField}
           formatTotal={formatTotal}
-          showTotal={true}
+          showTotal={!usePagination}
           totalValue={totalValue}
           showSource={true}
+          usePagination={usePagination}
+          page={page}
+          rowsPerPage={rowsPerPage}
+          handleChangePage={handleChangePage}
+          handleChangeRowsPerPage={handleChangeRowsPerPage}
           ref={tableRefs[filterType]}
         />
 
@@ -1560,6 +1626,11 @@ const renderCrossTable = (customData = null, customConfig = null) => {
                     },
                   ]}
                   showSource={true}
+                  usePagination={true}
+                  page={page}
+                  rowsPerPage={rowsPerPage}
+                  handleChangePage={handleChangePage}
+                  handleChangeRowsPerPage={handleChangeRowsPerPage}
                   ref={tableRefs.municipio}
                 />
 

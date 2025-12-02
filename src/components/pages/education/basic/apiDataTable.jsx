@@ -463,10 +463,19 @@ const SourceFooter = ({ source = "Laboratório de Dados Educacionais - LDE" }) =
 );
 
 // Componente de tabela básica
-const BasicTable = React.forwardRef(({ headers, data, formatTotal = false, sortField = null, showTotal = false, totalValue = 0, showSource = false }, ref) => {
+const BasicTable = React.forwardRef(({ headers, data, formatTotal = false, sortField = null, showTotal = false, totalValue = 0, showSource = false, usePagination = false, page = 0, rowsPerPage = 10, handleChangePage = null, handleChangeRowsPerPage = null }, ref) => {
   const sortedData = sortField
     ? [...data].sort((a, b) => Number(a[sortField]) - Number(b[sortField]))
     : data;
+
+  // Separar dados paginados e linha de total
+  // Verificar se há linha de total nos dados originais
+  const totalRow = sortedData.find(item => item.cityName === 'Total' || item.nome === 'Total');
+  const dataWithoutTotal = sortedData.filter(item => item.cityName !== 'Total' && item.nome !== 'Total');
+
+  const dataToShow = usePagination
+    ? dataWithoutTotal.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+    : sortedData;
 
   return (
     <>
@@ -482,9 +491,9 @@ const BasicTable = React.forwardRef(({ headers, data, formatTotal = false, sortF
             </TableRow>
           </StyledTableHead>
           <TableBody>
-            {sortedData.map((item, index) => {
+            {dataToShow.map((item, index) => {
               // Verifica se o item atual é a linha de Total
-              const isTotal = item.cityName === 'Total';
+              const isTotal = item.cityName === 'Total' || item.nome === 'Total';
 
               return (
                 <TableRow key={index}>
@@ -509,7 +518,7 @@ const BasicTable = React.forwardRef(({ headers, data, formatTotal = false, sortF
               );
             })}
             {/* Linha de total opcional */}
-            {showTotal && (
+            {showTotal && !usePagination && (
               <TableRow>
                 {headers.map(header => (
                   <BoldTableCell key={header}>
@@ -525,6 +534,22 @@ const BasicTable = React.forwardRef(({ headers, data, formatTotal = false, sortF
           </TableBody>
         </Table>
       </TableContainer>
+
+      {usePagination && handleChangePage && handleChangeRowsPerPage && (
+        <TablePagination
+          component="div"
+          count={dataWithoutTotal.length}
+          page={page}
+          onPageChange={handleChangePage}
+          rowsPerPage={rowsPerPage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+          rowsPerPageOptions={[5, 10, 25, 50]}
+          labelRowsPerPage="Linhas por página:"
+          labelDisplayedRows={({ from, to, count }) =>
+            `${from}-${to} de ${count !== -1 ? count : `mais de ${to}`}`
+          }
+        />
+      )}
 
       {showSource && <SourceFooter />}
     </>
@@ -993,8 +1018,10 @@ const ApiDataTable = ({
             </StyledTableHead>
             <TableBody>
               {sortedCategories
-                .slice(type === 'school/count' && isEtapaSelected ? page * rowsPerPage : 0,
-                      type === 'school/count' && isEtapaSelected ? page * rowsPerPage + rowsPerPage : undefined)
+                .slice(
+                  (type === 'school/count' && isEtapaSelected) || isMunicipioSelected ? page * rowsPerPage : 0,
+                  (type === 'school/count' && isEtapaSelected) || isMunicipioSelected ? page * rowsPerPage + rowsPerPage : undefined
+                )
                 .map(categoryId => {
                   const yearMap = categoryYearMap.get(categoryId);
                   // Buscar o nome da categoria nos dados originais
@@ -1018,7 +1045,7 @@ const ApiDataTable = ({
           </Table>
         </TableContainer>
 
-        {type === 'school/count' && isEtapaSelected && (
+        {((type === 'school/count' && isEtapaSelected) || isMunicipioSelected) && (
           <TablePagination
             component="div"
             count={sortedCategories.length}
@@ -1344,6 +1371,7 @@ const ApiDataTable = ({
         tableData = data.result;
         sortField = 'municipality_id';
         formatTotal = false;
+        usePagination = true;
         break;
 
       default:
@@ -1395,8 +1423,10 @@ const ApiDataTable = ({
             </StyledTableHead>
             <TableBody>
               {tableData
-                .slice(type === 'school/count' && isEtapaSelected ? page * rowsPerPage : 0,
-                      type === 'school/count' && isEtapaSelected ? page * rowsPerPage + rowsPerPage : undefined)
+                .slice(
+                  (type === 'school/count' && isEtapaSelected) || filterType === 'municipio' ? page * rowsPerPage : 0,
+                  (type === 'school/count' && isEtapaSelected) || filterType === 'municipio' ? page * rowsPerPage + rowsPerPage : undefined
+                )
                 .map((item, index) => (
                   <TableRow key={index}>
                     {headers.map(header => (
@@ -1410,18 +1440,20 @@ const ApiDataTable = ({
                     ))}
                   </TableRow>
                 ))}
-              {/* Linha de total */}
-              <TableRow>
-                {headers.map(header => (
-                  <BoldTableCell key={header}>
-                    {header === 'total' && formatTotal
-                      ? `${Number(totalValue).toFixed(2)}%`
-                      : header === 'total'
-                        ? formatNumber(totalValue)
-                        : 'Total'}
-                  </BoldTableCell>
-                ))}
-              </TableRow>
+              {/* Linha de total - não mostrar quando há paginação para município */}
+              {!(filterType === 'municipio' && usePagination) && (
+                <TableRow>
+                  {headers.map(header => (
+                    <BoldTableCell key={header}>
+                      {header === 'total' && formatTotal
+                        ? `${Number(totalValue).toFixed(2)}%`
+                        : header === 'total'
+                          ? formatNumber(totalValue)
+                          : 'Total'}
+                    </BoldTableCell>
+                  ))}
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </TableContainer>
@@ -1780,6 +1812,11 @@ const ApiDataTable = ({
                     },
                   ]}
                   showSource={true}
+                  usePagination={true}
+                  page={page}
+                  rowsPerPage={rowsPerPage}
+                  handleChangePage={handleChangePage}
+                  handleChangeRowsPerPage={handleChangeRowsPerPage}
                   ref={tableRefs.municipio}
                 />
 
