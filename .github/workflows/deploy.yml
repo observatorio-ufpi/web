@@ -45,6 +45,13 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      - name: Setup OpenFortiVPN
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y openfortivpn
+          echo "${{ secrets.VPN_PASSWORD }}" | sudo openfortivpn vpnssl.ati.pi.gov.br:443 -u ${{ secrets.VPN_USERNAME }} --trusted-cert ${{ secrets.VPN_CERT_HASH }} --pppd-use-peerdns=1 &
+          sleep 15
+
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
@@ -108,4 +115,9 @@ jobs:
             # limpa temporários
             rm -rf /tmp/observatorio-build
             rm -rf /tmp/observatorio-files
+
+      - name: Disconnect VPN
+        if: always()
+        run: |
+          sudo pkill openfortivpn || true
 
