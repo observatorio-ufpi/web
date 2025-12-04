@@ -455,7 +455,7 @@ const processCrossTableData = (data, rowIdField, columnIdField, rowField, column
            municipioDataArray.every(arr => !Array.isArray(arr) || arr.length === 0);
   };
 
-  const BasicTable = React.forwardRef(({ headers, data, formatTotal = false, sortField = null, showTotal = false, totalValue = 0, showSource = false, usePagination = false, page = 0, rowsPerPage = 10, handleChangePage = null, handleChangeRowsPerPage = null }, ref) => {
+  const BasicTable = React.forwardRef(({ headers, data, formatTotal = false, sortField = null, showTotal = false, totalValue = 0, showSource = false, usePagination = false, page = 0, rowsPerPage = 10, handleChangePage = null, handleChangeRowsPerPage = null, paginationCount = null }, ref) => {
     const sortedData = sortField
       ? [...data].sort((a, b) => Number(a[sortField]) - Number(b[sortField]))
       : data;
@@ -465,7 +465,9 @@ const processCrossTableData = (data, rowIdField, columnIdField, rowField, column
     const totalRow = sortedData.find(item => item.cityName === 'Total' || item.nome === 'Total');
     const dataWithoutTotal = sortedData.filter(item => item.cityName !== 'Total' && item.nome !== 'Total');
 
-    const dataToShow = usePagination
+    // Se usar paginação do backend, não fazer slice (dados já vêm paginados)
+    // Se usar paginação local, fazer slice
+    const dataToShow = usePagination && paginationCount === null
       ? dataWithoutTotal.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
       : sortedData;
 
@@ -530,13 +532,13 @@ const processCrossTableData = (data, rowIdField, columnIdField, rowField, column
         {usePagination && handleChangePage && handleChangeRowsPerPage && (
           <TablePagination
             component="div"
-            count={dataWithoutTotal.length}
+            count={paginationCount !== null ? paginationCount : dataWithoutTotal.length}
             page={page}
             onPageChange={handleChangePage}
             rowsPerPage={rowsPerPage}
             onRowsPerPageChange={handleChangeRowsPerPage}
-            rowsPerPageOptions={[5, 10, 25, 50]}
-            labelRowsPerPage="Linhas por página:"
+            rowsPerPageOptions={[5, 10, 20, 25, 50]}
+            labelRowsPerPage="Municípios por página:"
             labelDisplayedRows={({ from, to, count }) =>
               `${from}-${to} de ${count !== -1 ? count : `mais de ${to}`}`
             }
@@ -562,12 +564,80 @@ const DataTable = ({
   isInstituicaoEnsinoSelected,
   isMunicipioSelected,
   title = '',
-  showConsolidated = false
+  showConsolidated = false,
+  pagination = null,
+  onPaginationChange = null,
+  // Props para buscar todos os dados na exportação
+  fetchAllDataConfig = null // { type, year, isHistorical, startYear, endYear, city, selectedFilters }
 }) => {
 
-  // Estados para paginação
+  // Estados para paginação (local ou backend)
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
+
+  // Usar paginação do backend se disponível e municipality estiver selecionado
+  const useBackendPagination = pagination && isMunicipioSelected && onPaginationChange;
+
+  // Função para buscar todos os dados sem paginação (para exportação)
+  const fetchAllDataForExport = React.useCallback(async () => {
+    console.log('fetchAllDataForExport chamada', { fetchAllDataConfig, isMunicipioSelected });
+    if (!fetchAllDataConfig || !isMunicipioSelected) {
+      console.log('fetchAllDataForExport: condições não atendidas');
+      return null;
+    }
+
+    try {
+      const { type: configType, year, isHistorical: configIsHistorical, startYear, endYear, city, selectedFilters } = fetchAllDataConfig;
+      console.log('fetchAllDataForExport: config extraído', { configType, year, configIsHistorical, startYear, endYear, city });
+
+      const buildFilter = (cityId = null) => {
+        const yearFilter = configIsHistorical
+          ? `min_year:"${startYear}",max_year:"${endYear}"`
+          : `min_year:"${year}",max_year:"${year}"`;
+        return `${yearFilter},state:"22"${cityId ? `,city:"${cityId}"` : ""}`;
+      };
+
+      const buildUrl = (filter) => {
+        const selectedDims = [];
+        if (isModalidadeSelected) selectedDims.push("upper_education_mod");
+        if (isRegimeSelected) selectedDims.push("work_regime");
+        if (isFormacaoDocenteSelected) selectedDims.push("initial_training");
+        if (isCategoriaAdministrativaSelected) selectedDims.push("upper_adm_dependency");
+        if (isFaixaEtariaSuperiorSelected) selectedDims.push("age_student_code");
+        if (isOrganizacaoAcademicaSelected) selectedDims.push("academic_level");
+        if (isInstituicaoEnsinoSelected) selectedDims.push("institution");
+        if (isMunicipioSelected) selectedDims.push("municipality");
+
+        const dims = selectedDims.length > 0 ? `dims=${selectedDims.join(",")}` : "";
+        let finalEndpoint = configType;
+        if (configIsHistorical) {
+          finalEndpoint = `${configType}/timeseries`;
+        }
+
+        // NÃO adicionar paginação - buscar todos os dados
+        return `${import.meta.env.VITE_API_PUBLIC_URL}/higherEducation/${finalEndpoint}?${dims}&filter=${encodeURIComponent(filter)}`;
+      };
+
+      const filter = buildFilter(city);
+      const url = buildUrl(filter);
+      console.log('fetchAllDataForExport: URL construída', url);
+      const response = await fetch(url);
+      console.log('fetchAllDataForExport: resposta recebida', response.status);
+
+      if (!response.ok) {
+        throw new Error(`Erro HTTP! Status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log('fetchAllDataForExport: resultado', result);
+
+      // Retornar o resultado completo para processamento posterior
+      return result;
+    } catch (error) {
+      console.error('Erro ao buscar todos os dados para exportação:', error);
+      return null;
+    }
+  }, [fetchAllDataConfig, isMunicipioSelected, isModalidadeSelected, isRegimeSelected, isFormacaoDocenteSelected, isCategoriaAdministrativaSelected, isFaixaEtariaSuperiorSelected, isOrganizacaoAcademicaSelected, isInstituicaoEnsinoSelected]);
 
   // Referências para as tabelas
   const tableRefs = {
@@ -586,12 +656,33 @@ const DataTable = ({
   const chartRef = React.useRef(null);
 
   const handleChangePage = (event, newPage) => {
-    setPage(newPage);
+    if (useBackendPagination) {
+      // Verificar se há apenas uma página e prevenir navegação
+      if (pagination && pagination.totalPages === 1) {
+        return; // Não permitir navegação se houver apenas 1 página
+      }
+      // Verificar limites da página
+      if (newPage < 0 || (pagination && newPage + 1 > pagination.totalPages)) {
+        return; // Não permitir navegação fora dos limites
+      }
+      // Usar paginação do backend (page começa em 1 no backend)
+      onPaginationChange(newPage + 1, pagination.limit);
+    } else {
+      // Usar paginação local
+      setPage(newPage);
+    }
   };
 
   const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
+    const newLimit = parseInt(event.target.value, 10);
+    if (useBackendPagination) {
+      // Usar paginação do backend
+      onPaginationChange(1, newLimit); // Resetar para página 1
+    } else {
+      // Usar paginação local
+      setRowsPerPage(newLimit);
+      setPage(0);
+    }
   };
 
   const tableDataArray = [data?.result || []];
@@ -733,6 +824,39 @@ const DataTable = ({
       // Preparar dados para exportação
       const exportData = sortedYears.map(year => ({ year, total: yearMap.get(year) }));
 
+      // Função para buscar todos os dados quando houver paginação com município em série histórica (sem filtros)
+      const getFetchAllDataForHistoricalSimple = () => {
+        if (isMunicipioSelected && useBackendPagination && fetchAllDataConfig) {
+          return async () => {
+            console.log('getFetchAllDataForHistoricalSimple: chamando fetchAllDataForExport');
+            const allDataResult = await fetchAllDataForExport();
+            if (!allDataResult) return exportData;
+
+            // Processar dados históricos de todos os dados
+            let allData = [];
+            if (Array.isArray(allDataResult.result)) {
+              allData = allDataResult.result;
+            } else if (Array.isArray(allDataResult)) {
+              allData = allDataResult;
+            } else {
+              return exportData;
+            }
+
+            // Reorganizar dados históricos simples
+            const allYearMap = new Map();
+            allData.forEach(item => {
+              allYearMap.set(item.year, (allYearMap.get(item.year) || 0) + Number(item.total || 0));
+            });
+
+            const allSortedYears = [...allYearMap.keys()].sort((a, b) => a - b);
+            const allExportData = allSortedYears.map(year => ({ year, total: allYearMap.get(year) }));
+
+            return allExportData;
+          };
+        }
+        return null;
+      };
+
       return (
         <div>
           <TableContainer sx={{ maxWidth: '100%', overflowX: 'auto', border: '2px solid #ccc', borderRadius: '4px' }} ref={tableRefs.historical}>
@@ -765,6 +889,7 @@ const DataTable = ({
             fileName={cityName ? `dados_historicos_${cityName.toLowerCase().replace(/\s+/g, '_')}` : "dados_historicos"}
             tableTitle={cityName ? `Dados Históricos - ${cityName}` : (title || "Dados Históricos")}
             tableRef={tableRef}
+            fetchAllData={getFetchAllDataForHistoricalSimple()}
           />
         </div>
       );
@@ -814,6 +939,66 @@ const DataTable = ({
       headerDisplayNames[year] = year.toString();
     });
 
+    // Função para buscar todos os dados quando houver paginação com município em série histórica
+    const getFetchAllDataForHistorical = () => {
+      if (isMunicipioSelected && useBackendPagination && fetchAllDataConfig) {
+        return async () => {
+          console.log('getFetchAllDataForHistorical: chamando fetchAllDataForExport');
+          const allDataResult = await fetchAllDataForExport();
+          if (!allDataResult) return exportData;
+
+          // Processar dados históricos de todos os dados
+          let allData = [];
+          if (Array.isArray(allDataResult.result)) {
+            allData = allDataResult.result;
+          } else if (Array.isArray(allDataResult)) {
+            allData = allDataResult;
+          } else {
+            return exportData;
+          }
+
+          // Reorganizar dados históricos
+          const allCategoryYearMap = new Map();
+          const allYears = new Set();
+          const allCategories = new Set();
+          const allCategoryIds = new Map();
+
+          allData.forEach(item => {
+            const year = item.year;
+            const categoryName = item[extraColumn.name];
+            const categoryId = item[extraColumn.id];
+            allYears.add(year);
+            allCategories.add(categoryName);
+            allCategoryIds.set(categoryName, categoryId);
+
+            if (!allCategoryYearMap.has(categoryName)) {
+              allCategoryYearMap.set(categoryName, new Map());
+            }
+            allCategoryYearMap.get(categoryName).set(year, (allCategoryYearMap.get(categoryName).get(year) || 0) + Number(item.total || 0));
+          });
+
+          const allSortedYears = [...allYears].sort((a, b) => a - b);
+          const allSortedCategories = [...allCategories].sort((a, b) => {
+            return Number(allCategoryIds.get(a)) - Number(allCategoryIds.get(b));
+          });
+
+          // Preparar dados para exportação
+          const allExportData = [];
+          allSortedCategories.forEach(category => {
+            const yearMap = allCategoryYearMap.get(category);
+            const row = { [extraColumn.label]: category };
+            allSortedYears.forEach(year => {
+              row[year] = yearMap.get(year) || 0;
+            });
+            allExportData.push(row);
+          });
+
+          return allExportData;
+        };
+      }
+      return null;
+    };
+
     return (
       <div>
         <TableContainer sx={{ maxWidth: '100%', overflowX: 'auto', border: '2px solid #ccc', borderRadius: '4px' }} ref={tableRefs.historical}>
@@ -829,8 +1014,9 @@ const DataTable = ({
             <TableBody>
               {sortedCategories
                 .slice(
-                  isMunicipioSelected ? page * rowsPerPage : 0,
-                  isMunicipioSelected ? page * rowsPerPage + rowsPerPage : undefined
+                  // Se usar paginação do backend, não fazer slice (dados já vêm paginados)
+                  useBackendPagination ? 0 : (isMunicipioSelected ? page * rowsPerPage : 0),
+                  useBackendPagination ? undefined : (isMunicipioSelected ? page * rowsPerPage + rowsPerPage : undefined)
                 )
                 .map(category => {
                   const yearMap = categoryYearMap.get(category);
@@ -853,13 +1039,13 @@ const DataTable = ({
         {isMunicipioSelected && (
           <TablePagination
             component="div"
-            count={sortedCategories.length}
-            page={page}
+            count={useBackendPagination ? pagination.total : sortedCategories.length}
+            page={useBackendPagination ? pagination.page - 1 : page}
             onPageChange={handleChangePage}
-            rowsPerPage={rowsPerPage}
+            rowsPerPage={useBackendPagination ? pagination.limit : rowsPerPage}
             onRowsPerPageChange={handleChangeRowsPerPage}
-            rowsPerPageOptions={[5, 10, 25, 50]}
-            labelRowsPerPage="Linhas por página:"
+            rowsPerPageOptions={[5, 10, 20, 25, 50]}
+            labelRowsPerPage="Municípios por página:"
             labelDisplayedRows={({ from, to, count }) =>
               `${from}-${to} de ${count !== -1 ? count : `mais de ${to}`}`
             }
@@ -889,6 +1075,7 @@ const DataTable = ({
           fileName={cityName ? `dados_historicos_${cityName.toLowerCase().replace(/\s+/g, '_')}` : `dados_historicos_por_${extraColumn.label.toLowerCase()}`}
           tableTitle={cityName ? `Dados Históricos - ${cityName}` : (title || `Dados Históricos por ${extraColumn.label}`)}
           tableRef={tableRef}
+          fetchAllData={getFetchAllDataForHistorical()}
         />
       </div>
     );
@@ -955,6 +1142,58 @@ const renderCrossTable = (customData = null, customConfig = null) => {
     headerDisplayNames[col] = col;
   });
 
+  // Função para buscar todos os dados quando houver paginação com município
+  const getFetchAllDataForCrossTable = () => {
+    if (isMunicipioSelected && useBackendPagination && fetchAllDataConfig) {
+      return async () => {
+        const allDataResult = await fetchAllDataForExport();
+        if (!allDataResult) return exportData;
+
+        // Processar dados cruzados de todos os dados
+        let allCrossedData = [];
+        if (Array.isArray(allDataResult[config.dataKey])) {
+          allCrossedData = allDataResult[config.dataKey];
+        } else if (allDataResult.result && !Array.isArray(allDataResult.result) && Array.isArray(allDataResult.result[config.dataKey])) {
+          allCrossedData = allDataResult.result[config.dataKey];
+        } else if (Array.isArray(allDataResult.result)) {
+          allCrossedData = allDataResult.result;
+        }
+
+        if (!allCrossedData || allCrossedData.length === 0) return exportData;
+
+        const { uniqueRows: allUniqueRows, uniqueColumns: allUniqueColumns, cellValues: allCellValues, rowTotals: allRowTotals, columnTotals: allColumnTotals } = processCrossTableData(
+          allCrossedData,
+          config.rowIdField,
+          config.columnIdField,
+          config.rowField,
+          config.columnField
+        );
+
+        // Preparar dados para exportação
+        const allExportData = [];
+        Array.from(allUniqueRows.entries()).forEach(([rowId, rowName]) => {
+          const rowData = { [config.rowHeader]: rowName };
+          Array.from(allUniqueColumns.entries()).forEach(([colId, colName]) => {
+            rowData[colName] = allCellValues.get(`${rowId}-${colId}`) || 0;
+          });
+          rowData.Total = allRowTotals.get(rowId) || 0;
+          allExportData.push(rowData);
+        });
+
+        // Adicionar linha de total
+        const totalRow = { [config.rowHeader]: 'Total' };
+        Array.from(allUniqueColumns.entries()).forEach(([colId, colName]) => {
+          totalRow[colName] = allColumnTotals.get(colId) || 0;
+        });
+        totalRow.Total = Array.from(allColumnTotals.values()).reduce((sum, val) => sum + val, 0);
+        allExportData.push(totalRow);
+
+        return allExportData;
+      };
+    }
+    return null;
+  };
+
   return (
     <div>
       <TableContainer sx={{ maxWidth: '100%', overflowX: 'auto', border: '2px solid #ccc', borderRadius: '4px' }} ref={tableRefs.cross}>
@@ -970,6 +1209,7 @@ const renderCrossTable = (customData = null, customConfig = null) => {
           </StyledTableHead>
           <TableBody>
             {Array.from(uniqueRows.entries())
+              // Dados já vêm paginados do backend quando municipality está selecionado
               .map(([rowId, rowName]) => (
                 <TableRow key={rowId}>
                   <CenteredTableCell>{rowName}</CenteredTableCell>
@@ -981,20 +1221,40 @@ const renderCrossTable = (customData = null, customConfig = null) => {
                   <CenteredTableCell>{formatNumber(rowTotals.get(rowId))}</CenteredTableCell>
                 </TableRow>
               ))}
-            <TableRow>
-              <BoldTableCell>Total</BoldTableCell>
-              {Array.from(uniqueColumns.keys()).map(columnId => (
-                <BoldTableCell key={columnId}>
-                  {formatNumber(columnTotals.get(columnId))}
+            {/* Linha de total - não exibir quando há paginação com municipality */}
+            {!(isMunicipioSelected && useBackendPagination && pagination) && (
+              <TableRow>
+                <BoldTableCell>Total</BoldTableCell>
+                {Array.from(uniqueColumns.keys()).map(columnId => (
+                  <BoldTableCell key={columnId}>
+                    {formatNumber(columnTotals.get(columnId))}
+                  </BoldTableCell>
+                ))}
+                <BoldTableCell>
+                  {formatNumber(Array.from(columnTotals.values()).reduce((sum, val) => sum + val, 0))}
                 </BoldTableCell>
-              ))}
-              <BoldTableCell>
-                {formatNumber(Array.from(columnTotals.values()).reduce((sum, val) => sum + val, 0))}
-              </BoldTableCell>
-            </TableRow>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </TableContainer>
+
+      {/* Adicionar paginação quando municipality estiver selecionado na tabela cruzada */}
+      {isMunicipioSelected && useBackendPagination && pagination && (
+        <TablePagination
+          component="div"
+          count={pagination.total}
+          page={pagination.page - 1}
+          onPageChange={handleChangePage}
+          rowsPerPage={pagination.limit}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+          rowsPerPageOptions={[5, 10, 20, 25, 50]}
+          labelRowsPerPage="Municípios por página:"
+          labelDisplayedRows={({ from, to, count }) =>
+            `${from}-${to} de ${count !== -1 ? count : `mais de ${to}`}`
+          }
+        />
+      )}
 
       <SourceFooter />
 
@@ -1008,6 +1268,7 @@ const renderCrossTable = (customData = null, customConfig = null) => {
         fileName="dados_cruzados"
         tableTitle={title || "Dados Cruzados"}
         tableRef={tableRefs.cross}
+        fetchAllData={getFetchAllDataForCrossTable()}
       />
     </div>
   );
@@ -1417,6 +1678,54 @@ const renderCrossTable = (customData = null, customConfig = null) => {
     });
     exportData.push(totalRow);
 
+    // Função para buscar todos os dados quando houver paginação com município
+    const getFetchAllDataFunction = () => {
+      console.log('getFetchAllDataFunction chamada', { filterType, useBackendPagination, fetchAllDataConfig: !!fetchAllDataConfig });
+      if (filterType === 'municipioApi' && useBackendPagination && fetchAllDataConfig) {
+        console.log('getFetchAllDataFunction: retornando função async');
+        return async () => {
+          console.log('Função async de fetchAllData chamada');
+          const allDataResult = await fetchAllDataForExport();
+          console.log('allDataResult recebido', allDataResult);
+          if (!allDataResult) return exportData;
+
+          // Extrair array de dados
+          let allData = [];
+          if (Array.isArray(allDataResult.result)) {
+            allData = allDataResult.result;
+          } else if (Array.isArray(allDataResult)) {
+            allData = allDataResult;
+          } else {
+            return exportData;
+          }
+
+          // Processar dados para o formato de exportação
+          const processedData = allData.map(item => {
+            const row = {};
+            headers.forEach(header => {
+              row[header] = item[header];
+            });
+            return row;
+          });
+
+          // Adicionar linha de total
+          const totalValueAll = allData.reduce((sum, item) => sum + Number(item.total || 0), 0);
+          const totalRowAll = {};
+          headers.forEach(header => {
+            if (header === 'total') {
+              totalRowAll[header] = totalValueAll;
+            } else {
+              totalRowAll[header] = 'Total';
+            }
+          });
+          processedData.push(totalRowAll);
+
+          return processedData;
+        };
+      }
+      return null;
+    };
+
     return (
       <div>
         <BasicTable
@@ -1428,10 +1737,11 @@ const renderCrossTable = (customData = null, customConfig = null) => {
           totalValue={totalValue}
           showSource={true}
           usePagination={usePagination}
-          page={page}
-          rowsPerPage={rowsPerPage}
+          page={useBackendPagination && pagination ? pagination.page - 1 : page}
+          rowsPerPage={useBackendPagination && pagination ? pagination.limit : rowsPerPage}
           handleChangePage={handleChangePage}
           handleChangeRowsPerPage={handleChangeRowsPerPage}
+          paginationCount={useBackendPagination && pagination ? pagination.total : null}
           ref={tableRefs[filterType]}
         />
 
@@ -1445,6 +1755,7 @@ const renderCrossTable = (customData = null, customConfig = null) => {
           fileName={`dados_por_${filterType}`}
           tableTitle={title || getTableTitle(filterType)}
           tableRef={tableRefs[filterType]}
+          fetchAllData={getFetchAllDataFunction()}
         />
       </div>
     );

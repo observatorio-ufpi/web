@@ -18,6 +18,7 @@ import { FaFileExcel, FaFilePdf } from 'react-icons/fa';
  * @param {React.RefObject} props.chartRef - Referência para o gráfico (opcional)
  * @param {string} props.chartType - Tipo de gráfico: 'pie', 'bar', 'line' (opcional)
  * @param {Array} props.chartData - Dados específicos do gráfico (opcional)
+ * @param {Function} props.fetchAllData - Função assíncrona que retorna todos os dados (sem paginação) para exportação
  */
 const TableExport = ({
   data,
@@ -28,7 +29,8 @@ const TableExport = ({
   chartRef,
   showPdfExport = true, // Add this new prop
   chartType = 'bar',
-  chartData = null
+  chartData = null,
+  fetchAllData = null
 }) => {
   // Função para gerar um nome de arquivo baseado no título
   const generateFileName = () => {
@@ -78,12 +80,23 @@ const TableExport = ({
 
   // Função para exportar para PDF
   const exportToPDF = async () => {
-    if (!data || data.length === 0) {
-      alert('Não há dados para exportar');
-      return;
-    }
-
     try {
+      // Se há função fetchAllData, buscar todos os dados primeiro
+      let exportData = data;
+      console.log('exportToPDF: fetchAllData existe?', !!fetchAllData);
+      if (fetchAllData) {
+        console.log('exportToPDF: chamando fetchAllData');
+        exportData = await fetchAllData();
+        console.log('exportToPDF: dados recebidos', exportData?.length);
+        if (!exportData || exportData.length === 0) {
+          alert('Não há dados para exportar');
+          return;
+        }
+      } else if (!data || data.length === 0) {
+        alert('Não há dados para exportar');
+        return;
+      }
+
       const pdf = new jsPDF('l', 'pt', 'a4');
 
       // Adicionar título se fornecido
@@ -97,7 +110,7 @@ const TableExport = ({
 
       // Criar dados para a tabela
       const tableRows = [];
-      data.forEach(row => {
+      exportData.forEach(row => {
         const tableRow = [];
         headers.forEach(header => {
           // Verificar se a propriedade existe no objeto
@@ -173,12 +186,23 @@ const TableExport = ({
 
   // Função para exportar para Excel com tabela de dados para gráfico
   const exportToExcel = async () => {
-    if (!data || data.length === 0) {
-      console.warn('Não há dados para exportar');
-      return;
-    }
-
     try {
+      // Se há função fetchAllData, buscar todos os dados primeiro
+      let exportData = data;
+      console.log('exportToExcel: fetchAllData existe?', !!fetchAllData);
+      if (fetchAllData) {
+        console.log('exportToExcel: chamando fetchAllData');
+        exportData = await fetchAllData();
+        console.log('exportToExcel: dados recebidos', exportData?.length);
+        if (!exportData || exportData.length === 0) {
+          console.warn('Não há dados para exportar');
+          return;
+        }
+      } else if (!data || data.length === 0) {
+        console.warn('Não há dados para exportar');
+        return;
+      }
+
       // Criar workbook com ExcelJS
       const workbook = new ExcelJS.Workbook();
       workbook.creator = 'Sistema de Observatório';
@@ -202,7 +226,7 @@ const TableExport = ({
       };
 
       // Adicionar dados (substituindo valores vazios por 0)
-      data.forEach(item => {
+      exportData.forEach(item => {
         const row = [];
         headers.forEach(header => {
           const value = item[header];

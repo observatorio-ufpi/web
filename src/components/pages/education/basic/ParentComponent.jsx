@@ -1,5 +1,5 @@
-import { Button, Switch, Typography, Collapse } from '@mui/material';
-import { ExpandMore, ExpandLess } from '@mui/icons-material';
+import { ExpandLess, ExpandMore } from '@mui/icons-material';
+import { Button, Collapse, Switch, Typography } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 // import { exportBasicEducationTable } from '../../../../services/exportTableService.jsx';
@@ -45,6 +45,13 @@ function ParentComponent() {
   const [filteredYear, setFilteredYear] = useState(null);
   const [startYear, setStartYear] = useState(yearLimits.enrollment.min);
   const [endYear, setEndYear] = useState(yearLimits.enrollment.max);
+  // Estados para paginação do backend quando municipality está selecionado
+  const [municipalityPage, setMunicipalityPage] = useState(1);
+  const [municipalityLimit, setMunicipalityLimit] = useState(20);
+  const [municipalityPagination, setMunicipalityPagination] = useState(null);
+  // Ref para armazenar o valor atual da página (para evitar problema de estado assíncrono)
+  const municipalityPageRef = useRef(1);
+  const municipalityLimitRef = useRef(20);
 
   // Estado para controlar se os filtros estão expandidos
   const [filtersExpanded, setFiltersExpanded] = useState(false);
@@ -85,6 +92,8 @@ function ParentComponent() {
     setData(null);
     setTitle('');
     setFilteredType(type);
+    // Forçar limpeza completa do estado antes de fazer nova requisição
+    setIsLoading(true);
 
     // Determina se é série histórica baseado no yearRange
     const isHistoricalRange = yearRange[0] !== yearRange[1];
@@ -129,13 +138,19 @@ function ParentComponent() {
     }
     setTitle(fullTitle);
 
+    // Calcular valores dos filtros antes de atualizar estados
+    const isEtapaSelectedValue = selectedFilters.some(filter => filter.value === 'etapa');
+    const isLocalidadeSelectedValue = selectedFilters.some(filter => filter.value === 'localidade');
+    const isDependenciaSelectedValue = selectedFilters.some(filter => filter.value === 'dependencia');
+    const isMunicipioSelectedValue = selectedFilters.some(filter => filter.value === 'municipio');
+
     setIsHistorical(isHistoricalRange);
     setDisplayHistorical(isHistoricalRange);
     setFilteredYear(yearRange[0]);
-    setIsEtapaSelected(selectedFilters.some(filter => filter.value === 'etapa'));
-    setIsLocalidadeSelected(selectedFilters.some(filter => filter.value === 'localidade'));
-    setIsDependenciaSelected(selectedFilters.some(filter => filter.value === 'dependencia'));
-    setIsMunicipioSelected(selectedFilters.some(filter => filter.value === 'municipio'));
+    setIsEtapaSelected(isEtapaSelectedValue);
+    setIsLocalidadeSelected(isLocalidadeSelectedValue);
+    setIsDependenciaSelected(isDependenciaSelectedValue);
+    setIsMunicipioSelected(isMunicipioSelectedValue);
 
     // Armazenar os filtros aplicados na última busca
     setAppliedTerritory(territory);
@@ -145,7 +160,46 @@ function ParentComponent() {
     setAppliedSelectedFilters(selectedFilters);
 
     if (apiRef.current) {
+      // Resetar página quando filtros mudarem (exceto quando apenas a página mudar)
+      const shouldResetPage = !(isMunicipioSelectedValue && !city);
+      if (shouldResetPage) {
+        municipalityPageRef.current = 1;
+        setMunicipalityPage(1);
+      }
+
+      // Usar os valores calculados diretamente, não os estados
+      // Para evitar problema de estado assíncrono, usar refs para obter valores atualizados
+      const currentPageValue = shouldResetPage ? 1 : municipalityPageRef.current;
+      const currentLimitValue = municipalityLimitRef.current;
+
+      // Atualizar refs
+      municipalityPageRef.current = currentPageValue;
+      municipalityLimitRef.current = currentLimitValue;
+
+      const paginationParams = isMunicipioSelectedValue && !city
+        ? { page: currentPageValue, limit: currentLimitValue }
+        : {};
+
+      console.log('ParentComponent - Enviando dados para ApiComponent:', {
+        isMunicipioSelected: isMunicipioSelectedValue,
+        city,
+        municipalityPage: paginationParams.page || municipalityPage,
+        municipalityLimit: paginationParams.limit || municipalityLimit,
+        currentPageValue,
+        shouldResetPage,
+        paginationParams,
+        yearRange,
+        isHistoricalRange,
+        selectedFilters: selectedFilters,
+        startYear: yearRange[0],
+        endYear: yearRange[1],
+        type,
+        filteredType
+      });
+
+      // Passar selectedFilters e type diretamente para garantir que os valores corretos sejam usados
       apiRef.current.fetchData({
+        type: type, // Passar type diretamente, não filteredType
         year: yearRange[0],
         isHistorical: isHistoricalRange,
         startYear: yearRange[0],
@@ -156,6 +210,10 @@ function ParentComponent() {
         aglomerado,
         gerencia,
         citiesList: territory || faixaPopulacional || aglomerado || gerencia ? filteredCities : [],
+        // Adicionar paginação apenas quando municipality está selecionado e não há cidade específica
+        ...paginationParams,
+        // Passar selectedFilters para garantir que os valores corretos sejam usados
+        selectedFilters: selectedFilters,
       });
     }
   };
@@ -643,7 +701,15 @@ function ParentComponent() {
       <ApiContainer
         ref={apiRef}
         type={filteredType}
-        onDataFetched={setData}
+        onDataFetched={(result) => {
+          // Capturar informações de paginação se existirem
+          if (result && result.pagination) {
+            setMunicipalityPagination(result.pagination);
+          } else {
+            setMunicipalityPagination(null);
+          }
+          setData(result);
+        }}
         onError={setError}
         onLoading={setIsLoading}
         selectedFilters={selectedFilters}
@@ -661,6 +727,30 @@ function ParentComponent() {
           year={filteredYear || year}
           title={title} // Passando o título para o ApiDataTable
           showConsolidated={showConsolidated}
+          municipalityPagination={municipalityPagination}
+          onMunicipalityPageChange={(newPage) => {
+            // Atualizar ref e estado simultaneamente
+            municipalityPageRef.current = newPage;
+            setMunicipalityPage(newPage);
+            handleFilterClick();
+          }}
+          onMunicipalityLimitChange={(newLimit) => {
+            // Atualizar refs e estados simultaneamente
+            municipalityLimitRef.current = newLimit;
+            municipalityPageRef.current = 1;
+            setMunicipalityLimit(newLimit);
+            setMunicipalityPage(1);
+            handleFilterClick();
+          }}
+          fetchAllDataConfig={isMunicipioSelected ? {
+            type: filteredType,
+            year: filteredYear || year,
+            isHistorical,
+            startYear,
+            endYear,
+            city,
+            selectedFilters
+          } : null}
         />
       ) : null}
     </div>

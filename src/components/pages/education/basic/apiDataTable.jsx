@@ -741,11 +741,83 @@ const ApiDataTable = ({
   type,
   year,
   title = '',
-  showConsolidated = false
+  showConsolidated = false,
+  municipalityPagination = null,
+  onMunicipalityPageChange = null,
+  onMunicipalityLimitChange = null,
+  // Props para buscar todos os dados na exportação
+  fetchAllDataConfig = null // { type, year, isHistorical, startYear, endYear, city, selectedFilters }
 }) => {
   // Estados para paginação
   const [page, setPage] = React.useState(0);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
+
+  // Usar paginação do backend se disponível e municipality estiver selecionado
+  const useBackendPagination = municipalityPagination && isMunicipioSelected && onMunicipalityPageChange;
+
+  // Função para buscar todos os dados sem paginação (para exportação)
+  const fetchAllDataForExport = React.useCallback(async () => {
+    console.log('fetchAllDataForExport (basic) chamada', { fetchAllDataConfig, isMunicipioSelected });
+    if (!fetchAllDataConfig || !isMunicipioSelected) {
+      console.log('fetchAllDataForExport (basic): condições não atendidas');
+      return null;
+    }
+
+    try {
+      const { type: configType, year: configYear, isHistorical: configIsHistorical, startYear, endYear, city, selectedFilters } = fetchAllDataConfig;
+      console.log('fetchAllDataForExport (basic): config extraído', { configType, configYear, configIsHistorical, startYear, endYear, city });
+
+      const buildFilter = (cityId = null) => {
+        const yearFilter = configIsHistorical
+          ? `min_year:"${startYear}",max_year:"${endYear}"`
+          : `min_year:"${configYear}",max_year:"${configYear}"`;
+        return `${yearFilter},state:"22"${cityId ? `,city:"${cityId}"` : ""}`;
+      };
+
+      const buildUrl = (filter) => {
+        const selectedDims = [];
+        if (isEtapaSelected) selectedDims.push("education_level_mod");
+        if (isLocalidadeSelected) selectedDims.push("location");
+        if (isDependenciaSelected) selectedDims.push("adm_dependency_detailed");
+        if (isVinculoSelected) selectedDims.push("contract_type");
+        if (isFormacaoDocenteSelected) selectedDims.push("initial_training");
+        if (isFaixaEtariaSelected) selectedDims.push("age_range");
+        if (isMunicipioSelected) selectedDims.push("municipality");
+
+        const dims = selectedDims.length > 0 ? `dims=${selectedDims.join(",")}` : "";
+        let finalEndpoint = configType;
+        if (configIsHistorical) {
+          if (finalEndpoint === 'school/count') {
+            finalEndpoint = 'school/count/timeseries';
+          } else {
+            finalEndpoint = `${finalEndpoint}/timeseries`;
+          }
+        }
+
+        // NÃO adicionar paginação - buscar todos os dados
+        return `${import.meta.env.VITE_API_PUBLIC_URL}/basicEducation/${finalEndpoint}?${dims}&filter=${encodeURIComponent(filter)}`;
+      };
+
+      const filter = buildFilter(city);
+      const url = buildUrl(filter);
+      console.log('fetchAllDataForExport (basic): URL construída', url);
+      const response = await fetch(url);
+      console.log('fetchAllDataForExport (basic): resposta recebida', response.status);
+
+      if (!response.ok) {
+        throw new Error(`Erro HTTP! Status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      console.log('fetchAllDataForExport (basic): resultado', result);
+
+      // Retornar o resultado completo para processamento posterior
+      return result;
+    } catch (error) {
+      console.error('Erro ao buscar todos os dados para exportação (basic):', error);
+      return null;
+    }
+  }, [fetchAllDataConfig, isMunicipioSelected, isEtapaSelected, isLocalidadeSelected, isDependenciaSelected, isVinculoSelected, isFormacaoDocenteSelected, isFaixaEtariaSelected]);
 
   // Referências para as tabelas e gráficos
   const chartRef = React.useRef(null);
@@ -765,12 +837,24 @@ const ApiDataTable = ({
   };
 
   const handleChangePage = (event, newPage) => {
-    setPage(newPage);
+    // Se for paginação do backend (municipality), usar callback do parent
+    if (isMunicipioSelected && municipalityPagination && onMunicipalityPageChange) {
+      // TablePagination usa índice baseado em 0, mas backend usa baseado em 1
+      onMunicipalityPageChange(newPage + 1);
+    } else {
+      setPage(newPage);
+    }
   };
 
   const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
+    const newLimit = parseInt(event.target.value, 10);
+    // Se for paginação do backend (municipality), usar callback do parent
+    if (isMunicipioSelected && municipalityPagination && onMunicipalityLimitChange) {
+      onMunicipalityLimitChange(newLimit);
+    } else {
+      setRowsPerPage(newLimit);
+      setPage(0);
+    }
   };
 
   // Preparação de dados
@@ -911,6 +995,44 @@ const ApiDataTable = ({
       exportHeaders = ['year', 'total'];
       headerDisplayNames = { year: 'Ano', total: 'Total' };
 
+      // Função para buscar todos os dados quando houver paginação com município em série histórica (sem filtros)
+      const getFetchAllDataForHistoricalSimple = () => {
+        if (isMunicipioSelected && useBackendPagination && fetchAllDataConfig) {
+          return async () => {
+            console.log('getFetchAllDataForHistoricalSimple (basic): chamando fetchAllDataForExport');
+            const allDataResult = await fetchAllDataForExport();
+            if (!allDataResult) return exportData;
+
+            // Processar dados históricos de todos os dados
+            let allData = [];
+            if (Array.isArray(allDataResult.result)) {
+              allData = allDataResult.result;
+            } else if (Array.isArray(allDataResult)) {
+              allData = allDataResult;
+            } else {
+              return exportData;
+            }
+
+            // Reorganizar dados históricos simples
+            const allYearMap = new Map();
+            allData.forEach(item => {
+              allYearMap.set(item.year, (allYearMap.get(item.year) || 0) + Number(item.total || 0));
+            });
+
+            const allSortedYears = [...allYearMap.keys()].sort((a, b) => a - b);
+            const allExportData = [];
+            allSortedYears.forEach(year => {
+              const row = { year };
+              row.total = allYearMap.get(year) || 0;
+              allExportData.push(row);
+            });
+
+            return allExportData;
+          };
+        }
+        return null;
+      };
+
       return (
         <div>
           <TableContainer sx={{ maxWidth: '100%', overflowX: 'auto', border: '2px solid #ccc', borderRadius: '4px' }} ref={tableRefs.historical}>
@@ -945,6 +1067,7 @@ const ApiDataTable = ({
             fileName={cityName ? `dados_historicos_${cityName.toLowerCase().replace(/\s+/g, '_')}` : "dados_historicos"}
             tableTitle={cityName ? `Dados Históricos - ${cityName}` : (title || "Dados Históricos")}
             tableRef={tableRef}
+            fetchAllData={getFetchAllDataForHistoricalSimple()}
           />
         </div>
       );
@@ -1004,6 +1127,67 @@ const ApiDataTable = ({
       headerDisplayNames[year] = year;
     });
 
+    // Função para buscar todos os dados quando houver paginação com município em série histórica
+    const getFetchAllDataForHistorical = () => {
+      if (isMunicipioSelected && useBackendPagination && fetchAllDataConfig) {
+        return async () => {
+          console.log('getFetchAllDataForHistorical (basic): chamando fetchAllDataForExport');
+          const allDataResult = await fetchAllDataForExport();
+          if (!allDataResult) return exportData;
+
+          // Processar dados históricos de todos os dados
+          let allData = [];
+          if (Array.isArray(allDataResult.result)) {
+            allData = allDataResult.result;
+          } else if (Array.isArray(allDataResult)) {
+            allData = allDataResult;
+          } else {
+            return exportData;
+          }
+
+          // Reorganizar dados históricos
+          const allCategoryYearMap = new Map();
+          const allYears = new Set();
+          const allCategories = new Set();
+          const allCategoryIds = new Map();
+
+          allData.forEach(item => {
+            const year = item.year;
+            const categoryId = item[extraColumn.id];
+            allYears.add(year);
+            allCategories.add(categoryId);
+            allCategoryIds.set(categoryId, categoryId);
+
+            if (!allCategoryYearMap.has(categoryId)) {
+              allCategoryYearMap.set(categoryId, new Map());
+            }
+            const currentTotal = allCategoryYearMap.get(categoryId).get(year) || 0;
+            allCategoryYearMap.get(categoryId).set(year, currentTotal + (Number(item.total) || 0));
+          });
+
+          const allSortedYears = [...allYears].sort((a, b) => a - b);
+          const allSortedCategories = [...allCategories].sort((a, b) => {
+            return Number(allCategoryIds.get(a)) - Number(allCategoryIds.get(b));
+          });
+
+          // Preparar dados para exportação
+          const allExportData = [];
+          allSortedCategories.forEach(categoryId => {
+            const categoryItem = allData.find(item => item[extraColumn.id] == categoryId);
+            const categoryName = categoryItem ? categoryItem[extraColumn.name] : `ID ${categoryId}`;
+            const row = { [extraColumn.label]: categoryName };
+            allSortedYears.forEach(year => {
+              row[year] = allCategoryYearMap.get(categoryId)?.get(year) || 0;
+            });
+            allExportData.push(row);
+          });
+
+          return allExportData;
+        };
+      }
+      return null;
+    };
+
     return (
       <div>
         <TableContainer sx={{ maxWidth: '100%', overflowX: 'auto', border: '2px solid #ccc', borderRadius: '4px' }} ref={tableRefs.historical}>
@@ -1019,8 +1203,9 @@ const ApiDataTable = ({
             <TableBody>
               {sortedCategories
                 .slice(
-                  (type === 'school/count' && isEtapaSelected) || isMunicipioSelected ? page * rowsPerPage : 0,
-                  (type === 'school/count' && isEtapaSelected) || isMunicipioSelected ? page * rowsPerPage + rowsPerPage : undefined
+                  // Não fazer slice se for paginação do backend (municipality)
+                  (type === 'school/count' && isEtapaSelected) || (isMunicipioSelected && !municipalityPagination) ? page * rowsPerPage : 0,
+                  (type === 'school/count' && isEtapaSelected) || (isMunicipioSelected && !municipalityPagination) ? page * rowsPerPage + rowsPerPage : undefined
                 )
                 .map(categoryId => {
                   const yearMap = categoryYearMap.get(categoryId);
@@ -1048,12 +1233,20 @@ const ApiDataTable = ({
         {((type === 'school/count' && isEtapaSelected) || isMunicipioSelected) && (
           <TablePagination
             component="div"
-            count={sortedCategories.length}
-            page={page}
+            count={isMunicipioSelected && municipalityPagination
+              ? municipalityPagination.total
+              : sortedCategories.length}
+            page={isMunicipioSelected && municipalityPagination
+              ? municipalityPagination.page - 1  // Converter de base 1 para base 0
+              : page}
             onPageChange={handleChangePage}
-            rowsPerPage={rowsPerPage}
+            rowsPerPage={isMunicipioSelected && municipalityPagination
+              ? municipalityPagination.limit
+              : rowsPerPage}
             onRowsPerPageChange={handleChangeRowsPerPage}
-            rowsPerPageOptions={[5, 10, 25, 50]}
+            rowsPerPageOptions={isMunicipioSelected && municipalityPagination
+              ? [10, 20, 50, 100]
+              : [5, 10, 25, 50]}
             labelRowsPerPage="Linhas por página:"
             labelDisplayedRows={({ from, to, count }) =>
               `${from}-${to} de ${count !== -1 ? count : `mais de ${to}`}`
@@ -1090,6 +1283,7 @@ const ApiDataTable = ({
             tableTitle={cityName ? `Dados Históricos - ${cityName}` : (title || "Dados Históricos")}
             tableRef={tableRef}
             chartRef={chartRef}
+            fetchAllData={getFetchAllDataForHistorical()}
           />
         </div>
       </div>
@@ -1151,7 +1345,14 @@ const ApiDataTable = ({
     if (!config) return null;
 
     const dataSource = tempData || data;
-    const crossedData = dataSource?.result?.[config.dataKey] || [];
+    // Quando há paginação, os dados vêm diretamente em result, não em result[dataKey]
+    // Verificar primeiro se há dados em result[dataKey], caso contrário usar result diretamente
+    let crossedData = dataSource?.result?.[config.dataKey];
+    if (!crossedData || (Array.isArray(crossedData) && crossedData.length === 0)) {
+      // Se não há dados em result[dataKey], tentar usar result diretamente
+      // Isso acontece quando há paginação e os dados vêm em result
+      crossedData = Array.isArray(dataSource?.result) ? dataSource.result : [];
+    }
 
     // Processamento de dados cruzados
     const { uniqueRows, uniqueColumns, cellValues, rowTotals, columnTotals } = processCrossTableData(
@@ -1188,6 +1389,59 @@ const ApiDataTable = ({
       headerDisplayNames[col] = col;
     });
 
+    // Função para buscar todos os dados quando houver paginação com município em tabela cruzada
+    const getFetchAllDataForCrossTable = () => {
+      if (isMunicipioSelected && useBackendPagination && fetchAllDataConfig) {
+        return async () => {
+          console.log('getFetchAllDataForCrossTable (basic): chamando fetchAllDataForExport');
+          const allDataResult = await fetchAllDataForExport();
+          if (!allDataResult) return exportData;
+
+          // Processar dados cruzados de todos os dados
+          let allCrossedData = [];
+          if (Array.isArray(allDataResult[config.dataKey])) {
+            allCrossedData = allDataResult[config.dataKey];
+          } else if (allDataResult.result && !Array.isArray(allDataResult.result) && Array.isArray(allDataResult.result[config.dataKey])) {
+            allCrossedData = allDataResult.result[config.dataKey];
+          } else if (Array.isArray(allDataResult.result)) {
+            allCrossedData = allDataResult.result;
+          }
+
+          if (!allCrossedData || allCrossedData.length === 0) return exportData;
+
+          const { uniqueRows: allUniqueRows, uniqueColumns: allUniqueColumns, cellValues: allCellValues, rowTotals: allRowTotals, columnTotals: allColumnTotals } = processCrossTableData(
+            allCrossedData,
+            config.rowIdField,
+            config.columnIdField,
+            config.rowField,
+            config.columnField
+          );
+
+          // Preparar dados para exportação
+          const allExportData = [];
+          Array.from(allUniqueRows.entries()).forEach(([rowId, rowName]) => {
+            const rowData = { [config.rowHeader]: rowName };
+            Array.from(allUniqueColumns.entries()).forEach(([colId, colName]) => {
+              rowData[colName] = allCellValues.get(`${rowId}-${colId}`) || 0;
+            });
+            rowData.Total = allRowTotals.get(rowId) || 0;
+            allExportData.push(rowData);
+          });
+
+          // Adicionar linha de total
+          const totalRow = { [config.rowHeader]: 'Total' };
+          Array.from(allUniqueColumns.entries()).forEach(([colId, colName]) => {
+            totalRow[colName] = allColumnTotals.get(colId) || 0;
+          });
+          totalRow.Total = Array.from(allColumnTotals.values()).reduce((sum, val) => sum + val, 0);
+          allExportData.push(totalRow);
+
+          return allExportData;
+        };
+      }
+      return null;
+    };
+
     return (
       <div>
         <TableContainer sx={{ maxWidth: '100%', overflowX: 'auto', border: '2px solid #ccc', borderRadius: '4px' }} ref={tableRefs.cross}>
@@ -1203,8 +1457,11 @@ const ApiDataTable = ({
             </StyledTableHead>
             <TableBody>
               {Array.from(uniqueRows.entries())
-                .slice(type === 'school/count' && isEtapaSelected ? page * rowsPerPage : 0,
-                      type === 'school/count' && isEtapaSelected ? page * rowsPerPage + rowsPerPage : undefined)
+                .slice(
+                  // Não fazer slice se for paginação do backend (municipality)
+                  (type === 'school/count' && isEtapaSelected) || (isMunicipioSelected && !municipalityPagination) ? page * rowsPerPage : 0,
+                  (type === 'school/count' && isEtapaSelected) || (isMunicipioSelected && !municipalityPagination) ? page * rowsPerPage + rowsPerPage : undefined
+                )
                 .map(([rowId, rowName]) => (
                   <TableRow key={rowId}>
                     <CenteredTableCell>{rowName}</CenteredTableCell>
@@ -1233,6 +1490,30 @@ const ApiDataTable = ({
           </Table>
         </TableContainer>
 
+        {((type === 'school/count' && isEtapaSelected) || isMunicipioSelected) && (
+          <TablePagination
+            component="div"
+            count={isMunicipioSelected && municipalityPagination
+              ? municipalityPagination.total
+              : uniqueRows.size}
+            page={isMunicipioSelected && municipalityPagination
+              ? municipalityPagination.page - 1  // Converter de base 1 para base 0
+              : page}
+            onPageChange={handleChangePage}
+            rowsPerPage={isMunicipioSelected && municipalityPagination
+              ? municipalityPagination.limit
+              : rowsPerPage}
+            onRowsPerPageChange={handleChangeRowsPerPage}
+            rowsPerPageOptions={isMunicipioSelected && municipalityPagination
+              ? [10, 20, 50, 100]
+              : [5, 10, 25, 50]}
+            labelRowsPerPage="Linhas por página:"
+            labelDisplayedRows={({ from, to, count }) =>
+              `${from}-${to} de ${count !== -1 ? count : `mais de ${to}`}`
+            }
+          />
+        )}
+
         <SourceFooter />
 
         {/* Adicionar gráficos para tabelas cruzadas */}
@@ -1246,22 +1527,8 @@ const ApiDataTable = ({
           tableTitle={title || "Dados Cruzados"}
           tableRef={tableRefs.cross}
           chartRef={crossChartRef}
+          fetchAllData={getFetchAllDataForCrossTable()}
         />
-        {type === 'school/count' && isEtapaSelected && (
-          <TablePagination
-            component="div"
-            count={uniqueRows.size}
-            page={page}
-            onPageChange={handleChangePage}
-            rowsPerPage={rowsPerPage}
-            onRowsPerPageChange={handleChangeRowsPerPage}
-            rowsPerPageOptions={[5, 10, 25, 50]}
-            labelRowsPerPage="Linhas por página:"
-            labelDisplayedRows={({ from, to, count }) =>
-              `${from}-${to} de ${count !== -1 ? count : `mais de ${to}`}`
-            }
-          />
-        )}
       </div>
     );
   };
@@ -1408,6 +1675,54 @@ const ApiDataTable = ({
       headerDisplayNames[header] = HEADER_DISPLAY_NAMES[header] || header;
     });
 
+    // Função para buscar todos os dados quando houver paginação com município
+    const getFetchAllDataFunction = () => {
+      console.log('getFetchAllDataFunction (basic) chamada', { filterType, useBackendPagination, fetchAllDataConfig: !!fetchAllDataConfig });
+      if (filterType === 'municipio' && useBackendPagination && fetchAllDataConfig) {
+        console.log('getFetchAllDataFunction (basic): retornando função async');
+        return async () => {
+          console.log('Função async de fetchAllData (basic) chamada');
+          const allDataResult = await fetchAllDataForExport();
+          console.log('allDataResult (basic) recebido', allDataResult);
+          if (!allDataResult) return exportData;
+
+          // Extrair array de dados
+          let allData = [];
+          if (Array.isArray(allDataResult.result)) {
+            allData = allDataResult.result;
+          } else if (Array.isArray(allDataResult)) {
+            allData = allDataResult;
+          } else {
+            return exportData;
+          }
+
+          // Processar dados para o formato de exportação
+          const processedData = allData.map(item => {
+            const row = {};
+            headers.forEach(header => {
+              row[header] = item[header];
+            });
+            return row;
+          });
+
+          // Adicionar linha de total
+          const totalValueAll = allData.reduce((sum, item) => sum + Number(item.total || 0), 0);
+          const totalRowAll = {};
+          headers.forEach(header => {
+            if (header === 'total') {
+              totalRowAll[header] = totalValueAll;
+            } else {
+              totalRowAll[header] = 'Total';
+            }
+          });
+          processedData.push(totalRowAll);
+
+          return processedData;
+        };
+      }
+      return null;
+    };
+
     return (
       <div>
         <TableContainer sx={{ maxWidth: '100%', overflowX: 'auto', border: '2px solid #ccc', borderRadius: '4px' }} ref={tableRefs[filterType]}>
@@ -1424,8 +1739,9 @@ const ApiDataTable = ({
             <TableBody>
               {tableData
                 .slice(
-                  (type === 'school/count' && isEtapaSelected) || filterType === 'municipio' ? page * rowsPerPage : 0,
-                  (type === 'school/count' && isEtapaSelected) || filterType === 'municipio' ? page * rowsPerPage + rowsPerPage : undefined
+                  // Não fazer slice se for paginação do backend (municipality)
+                  (type === 'school/count' && isEtapaSelected) || (filterType === 'municipio' && !municipalityPagination) ? page * rowsPerPage : 0,
+                  (type === 'school/count' && isEtapaSelected) || (filterType === 'municipio' && !municipalityPagination) ? page * rowsPerPage + rowsPerPage : undefined
                 )
                 .map((item, index) => (
                   <TableRow key={index}>
@@ -1461,12 +1777,20 @@ const ApiDataTable = ({
         {usePagination && (
           <TablePagination
             component="div"
-            count={tableData.length}
-            page={page}
+            count={filterType === 'municipio' && municipalityPagination
+              ? municipalityPagination.total
+              : tableData.length}
+            page={filterType === 'municipio' && municipalityPagination
+              ? municipalityPagination.page - 1  // Converter de base 1 para base 0
+              : page}
             onPageChange={handleChangePage}
-            rowsPerPage={rowsPerPage}
+            rowsPerPage={filterType === 'municipio' && municipalityPagination
+              ? municipalityPagination.limit
+              : rowsPerPage}
             onRowsPerPageChange={handleChangeRowsPerPage}
-            rowsPerPageOptions={[5, 10, 25, 50]}
+            rowsPerPageOptions={filterType === 'municipio' && municipalityPagination
+              ? [10, 20, 50, 100]
+              : [5, 10, 25, 50]}
             labelRowsPerPage="Linhas por página:"
             labelDisplayedRows={({ from, to, count }) =>
               `${from}-${to} de ${count !== -1 ? count : `mais de ${to}`}`
@@ -1503,6 +1827,7 @@ const ApiDataTable = ({
           tableTitle={title || getTableTitle(filterType)}
           tableRef={tableRefs[filterType]}
           chartRef={simpleChartRef}
+          fetchAllData={getFetchAllDataFunction()}
         />
       </div>
     );
