@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { processResults as processApiResults } from "../../../../services/dataProcessors";
 
 function ApiHigherContainer({
@@ -18,10 +18,36 @@ function ApiHigherContainer({
   onError,
   onLoading,
   triggerFetch,
-  selectedFilters
+  selectedFilters,
+  paginationPage = 1,
+  paginationLimit = 20
 }) {
+  const prevPaginationRef = useRef({ page: paginationPage, limit: paginationLimit });
+  const isInitialMount = useRef(true);
+
   useEffect(() => {
-    if (!triggerFetch) return;
+    // Verificar se paginação mudou
+    const paginationChanged =
+      prevPaginationRef.current.page !== paginationPage ||
+      prevPaginationRef.current.limit !== paginationLimit;
+
+    // Atualizar referência
+    prevPaginationRef.current = { page: paginationPage, limit: paginationLimit };
+
+    // Se é o mount inicial e não há triggerFetch, não executar ainda
+    if (isInitialMount.current && !triggerFetch) {
+      isInitialMount.current = false;
+      return;
+    }
+
+    // Executar se triggerFetch for true OU se paginação mudou
+    if (!triggerFetch && !paginationChanged) {
+      return;
+    }
+
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+    }
 
     const isModalidadeSelected = Array.isArray(selectedFilters) && selectedFilters.some((filter) => filter.value === "modalidade");
     const isRegimeSelected = Array.isArray(selectedFilters) && selectedFilters.some((filter) => filter.value === "regimeDeTrabalho");
@@ -78,13 +104,18 @@ function ApiHigherContainer({
       const endpoint = forceEndpoint || type;
       const dims = selectedDims.length > 0 ? `dims=${selectedDims.join(",")}` : "";
 
+      // Adicionar paginação quando municipality estiver selecionado e não houver city específica
+      const paginationParams = isMunicipioSelected && !city
+        ? `&page=${paginationPage}&limit=${paginationLimit}`
+        : "";
+
       // Usar apenas backend local
       let finalEndpoint = endpoint;
       if (isHistorical) {
         finalEndpoint = `${endpoint}/timeseries`;
       }
 
-      return `${import.meta.env.VITE_API_PUBLIC_URL}/higherEducation/${finalEndpoint}?${dims}&filter=${encodeURIComponent(filter)}`;
+      return `${import.meta.env.VITE_API_PUBLIC_URL}/higherEducation/${finalEndpoint}?${dims}&filter=${encodeURIComponent(filter)}${paginationParams}`;
     };
 
     const fetchCityData = async (cityId, cityName) => {
@@ -251,7 +282,8 @@ function ApiHigherContainer({
     };
 
     fetchData();
-  }, [triggerFetch, type, year, isHistorical, startYear, endYear, state, city, territory, faixaPopulacional, aglomerado, gerencia, citiesList, onDataFetched, onError, onLoading, selectedFilters]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [triggerFetch, type, year, isHistorical, startYear, endYear, state, city, territory, faixaPopulacional, aglomerado, gerencia, citiesList, selectedFilters, paginationPage, paginationLimit]);
 
   return null;
 }

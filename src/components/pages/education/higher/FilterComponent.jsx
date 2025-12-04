@@ -35,6 +35,11 @@ function FilterComponent() {
   const [isMunicipioSelected, setIsMunicipioSelected] = useState(false);
   const [showConsolidated, setShowConsolidated] = useState(false);
 
+  // Estados para paginação do backend (quando dimensão municipality estiver selecionada)
+  const [paginationPage, setPaginationPage] = useState(1);
+  const [paginationLimit, setPaginationLimit] = useState(20);
+  const [fetchTrigger, setFetchTrigger] = useState(0);
+
   // Estado para controlar se os filtros estão expandidos
   const [filtersExpanded, setFiltersExpanded] = useState(false);
 
@@ -86,6 +91,10 @@ function FilterComponent() {
     setError(null);
     setData(null);
     setTitle('');
+
+    // Resetar paginação quando filtros mudarem
+    setPaginationPage(1);
+    setPaginationLimit(20);
 
     // Determina se é série histórica baseado no yearRange
     const isHistoricalRange = yearRange[0] !== yearRange[1];
@@ -685,14 +694,16 @@ function FilterComponent() {
         onDataFetched={setData}
         onError={setError}
         onLoading={setIsLoading}
-        triggerFetch={isLoading}
+        triggerFetch={isLoading || fetchTrigger}
         selectedFilters={selectedFilters}
+        paginationPage={paginationPage}
+        paginationLimit={paginationLimit}
       />
       {!isLoading && !error && data && title ? (
         <DataTable
           data={data.finalResult ? data.finalResult : data}
           municipioData={data.allResults && data.allResults.length > 0 ? data.allResults : []}
-          isHistorical={yearRange[0] !== yearRange[1]}
+          isHistorical={displayHistorical}
           type={type}
           isModalidadeSelected={isModalidadeSelected}
           isRegimeSelected={isRegimeSelected}
@@ -704,6 +715,21 @@ function FilterComponent() {
           isMunicipioSelected={isMunicipioSelected}
           title={title}
           showConsolidated={showConsolidated}
+          pagination={data.finalResult?.pagination || data.pagination}
+          onPaginationChange={(newPage, newLimit) => {
+            setPaginationPage(newPage);
+            setPaginationLimit(newLimit);
+            setIsLoading(true); // Mostrar loading ao mudar paginação
+          }}
+          fetchAllDataConfig={isMunicipioSelected ? {
+            type,
+            year: yearRange[0],
+            isHistorical: displayHistorical,
+            startYear: yearRange[0],
+            endYear: yearRange[1],
+            city,
+            selectedFilters
+          } : null}
         />
       ) : null}
     </div>
