@@ -1,23 +1,23 @@
-import React from 'react';
-import { Button } from '@mui/material';
-import TableTypeFilter from '../../../../helpers/TableTypeFilter.jsx';
-import YearRangeFilter from '../../../../helpers/YearRangeFilter.jsx';
-import { stateTableNames } from '../../../../../services/csvService.jsx';
+import React from "react";
+import { Button } from "@mui/material";
+import TableTypeFilter from "../../../../helpers/TableTypeFilter.jsx";
+import YearRangeFilter from "../../../../helpers/YearRangeFilter.jsx";
+import { stateTableNames } from "../../../../../services/csvService.jsx";
 
-const StateFilters = ({ 
-  selectedTable, 
-  onTableChange, 
-  startYear, 
-  endYear, 
-  onStartYearChange, 
+const StateFilters = ({
+  selectedTable,
+  onTableChange,
+  startYear,
+  endYear,
+  onStartYearChange,
   onEndYearChange,
   onFilter,
-  loading = false
+  loading = false,
 }) => {
   // Opções das tabelas do estado
   const tableOptions = Object.entries(stateTableNames).map(([key, label]) => ({
     value: key,
-    label: label
+    label: label,
   }));
 
   return (
