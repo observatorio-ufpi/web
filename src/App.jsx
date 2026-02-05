@@ -9,18 +9,20 @@ import { ThemeProvider } from '@mui/material/styles';
 import { CssBaseline } from '@mui/material';
 import Home from "./components/navigation/Home.jsx";
 import QuemSomos from "./components/navigation/QuemSomos.jsx";
-import RevenueTableContainer from "./components/pages/education/financial/municipality/tables/RevenueTableContainer.jsx";
-import StateRevenueTableContainer from "./components/pages/education/financial/state/StateRevenueTableContainer.jsx";
+import MunicipalFinancialPage from "./components/pages/education/financial/MunicipalFinancialPage.jsx";
+import StateFinancialPage from "./components/pages/education/financial/StateFinancialPage.jsx";
+import MunicipalIndicatorsPage from "./components/pages/education/financial/MunicipalIndicatorsPage.jsx";
+import StateIndicatorsPage from "./components/pages/education/financial/StateIndicatorsPage.jsx";
 import FinancialDataSelection from "./components/navigation/FinancialDataSelection.jsx";
 import EducationSelection from "./components/navigation/EducationSelection.jsx";
 import Navbar from "./components/common/Navbar.jsx";
 import Footer from "./components/common/Footer.jsx";
-import ParentComponent from "./components/pages/education/basic/ParentComponent.jsx";
-import CensoEscolarComponent from "./components/pages/education/basic/CensoEscolarComponent.jsx";
-import FilterComponent from "./components/pages/education/higher/FilterComponent.jsx";
-import FiltrosRateComponent from "./components/pages/education/rate/FiltrosRateComponent.jsx";
-import ChartContainer from "./components/pages/education/financial/municipality/indicators/ChartContainer.jsx";
-import StateIndicatorsContainer from "./components/pages/education/financial/state/indicators/StateIndicatorsContainer.jsx";
+import BasicEducationPage from "./components/pages/education/basic/BasicEducationPage.jsx";
+import CondicoesOfertaPage from "./components/pages/education/basic/CondicoesOfertaPage.jsx";
+import HigherEducationPage from "./components/pages/education/higher/HigherEducationPage.jsx";
+import RateIndicatorsPage from "./components/pages/education/rate/RateIndicatorsPage.jsx";
+import EducationLayout from "./components/layouts/EducationLayout.jsx";
+import FinancialLayout from "./components/layouts/FinancialLayout.jsx";
 import AppLayout from "./components/layouts/AppLayout.jsx";
 import ScrollToTop from "./components/common/ScrollToTop.jsx";
 import theme from "./theme/muiTheme.jsx";
@@ -78,16 +80,24 @@ function App() {
           <Route path="/dados-financeiros" element={<AppWithLayout />} />
           <Route path="/dados-educacionais" element={<AppWithLayout />} />
 
-          {/* Layout da Aplicação (com Sidebar) - Rotas aninhadas */}
+          {/* Layout da Educação (com Sidebar de Categorias) - Rotas aninhadas */}
+          <Route path="/" element={<EducationLayout />}>
+            <Route path="dados-educacionais/basica" element={<BasicEducationPage />} />
+            <Route path="dados-educacionais/condicoes-de-oferta" element={<CondicoesOfertaPage />} />
+            <Route path="dados-educacionais/superior" element={<HigherEducationPage />} />
+            <Route path="dados-educacionais/taxas" element={<RateIndicatorsPage />} />
+          </Route>
+
+          {/* Layout da Financeiro (com Sidebar de Categorias) - Rotas aninhadas */}
+          <Route path="/" element={<FinancialLayout />}>
+            <Route path="municipios" element={<MunicipalFinancialPage />} />
+            <Route path="estado" element={<StateFinancialPage />} />
+            <Route path="indicadores" element={<MunicipalIndicatorsPage />} />
+            <Route path="indicadores-estaduais" element={<StateIndicatorsPage />} />
+          </Route>
+
+          {/* Layout antigo mantido para compatibilidade */}
           <Route path="/" element={<AppLayout />}>
-            <Route path="municipios" element={<RevenueTableContainer />} />
-            <Route path="estado" element={<StateRevenueTableContainer />} />
-            <Route path="indicadores" element={<ChartContainer />} />
-            <Route path="indicadores-estaduais" element={<StateIndicatorsContainer />} />
-            <Route path="dados-educacionais/basica" element={<ParentComponent />} />
-            <Route path="dados-educacionais/condicoes-de-oferta" element={<CensoEscolarComponent />} />
-            <Route path="dados-educacionais/superior" element={<FilterComponent />} />
-            <Route path="dados-educacionais/taxas" element={<FiltrosRateComponent />} />
           </Route>
         </Routes>
       </Router>

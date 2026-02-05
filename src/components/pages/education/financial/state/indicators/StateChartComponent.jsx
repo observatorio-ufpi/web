@@ -25,7 +25,7 @@ const StateChartComponent = ({
   data,
   enableMonetaryCorrection = false,
   chartType = 'bar', // 'bar' ou 'line'
-  yAxisLabel = 'Valor (R$)'
+  yAxisLabel = 'Valor'
 }) => {
   const theme = useTheme();
   const [chartData, setChartData] = useState({

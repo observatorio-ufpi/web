@@ -74,7 +74,7 @@ const Navbar = () => {
             <div className="hidden lg:block">
               <Link 
                 to="/dados-educacionais/basica"
-                className="bg-green-400 hover:bg-green-700 text-black px-6 py-3 rounded-lg font-semibold transition-all duration-300 hover:-translate-y-1 flex items-center gap-2"
+                className="bg-orange-400 hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 hover:-translate-y-1 flex items-center gap-2"
               >
                 acessar painéis
                 <span>→</span>
@@ -140,7 +140,7 @@ const Navbar = () => {
                 </Link>
                 <Link 
                   to="/dados-educacionais/basica"
-                  className="mt-4 bg-green-400 hover:bg-green-700 text-black px-4 py-2 rounded-lg font-semibold transition-all duration-300 text-center"
+                  className="mt-4 bg-orange-400 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-semibold transition-all duration-300 text-center"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   acessar painéis →

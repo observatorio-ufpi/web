@@ -2,7 +2,7 @@ import { Button, Typography, Box } from '@mui/material';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useTheme } from '@mui/material/styles';
 import { Select } from '../../../ui';
-import YearRangeSlider from '../../../ui/YearRangeSlider';
+import YearRangeFilter from '../../../helpers/YearRangeFilter';
 import '../../../../style/RevenueTableContainer.css';
 import '../../../../style/TableFilters.css';
 import ApiRateContainer from './ApiRateComponent.jsx';
@@ -10,6 +10,7 @@ import TableRateComponent from './TableRateComponent.jsx';
 import { Loading } from "../../../ui";
 
 function FiltrosRateComponent() {
+  const theme = useTheme();
   const yearLimits = useMemo(() => ({
     pop_out_school: { min: 2019, max: 2023 },
     adjusted_liquid_frequency: { min: 2019, max: 2023 },
@@ -36,9 +37,6 @@ function FiltrosRateComponent() {
   const [filteredYear, setFilteredYear] = useState(null);
   const [startYear, setStartYear] = useState(yearLimits.pop_out_school.min);
   const [endYear, setEndYear] = useState(yearLimits.pop_out_school.max);
-  
-  // Estado para o range slider
-  const [yearRange, setYearRange] = useState([2019, 2023]);
 
   // Função para obter os limites de anos
   const getYearLimits = useMemo(() => {
@@ -80,17 +78,14 @@ function FiltrosRateComponent() {
       setYear(2023); // Ano mais recente disponível
       setStartYear(2019);
       setEndYear(2023);
-      setYearRange([2019, 2023]);
     } else if (type === 'instruction_level') {
       setYear(2023); // Ano mais recente disponível
       setStartYear(2016);
       setEndYear(2023);
-      setYearRange([2016, 2023]);
     } else {
       setYear(getYearLimits.max);
       setStartYear(getYearLimits.min);
       setEndYear(getYearLimits.max);
-      setYearRange([getYearLimits.min, getYearLimits.max]);
     }
   }, [getYearLimits, type]);
 
@@ -113,29 +108,60 @@ function FiltrosRateComponent() {
     // Para os outros novos tipos, não há filtros obrigatórios
   }, [type, selectedFilters]);
 
-  const handleFilterClick = () => {
-    setIsLoading(true);
-    setError(null);
-    setData(null);
-    // Limpar o título antes de definir um novo
-    setTitle('');
+  // Listener para o evento applyFilters do sidebar
+  useEffect(() => {
+    const handleApplyFilters = (event) => {
+      console.log('applyFilters event received in FiltrosRateComponent:', event.detail);
+      const filterData = event.detail;
+      
+      console.log('Valores do evento:');
+      console.log('  filterData.startYear:', filterData.startYear);
+      console.log('  filterData.endYear:', filterData.endYear);
+      console.log('  filterData.type:', filterData.type);
+      
+      // Atualizar estado local com os valores do evento
+      if (filterData.type) {
+        setType(filterData.type);
+      }
+      if (filterData.selectedFilters) {
+        setSelectedFilters(filterData.selectedFilters);
+      }
+      
+      // Chamar com os valores do evento
+      if (filterData.startYear !== undefined && filterData.endYear !== undefined) {
+        applyFiltersWithValues(filterData.startYear, filterData.endYear, filterData.type || type);
+      }
+    };
 
-    // Determina se é série histórica baseado no yearRange
-    const isHistoricalRange = yearRange[0] !== yearRange[1];
-    const yearDisplay = isHistoricalRange ? `${yearRange[0]}-${yearRange[1]}` : yearRange[0];
-    
-    setIsHistorical(isHistoricalRange);
-    setDisplayHistorical(isHistoricalRange);
-    setFilteredType(type);
-    setFilteredYear(yearRange[0]);
+    window.addEventListener('applyFilters', handleApplyFilters);
+    return () => window.removeEventListener('applyFilters', handleApplyFilters);
+  }, [type]);
 
-    // Para taxas, sempre usar "Piauí" como localização
+  // Listener para o evento clearFilters do sidebar
+  useEffect(() => {
+    const handleClearFiltersEvent = (event) => {
+      console.log('clearFilters event received in FiltrosRateComponent');
+      handleClearFilters();
+    };
+
+    window.addEventListener('clearFilters', handleClearFiltersEvent);
+    return () => window.removeEventListener('clearFilters', handleClearFiltersEvent);
+  }, []);
+
+  const titleMapping = {
+    pop_out_school: "Número de alunos fora da escola",
+    adjusted_liquid_frequency: "Frequência líquida ajustada",
+    iliteracy_rate: "Taxa de analfabetismo",
+    superior_education_conclusion_tax: "Taxa de conclusão do ensino superior",
+    basic_education_conclusion: "Taxa de conclusão do ensino básico",
+    instruction_level: "Nível de instrução"
+  };
+
+  const buildTitle = (typeValue, startYearValue, endYearValue) => {
+    const yearDisplay = startYearValue !== endYearValue ? `${startYearValue}-${endYearValue}` : startYearValue;
     const locationName = "Piauí";
-
-    // Adicionar informações sobre os filtros selecionados
     let filterInfo = [];
 
-    // Adicionar filtros adicionais selecionados
     if (selectedFilters.length > 0) {
       const filterNames = selectedFilters.map(filter => {
         switch(filter.value) {
@@ -149,20 +175,43 @@ function FiltrosRateComponent() {
       filterInfo.push(`Filtros: ${filterNames.join(', ')}`);
     }
 
-    // Construir o título completo
-    let fullTitle = `${titleMapping[type]} - ${locationName} (${yearDisplay})`;
-
-    // Adicionar informações de filtro se houver
+    let fullTitle = `${titleMapping[typeValue]} - ${locationName} (${yearDisplay})`;
     if (filterInfo.length > 0) {
       fullTitle += ` | ${filterInfo.join(' | ')}`;
     }
+    return fullTitle;
+  };
 
-    setTitle(type ? fullTitle : '');
-
+  const applyFiltersWithValues = (startYearValue, endYearValue, typeValue) => {
+    const isHistoricalRange = startYearValue !== endYearValue;
+    
+    console.log('FiltrosRateComponent - applyFiltersWithValues:');
+    console.log('  startYear:', startYearValue);
+    console.log('  endYear:', endYearValue);
+    console.log('  isHistorical:', isHistoricalRange);
+    
+    setIsLoading(true);
+    setError(null);
+    setData(null);
+    setStartYear(startYearValue);
+    setEndYear(endYearValue);
+    setYear(startYearValue);
+    setIsHistorical(isHistoricalRange);
+    setDisplayHistorical(isHistoricalRange);
+    setFilteredType(typeValue);
+    setFilteredYear(startYearValue);
+    
+    const newTitle = buildTitle(typeValue, startYearValue, endYearValue);
+    setTitle(newTitle);
+    
     setIsEtapaSelected(selectedFilters.some(filter => filter.value === 'etapa'));
     setIsLocalidadeSelected(selectedFilters.some(filter => filter.value === 'localidade'));
     setIsFaixaEtariaSelected(selectedFilters.some(filter => filter.value === 'faixaEtaria'));
     setIsInstructionLevelSelected(selectedFilters.some(filter => filter.value === 'instruction_level'));
+  };
+
+  const handleFilterClick = () => {
+    applyFiltersWithValues(startYear, endYear, type);
   };
 
   const handleClearFilters = () => {
@@ -175,7 +224,6 @@ function FiltrosRateComponent() {
     setEndYear(limits.max);
     setYear(limits.max);
     setFilteredYear(null);
-    setYearRange([limits.min, limits.max]);
     setData(null);
     setError(null);
     setTitle('');
@@ -184,15 +232,6 @@ function FiltrosRateComponent() {
     setIsLocalidadeSelected(false);
     setIsFaixaEtariaSelected(false);
     setIsInstructionLevelSelected(false);
-  };
-
-  const titleMapping = {
-    pop_out_school: "Número de alunos fora da escola",
-    adjusted_liquid_frequency: "Frequência líquida ajustada",
-    iliteracy_rate: "Taxa de analfabetismo",
-    superior_education_conclusion_tax: "Taxa de conclusão do ensino superior",
-    basic_education_conclusion: "Taxa de conclusão do ensino básico",
-    instruction_level: "Nível de instrução"
   };
 
   const typeOptions = Object.entries(titleMapping).map(([key, label]) => ({
@@ -219,202 +258,84 @@ function FiltrosRateComponent() {
       ]
     : [];
 
-  const theme = useTheme();
-
   return (
     <div className="app-container">
       <div className="flex flex-col gap-4 p-0 m-0">
         
-          {/* Tipo + Filtros + Informações - Primeira linha */}
-          <div className="md:col-span-3">
-            <div className="flex flex-col lg:flex-row items-start gap-4">
-              <div className="w-full lg:flex-1">
-                <label htmlFor="typeSelect" className="block text-sm font-medium text-gray-700 mb-1">Tipo:</label>
-                <Select
-                  id="typeSelect"
-                  value={typeOptions.find(option => option.value === type)}
-                  onChange={(selectedOption) => {
-                    setType(selectedOption.value);
-                    setSelectedFilters([]);
-                  }}
-                  options={typeOptions}
-                  placeholder="Selecione o tipo"
-                  size="xs"
-                />
-              </div>
+          <hr className="divider" />
 
-              <div className="w-full lg:flex-1">
-                <label htmlFor="multiFilterSelect" className="block text-sm font-medium text-gray-700 mb-1">Filtros:</label>
-                <Select
-                  id="multiFilterSelect"
-                  value={selectedFilters}
-                  onChange={(newValue, actionMeta) => {
-                    if (type === 'instruction_level') {
-                      // Para instruction_level, garantir que instruction_level esteja sempre selecionado
-                      const instructionLevelFilter = { value: 'instruction_level', label: 'Nível de Instrução (Obrigatório)' };
-
-                      if (newValue.length === 0) {
-                        setSelectedFilters([instructionLevelFilter]);
-                      } else if (!newValue.some(filter => filter.value === 'instruction_level')) {
-                        setSelectedFilters([instructionLevelFilter, ...newValue.slice(-1)]);
-                      } else {
-                        setSelectedFilters(newValue.slice(-3)); // Máximo 3 filtros
-                      }
-                    } else if (type === 'iliteracy_rate' || type === 'superior_education_conclusion_tax' || type === 'basic_education_conclusion') {
-                      // Para os novos tipos, permitir até 2 filtros sem obrigatoriedade
-                      if (newValue.length <= 2) {
-                        setSelectedFilters(newValue);
-                      } else {
-                        setSelectedFilters(newValue.slice(-2));
-                      }
-                    } else {
-                      const isHistoricalRange = yearRange[0] !== yearRange[1];
-                      if (isHistoricalRange) {
-                        setSelectedFilters(newValue.slice(-1));
-                      } else if (newValue.length <= 2) {
-                        setSelectedFilters(newValue);
-                      } else {
-                        setSelectedFilters(newValue.slice(-2));
-                      }
-                    }
-                  }}
-                  options={filterOptions}
-                  isMulti
-                  placeholder={yearRange[0] !== yearRange[1] ? "Selecione 1 filtro" : "Selecione até 2 filtros"}
-                  size="xs"
-                />
-              </div>
-
-              <div className="w-full lg:flex-1">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Informações:</label>
-                <Box sx={{ 
-                  width: '100%',
-                  color: theme.palette.text.secondary,
-                  fontSize: '0.85em',
-                  padding: '10px',
-                  backgroundColor: '#f8f9fa',
-                  borderRadius: '8px',
-                  border: '1px solid #e9ecef',
-                  minHeight: '40px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  wordWrap: 'break-word',
-                  overflowWrap: 'break-word'
-                }}>
-                  {type === 'pop_out_school'
-                    ? <span>Para população fora da escola, os dados estão disponíveis apenas para consulta consolidada do estado do Piauí <span style={{ color: '#ff6b6b' }}>e é obrigatório selecionar faixa etaria para consulta</span>.</span>
-                    : type === 'adjusted_liquid_frequency'
-                    ? <span>Para frequência líquida ajustada, os dados estão disponíveis apenas para consulta consolidada do estado do Piauí <span style={{ color: '#ff6b6b' }}>e é obrigatório selecionar faixa etaria para consulta</span>.</span>
-                    : type === 'iliteracy_rate'
-                    ? <span>Para taxa de analfabetismo, os dados estão disponíveis apenas para consulta consolidada do estado do Piauí. Você pode selecionar faixa etária e/ou localidade como filtros opcionais.</span>
-                    : type === 'superior_education_conclusion_tax'
-                    ? <span>Para taxa de conclusão do ensino superior, os dados estão disponíveis apenas para consulta consolidada do estado do Piauí. Você pode selecionar faixa etária e/ou localidade como filtros opcionais.</span>
-                    : type === 'basic_education_conclusion'
-                    ? <span>Para taxa de conclusão do ensino básico, os dados estão disponíveis apenas para consulta consolidada do estado do Piauí. Você pode selecionar faixa etária e/ou localidade como filtros opcionais.</span>
-                    : type === 'instruction_level'
-                    ? <span>Para nível de instrução, os dados estão disponíveis apenas para consulta consolidada do estado do Piauí <span style={{ color: '#ff6b6b' }}>e é obrigatório selecionar nível de instrução para consulta</span>. Você pode combinar com localidade e/ou faixa etária.</span>
-                    : <span>Selecione um tipo para ver as informações específicas.</span>}
-                </Box>
-              </div>
+          {isLoading && (
+            <Loading />
+          )}
+          {error && (
+            <div className="error-message">
+              <p>{error}</p>
             </div>
-          </div>
+          )}
 
-          {/* Período - Todas as colunas, segunda linha */}
-          <div className="md:col-span-3">
-            <YearRangeSlider
-              minYear={getYearLimits.min}
-              maxYear={getYearLimits.max}
-              value={yearRange}
-              onChange={setYearRange}
-            />
-          </div>
+          {!isLoading && !error && !data && (
+            <Typography 
+              variant="body1" 
+              sx={{ 
+                textAlign: 'center',
+                fontSize: '18px',
+                fontWeight: 'bold',
+                margin: '20px auto',
+                maxWidth: '400px',
+                color: theme.palette.primary.main
+              }}
+            >
+              Selecione os filtros desejados na lateral e clique em "Filtrar" para montar uma consulta.
+            </Typography>
+          )}
 
-          {/* Botões - Ocupa todo o espaço da linha */}
-          <div className="md:col-span-3 flex flex-col justify-end">
-            <div className="flex flex-col sm:flex-row gap-3 justify-end items-end">
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={handleFilterClick}
-                className="w-full sm:w-auto"
-              >
-                Filtrar
-              </Button>
+          {!isLoading && !error && data && title ? (
+            <Box sx={{ padding: 2 }}>
+              <Typography variant="h6" sx={{ marginBottom: 2, textAlign: 'center' }}>
+                {title}
+              </Typography>
+            </Box>
+          ) : null}
 
-              <Button
-                style={{
-                  backgroundColor: '#f0f0f0',
-                  color: '#000',
-                }}
-                variant="contained"
-                onClick={handleClearFilters}
-                className="w-full sm:w-auto"
-              >
-                Limpar
-              </Button>
-            </div>
-          </div>
-        </div>
+          <ApiRateContainer
+            type={type}
+            year={year}
+            isHistorical={isHistorical}
+            startYear={startYear}
+            endYear={endYear}
+            onDataFetched={setData}
+            onError={setError}
+            onLoading={setIsLoading}
+            triggerFetch={isLoading}
+            selectedFilters={selectedFilters}
+          />
 
-      <hr className="divider" />
+          {!isLoading && !error && data && title ? (
+            <>
+              <TableRateComponent
+                data={data.finalResult ? data.finalResult : data}
+                isEtapaSelected={false}
+                isLocalidadeSelected={false}
+                isFaixaEtariaSelected={false}
+                isInstructionLevelSelected={false}
+                isHistorical={isHistorical}
+                type={type}
+                year={year}
+                title={title}
+              />
 
-      {isLoading && (
-        <Loading />
-      )}
-      {error && (
-        <div className="error-message">
-          <p>{error}</p>
-        </div>
-      )}
-
-      {!isLoading && !error && !data && (
-        <Typography 
-          variant="body1" 
-          sx={{ 
-            textAlign: 'center',
-            fontSize: '18px',
-            fontWeight: 'bold',
-            margin: '20px auto',
-            maxWidth: '400px',
-            color: theme.palette.primary.main
-          }}
-        >
-          Selecione os filtros desejados e clique em "Filtrar" para montar uma consulta.
-        </Typography>
-      )}
-
-      {!isLoading && !error && data && title ? (
-        <div>
-          <h2>{title}</h2>
-        </div>
-      ) : null}
-
-      <ApiRateContainer
-        type={filteredType}
-        year={yearRange[0]}
-        isHistorical={yearRange[0] !== yearRange[1]}
-        startYear={yearRange[0]}
-        endYear={yearRange[1]}
-        onDataFetched={setData}
-        onError={setError}
-        onLoading={setIsLoading}
-        triggerFetch={isLoading}
-        selectedFilters={selectedFilters}
-      />
-
-      {!isLoading && !error && data && title ? (
-        <TableRateComponent
-          data={data.finalResult ? data.finalResult : data}
-          isEtapaSelected={isEtapaSelected}
-          isLocalidadeSelected={isLocalidadeSelected}
-          isFaixaEtariaSelected={isFaixaEtariaSelected}
-          isInstructionLevelSelected={isInstructionLevelSelected}
-          isHistorical={yearRange[0] !== yearRange[1]}
-          type={filteredType}
-          year={yearRange[0]}
-          title={title}
-        />
-      ) : null}
+              {/* Ficha Técnica */}
+              <Box sx={{ marginTop: 6, padding: 3, backgroundColor: '#f5f5f5', borderRadius: '8px', border: '1px solid #e0e0e0' }}>
+                <Typography variant="h6" sx={{ marginBottom: 2, fontWeight: 'bold', color: '#333' }}>
+                  Ficha Técnica
+                </Typography>
+                <Typography variant="body2" sx={{ color: '#666', lineHeight: 1.6 }}>
+                  Informações sobre a metodologia, fonte de dados, periodicidade e outras informações técnicas estarão disponíveis aqui.
+                </Typography>
+              </Box>
+            </>
+          ) : null}
+      </div>
     </div>
   );
 }

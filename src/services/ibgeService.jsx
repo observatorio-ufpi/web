@@ -293,8 +293,6 @@ export const formatCurrency = (value) => {
   if (isNaN(value)) return 'N/A';
   
   return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
     minimumFractionDigits: 0,
     maximumFractionDigits: 0
   }).format(value);

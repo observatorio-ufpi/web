@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { stateTableNames } from '../../../../../services/csvService.jsx';
 import StateRevenueTable from './StateRevenueTable.jsx';
 import StateFilters from './StateFilters.jsx';
 import { useStateData } from '../../../../../hooks/useStateData.jsx';
 import { useTheme } from '@mui/material/styles';
-import { Typography } from '@mui/material';
+import { Typography, Box } from '@mui/material';
+import { Select } from '../../../../ui';
 import '../../../../../style/RevenueTableContainer.css';
 import { Loading } from "../../../../ui";
 
@@ -14,6 +15,7 @@ const StateRevenueTableContainer = () => {
   const [startYear, setStartYear] = useState(2007);
   const [endYear, setEndYear] = useState(2023);
   const [hasInitialLoad, setHasInitialLoad] = useState(false);
+  const [tableTitle, setTableTitle] = useState('');
 
   // Usar o hook personalizado para gerenciar os dados (sem autoLoad)
   const { csvData, loading, error, refetch } = useStateData(selectedTable, startYear, endYear, false);
@@ -36,24 +38,30 @@ const StateRevenueTableContainer = () => {
 
   const handleFilter = () => {
     setHasInitialLoad(true);
+    const yearDisplay = startYear === endYear ? startYear : `${startYear}-${endYear}`;
+    setTableTitle(`Dados Estaduais - Piauí (${yearDisplay})`);
     refetch();
   };
 
+  // Escutar eventos de filtro aplicados
+  useEffect(() => {
+    const handleApplyFilters = (event) => {
+      setStartYear(event.detail.anoInicial);
+      setEndYear(event.detail.anoFinal);
+      setHasInitialLoad(true);
+      const yearDisplay = event.detail.anoInicial === event.detail.anoFinal 
+        ? event.detail.anoInicial 
+        : `${event.detail.anoInicial}-${event.detail.anoFinal}`;
+      setTableTitle(`Dados Estaduais - Piauí (${yearDisplay})`);
+      refetch();
+    };
+
+    window.addEventListener('applyFinancialFilters', handleApplyFilters);
+    return () => window.removeEventListener('applyFinancialFilters', handleApplyFilters);
+  }, [refetch]);
+
   return (
     <div className='app-container'>
-      <div className="filters-section">
-        <StateFilters
-          selectedTable={selectedTable}
-          onTableChange={handleTableChange}
-          startYear={startYear}
-          endYear={endYear}
-          onStartYearChange={handleStartYearChange}
-          onEndYearChange={handleEndYearChange}
-          onFilter={handleFilter}
-          loading={loading}
-        />
-      </div>
-
       <hr className="divider" />
 
       {/* Área de dados - sempre visível */}
@@ -83,7 +91,7 @@ const StateRevenueTableContainer = () => {
               color: theme.palette.primary.main
             }}
           >
-            Selecione os filtros desejados e clique em "Filtrar" para montar uma consulta.
+            Selecione os filtros desejados na lateral e clique em "Filtrar" para montar uma consulta.
           </Typography>
         )}
 
@@ -99,15 +107,34 @@ const StateRevenueTableContainer = () => {
         )}
 
         {!loading && !error && csvData && (
-          <div className='table-container'>
-            <StateRevenueTable 
-              csvData={csvData} 
-              tableName={stateTableNames[selectedTable]}
-              startYear={startYear}
-              endYear={endYear}
-              enableMonetaryCorrection={true}
-            />
-          </div>
+          <>
+            {tableTitle && (
+              <Box sx={{ padding: 2 }}>
+                <Typography variant="h6" sx={{ marginBottom: 2, textAlign: 'center' }}>
+                  {tableTitle}
+                </Typography>
+              </Box>
+            )}
+            <div className='table-container'>
+              <StateRevenueTable 
+                csvData={csvData} 
+                tableName={stateTableNames[selectedTable]}
+                startYear={startYear}
+                endYear={endYear}
+                enableMonetaryCorrection={true}
+              />
+            </div>
+
+            {/* Ficha Técnica */}
+            <Box sx={{ marginTop: 6, padding: 3, backgroundColor: '#f5f5f5', borderRadius: '8px', border: '1px solid #e0e0e0' }}>
+              <Typography variant="h6" sx={{ marginBottom: 2, fontWeight: 'bold', color: '#333' }}>
+                Ficha Técnica
+              </Typography>
+              <Typography variant="body2" sx={{ color: '#666', lineHeight: 1.6 }}>
+                Informações sobre a metodologia, fonte de dados, periodicidade e outras informações técnicas estarão disponíveis aqui.
+              </Typography>
+            </Box>
+          </>
         )}
       </div>
     </div>

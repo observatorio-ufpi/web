@@ -1,6 +1,6 @@
-import { Button, Typography } from '@mui/material';
+import { Button, Typography, Box } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import React, { useMemo, useState, useRef } from 'react';
+import React, { useMemo, useState, useRef, useEffect } from 'react';
 import '../../../../style/RevenueTableContainer.css';
 import '../../../../style/TableFilters.css';
 import { municipios, Regioes, FaixaPopulacional } from '../../../../utils/citiesMapping';
@@ -112,6 +112,75 @@ function CensoEscolarComponent() {
     setGerencia('');
   };
 
+  // Listener para o evento applyFilters do sidebar
+  useEffect(() => {
+    const handleApplyFilters = (event) => {
+      console.log('applyFilters event received:', event.detail);
+      const filterData = event.detail;
+      
+      // Atualizar os estados primeiro
+      const newSelectedFilters = filterData.selectedFilters || selectedFilters;
+      const newCity = filterData.city || city;
+      const newTerritory = filterData.territory || territory;
+      const newFaixaPopulacional = filterData.faixaPopulacional || faixaPopulacional;
+      const newAglomerado = filterData.aglomerado || aglomerado;
+      const newGerencia = filterData.gerencia || gerencia;
+      const startYear = filterData.startYear || 2007;
+      const endYear = filterData.endYear || 2024;
+      
+      // Atualizar os estados
+      setSelectedFilters(newSelectedFilters);
+      setCity(newCity);
+      setTerritory(newTerritory);
+      setFaixaPopulacional(newFaixaPopulacional);
+      setAglomerado(newAglomerado);
+      setGerencia(newGerencia);
+
+      // Agora chamar handleFilterClick com os dados atualizados
+      setError(null);
+      setData(null);
+      setTitle('');
+
+      const isHistorical = startYear !== endYear;
+      const yearDisplay = isHistorical ? `${startYear}-${endYear}` : startYear;
+      let locationName = 'Piauí';
+      if (newCity && municipios[newCity]) {
+        locationName = municipios[newCity].nomeMunicipio;
+      }
+
+      let filterInfo = [];
+      if (newSelectedFilters.length > 0) {
+        const filterNames = newSelectedFilters.map((filter) => filter.label);
+        filterInfo.push(`Filtros: ${filterNames.join(', ')}`);
+      }
+
+      let fullTitle = `Condições de Oferta - Infraestrutura - ${locationName} (${yearDisplay})`;
+      if (filterInfo.length > 0) {
+        fullTitle += ` | ${filterInfo.join(' | ')}`;
+      }
+      setTitle(fullTitle);
+
+      if (apiRef.current) {
+        setIsLoading(true);
+        apiRef.current.fetchData({
+          year: startYear,
+          isHistorical,
+          startYear,
+          endYear,
+          city: newCity,
+          territory: newTerritory,
+          faixaPopulacional: newFaixaPopulacional,
+          aglomerado: newAglomerado,
+          gerencia: newGerencia,
+          citiesList,
+        });
+      }
+    };
+
+    window.addEventListener('applyFilters', handleApplyFilters);
+    return () => window.removeEventListener('applyFilters', handleApplyFilters);
+  }, []);
+
   // Função para normalizar os dados recebidos da API
   const normalizeData = (fetchedData) => {
     console.log('Raw fetchedData:', fetchedData);
@@ -200,6 +269,18 @@ function CensoEscolarComponent() {
         )}
 
         {!isLoading && !error && data && <CensoEscolarDataTable data={data} title={title} />}
+
+        {/* Ficha Técnica */}
+        {!isLoading && !error && data && (
+          <Box sx={{ marginTop: 6, padding: 3, backgroundColor: '#f5f5f5', borderRadius: '8px', border: '1px solid #e0e0e0' }}>
+            <Typography variant="h6" sx={{ marginBottom: 2, fontWeight: 'bold', color: '#333' }}>
+              Ficha Técnica
+            </Typography>
+            <Typography variant="body2" sx={{ color: '#666', lineHeight: 1.6 }}>
+              Informações sobre a metodologia, fonte de dados, periodicidade e outras informações técnicas estarão disponíveis aqui.
+            </Typography>
+          </Box>
+        )}
 
         <ApiContainer
           ref={apiRef}

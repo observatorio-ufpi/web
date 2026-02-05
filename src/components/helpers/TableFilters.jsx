@@ -2,7 +2,7 @@ import { Button, Collapse, Box, Typography } from '@mui/material';
 import { ExpandMore, ExpandLess } from '@mui/icons-material';
 import React, { useEffect, useState, useMemo } from 'react';
 import { Select } from '../ui';
-import YearRangeSlider from '../ui/YearRangeSlider';
+import YearRangeFilter from './YearRangeFilter';
 import { FaixaPopulacional, municipios, Regioes } from '../../utils/municipios.mapping';
 
 const findMunicipioCodigo = (nomeMunicipio) => {
@@ -34,9 +34,6 @@ const FilterComponent = ({
     anoInicial: 2007, // Ano inicial padrão
     anoFinal: 2024, // Ano final padrão
   });
-
-  // Estado para o range slider
-  const [yearRange, setYearRange] = useState([2007, 2024]);
 
   // Converter os valores recebidos para o formato do react-select
   const [selectedMunicipioState, setSelectedMunicipio] = useState(
@@ -160,7 +157,6 @@ const FilterComponent = ({
     setFaixaPopulacionalMunicipio(faixaPopulacionalMunicipio ? { value: faixaPopulacionalMunicipio, label: FaixaPopulacional[faixaPopulacionalMunicipio] } : null);
     setAglomeradoMunicipio(aglomeradoMunicipio && aglomeradoMunicipio !== 'undefined' ? { value: aglomeradoMunicipio, label: `AG ${aglomeradoMunicipio}` } : null);
     setGerenciaRegionalMunicipio(gerenciaRegionalMunicipio && gerenciaRegionalMunicipio !== 'undefined' ? { value: gerenciaRegionalMunicipio, label: `${gerenciaRegionalMunicipio}ª GRE` } : null);
-    setYearRange([anoInicial || 2007, anoFinal || 2024]);
   }, [selectedMunicipio, territorioDeDesenvolvimentoMunicipio, faixaPopulacionalMunicipio, aglomeradoMunicipio, gerenciaRegionalMunicipio, anoInicial, anoFinal]);
 
   const handleSearch = () => {
@@ -170,8 +166,8 @@ const FilterComponent = ({
       faixaPopulacionalMunicipio: faixaState ? faixaState.value : null,
       aglomeradoMunicipio: aglomeradoState ? aglomeradoState.value : null,
       gerenciaRegionalMunicipio: gerenciaState ? gerenciaState.value : null,
-      anoInicial: yearRange[0],
-      anoFinal: yearRange[1],
+      anoInicial: filters.anoInicial,
+      anoFinal: filters.anoFinal,
       loading: true,
     });
   };
@@ -182,7 +178,7 @@ const FilterComponent = ({
     setFaixaPopulacionalMunicipio(null);
     setAglomeradoMunicipio(null);
     setGerenciaRegionalMunicipio(null);
-    setYearRange([2007, 2024]);
+    setFilters({...filters, anoInicial: 2007, anoFinal: 2024});
     
     onFilterChange({
       codigoMunicipio: null,
@@ -199,103 +195,124 @@ const FilterComponent = ({
 
 
   return (
-    <div className="flex flex-col gap-4 p-0 m-0">
+    <div className="flex flex-col gap-4 p-0 m-0 w-full">
+      {/* Header de Filtros */}
+      <div className="flex items-center justify-between bg-gray-100 rounded-lg p-3 mb-2">
+        <h3 className="text-sm font-semibold text-gray-700">Filtros</h3>
+      </div>
+
       {/* Filtros recolhíveis */}
-      <Collapse in={filtersExpanded} timeout="auto" unmountOnExit>
-          <div className="md:col-span-3">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* Território - Segunda e terceira colunas, primeira linha */}
-              <div className="md:col-span-1">
-                <Select
-                  value={territorioState}
-                  onChange={setTerritorioDeDesenvolvimentoMunicipio}
-                  options={filteredTerritorioOptions}
-                  placeholder="Território de Desenvolvimento"
-                  size="xs"
-                  isClearable
-                  disabled={otherLocalityDisabled}
-                />
-              </div>
-
-              {/* Faixa Populacional - Primeira coluna, segunda linha */}
-              <div className="md:col-span-1">
-                <Select
-                  value={faixaState}
-                  onChange={setFaixaPopulacionalMunicipio}
-                  options={filteredFaixaPopulacionalOptions}
-                  placeholder="Faixa Populacional"
-                  size="xs"
-                  isClearable
-                  disabled={otherLocalityDisabled}
-                />
-              </div>
-
-              {/* Aglomerado - Segunda coluna, segunda linha */}
-              <div className="md:col-span-1">
-                <Select
-                  value={aglomeradoState}
-                  onChange={setAglomeradoMunicipio}
-                  options={filteredAglomeradoOptions}
-                  placeholder="Aglomerado - AG"
-                  size="xs"
-                  isClearable
-                  disabled={otherLocalityDisabled}
-                />
-              </div>
-
-              {/* Gerência - Terceira coluna, segunda linha */}
-              <div className="md:col-span-1">
-                <Select
-                  value={gerenciaState}
-                  onChange={setGerenciaRegionalMunicipio}
-                  options={filteredGerenciaOptions}
-                  placeholder="Gerência Regional de Ensino - GRE"
-                  size="xs"
-                  isSearchable={false}
-                  isClearable
-                  disabled={otherLocalityDisabled}
-                />
-              </div>
-
-              {/* Município - Primeira coluna, primeira linha */}
-              <div className="md:col-span-1">
-                <Select
-                  value={selectedMunicipioState}
-                  onChange={setSelectedMunicipio}
-                  options={filteredMunicipioOptions}
-                  placeholder="Município"
-                  size="xs"
-                  isClearable
-                />
-              </div>
-            </div>
-          </div>
-      </Collapse>
-
-        {/* Período - Todas as colunas, primeira linha */}
-        <div className="md:col-span-3">
-          <YearRangeSlider
-            minYear={2007}
-            maxYear={2024}
-            value={yearRange}
-            onChange={setYearRange}
+      <div className="flex flex-col gap-3 w-full">
+        {/* Município - Sempre visível */}
+        <div className="w-full">
+          <label className="block text-xs font-medium text-gray-600 mb-1">Município</label>
+          <Select
+            value={selectedMunicipioState}
+            onChange={setSelectedMunicipio}
+            options={filteredMunicipioOptions}
+            placeholder="Selecione..."
+            size="xs"
+            isClearable
           />
         </div>
 
-        {/* Botões Filtrar e Limpar - Todas as colunas, segunda linha */}
-        <div className="md:col-span-3 flex justify-end gap-3 mt-4">
+        {/* Collapser para filtros de localização */}
+        <Collapse in={filtersExpanded} timeout="auto" unmountOnExit>
+          <div className="flex flex-col gap-3 w-full border-t pt-3">
+            {/* Território */}
+            <div className="w-full">
+              <label className="block text-xs font-medium text-gray-600 mb-1">Território</label>
+              <Select
+                value={territorioState}
+                onChange={setTerritorioDeDesenvolvimentoMunicipio}
+                options={filteredTerritorioOptions}
+                placeholder="Selecione..."
+                size="xs"
+                isClearable
+                disabled={otherLocalityDisabled}
+              />
+            </div>
+
+            {/* Faixa Populacional */}
+            <div className="w-full">
+              <label className="block text-xs font-medium text-gray-600 mb-1">Faixa Populacional</label>
+              <Select
+                value={faixaState}
+                onChange={setFaixaPopulacionalMunicipio}
+                options={filteredFaixaPopulacionalOptions}
+                placeholder="Selecione..."
+                size="xs"
+                isClearable
+                disabled={otherLocalityDisabled}
+              />
+            </div>
+
+            {/* Aglomerado */}
+            <div className="w-full">
+              <label className="block text-xs font-medium text-gray-600 mb-1">Aglomerado</label>
+              <Select
+                value={aglomeradoState}
+                onChange={setAglomeradoMunicipio}
+                options={filteredAglomeradoOptions}
+                placeholder="Selecione..."
+                size="xs"
+                isClearable
+                disabled={otherLocalityDisabled}
+              />
+            </div>
+
+            {/* Gerência */}
+            <div className="w-full">
+              <label className="block text-xs font-medium text-gray-600 mb-1">Gerência Regional</label>
+              <Select
+                value={gerenciaState}
+                onChange={setGerenciaRegionalMunicipio}
+                options={filteredGerenciaOptions}
+                placeholder="Selecione..."
+                size="xs"
+                isSearchable={false}
+                isClearable
+                disabled={otherLocalityDisabled}
+              />
+            </div>
+          </div>
+        </Collapse>
+
+        {/* Período */}
+        <div className="w-full border-t pt-3">
+          <label className="block text-xs font-medium text-gray-600 mb-2">Período</label>
+          <YearRangeFilter
+            startYear={filters.anoInicial}
+            endYear={filters.anoFinal}
+            onStartYearChange={(year) => setFilters({...filters, anoInicial: year})}
+            onEndYearChange={(year) => setFilters({...filters, anoFinal: year})}
+            minYear={2007}
+            maxYear={2024}
+          />
+        </div>
+
+        {/* Botões */}
+        <div className="flex flex-col gap-2 w-full pt-3 border-t">
           <Button
             variant="contained"
             onClick={handleSearch}
-            className="w-full md:w-auto min-w-[120px] px-4 py-1.5"
+            fullWidth
+            size="small"
+            sx={{
+              textTransform: 'none',
+              fontSize: '0.875rem'
+            }}
           >
             Mostrar resultados
           </Button>
           <Button
             variant="outlined"
             onClick={handleClearFilters}
-            className="w-full md:w-auto min-w-[120px] px-4 py-1.5"
+            fullWidth
+            size="small"
             sx={{
+              textTransform: 'none',
+              fontSize: '0.875rem',
               backgroundColor: '#f0f0f0',
               color: '#000',
               '&:hover': {
@@ -307,6 +324,7 @@ const FilterComponent = ({
           </Button>
         </div>
       </div>
+    </div>
   );
 };
 

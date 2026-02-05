@@ -54,7 +54,7 @@ const BoldTableCell = styled(TableCell)(({ theme }) => ({
 }));
 
 const CenteredTableCell = styled(TableCell)(({ theme }) => ({
-  textAlign: "center", // Centraliza o texto horizontalmente
+  textAlign: "right", // Alinha o texto à direita
   verticalAlign: "middle", // Centraliza o texto verticalmente
 }));
 
@@ -202,8 +202,8 @@ const RevenueTable = ({
       return `${value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%`;
     } else {
       return value.toLocaleString("pt-BR", {
-        style: "currency",
-        currency: "BRL",
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
       });
     }
   };
@@ -448,7 +448,7 @@ const RevenueTable = ({
                         : `${row}`}
                     </BoldTableCell>
                     {types.map((type) => (
-                      <CenteredTableCell key={type} align="center">
+                      <CenteredTableCell key={type} align="right">
                         {finalDisplayData[type] &&
                         finalDisplayData[type][row] !== undefined
                           ? formatValue(finalDisplayData[type][row], type)

@@ -577,57 +577,6 @@ useEffect(() => {
         </div>
       </section>
 
-      {/* Linhas de Pesquisa Section */}
-      <section className="py-20">
-        <div className="max-w-7xl mx-auto px-4 text-center">
-          <h2 className="text-4xl md:text-5xl font-bold text-black mb-16 italic">
-            Faça sua pesquisa sobre
-          </h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                         {/* Card 1 - Análise de dados */}
-             <div className="p-8 rounded-xl shadow-lg border-2 border-purple-500 hover:shadow-xl transition-all duration-300" style={{ backgroundColor: 'var(--background-color)' }}>
-              <div className="text-purple-500 text-4xl mb-4 flex justify-center">
-                <FaGraduationCap />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-800">
-                Análise de dados e indicadores educacionais
-              </h3>
-            </div>
-
-                         {/* Card 2 - Condições de trabalho */}
-             <div className="p-8 rounded-xl shadow-lg border-2 border-purple-500 hover:shadow-xl transition-all duration-300" style={{ backgroundColor: 'var(--background-color)' }}>
-              <div className="text-purple-500 text-4xl mb-4 flex justify-center">
-                <FaSearch />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-800">
-                Condições de trabalho docente
-              </h3>
-            </div>
-
-                         {/* Card 3 - Condições de oferta */}
-             <div className="p-8 rounded-xl shadow-lg border-2 border-purple-500 hover:shadow-xl transition-all duration-300" style={{ backgroundColor: 'var(--background-color)' }}>
-              <div className="text-purple-500 text-4xl mb-4 flex justify-center">
-                <FaBook />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-800">
-                Condições de oferta de ensino
-              </h3>
-            </div>
-
-                         {/* Card 4 - Financiamento */}
-             <div className="p-8 rounded-xl shadow-lg border-2 border-green-500 hover:shadow-xl transition-all duration-300" style={{ backgroundColor: 'var(--background-color)' }}>
-              <div className="text-green-500 text-4xl mb-4 flex justify-center">
-                <FaDollarSign />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-800">
-                Financiamento da educação
-              </h3>
-            </div>
-          </div>
-        </div>
-      </section>
-
       <div className="max-w-7xl mx-auto px-4 text-center py-20">
         <h2 className="text-4xl md:text-5xl font-bold text-black mb-16 italic">
           Equipe do Opepi
@@ -648,7 +597,7 @@ useEffect(() => {
                style={{ backgroundColor: 'var(--background-color)' }}
                onClick={() => openModal('gestao')}
              >
-              <div className="text-purple-600 text-3xl mb-4 flex justify-center">
+              <div className="text-orange-600 text-3xl mb-4 flex justify-center">
                 <MdSchool />
               </div>
               <h3 className="text-lg font-semibold text-gray-800">
@@ -662,7 +611,7 @@ useEffect(() => {
                style={{ backgroundColor: 'var(--background-color)' }}
                onClick={() => openModal('financiamento')}
              >
-              <div className="text-purple-600 text-3xl mb-4 flex justify-center">
+              <div className="text-yellow-600 text-3xl mb-4 flex justify-center">
                 <FaDollarSign />
               </div>
               <h3 className="text-lg font-semibold text-gray-800">
@@ -676,7 +625,7 @@ useEffect(() => {
                style={{ backgroundColor: 'var(--background-color)' }}
                onClick={() => openModal('ensinoSuperior')}
              >
-              <div className="text-purple-600 text-3xl mb-4 flex justify-center">
+              <div className="text-orange-500 text-3xl mb-4 flex justify-center">
                 <FaGraduationCap />
               </div>
               <h3 className="text-lg font-semibold text-gray-800">
@@ -690,7 +639,7 @@ useEffect(() => {
                style={{ backgroundColor: 'var(--background-color)' }}
                onClick={() => openModal('educacaoInfantil')}
              >
-              <div className="text-purple-600 text-3xl mb-4 flex justify-center">
+              <div className="text-yellow-500 text-3xl mb-4 flex justify-center">
                 <MdPeople />
               </div>
               <h3 className="text-lg font-semibold text-gray-800">
@@ -704,7 +653,7 @@ useEffect(() => {
                style={{ backgroundColor: 'var(--background-color)' }}
                onClick={() => openModal('eja')}
              >
-              <div className="text-purple-600 text-3xl mb-4 flex justify-center">
+              <div className="text-orange-600 text-3xl mb-4 flex justify-center">
                 <FaUsers />
               </div>
               <h3 className="text-lg font-semibold text-gray-800">
@@ -718,7 +667,7 @@ useEffect(() => {
                style={{ backgroundColor: 'var(--background-color)' }}
                onClick={() => openModal('producaoConhecimento')}
              >
-              <div className="text-purple-600 text-3xl mb-4 flex justify-center">
+              <div className="text-yellow-600 text-3xl mb-4 flex justify-center">
                 <MdScience />
               </div>
               <h3 className="text-lg font-semibold text-gray-800">
@@ -732,7 +681,7 @@ useEffect(() => {
                style={{ backgroundColor: 'var(--background-color)' }}
                onClick={() => openModal('educacaoCampo')}
              >
-              <div className="text-purple-600 text-3xl mb-4 flex justify-center">
+              <div className="text-orange-500 text-3xl mb-4 flex justify-center">
                 <FaUniversity />
               </div>
               <h3 className="text-lg font-semibold text-gray-800">
@@ -746,7 +695,7 @@ useEffect(() => {
                style={{ backgroundColor: 'var(--background-color)' }}
                onClick={() => openModal('avaliacao')}
              >
-              <div className="text-purple-600 text-3xl mb-4 flex justify-center">
+              <div className="text-yellow-600 text-3xl mb-4 flex justify-center">
                 <FaSearch />
               </div>
               <h3 className="text-lg font-semibold text-gray-800">
@@ -772,7 +721,7 @@ useEffect(() => {
         style={{ backgroundColor: 'var(--background-color)' }}
         onClick={() => openGTModal('dados')}
       >
-        <div className="text-blue-600 text-3xl mb-4 flex justify-center">
+        <div className="text-orange-600 text-3xl mb-4 flex justify-center">
           <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
           </svg>
@@ -788,7 +737,7 @@ useEffect(() => {
         style={{ backgroundColor: 'var(--background-color)' }}
         onClick={() => openGTModal('plataforma')}
       >
-        <div className="text-green-600 text-3xl mb-4 flex justify-center">
+        <div className="text-yellow-600 text-3xl mb-4 flex justify-center">
           <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
             <path d="M9.4 16.6L4.8 12l-1.4 1.4L9.4 19 21 7.4 19.6 6z"/>
           </svg>
@@ -822,7 +771,7 @@ useEffect(() => {
   <div className="fixed inset-0 bg-black/30 backdrop-blur-md flex items-center justify-center z-50 p-4">
     <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-2xl">
       {/* Header do Modal com Foto */}
-      <div className="relative h-64 bg-gradient-to-r from-purple-600 to-blue-600">
+      <div className="relative h-64 bg-gradient-to-r from-orange-500 to-yellow-400">
         {/* A IMAGEM DE FUNDO */}
         <img
           src={selectedGT.foto}
@@ -874,7 +823,7 @@ useEffect(() => {
         {/* Objetivo */}
         <div className="mb-8">
           <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
-            <svg className="w-5 h-5 text-purple-600 mr-2" fill="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 text-orange-600 mr-2" fill="currentColor" viewBox="0 0 24 24">
               <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
             </svg>
             Objetivo
@@ -887,7 +836,7 @@ useEffect(() => {
         {/* Membros */}
         <div>
           <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
-            <svg className="w-5 h-5 text-purple-600 mr-2" fill="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 text-orange-600 mr-2" fill="currentColor" viewBox="0 0 24 24">
               <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
             </svg>
             Membros
@@ -896,12 +845,12 @@ useEffect(() => {
             {selectedGT.id === 'documentos' ? (
               selectedGT.membros.map((section, sectionIndex) => (
                 <div key={sectionIndex}>
-                  <h4 className="text-lg font-semibold text-purple-600 mb-3 mt-4">
+                  <h4 className="text-lg font-semibold text-orange-600 mb-3 mt-4">
                     {section.subtitulo}
                   </h4>
                   {section.membros.map((membro, index) => (
                     <div key={index} className="flex items-start">
-                      <div className="w-2 h-2 bg-purple-600 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                      <div className="w-2 h-2 bg-orange-600 rounded-full mt-2 mr-3 flex-shrink-0"></div>
                       <p className="text-gray-700 text-sm leading-relaxed">
                         {membro}
                       </p>
@@ -912,7 +861,7 @@ useEffect(() => {
             ) : (
               selectedGT.membros.map((membro, index) => (
                 <div key={index} className="flex items-start">
-                  <div className="w-2 h-2 bg-purple-600 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                  <div className="w-2 h-2 bg-orange-600 rounded-full mt-2 mr-3 flex-shrink-0"></div>
                   <p className="text-gray-700 text-sm leading-relaxed">
                     {membro}
                   </p>
@@ -924,7 +873,7 @@ useEffect(() => {
       </div>
 
       {/* Footer do Modal */}
-      <div className="bg-gray-50 px-6 py-4 border-t">
+      <div className="bg-yellow-50 px-6 py-4 border-t border-yellow-100">
         <div className="flex justify-between items-center">
           {/* Indicadores de posição */}
           <div className="flex space-x-2">
@@ -934,7 +883,7 @@ useEffect(() => {
                 onClick={() => setSelectedGT(gtsData[gtId])}
                 className={`w-3 h-3 rounded-full transition-all duration-200 ${
                   selectedGT.id === gtId 
-                    ? 'bg-purple-600 scale-125' 
+                    ? 'bg-orange-600 scale-125' 
                     : 'bg-gray-300 hover:bg-gray-400'
                 }`}
               />
@@ -944,7 +893,7 @@ useEffect(() => {
           {/* Botão de fechar */}
           <button
             onClick={closeGTModal}
-            className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg transition-colors duration-200 font-medium"
+            className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg transition-colors duration-200 font-medium"
           >
             Fechar
           </button>
@@ -1056,8 +1005,8 @@ useEffect(() => {
                   onClick={() => goToSlide(index)}
                   className={`w-3 h-3 rounded-full transition-all duration-200 ${
                     index === currentSlide 
-                      ? 'bg-purple-600 scale-125' 
-                      : 'bg-gray-300 hover:bg-gray-400'
+                      ? 'bg-orange-600 scale-125' 
+                      : 'bg-yellow-200 hover:bg-yellow-300'
                   }`}
                   aria-label={`Ir para slide ${index + 1}`}
                 />
@@ -1077,7 +1026,7 @@ useEffect(() => {
         <div className="fixed inset-0 bg-black/30 backdrop-blur-md flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-2xl">
             {/* Header do Modal com Foto */}
-            <div className="relative h-64 bg-gradient-to-r from-purple-600 to-blue-600">
+            <div className="relative h-64 bg-gradient-to-r from-orange-500 to-yellow-400">
               <img
                 src={selectedCelula.foto}
                 alt={selectedCelula.nome}
@@ -1125,7 +1074,7 @@ useEffect(() => {
               {/* Objetivo */}
               <div className="mb-8">
                 <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
-                  <FaSearch className="text-purple-600 mr-2" />
+                  <FaSearch className="text-orange-600 mr-2" />
                   Objetivo
                 </h3>
                 <p className="text-gray-700 leading-relaxed text-justify">
@@ -1136,13 +1085,13 @@ useEffect(() => {
               {/* Membros */}
               <div>
                 <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
-                  <FaUsers className="text-purple-600 mr-2" />
+                  <FaUsers className="text-orange-600 mr-2" />
                   Membros
                 </h3>
                 <div className="space-y-3">
                   {selectedCelula.membros.map((membro, index) => (
                     <div key={index} className="flex items-start">
-                      <div className="w-2 h-2 bg-purple-600 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                      <div className="w-2 h-2 bg-orange-600 rounded-full mt-2 mr-3 flex-shrink-0"></div>
                       <p className="text-gray-700 text-sm leading-relaxed">
                         {membro}
                       </p>
@@ -1153,7 +1102,7 @@ useEffect(() => {
             </div>
 
             {/* Footer do Modal */}
-            <div className="bg-gray-50 px-6 py-4 border-t">
+            <div className="bg-yellow-50 px-6 py-4 border-t border-yellow-100">
               <div className="flex justify-between items-center">
                 {/* Indicadores de posição */}
                 <div className="flex space-x-2">
@@ -1163,8 +1112,8 @@ useEffect(() => {
                       onClick={() => setSelectedCelula(celulasData[celulaId])}
                       className={`w-3 h-3 rounded-full transition-all duration-200 ${
                         selectedCelula.id === celulaId 
-                          ? 'bg-purple-600 scale-125' 
-                          : 'bg-gray-300 hover:bg-gray-400'
+                          ? 'bg-orange-600 scale-125' 
+                          : 'bg-yellow-200 hover:bg-yellow-300'
                       }`}
                       aria-label={`Ir para ${celulasData[celulaId].nome}`}
                     />
@@ -1174,7 +1123,7 @@ useEffect(() => {
                 {/* Botão de fechar */}
                 <button
                   onClick={closeModal}
-                  className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2 rounded-lg transition-colors duration-200 font-medium"
+                  className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg transition-colors duration-200 font-medium"
                 >
                   Fechar
                 </button>
