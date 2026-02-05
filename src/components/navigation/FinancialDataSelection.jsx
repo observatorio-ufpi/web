@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Typography, Container } from '@mui/material';
-import { FaChartLine, FaGraduationCap, FaMapMarkedAlt, FaUniversity } from 'react-icons/fa';
+import { FaChartLine, FaChartPie, FaMapMarkedAlt, FaUniversity } from 'react-icons/fa';
 import { useTheme } from '@mui/material/styles';
 import { Button, Card } from '../ui';
 
@@ -36,14 +36,6 @@ const FinancialDataSelection = () => {
       </Typography>
       
       <div 
-        sx={{
-          display: 'flex',
-          flexDirection: { xs: 'column', sm: 'row' },
-          gap: 3,
-          justifyContent: 'center',
-          alignItems: 'stretch',
-          marginTop: 2,
-        }}
         style={{
           display: 'flex',
           flexDirection: 'row',
@@ -54,6 +46,7 @@ const FinancialDataSelection = () => {
           flexWrap: 'wrap'
         }}
       >
+        {/* Card 1 - Dados por Município */}
         <div 
           style={{
             flex: '1 1 300px',
@@ -89,6 +82,7 @@ const FinancialDataSelection = () => {
           </Card>
         </div>
         
+        {/* Card 2 - Dados por Estado */}
         <div 
           style={{
             flex: '1 1 300px',
@@ -124,6 +118,43 @@ const FinancialDataSelection = () => {
           </Card>
         </div>
         
+        {/* Card 3 - Indicadores por Município */}
+        <div 
+          style={{
+            flex: '1 1 300px',
+            maxWidth: '350px',
+            minWidth: '250px'
+          }}
+        >
+          <Card variant="elevated" className="h-full">
+            <Card.Content padding="large" className="flex flex-col items-center text-center justify-between">
+              <FaChartPie 
+                style={{ 
+                  color: theme.palette.primary.main,
+                  fontSize: '4rem',
+                  marginBottom: '1.5rem'
+                }}
+              />
+              <Typography variant="h6" component="h2" gutterBottom>
+                Indicadores - Município
+              </Typography>
+              <Typography variant="body2" color="textSecondary">
+                Explore indicadores e gráficos financeiros dos municípios.
+              </Typography>
+              <Button 
+                component={Link} 
+                to="/indicadores" 
+                variant="primary"
+                size="medium"
+                className="mt-4"
+              >
+                Acessar
+              </Button>
+            </Card.Content>
+          </Card>
+        </div>
+
+        {/* Card 4 - Indicadores por Estado */}
         <div 
           style={{
             flex: '1 1 300px',
@@ -141,14 +172,14 @@ const FinancialDataSelection = () => {
                 }}
               />
               <Typography variant="h6" component="h2" gutterBottom>
-                Indicadores
+                Indicadores - Estado
               </Typography>
               <Typography variant="body2" color="textSecondary">
-                Explore indicadores e gráficos financeiros detalhados.
+                Explore indicadores e gráficos financeiros do estado.
               </Typography>
               <Button 
                 component={Link} 
-                to="/indicadores" 
+                to="/indicadores-estaduais" 
                 variant="primary"
                 size="medium"
                 className="mt-4"

@@ -10,7 +10,7 @@ import StateAdditionalRevenueCharts from "./StateAdditionalRevenueCharts";
 import StateRPEBCharts from "./StateRPEBCharts";
 import Select from "../../../../../ui/Select";
 import { Loading } from "../../../../../ui";
-import { Typography, Button } from "@mui/material";
+import { Typography, Button, Box } from "@mui/material";
 import { loadIndicatorData, stateIndicatorOptions } from "../../../../../../services/stateDataService";
 import YearRangeFilter from "../../../../../helpers/YearRangeFilter.jsx";
 
@@ -26,6 +26,16 @@ function StateIndicatorsContainer() {
   const [hasInitialLoad, setHasInitialLoad] = useState(false);
   const [startYear, setStartYear] = useState(2007);
   const [endYear, setEndYear] = useState(2023);
+  const [chartTitle, setChartTitle] = useState('');
+
+  // Atualizar título quando dados forem carregados
+  useEffect(() => {
+    if (apiData && hasInitialLoad) {
+      const yearDisplay = startYear === endYear ? startYear : `${startYear}-${endYear}`;
+      const title = `Indicadores Estaduais - Piauí (${yearDisplay})`;
+      setChartTitle(title);
+    }
+  }, [apiData, hasInitialLoad, startYear, endYear]);
 
   // Função para carregar dados dos CSVs
   const loadCSVData = async (indicatorType) => {
@@ -75,57 +85,22 @@ function StateIndicatorsContainer() {
     loadCSVData(selectedIndicator);
   };
 
+  // Escutar eventos de filtro aplicados
+  useEffect(() => {
+    const handleApplyFilters = (event) => {
+      setStartYear(event.detail.anoInicial);
+      setEndYear(event.detail.anoFinal);
+      setHasInitialLoad(true);
+      loadCSVData(selectedIndicator);
+    };
+
+    window.addEventListener('applyFinancialFilters', handleApplyFilters);
+    return () => window.removeEventListener('applyFinancialFilters', handleApplyFilters);
+  }, [selectedIndicator]);
+
   return (
     <div>
       <div className="app-container">
-        <div className="filters-section">
-          <div className="flex flex-col gap-4 p-0 m-0">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
-              {/* Filtro de Indicador - Primeira coluna */}
-              <div className="md:col-span-1">
-                <Select
-                  label="Selecione o indicador:"
-                  value={stateIndicatorOptions.find(option => option.value === selectedIndicator)}
-                  onChange={handleIndicatorChange}
-                  options={stateIndicatorOptions}
-                  placeholder="Selecione um indicador"
-                  size="xs"
-                  isClearable
-                  fullWidth
-                />
-              </div>
-
-              {/* Filtro de Ano - Segunda coluna */}
-              <div className="md:col-span-1">
-                <YearRangeFilter
-                  startYear={startYear}
-                  endYear={endYear}
-                  onStartYearChange={handleStartYearChange}
-                  onEndYearChange={handleEndYearChange}
-                  minYear={2007}
-                  maxYear={2023}
-                />
-              </div>
-
-              {/* Botão Filtrar - Terceira coluna */}
-              <div className="md:col-span-1 flex justify-end items-end">
-                <Button
-                  variant="contained"
-                  onClick={handleLoadData}
-                  disabled={selectedIndicator === "publicFinances" || 
-                           selectedIndicator === "financingCapacity" || 
-                           selectedIndicator === "fundebResources" || 
-                           selectedIndicator === "resourceApplicationControl" || 
-                           selectedIndicator === "educationInvestment"}
-                  className="w-full md:w-auto min-w-[120px] px-4 py-1.5"
-                >
-                  Mostrar Resultados
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-
         <hr className="divider" />
 
         {/* Área de dados - sempre visível */}
@@ -192,7 +167,7 @@ function StateIndicatorsContainer() {
                     color: theme.palette.primary.main
                   }}
                 >
-                  Selecione o indicador desejado e clique em "Filtrar" para visualizar os dados.
+                  Selecione o indicador desejado na lateral e clique em "Filtrar" para visualizar os dados.
                 </Typography>
               )}
             </>
@@ -211,6 +186,13 @@ function StateIndicatorsContainer() {
 
           {!loading && !error && apiData && (
             <>
+              {chartTitle && (
+                <Box sx={{ padding: 2 }}>
+                  <Typography variant="h6" sx={{ marginBottom: 2, textAlign: 'center' }}>
+                    {chartTitle}
+                  </Typography>
+                </Box>
+              )}
               {selectedIndicator === "revenueComposition" && (
                 <StateRevenueCompositionCharts data={apiData} />
               )}
@@ -234,6 +216,16 @@ function StateIndicatorsContainer() {
               {selectedIndicator === "rpeb" && (
                 <StateRPEBCharts data={apiData} />
               )}
+
+              {/* Ficha Técnica */}
+              <Box sx={{ marginTop: 6, padding: 3, backgroundColor: '#f5f5f5', borderRadius: '8px', border: '1px solid #e0e0e0' }}>
+                <Typography variant="h6" sx={{ marginBottom: 2, fontWeight: 'bold', color: '#333' }}>
+                  Ficha Técnica
+                </Typography>
+                <Typography variant="body2" sx={{ color: '#666', lineHeight: 1.6 }}>
+                  Informações sobre a metodologia, fonte de dados, periodicidade e outras informações técnicas estarão disponíveis aqui.
+                </Typography>
+              </Box>
             </>
           )}
         </div>

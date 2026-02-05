@@ -5,6 +5,8 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TablePagination from '@mui/material/TablePagination';
 import TableRow from '@mui/material/TableRow';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
 import { ThemeProvider, createTheme, styled } from '@mui/material/styles';
 import React from 'react';
 import EnhancedBarChart from '../../../common/EnhancedBarChart';
@@ -2018,29 +2020,36 @@ const ApiDataTable = ({
   return (
     <ThemeProvider theme={theme}>
       <div>
-            {/* Série Histórica - Dados individuais por cidade */}
-            {isHistorical && hasTerritorialWithOtherFilters && !showConsolidated && (
-              <div>
-                {renderHistoricalTable()}
-              </div>
-            )}
+        {title && (
+          <Box sx={{ padding: 2 }}>
+            <Typography variant="h6" sx={{ marginBottom: 2, textAlign: 'center' }}>
+              {title}
+            </Typography>
+          </Box>
+        )}
+        {/* Série Histórica - Dados individuais por cidade */}
+        {isHistorical && hasTerritorialWithOtherFilters && !showConsolidated && (
+          <div>
+            {renderHistoricalTable()}
+          </div>
+        )}
 
-            {/* Série Histórica - Dados consolidados */}
-            {isHistorical && hasTerritorialWithOtherFilters && showConsolidated && (
-              <div>
-                {renderHistoricalTableForCity(data.result, tableRefs.historical, chartRef)}
-              </div>
-            )}
+        {/* Série Histórica - Dados consolidados */}
+        {isHistorical && hasTerritorialWithOtherFilters && showConsolidated && (
+          <div>
+            {renderHistoricalTableForCity(data.result, tableRefs.historical, chartRef)}
+          </div>
+        )}
 
-            {/* Série Histórica - Sem filtros territoriais */}
-            {isHistorical && !hasTerritorialWithOtherFilters && (
-              <div>
-                {renderHistoricalTable()}
-              </div>
-            )}
+        {/* Série Histórica - Sem filtros territoriais */}
+        {isHistorical && !hasTerritorialWithOtherFilters && (
+          <div>
+            {renderHistoricalTable()}
+          </div>
+        )}
 
-            {/* Tabela cruzada consolidada - apenas quando não há filtros territoriais OU quando toggle está ativado */}
-            {!isHistorical && hasCrossFilters && (!hasTerritorialWithOtherFilters || showConsolidated) && renderCrossTable()}
+        {/* Tabela cruzada consolidada - apenas quando não há filtros territoriais OU quando toggle está ativado */}
+        {!isHistorical && hasCrossFilters && (!hasTerritorialWithOtherFilters || showConsolidated) && renderCrossTable()}
 
         {/* Dados individuais por cidade (quando há filtros territoriais combinados com outros filtros e não está em modo consolidado) */}
         {!isHistorical && hasTerritorialWithOtherFilters && !showConsolidated && municipioDataArray.length > 0 && (

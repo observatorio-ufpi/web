@@ -53,10 +53,12 @@ const ApiContainer = forwardRef(({
         // IMPORTANTE: Respeitar startYear e endYear do range slider
         // Se isHistorical, usar o range completo
         // Se não é histórico, ainda assim respeitar o range selecionado
-        const yearFilter = `min_year:"${startYear}",max_year:"${endYear}"`;
+        const finalStartYear = startYear !== undefined ? startYear : year;
+        const finalEndYear = endYear !== undefined ? endYear : year;
+        const yearFilter = `min_year:"${finalStartYear}",max_year:"${finalEndYear}"`;
         const filterString = `${yearFilter},state:"${state}"${cityId ? `,city:"${cityId}"` : ""}`;
 
-        console.log('buildFilter chamado:', { cityId, startYear, endYear, state, filterString });
+        console.log('buildFilter chamado:', { cityId, startYear: finalStartYear, endYear: finalEndYear, state, filterString });
 
         return filterString;
       };
@@ -174,6 +176,24 @@ const ApiContainer = forwardRef(({
         return processApiResults(allResults, activeSelectedFilters);
       };
 
+      // Função para filtrar dados de 2006
+      const filterOut2006 = (data) => {
+        if (!data) return data;
+        
+        if (Array.isArray(data)) {
+          return data.filter(item => item.year !== 2006);
+        }
+        
+        if (data.result && Array.isArray(data.result)) {
+          return {
+            ...data,
+            result: data.result.filter(item => item.year !== 2006)
+          };
+        }
+        
+        return data;
+      };
+
       try {
         onError(null);
         onLoading(true);
@@ -234,13 +254,13 @@ const ApiContainer = forwardRef(({
               result: allUniqueData
             };
 
-            onDataFetched({ finalResult: summedResults, allResults });
+            onDataFetched(filterOut2006({ finalResult: summedResults, allResults }));
             if (basePath === 'censo-escolar') {
               const finalResult = handleResults(allResults);
               console.log("Final Result (historical, multiple cities):", finalResult);
               console.log("Total items:", finalResult.result.length);
 
-              onDataFetched({ finalResult, allResults });
+              onDataFetched(filterOut2006({ finalResult, allResults }));
             }
           } else if (citiesList.length === 0 && (territory || faixaPopulacional || aglomerado || gerencia)) {
             // Filtros que não retornam cidades
@@ -269,11 +289,11 @@ const ApiContainer = forwardRef(({
             const result = await response.json();
             console.log("Historical municipality result with pagination:", result);
 
-            // Passar resultado com paginação
+            // Passar resultado com paginação (filtrado para remover 2006)
             if (result.pagination) {
-              onDataFetched({ ...result, pagination: result.pagination });
+              onDataFetched(filterOut2006({ ...result, pagination: result.pagination }));
             } else {
-              onDataFetched(result);
+              onDataFetched(filterOut2006(result));
             }
           } else {
             // Uma cidade específica em série histórica
@@ -297,7 +317,7 @@ const ApiContainer = forwardRef(({
 
             const result = await response.json();
             console.log("Historical result:", result);
-            onDataFetched(result);
+            onDataFetched(filterOut2006(result));
           }
           return;
         }
@@ -313,7 +333,7 @@ const ApiContainer = forwardRef(({
           console.log("Final Result (multiple cities):", finalResult);
           console.log("Total items:", finalResult.result.length);
 
-          onDataFetched({ finalResult, allResults });
+          onDataFetched(filterOut2006({ finalResult, allResults }));
         } else if (citiesList.length === 0 && (territory || faixaPopulacional || aglomerado || gerencia)) {
           console.log("No cities match the filters");
           onDataFetched({ finalResult: { result: [] }, allResults: [] });
@@ -340,11 +360,11 @@ const ApiContainer = forwardRef(({
           const result = await response.json();
           console.log("Municipality result with pagination:", result);
 
-          // Passar resultado com paginação
+          // Passar resultado com paginação (filtrado para remover 2006)
           if (result.pagination) {
-            onDataFetched({ ...result, pagination: result.pagination });
+            onDataFetched(filterOut2006({ ...result, pagination: result.pagination }));
           } else {
-            onDataFetched(result);
+            onDataFetched(filterOut2006(result));
           }
         } else {
           // Uma cidade específica
@@ -371,7 +391,7 @@ const ApiContainer = forwardRef(({
           const allResults = [result];
           const finalResult = handleResults(allResults);
           console.log("API Result:", finalResult);
-          onDataFetched(finalResult);
+          onDataFetched(filterOut2006(finalResult));
         }
 
         onError(null);

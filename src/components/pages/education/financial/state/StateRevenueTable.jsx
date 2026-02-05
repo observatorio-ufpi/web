@@ -47,7 +47,7 @@ const BoldTableCell = styled(TableCell)(({ theme }) => ({
 }));
 
 const CenteredTableCell = styled(TableCell)(({ theme }) => ({
-  textAlign: 'center',
+  textAlign: 'right', // Alinha o texto à direita
   verticalAlign: 'middle',
 }));
 
@@ -324,8 +324,8 @@ const StateRevenueTable = ({ csvData, tableName, startYear, endYear, enableMonet
             : data.valuesByTypeAndYear[type][year];
           if (typeof value === 'number') {
             return value.toLocaleString("pt-BR", {
-              style: "currency",
-              currency: "BRL",
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
             });
           } else {
             return value || "-";
@@ -425,7 +425,7 @@ const StateRevenueTable = ({ csvData, tableName, startYear, endYear, enableMonet
                 <TableRow>
                   <BoldTableCell>Ano</BoldTableCell>
                   {data.types.map((type) => (
-                    <BoldTableCell key={type} align="center">
+                    <BoldTableCell key={type} align="right">
                       {type}
                     </BoldTableCell>
                   ))}
@@ -442,9 +442,9 @@ const StateRevenueTable = ({ csvData, tableName, startYear, endYear, enableMonet
                         ? finalDisplayData[type][year] 
                         : data.valuesByTypeAndYear[type][year];
                       return (
-                        <CenteredTableCell key={idx} align="center">
+                        <CenteredTableCell key={idx} align="right">
                           {typeof value === 'number' 
-                            ? value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+                            ? value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
                             : value || '-'}
                         </CenteredTableCell>
                       );

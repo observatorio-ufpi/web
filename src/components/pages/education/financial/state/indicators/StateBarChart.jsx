@@ -169,7 +169,7 @@ const StateBarChart = ({ chartData, title }) => {
             y: {
               title: {
                 display: true,
-                text: 'Valor (R$)',
+                text: 'Valor',
                 font: {
                   size: 12,
                   weight: 'bold',

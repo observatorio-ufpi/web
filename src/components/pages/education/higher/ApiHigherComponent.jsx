@@ -115,7 +115,14 @@ function ApiHigherContainer({
         finalEndpoint = `${endpoint}/timeseries`;
       }
 
-      return `${import.meta.env.VITE_API_PUBLIC_URL}/higherEducation/${finalEndpoint}?${dims}&filter=${encodeURIComponent(filter)}${paginationParams}`;
+      // Construir query string corretamente
+      const queryParts = [];
+      if (dims) queryParts.push(dims);
+      queryParts.push(`filter=${encodeURIComponent(filter)}`);
+      if (paginationParams) queryParts.push(paginationParams.substring(1)); // Remove o & inicial
+      
+      const queryString = queryParts.join('&');
+      return `${import.meta.env.VITE_API_PUBLIC_URL}/higherEducation/${finalEndpoint}?${queryString}`;
     };
 
     const fetchCityData = async (cityId, cityName) => {

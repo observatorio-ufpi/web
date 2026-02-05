@@ -61,8 +61,11 @@ function ApiRateContainer({
         }
       }
 
+      // Construir a query string corretamente
+      const queryParams = dims ? `${dims}&filter=${encodeURIComponent(filter)}` : `filter=${encodeURIComponent(filter)}`;
+      
       //return `https://simcaq.c3sl.ufpr.br/api/v1/${endpoint}?${dims}&filter=${encodeURIComponent(filter)}`;
-      return `${import.meta.env.VITE_API_PUBLIC_URL}/rate/${endpoint}?${dims}&filter=${encodeURIComponent(filter)}`;
+      return `${import.meta.env.VITE_API_PUBLIC_URL}/rate/${endpoint}?${queryParams}`;
     };
 
     const handleResults = (allResults) => {
@@ -78,12 +81,30 @@ function ApiRateContainer({
         // Para taxas, sempre buscar dados do estado (Piauí)
         const filter = buildFilter();
         const url = buildUrl(filter);
+        
+        // DEBUG: Log dos parâmetros
+        console.log('ApiRateComponent - Parâmetros:');
+        console.log('  type:', type);
+        console.log('  isHistorical:', isHistorical);
+        console.log('  year:', year);
+        console.log('  startYear:', startYear);
+        console.log('  endYear:', endYear);
+        console.log('  filter:', filter);
+        console.log('  URL completa:', url);
+        
         const response = await fetch(url);
 
         if (!response.ok) throw new Error(`Erro HTTP! Status: ${response.status}`);
 
         const result = await response.json();
         console.log('Dados da API:', result);
+        console.log('Quantidade de itens retornados:', Array.isArray(result?.result) ? result.result.length : 'N/A');
+        
+        // DEBUG: Mostrar anos presentes nos dados
+        if (Array.isArray(result?.result)) {
+          const years = [...new Set(result.result.map(item => item.year || item.ano))].sort();
+          console.log('Anos presentes nos dados:', years);
+        }
 
         if (isHistorical) {
           // Para dados históricos, retornar diretamente

@@ -272,9 +272,9 @@ const Home = () => {
 
   const handleCategorySelect = (category) => {
     if (category === 'educacional') {
-      navigate('/dados-educacionais/basica');
+      navigate('/dados-educacionais');
     } else if (category === 'financeiro') {
-      navigate('/dados-financeiros/municipios');
+      navigate('/dados-financeiros');
     }
   };
 
@@ -297,17 +297,17 @@ const Home = () => {
   console.log('Home - Dados financeiros:', displayData?.financialData);
 
   const legendData = [
-    { name: 'Planície Litorânea', color: '#8c9bb3' },
-    { name: 'Cocais', color: '#c0b972' },
-    { name: 'Carnaubais', color: '#72928f' },
-    { name: 'Entre Rios', color: '#c8a140' },
-    { name: 'Vale do Sambito', color: '#d8dc7a' },
-    { name: 'Vale do Canindé', color: '#9e8fca' },
-    { name: 'Serra da Capivara', color: '#a7a569' },
-    { name: 'Vale do Rio Guaribas', color: '#cebadd' },
-    { name: 'Chapada Vale do Itaim', color: '#97b9aa' },
-    { name: 'Chapada das Mangabeiras', color: '#b0985a' },
-    { name: 'Tabuleiros do Alto Parnaíba', color: '#535bac' },
+    { name: 'Planície Litorânea', color: '#D4E8F4' },
+    { name: 'Cocais', color: '#F9EDD0' },
+    { name: 'Carnaubais', color: '#D4E8E0' },
+    { name: 'Entre Rios', color: '#F4D898' },
+    { name: 'Vale do Sambito', color: '#F9F0D0' },
+    { name: 'Vale do Canindé', color: '#E8D4F4' },
+    { name: 'Serra da Capivara', color: '#F0E8D0' },
+    { name: 'Vale do Rio Guaribas', color: '#F0D8F4' },
+    { name: 'Chapada Vale do Itaim', color: '#D4E8DC' },
+    { name: 'Chapada das Mangabeiras', color: '#F0E0D0' },
+    { name: 'Tabuleiros do Alto Parnaíba', color: '#E0D4F4' },
   ].sort((a, b) => a.name.localeCompare(b.name));
   
   return (
@@ -341,12 +341,12 @@ const Home = () => {
           <div className="feature-cards-container">
             {/* Dados Financeiros */}
             <div 
-              className="feature-card p-8 rounded-xl shadow-lg border-2 border-green-500 cursor-pointer hover:shadow-xl transition-all duration-300 hover:scale-105 text-center" 
+              className="feature-card p-8 rounded-xl shadow-lg border-2 border-yellow-300 cursor-pointer hover:shadow-xl transition-all duration-300 hover:scale-105 text-center" 
               style={{ backgroundColor: 'var(--background-color)' }}
-              onClick={() => navigate('/municipios')}
+              onClick={() => navigate('/dados-financeiros')}
             >
-              <div className="bg-green-100 w-16 h-10 rounded-full flex items-center justify-center mx-auto mb-6">
-                <FaDollarSign className="text-green-600 text-2xl" />
+              <div className="bg-yellow-100 w-16 h-10 rounded-full flex items-center justify-center mx-auto mb-6">
+                <FaDollarSign className="text-yellow-600 text-2xl" />
               </div>
               <h3 className="text-xl font-bold mb-4 text-gray-800">Dados financeiros</h3>
               <p className="text-gray-600 leading-relaxed">
@@ -357,13 +357,13 @@ const Home = () => {
             {/* Dados Educacionais */}
             <Card 
               variant="elevated" 
-              className="feature-card border-2 border-purple-500 cursor-pointer hover:shadow-lg transition-all duration-300" 
+              className="feature-card border-2 border-orange-300 cursor-pointer hover:shadow-lg transition-all duration-300" 
               backgroundColor="var(--background-color)"
               onClick={() => navigate('/dados-educacionais')}
             >
               <Card.Content padding="default" className="text-center">
-                <div className="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <FaGraduationCap className="text-purple-600 text-2xl" />
+                <div className="bg-orange-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <FaGraduationCap className="text-orange-500 text-2xl" />
                 </div>
                 <h3 className="text-xl font-bold mb-4 text-gray-800">Dados educacionais</h3>
                 <p className="text-gray-600 leading-relaxed">
@@ -375,7 +375,7 @@ const Home = () => {
 
             {/* Repositório */}
             <div 
-              className="feature-card p-8 rounded-xl shadow-lg border-2 border-gray-500 cursor-pointer hover:shadow-xl transition-all duration-300 hover:scale-105 text-center" 
+              className="feature-card p-8 rounded-xl shadow-lg border-2 border-yellow-200 cursor-pointer hover:shadow-xl transition-all duration-300 hover:scale-105 text-center" 
               style={{ backgroundColor: 'var(--background-color)' }}
               onClick={() => window.location.href = 'https://repositorio.opepi.pi.gov.br'}
             >
@@ -647,7 +647,7 @@ const Home = () => {
                     <>
                       <div className="mb-4 space-y-2">
                         {/* Título do card */}
-                        <h3 className="text-base font-bold text-purple-700 uppercase tracking-wide">
+                        <h3 className="text-base font-bold text-orange-600 uppercase tracking-wide">
                           Educação Básica
                         </h3>
 
@@ -658,7 +658,7 @@ const Home = () => {
                         <div className="space-y-1">
                           <div className="flex justify-between items-center px-2">
                             <span className="text-sm text-gray-600">Matrículas:</span>
-                            <span className="text-lg font-bold text-purple-600">
+                            <span className="text-lg font-bold text-orange-500">
                               {displayData?.education?.enrollments
                                 ? formatNumber(displayData.education.enrollments)
                                 : 'N/A'}
@@ -666,7 +666,7 @@ const Home = () => {
                           </div>
                           <div className="flex justify-between items-center px-2">
                             <span className="text-sm text-gray-600">Escolas:</span>
-                            <span className="text-lg font-bold text-purple-600">
+                            <span className="text-lg font-bold text-orange-500">
                               {displayData?.education?.schools
                                 ? formatNumber(displayData.education.schools)
                                 : 'N/A'}
@@ -674,7 +674,7 @@ const Home = () => {
                           </div>
                           <div className="flex justify-between items-center px-2">
                             <span className="text-sm text-gray-600">Ano:</span>
-                            <span className="text-lg font-bold text-purple-600">2023</span>
+                            <span className="text-lg font-bold text-orange-500">2023</span>
                           </div>
                         </div>
                       </div>
@@ -682,7 +682,7 @@ const Home = () => {
                   )}
                   <button 
                     onClick={() => handleCategorySelect('educacional')}
-                    className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-semibold transition-all duration-300 hover:-translate-y-1 flex items-center gap-2 w-full justify-center text-sm"
+                    className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-semibold transition-all duration-300 hover:-translate-y-1 flex items-center gap-2 w-full justify-center text-sm"
                   >
                     <FaGraduationCap />
                     dados educacionais
@@ -708,7 +708,7 @@ const Home = () => {
                     <>
                       <div className="mb-4 space-y-2">
                         {/* Título do card */}
-                        <h3 className="text-base font-bold text-purple-700 uppercase tracking-wide">
+                        <h3 className="text-base font-bold text-orange-600 uppercase tracking-wide">
                           Educação Superior
                         </h3>
 
@@ -719,7 +719,7 @@ const Home = () => {
                         <div className="space-y-1">
                           <div className="flex justify-between items-center px-2">
                             <span className="text-sm text-gray-600">Matrículas:</span>
-                            <span className="text-lg font-bold text-purple-600">
+                            <span className="text-lg font-bold text-orange-500">
                               {displayData?.higherEducation?.enrollments
                                 ? formatNumber(displayData.higherEducation.enrollments)
                                 : 'N/A'}
@@ -727,7 +727,7 @@ const Home = () => {
                           </div>
                           <div className="flex justify-between items-center px-2">
                             <span className="text-sm text-gray-600">Instituições:</span>
-                            <span className="text-lg font-bold text-purple-600">
+                            <span className="text-lg font-bold text-orange-500">
                               {displayData?.higherEducation?.institutions
                                 ? formatNumber(displayData.higherEducation.institutions)
                                 : 'N/A'}
@@ -735,7 +735,7 @@ const Home = () => {
                           </div>
                           <div className="flex justify-between items-center px-2">
                             <span className="text-sm text-gray-600">Ano:</span>
-                            <span className="text-lg font-bold text-purple-600">2023</span>
+                            <span className="text-lg font-bold text-orange-500">2023</span>
                           </div>
                         </div>
 
@@ -746,7 +746,7 @@ const Home = () => {
                   )}
                   <button 
                     onClick={() => handleCategorySelect('educacional')}
-                    className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-semibold transition-all duration-300 hover:-translate-y-1 flex items-center gap-2 w-full justify-center text-sm"
+                    className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-semibold transition-all duration-300 hover:-translate-y-1 flex items-center gap-2 w-full justify-center text-sm"
                   >
                     <FaGraduationCap />
                     dados educacionais
@@ -764,38 +764,6 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Repository Section */}
-      <section className="py-20">
-        <div className="max-w-7xl mx-auto px-4 text-center">
-          <h2 className="headline-large text-4xl md:text-5xl text-black mb-8">
-            O repositório do Opepi
-          </h2>
-          <p className="text-lg text-gray-700 mb-12 max-w-4xl mx-auto leading-relaxed">
-            Armazena, preserva e dissemina documentos digitais com base legal, normativa e da produção científica sobre a política educacional piauiense.
-          </p>
-          
-          <Card variant="elevated" className="max-w-2xl mx-auto mb-8">
-            <Card.Content padding="default">
-              <div className="flex items-center">
-                <FaSearch className="text-gray-400 mr-3" />
-                <input 
-                  type="text" 
-                  placeholder="Pesquisar no repositório" 
-                  className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-purple-500 outline-none transition-colors"
-                />
-              </div>
-            </Card.Content>
-          </Card>
-          
-          <div className="flex flex-wrap justify-center gap-2">
-            {['base legal', 'base normativa', 'teses', 'artigos', 'dissertações', 'mídia', 'co'].map((tag) => (
-              <button key={tag} className="bg-gray-200 hover:bg-purple-600 hover:text-white px-4 py-2 rounded-full transition-all duration-300">
-                {tag}
-              </button>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* Nova Seção - Observatório e Nuppege */}
       <section className="py-20">

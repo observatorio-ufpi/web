@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useTheme } from '@mui/material/styles';
+import { useNavigate } from 'react-router-dom';
 import "../../../../../../App.css";
 import { fetchData } from "../../../../../../services/apiService.jsx";
 import "../../../../../../style/ChartPagination.css";
@@ -19,6 +20,7 @@ import Select from "../../../../../ui/Select";
 import { Loading } from "../../../../../ui";
 import { Typography, Button, Box } from "@mui/material";
 import { ExpandMore, ExpandLess } from '@mui/icons-material';
+import { municipios } from "../../../../../../utils/municipios.mapping";
 
 // Opções para os selects
 const indicatorOptions = [
@@ -141,6 +143,7 @@ const endpoints = {
 
 function ChartContainer() {
   const theme = useTheme();
+  const navigate = useNavigate();
   
   const [apiData, setApiData] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -156,11 +159,28 @@ function ChartContainer() {
   const [limit, setLimit] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [hasInitialLoad, setHasInitialLoad] = useState(false);
-  const [filtersExpanded, setFiltersExpanded] = useState(false);
+  const [filtersExpanded, setFiltersExpanded] = useState(true);
+  const [chartTitle, setChartTitle] = useState('');
   const [filters, setFilters] = useState({
     anoInicial: 2007,
     anoFinal: 2024,
   });
+
+  // Atualizar título quando dados forem carregados
+  useEffect(() => {
+    if (apiData && hasInitialLoad) {
+      const yearDisplay = filters.anoInicial === filters.anoFinal ? filters.anoInicial : `${filters.anoInicial}-${filters.anoFinal}`;
+      let locationName = 'Piauí';
+      if (selectedMunicipio && Object.keys(municipios).length > 0) {
+        const municipio = municipios[selectedMunicipio];
+        if (municipio) {
+          locationName = municipio.nomeMunicipio;
+        }
+      }
+      const title = `Indicadores Financeiros - ${locationName} (${yearDisplay})`;
+      setChartTitle(title);
+    }
+  }, [apiData, hasInitialLoad, filters.anoInicial, filters.anoFinal, selectedMunicipio]);
 
   const fetchTableData = (customFilters = null) => {
     if (loading) return; // Evita múltiplas chamadas simultâneas
@@ -793,6 +813,16 @@ function ChartContainer() {
     });
   };
 
+  // Escutar eventos de filtro aplicados
+  useEffect(() => {
+    const handleApplyFilters = (event) => {
+      handleFilterChange(event.detail);
+    };
+
+    window.addEventListener('applyFinancialFilters', handleApplyFilters);
+    return () => window.removeEventListener('applyFinancialFilters', handleApplyFilters);
+  }, [handleFilterChange]);
+
   const handlePageChange = (event, newPage) => {
     setPage(newPage);
     setLoading(true);
@@ -830,75 +860,6 @@ function ChartContainer() {
   return (
     <div>
       <div className="app-container">
-        <div className="filters-section">
-          <div 
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-              gap: '20px',
-              width: '100%',
-              marginBottom: '20px'
-            }}
-          >
-            <Select
-              label="Selecione o indicador:"
-              value={indicatorOptions.find(option => option.value === selectedTable)}
-              onChange={(option) => handleTableChange({ target: { value: option.value } })}
-              options={indicatorOptions}
-              placeholder="Selecione um indicador"
-              size="xs"
-              isClearable
-              fullWidth
-            />
-
-            <Box sx={{ display: 'flex', alignItems: 'end', gap: 2 }}>
-              <Select
-                label="Tipo de Agrupamento:"
-                value={groupTypeOptions.find(option => option.value === groupType)}
-                onChange={(option) => handleGroupTypeChange({ target: { value: option.value } })}
-                options={groupTypeOptions}
-                placeholder="Selecione o tipo de agrupamento"
-                size="xs"
-                isClearable
-                fullWidth
-              />
-              
-              <Button
-                variant="outlined"
-                size="small"
-                startIcon={filtersExpanded ? <ExpandLess /> : <ExpandMore />}
-                onClick={() => setFiltersExpanded(!filtersExpanded)}
-                sx={{
-                  minWidth: 'auto',
-                  padding: '8px 16px',
-                  whiteSpace: 'nowrap',
-                  height: 'fit-content',
-                  mb: 0.5
-                }}
-              >
-                {filtersExpanded ? 'Menos Filtros' : 'Mais Filtros'}
-              </Button>
-            </Box>
-          </div>
-
-          {/* Desabilitar filtros para indicadores em desenvolvimento */}
-          {!(selectedTable === "rpebComposition" || 
-            selectedTable === "resourcesApplicationControl" || 
-            selectedTable === "educationExpenseComposition") && (
-            <FilterComponent
-              onFilterChange={handleFilterChange}
-              selectedMunicipio={selectedMunicipio}
-              territorioDeDesenvolvimentoMunicipio={territorioDeDesenvolvimentoMunicipio}
-              faixaPopulacionalMunicipio={faixaPopulacionalMunicipio}
-              aglomeradoMunicipio={aglomeradoMunicipio}
-              gerenciaRegionalMunicipio={gerenciaRegionalMunicipio}
-              anoInicial={filters.anoInicial}
-              anoFinal={filters.anoFinal}
-              filtersExpanded={filtersExpanded}
-            />
-          )}
-        </div>
-
         <hr className="divider" />
 
         {/* Área de dados - sempre visível */}
@@ -962,7 +923,7 @@ function ChartContainer() {
                     color: theme.palette.primary.main
                   }}
                 >
-                  Selecione os filtros desejados e clique em "Filtrar" para montar uma consulta.
+                  Selecione os filtros desejados na lateral e clique em "Filtrar" para montar uma consulta.
                 </Typography>
               )}
             </>
@@ -981,6 +942,13 @@ function ChartContainer() {
 
           {!loading && !error && apiData && (
             <>
+              {chartTitle && (
+                <Box sx={{ padding: 2 }}>
+                  <Typography variant="h6" sx={{ marginBottom: 2, textAlign: 'center' }}>
+                    {chartTitle}
+                  </Typography>
+                </Box>
+              )}
               {selectedTable === "expensesBasicEducationFundeb" && (
                 <ChartComponent
                   key={selectedTable + JSON.stringify(apiData)}
@@ -1016,6 +984,16 @@ function ChartContainer() {
                 onPageChange={handlePageChange}
                 onLimitChange={handleLimitChange}
               />
+
+              {/* Ficha Técnica */}
+              <Box sx={{ marginTop: 6, padding: 3, backgroundColor: '#f5f5f5', borderRadius: '8px', border: '1px solid #e0e0e0' }}>
+                <Typography variant="h6" sx={{ marginBottom: 2, fontWeight: 'bold', color: '#333' }}>
+                  Ficha Técnica
+                </Typography>
+                <Typography variant="body2" sx={{ color: '#666', lineHeight: 1.6 }}>
+                  Informações sobre a metodologia, fonte de dados, periodicidade e outras informações técnicas estarão disponíveis aqui.
+                </Typography>
+              </Box>
             </>
           )}
         </div>
