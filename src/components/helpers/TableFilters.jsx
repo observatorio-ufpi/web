@@ -162,6 +162,7 @@ const FilterComponent = ({
   const handleSearch = () => {
     onFilterChange({
       codigoMunicipio: selectedMunicipioState ? selectedMunicipioState.value : null,
+      nomeMunicipio: selectedMunicipioState ? selectedMunicipioState.label : null,
       territorioDeDesenvolvimentoMunicipio: territorioState ? territorioState.value : null,
       faixaPopulacionalMunicipio: faixaState ? faixaState.value : null,
       aglomeradoMunicipio: aglomeradoState ? aglomeradoState.value : null,
@@ -182,6 +183,7 @@ const FilterComponent = ({
     
     onFilterChange({
       codigoMunicipio: null,
+      nomeMunicipio: null,
       territorioDeDesenvolvimentoMunicipio: null,
       faixaPopulacionalMunicipio: null,
       aglomeradoMunicipio: null,

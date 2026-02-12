@@ -84,6 +84,11 @@ function RevenueTableContainer() {
   const [tableTitle, setTableTitle] = useState("");
   const [filters, setFilters] = useState({
     nomeMunicipio: '',
+    codigoMunicipio: '',
+    territorioDeDesenvolvimentoMunicipio: '',
+    faixaPopulacionalMunicipio: '',
+    aglomeradoMunicipio: '',
+    gerenciaRegionalMunicipio: '',
     anoInicial: 2007,
     anoFinal: 2024,
   });
@@ -109,10 +114,10 @@ function RevenueTableContainer() {
 
     fetchData(selectedTable, apiGroupType, {
       codigoMunicipio: selectedMunicipio,
-      territorioDeDesenvolvimentoMunicipio,
-      faixaPopulacionalMunicipio,
-      aglomeradoMunicipio,
-      gerenciaRegionalMunicipio,
+      territorioDeDesenvolvimentoMunicipio: filters.territorioDeDesenvolvimentoMunicipio,
+      faixaPopulacionalMunicipio: filters.faixaPopulacionalMunicipio,
+      aglomeradoMunicipio: filters.aglomeradoMunicipio,
+      gerenciaRegionalMunicipio: filters.gerenciaRegionalMunicipio,
       anoInicial: filters.anoInicial,
       anoFinal: filters.anoFinal,
       page: currentPage,
@@ -121,12 +126,16 @@ function RevenueTableContainer() {
       .then((response) => {
         // Construir o título com os filtros aplicados
         let locationName = 'Piauí';
-        if (filters.nomeMunicipio) {
+        let ibgeCode = '';
+        if (filters.nomeMunicipio && filters.codigoMunicipio) {
+          locationName = filters.nomeMunicipio;
+          ibgeCode = ` (IBGE: ${filters.codigoMunicipio})`;
+        } else if (filters.nomeMunicipio) {
           locationName = filters.nomeMunicipio;
         }
         const yearDisplay = filters.anoInicial === filters.anoFinal ? filters.anoInicial : `${filters.anoInicial}-${filters.anoFinal}`;
         
-        let titleParts = [`Dados Municipais - ${locationName} (${yearDisplay})`];
+        let titleParts = [`Dados Municipais - ${locationName}${ibgeCode} (${yearDisplay})`];
         
         // Adicionar filtros aplicados ao título
         let filterInfo = [];
@@ -187,27 +196,76 @@ function RevenueTableContainer() {
     // Não carrega dados automaticamente - aguarda o usuário filtrar
   };
 
-  const handleFilterChange = (filters) => {
-    setSelectedMunicipio(filters.codigoMunicipio);
-    setFilters(prev => ({
-      ...prev,
-      anoInicial: filters.anoInicial,
-      anoFinal: filters.anoFinal,
-    }));
+  const handleFilterChange = (filterData) => {
+    setSelectedMunicipio(filterData.codigoMunicipio);
+    
+    // Atualizar todos os filtros no estado
+    const newFilters = {
+      nomeMunicipio: filterData.nomeMunicipio || (filterData.codigoMunicipio ? municipios[filterData.codigoMunicipio]?.nomeMunicipio : null),
+      codigoMunicipio: filterData.codigoMunicipio,
+      territorioDeDesenvolvimentoMunicipio: filterData.territorioDeDesenvolvimentoMunicipio,
+      faixaPopulacionalMunicipio: filterData.faixaPopulacionalMunicipio,
+      aglomeradoMunicipio: filterData.aglomeradoMunicipio,
+      gerenciaRegionalMunicipio: filterData.gerenciaRegionalMunicipio,
+      anoInicial: filterData.anoInicial,
+      anoFinal: filterData.anoFinal,
+    };
+    
+    setFilters(newFilters);
     setLoading(true);
     setPage(1);
     setHasInitialLoad(true);
     
     // Usar os valores dos filtros diretamente em vez de aguardar o estado ser atualizado
     const apiGroupType = groupType === 'desagregado' ? 'municipio' : groupType;
+    console.log('Chamando fetchData com:', { selectedTable, apiGroupType, filters: newFilters });
     fetchData(selectedTable, apiGroupType, {
-      codigoMunicipio: filters.codigoMunicipio,
-      anoInicial: filters.anoInicial,
-      anoFinal: filters.anoFinal,
+      codigoMunicipio: filterData.codigoMunicipio,
+      territorioDeDesenvolvimentoMunicipio: filterData.territorioDeDesenvolvimentoMunicipio,
+      faixaPopulacionalMunicipio: filterData.faixaPopulacionalMunicipio,
+      aglomeradoMunicipio: filterData.aglomeradoMunicipio,
+      gerenciaRegionalMunicipio: filterData.gerenciaRegionalMunicipio,
+      anoInicial: filterData.anoInicial,
+      anoFinal: filterData.anoFinal,
       page: 1,
       limit: limit,
     })
       .then((response) => {
+        console.log('Resposta completa do servidor:', JSON.stringify(response, null, 2).substring(0, 2000));
+        
+        // Construir o título com os filtros aplicados
+        const nomeMunicipio = newFilters.nomeMunicipio;
+        let locationName = nomeMunicipio || 'Piauí';
+        let ibgeCode = newFilters.codigoMunicipio ? ` (IBGE: ${newFilters.codigoMunicipio})` : '';
+        const yearDisplay = newFilters.anoInicial === newFilters.anoFinal ? newFilters.anoInicial : `${newFilters.anoInicial}-${newFilters.anoFinal}`;
+        
+        // Obter o nome da tabela selecionada
+        const tableLabel = tableOptions.find(t => t.value === selectedTable)?.label || selectedTable;
+        
+        // Construir partes do título
+        let titleParts = [`${tableLabel} - ${locationName}${ibgeCode} (${yearDisplay})`];
+        
+        // Adicionar filtros aplicados ao título
+        let filterInfo = [];
+        if (newFilters.territorioDeDesenvolvimentoMunicipio) {
+          filterInfo.push(`Território: ${newFilters.territorioDeDesenvolvimentoMunicipio}`);
+        }
+        if (newFilters.faixaPopulacionalMunicipio) {
+          filterInfo.push(`Faixa: ${newFilters.faixaPopulacionalMunicipio}`);
+        }
+        if (newFilters.aglomeradoMunicipio) {
+          filterInfo.push(`Aglomerado: ${newFilters.aglomeradoMunicipio}`);
+        }
+        if (newFilters.gerenciaRegionalMunicipio) {
+          filterInfo.push(`GRE: ${newFilters.gerenciaRegionalMunicipio}`);
+        }
+        
+        if (filterInfo.length > 0) {
+          titleParts.push(filterInfo.join(' | '));
+        }
+        
+        setTableTitle(titleParts.join(' - '));
+        
         setApiData(response.data);
         setLoading(false);
         setPage(response.pagination?.page || 1);
@@ -418,9 +476,9 @@ function RevenueTableContainer() {
         console.log(rows);
 
         const wsData = [
-          ["Municipio", ...types],
+          ["Município (IBGE)", ...types],
           ...rows.map((row) => [
-            municipios[row]?.nomeMunicipio,
+            `${municipios[row]?.nomeMunicipio || row} (${row})`,
             ...types.map((type) =>
               typeToRowToValue[type] &&
               typeToRowToValue[type][row] !== undefined
@@ -449,10 +507,9 @@ function RevenueTableContainer() {
       const types = Object.keys(map);
 
       const wsData = [
-        ["Municipio", "Ano", ...types],
+        ["Município (IBGE)", ...types],
         ...rows.map((row) => [
-          municipios[row]?.nomeMunicipio || row,
-          row,
+          `${municipios[row]?.nomeMunicipio || row} (${row})`,
           ...types.map((type) =>
             typeToRowToValue[type] &&
             typeToRowToValue[type][row] !== undefined
@@ -696,7 +753,7 @@ function RevenueTableContainer() {
                             {selectedTable === "allTables" && (
                               <RevenueTable
                                 data={consolidateDataByMunicipio(apiData)}
-                                transformDataFunction={transformDataForTableByYear}
+                                transformDataFunction={transformDataForTableRevenues}
                                 standardizeTypeFunction={standardizedTypeAllTables}
                                 tableName="Tabelão"
                                 keyTable="municipios_consolidado"
@@ -709,7 +766,7 @@ function RevenueTableContainer() {
                     : selectedTable === "ownRevenues" && (
                         <RevenueTable
                           data={consolidateDataByMunicipio(apiData)}
-                          transformDataFunction={transformDataForTableByYear}
+                          transformDataFunction={transformDataForTableRevenues}
                           standardizeTypeFunction={standardizedTypeOwnRevenues}
                           tableMapping={mapOwnRevenues}
                           tableName="Impostos Próprios"
@@ -721,7 +778,7 @@ function RevenueTableContainer() {
                   {selectedTable === "constitutionalTransfersRevenue" && (
                     <RevenueTable
                       data={consolidateDataByMunicipio(apiData)}
-                      transformDataFunction={transformDataForTableByYear}
+                      transformDataFunction={transformDataForTableRevenues}
                       standardizeTypeFunction={standardizedTypeConstitutionalTransfersRevenue}
                       tableMapping={mapConstitutionalTransfersRevenue}
                       tableName="Receita de transferências constitucionais e legais"
@@ -733,7 +790,7 @@ function RevenueTableContainer() {
                   {selectedTable === "municipalTaxesRevenues" && (
                     <RevenueTable
                       data={consolidateDataByMunicipio(apiData)}
-                      transformDataFunction={transformDataForTableByYear}
+                      transformDataFunction={transformDataForTableRevenues}
                       standardizeTypeFunction={standardizeTypeMunicipalTaxesRevenues}
                       tableMapping={mapMunicipalTaxesRevenues}
                       tableName="Receita Líquida de Impostos do Município"
@@ -745,7 +802,7 @@ function RevenueTableContainer() {
                   {selectedTable === "additionalEducationRevenue" && (
                     <RevenueTable
                       data={consolidateDataByMunicipio(apiData)}
-                      transformDataFunction={transformDataForTableByYear}
+                      transformDataFunction={transformDataForTableRevenues}
                       standardizeTypeFunction={standardizeTypeAdditionalEducationRevenues}
                       tableMapping={mapAdditionalMunicipalEducationRevenue}
                       tableName="Receitas adicionais da educação no Município"
@@ -757,7 +814,7 @@ function RevenueTableContainer() {
                   {selectedTable === "municipalFundebFundefComposition" && (
                     <RevenueTable
                       data={consolidateDataByMunicipio(apiData)}
-                      transformDataFunction={transformDataForTableByYear}
+                      transformDataFunction={transformDataForTableRevenues}
                       standardizeTypeFunction={standardizedTypeMunicipalFundebFundefComposition}
                       tableMapping={mapMunicipalFundebFundefComposition}
                       tableName="Composição do Fundef/Fundeb no município"
@@ -768,7 +825,7 @@ function RevenueTableContainer() {
                   {selectedTable === "complementationFundebFundef" && (
                     <RevenueTable
                       data={consolidateDataByMunicipio(apiData)}
-                      transformDataFunction={transformDataForTableByYear}
+                      transformDataFunction={transformDataForTableRevenues}
                       standardizeTypeFunction={standardizedTypeComplementationFundebFundef}
                       tableMapping={mapComplementationFundebFundef}
                       tableName="Composição da complementação do Fundef/Fundeb"
@@ -779,7 +836,7 @@ function RevenueTableContainer() {
                   {selectedTable === "constitutionalLimitMde" && (
                     <RevenueTable
                       data={consolidateDataByMunicipio(apiData)}
-                      transformDataFunction={transformDataForTableByYear}
+                      transformDataFunction={transformDataForTableRevenues}
                       standardizeTypeFunction={standardizedTypeConstitutionalLimitMde}
                       tableMapping={mapConstitutionalLimitMde}
                       tableName="Limite constitucional em MDE no município"
@@ -790,7 +847,7 @@ function RevenueTableContainer() {
                   {selectedTable === "expensesBasicEducationFundeb" && (
                     <RevenueTable
                       data={consolidateDataByMunicipio(apiData)}
-                      transformDataFunction={transformDataForTableByYear}
+                      transformDataFunction={transformDataForTableRevenues}
                       standardizeTypeFunction={standardizedTypeExpensesBasicEducationFundeb}
                       tableMapping={mapExpensesBasicEducationFundeb}
                       tableName="Despesas com profissionais da educação básica com o Fundef/Fundeb"
@@ -801,7 +858,7 @@ function RevenueTableContainer() {
                   {selectedTable === "areasActivityExpense" && (
                     <RevenueTable
                       data={consolidateDataByMunicipio(apiData)}
-                      transformDataFunction={transformDataForTableByYear}
+                      transformDataFunction={transformDataForTableRevenues}
                       standardizeTypeFunction={standardizedTypeAreasActivityExpense}
                       tableMapping={mapAreasActivityExpense}
                       tableName="Despesas em MDE por área de atuação"
@@ -812,7 +869,7 @@ function RevenueTableContainer() {
                   {selectedTable === "basicEducationMinimalPotential" && (
                     <RevenueTable
                       data={consolidateDataByMunicipio(apiData)}
-                      transformDataFunction={transformDataForTableByYear}
+                      transformDataFunction={transformDataForTableRevenues}
                       standardizeTypeFunction={standardizedTypeBasicEducationMinimalPotential}
                       tableMapping={mapBasicEducationMinimalPotential}
                       tableName="Receita Potencial Mínima vinculada à Educação Básica"
@@ -823,7 +880,7 @@ function RevenueTableContainer() {
                   {selectedTable === "complementaryProtocol" && (
                     <RevenueTable
                       data={consolidateDataByMunicipio(apiData)}
-                      transformDataFunction={transformDataForTableByYear}
+                      transformDataFunction={transformDataForTableRevenues}
                       standardizeTypeFunction={standardizedTypeComplementaryProtocol}
                       tableMapping={mapComplementaryProtocol}
                       tableName="Protocolo Complementar"

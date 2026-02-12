@@ -202,7 +202,7 @@ export const transformDataForTableRevenues = (data, standardizeTypeFunction) => 
   });
 
   return {
-    rows: Array.from(years).sort(),
+    rows: Array.from(years).sort((a, b) => Number(a) - Number(b)),
     typeToRowToValue: typeToYearToValue,
   };
 };
@@ -211,148 +211,167 @@ export const transformDataForTableByYear = (data, standardizeTypeFunction) => {
   const municipios = new Set();
   const typeToMunicipioToValue = {};
 
+  // Helper function to process a single municipio record
+  const processMunicipioData = (municipioData, municipio) => {
+    municipios.add(municipio);
 
-  Object.keys(data).forEach((key) => {
-    data[key].forEach((municipioData) => {
-      const municipio = municipioData.codigoMunicipio;
-      municipios.add(municipio);
+    if (municipioData.receita) {
+      municipioData.receita.forEach((revenue) => {
+        const standardizedType = standardizeTypeFunction(revenue.tipo);
+        if (!typeToMunicipioToValue[standardizedType]) {
+          typeToMunicipioToValue[standardizedType] = {};
+        }
+        typeToMunicipioToValue[standardizedType][municipio] = getValidRevenue(revenue);
+      });
+    }
 
-      if (municipioData.receita) {
-        municipioData.receita.forEach((revenue) => {
-          const standardizedType = standardizeTypeFunction(revenue.tipo);
-          if (!typeToMunicipioToValue[standardizedType]) {
-            typeToMunicipioToValue[standardizedType] = {};
-          }
+    if (municipioData.despesa) {
+      municipioData.despesa.forEach((expense) => {
+        const standardizedType = standardizeTypeFunction(expense.tipo);
+        if (!typeToMunicipioToValue[standardizedType]) {
+          typeToMunicipioToValue[standardizedType] = {};
+        }
+        typeToMunicipioToValue[standardizedType][municipio] = getValidExpense(expense);
+      });
+    }
 
-          typeToMunicipioToValue[standardizedType][municipio] = getValidRevenue(revenue);
-        });
-      }
+    if (municipioData.tabelaCumprimentoLimitesConstitucionais) {
+      municipioData.tabelaCumprimentoLimitesConstitucionais.forEach((item) => {
+        const standardizedType = standardizeTypeFunction(item.tipo);
+        if (!typeToMunicipioToValue[standardizedType]) {
+          typeToMunicipioToValue[standardizedType] = {};
+        }
+        typeToMunicipioToValue[standardizedType][municipio] = getValidPercentage(item);
+      });
+    }
 
-      if (municipioData.despesa) {
-        municipioData.despesa.forEach((expense) => {
-          const standardizedType = standardizeTypeFunction(expense.tipo);
-          if (!typeToMunicipioToValue[standardizedType]) {
-            typeToMunicipioToValue[standardizedType] = {};
-          }
+    if (municipioData.apuracaoLimiteMinimoConstitucional) {
+      municipioData.apuracaoLimiteMinimoConstitucional.forEach((item) => {
+        const standardizedType = standardizeTypeFunction(item.tipo);
+        if (!typeToMunicipioToValue[standardizedType]) {
+          typeToMunicipioToValue[standardizedType] = {};
+        }
+        typeToMunicipioToValue[standardizedType][municipio] = getValidValue(item);
+      });
+    }
 
-          typeToMunicipioToValue[standardizedType][municipio] = getValidExpense(expense);
-        });
-      }
+    if (municipioData.deducoesParaFinsDeLimitesConstitucional) {
+      municipioData.deducoesParaFinsDeLimitesConstitucional.forEach((item) => {
+        const standardizedType = standardizeTypeFunction(item.tipo);
+        if (!typeToMunicipioToValue[standardizedType]) {
+          typeToMunicipioToValue[standardizedType] = {};
+        }
+        typeToMunicipioToValue[standardizedType][municipio] = getValidValue(item);
+      });
+    }
 
-      if (municipioData.tabelaCumprimentoLimitesConstitucionais) {
-        municipioData.tabelaCumprimentoLimitesConstitucionais.forEach((item) => {
-          const standardizedType = standardizeTypeFunction(item.tipo);
-          if (!typeToMunicipioToValue[standardizedType]) {
-            typeToMunicipioToValue[standardizedType] = {};
-          }
+    if (municipioData.minimo60PorCentoFundeb) {
+      municipioData.minimo60PorCentoFundeb.forEach((item) => {
+        const standardizedType = standardizeTypeFunction(item.tipo);
+        if (!typeToMunicipioToValue[standardizedType]) {
+          typeToMunicipioToValue[standardizedType] = {};
+        }
+        typeToMunicipioToValue[standardizedType][municipio] = getValidPercentage(item);
+      });
+    }
 
-          typeToMunicipioToValue[standardizedType][municipio] = getValidPercentage(item);
-        });
-      }
+    if (municipioData.deducoesFundebMagisterio) {
+      municipioData.deducoesFundebMagisterio.forEach((item) => {
+        const standardizedType = standardizeTypeFunction(item.tipo);
+        if (!typeToMunicipioToValue[standardizedType]) {
+          typeToMunicipioToValue[standardizedType] = {};
+        }
+        typeToMunicipioToValue[standardizedType][municipio] = getValidValue(item);
+      });
+    }
 
-      if (municipioData.apuracaoLimiteMinimoConstitucional) {
-        municipioData.apuracaoLimiteMinimoConstitucional.forEach((item) => {
-          const standardizedType = standardizeTypeFunction(item.tipo);
-          if (!typeToMunicipioToValue[standardizedType]) {
-            typeToMunicipioToValue[standardizedType] = {};
-          }
+    if (municipioData.deducoesParaFinsLimiteFundeb) {
+      municipioData.deducoesParaFinsLimiteFundeb.forEach((item) => {
+        const standardizedType = standardizeTypeFunction(item.tipo);
+        if (!typeToMunicipioToValue[standardizedType]) {
+          typeToMunicipioToValue[standardizedType] = {};
+        }
+        typeToMunicipioToValue[standardizedType][municipio] = getValidValue(item);
+      });
+    }
 
-          typeToMunicipioToValue[standardizedType][municipio] = getValidValue(item);
-        });
-      }
+    if (municipioData.indicadoresFundeb) {
+      municipioData.indicadoresFundeb.forEach((item) => {
+        const standardizedType = standardizeTypeFunction(item.tipo);
+        if (!typeToMunicipioToValue[standardizedType]) {
+          typeToMunicipioToValue[standardizedType] = {};
+        }
+        typeToMunicipioToValue[standardizedType][municipio] = getValidValue(item);
+      });
+    }
 
-      if (municipioData.deducoesParaFinsDeLimitesConstitucional) {
-        municipioData.deducoesParaFinsDeLimitesConstitucional.forEach((item) => {
-          const standardizedType = standardizeTypeFunction(item.tipo);
-          if (!typeToMunicipioToValue[standardizedType]) {
-            typeToMunicipioToValue[standardizedType] = {};
-          }
+    if (municipioData.indicadoresArt212) {
+      municipioData.indicadoresArt212.forEach((item) => {
+        const standardizedType = standardizeTypeFunction(item.tipo);
+        if (!typeToMunicipioToValue[standardizedType]) {
+          typeToMunicipioToValue[standardizedType] = {};
+        }
+        typeToMunicipioToValue[standardizedType][municipio] = getValidValue(item);
+      });
+    }
 
-          typeToMunicipioToValue[standardizedType][municipio] = getValidValue(item);
-        });
-      }
+    if (municipioData.deducoesAdicoesParaFinsLimiteConstitucional) {
+      municipioData.deducoesAdicoesParaFinsLimiteConstitucional.forEach((item) => {
+        const standardizedType = standardizeTypeFunction(item.tipo);
+        if (!typeToMunicipioToValue[standardizedType]) {
+          typeToMunicipioToValue[standardizedType] = {};
+        }
+        typeToMunicipioToValue[standardizedType][municipio] = getValidValue(item);
+      });
+    }
 
-      if (municipioData.minimo60PorCentoFundeb) {
-        municipioData.minimo60PorCentoFundeb.forEach((item) => {
-          const standardizedType = standardizeTypeFunction(item.tipo);
-          if (!typeToMunicipioToValue[standardizedType]) {
-            typeToMunicipioToValue[standardizedType] = {};
-          }
+    if (municipioData.deducoesParaFinsDeLimitesConstitucionais) {
+      municipioData.deducoesParaFinsDeLimitesConstitucionais.forEach((item) => {
+        const standardizedType = standardizeTypeFunction(item.tipo);
+        if (!typeToMunicipioToValue[standardizedType]) {
+          typeToMunicipioToValue[standardizedType] = {};
+        }
+        typeToMunicipioToValue[standardizedType][municipio] = getValidValue(item);
+      });
+    }
+  };
 
-          typeToMunicipioToValue[standardizedType][municipio] = getValidPercentage(item);
-        });
-      }
+  // Detectar o formato dos dados
+  const firstKey = Object.keys(data)[0];
+  const firstValue = data[firstKey];
+  
+  // Se a primeira chave parece ser um código IBGE (número com 6 dígitos) e o valor é um objeto (não array)
+  const isGroupedByMunicipio = firstKey && /^\d{6}$/.test(firstKey) && firstValue && typeof firstValue === 'object' && !Array.isArray(firstValue);
 
-      if (municipioData.deducoesFundebMagisterio) {
-        municipioData.deducoesFundebMagisterio.forEach((item) => {
-          const standardizedType = standardizeTypeFunction(item.tipo);
-          if (!typeToMunicipioToValue[standardizedType]) {
-            typeToMunicipioToValue[standardizedType] = {};
-          }
-
-          typeToMunicipioToValue[standardizedType][municipio] = getValidValue(item);
-        });
-      }
-
-      if (municipioData.deducoesParaFinsLimiteFundeb) {
-        municipioData.deducoesParaFinsLimiteFundeb.forEach((item) => {
-          const standardizedType = standardizeTypeFunction(item.tipo);
-          if (!typeToMunicipioToValue[standardizedType]) {
-            typeToMunicipioToValue[standardizedType] = {};
-          }
-
-          typeToMunicipioToValue[standardizedType][municipio] = getValidValue(item);
-        });
-      }
-
-      if (municipioData.indicadoresFundeb) {
-        municipioData.indicadoresFundeb.forEach((item) => {
-          const standardizedType = standardizeTypeFunction(item.tipo);
-          if (!typeToMunicipioToValue[standardizedType]) {
-            typeToMunicipioToValue[standardizedType] = {};
-          }
-
-          typeToMunicipioToValue[standardizedType][municipio] = getValidValue(item);
-        });
-      }
-
-      if (municipioData.indicadoresArt212) {
-        municipioData.indicadoresArt212.forEach((item) => {
-          const standardizedType = standardizeTypeFunction(item.tipo);
-          if (!typeToMunicipioToValue[standardizedType]) {
-            typeToMunicipioToValue[standardizedType] = {};
-          }
-
-          typeToMunicipioToValue[standardizedType][municipio] = getValidValue(item);
-        });
-      }
-
-      if (municipioData.deducoesAdicoesParaFinsLimiteConstitucional) {
-        municipioData.deducoesAdicoesParaFinsLimiteConstitucional.forEach((item) => {
-          const standardizedType = standardizeTypeFunction(item.tipo);
-          if (!typeToMunicipioToValue[standardizedType]) {
-            typeToMunicipioToValue[standardizedType] = {};
-          }
-
-          typeToMunicipioToValue[standardizedType][municipio] = getValidValue(item);
-        });
-      }
-
-      if (municipioData.deducoesParaFinsDeLimitesConstitucionais) {
-        municipioData.deducoesParaFinsDeLimitesConstitucionais.forEach((item) => {
-          const standardizedType = standardizeTypeFunction(item.tipo);
-          if (!typeToMunicipioToValue[standardizedType]) {
-            typeToMunicipioToValue[standardizedType] = {};
-          }
-
-          typeToMunicipioToValue[standardizedType][municipio] = getValidValue(item);
+  if (isGroupedByMunicipio) {
+    // Formato: { "220005": { revenues0708: [...], revenues09: [...] }, "220010": {...} }
+    Object.keys(data).forEach((codigoMunicipio) => {
+      const municipioRevenues = data[codigoMunicipio];
+      // Iterar sobre cada grupo de revenues (revenues0708, revenues09, etc.)
+      Object.keys(municipioRevenues).forEach((revenueKey) => {
+        const revenueArray = municipioRevenues[revenueKey];
+        if (Array.isArray(revenueArray)) {
+          revenueArray.forEach((record) => {
+            const municipio = record.codigoMunicipio || codigoMunicipio;
+            processMunicipioData(record, municipio);
+          });
+        }
+      });
+    });
+  } else {
+    // Formato original: { "revenues0708": [...], "revenues09": [...] }
+    Object.keys(data).forEach((key) => {
+      if (Array.isArray(data[key])) {
+        data[key].forEach((municipioData) => {
+          const municipio = municipioData.codigoMunicipio;
+          processMunicipioData(municipioData, municipio);
         });
       }
     });
-  });
+  }
 
   return {
-    rows: Array.from(municipios).sort(),
+    rows: Array.from(municipios).sort((a, b) => a.localeCompare(b)),
     typeToRowToValue: typeToMunicipioToValue,
   };
 };

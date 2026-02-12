@@ -942,6 +942,9 @@ function ChartContainer() {
 
           {!loading && !error && apiData && (
             <>
+
+
+
               {chartTitle && (
                 <Box sx={{ padding: 2 }}>
                   <Typography variant="h6" sx={{ marginBottom: 2, textAlign: 'center' }}>
@@ -954,7 +957,7 @@ function ChartContainer() {
                   key={selectedTable + JSON.stringify(apiData)}
                   indicatorType={selectedTable}
                   processDataFunction={processBasicEducationData}
-                  title="% do Fundeb nos profissionais de educação básica"
+                  title={chartTitle + " - % do Fundeb nos profissionais de educação básica"}
                   data={apiData}
                 />
               )}
@@ -964,17 +967,17 @@ function ChartContainer() {
                   key={selectedTable + JSON.stringify(apiData)}
                   indicatorType={selectedTable}
                   processDataFunction={processMDEData}
-                  title="% Aplicado em MDE por Município"
+                  title={chartTitle + " - % Aplicado em MDE por Município"}
                   data={apiData}
                 />
               )}
 
               {selectedTable === "revenueComposition" && (
-                <RevenueCompositionCharts data={apiData} />
+                <RevenueCompositionCharts data={apiData} title={chartTitle + " - Composição das Receitas"} />
               )}
 
               {selectedTable === "financingCapacity" && (
-                <FinancingCapacityCharts data={apiData} />
+                <FinancingCapacityCharts data={apiData} title={chartTitle + " - Capacidade de Financiamento"} />
               )}
 
               <CustomPagination
