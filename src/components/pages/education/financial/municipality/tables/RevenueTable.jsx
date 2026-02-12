@@ -236,13 +236,13 @@ const RevenueTable = ({
       XLSX.writeFile(wb, fileName);
     }
 
-    if (groupType === "ano") {
+    if (groupType === "ano" || groupType === "desagregado") {
       const wb = XLSX.utils.book_new();
       const wsData = [
-        ["Municipio", ...types],
+        ["Município (IBGE)", ...types],
         ...rows.map((row) => {
           return [
-            municipios[row]?.nomeMunicipio,
+            `${municipios[row]?.nomeMunicipio || row} (${row})`,
             ...types.map((type) => {
               if (
                 finalDisplayData[type] &&
@@ -267,14 +267,14 @@ const RevenueTable = ({
   const downloadPDF = () => {
     const doc = new jsPDF();
     const headers = [
-      groupType === "ano" ? "Municipio" : "Ano",
+      groupType === "ano" || groupType === "desagregado" ? "Município (IBGE)" : "Ano",
       ...types,
     ];
 
     const dataForTable = rows.map((row) => {
       return [
-        groupType === "ano"
-          ? `${municipios[row]?.nomeMunicipio}`
+        groupType === "ano" || groupType === "desagregado"
+          ? `${municipios[row]?.nomeMunicipio || row} (${row})`
           : `${row}`,
         ...types.map((type) => {
           if (
@@ -427,7 +427,7 @@ const RevenueTable = ({
               <StyledTableHead>
                 <TableRow>
                   <BoldTableCell>
-                    {groupType === "ano" ? "Municipio" : "Ano"}
+                    {groupType === "ano" || groupType === "desagregado" ? "Município (IBGE)" : "Ano"}
                   </BoldTableCell>
                   {types.map((type) => (
                     <BoldTableCell key={type} align="center">
@@ -443,8 +443,8 @@ const RevenueTable = ({
                     sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
                   >
                     <BoldTableCell component="th" scope="row">
-                      {groupType === "ano"
-                        ? `${municipios[row]?.nomeMunicipio}`
+                      {groupType === "ano" || groupType === "desagregado"
+                        ? `${municipios[row]?.nomeMunicipio || row} (${row})`
                         : `${row}`}
                     </BoldTableCell>
                     {types.map((type) => (

@@ -1,10 +1,7 @@
 import { municipios } from "./municipios.mapping";
 
 const createProcessFunction = (indicatorType) => (rawData, colorPalette) => {
-  const labels = [];
-  const percentages = [];
-  const backgroundColors = [];
-  const borderColors = [];
+  let rows = [];
   const municipalityColorsTemp = {};
 
   Object.entries(rawData).forEach(([year, dataPerYear]) => {
@@ -12,34 +9,33 @@ const createProcessFunction = (indicatorType) => (rawData, colorPalette) => {
       Object.entries(dataPerYear[key]).forEach(([key, data]) => {
         data.forEach((municipality) => {
           const codigoMunicipio = municipality.codigoMunicipio;
-          const nomeMunicipio =
-            municipios[codigoMunicipio]?.nomeMunicipio || "";
+          const nomeMunicipio = municipios[codigoMunicipio]?.nomeMunicipio || "";
           const ano = municipality.ano;
-
-          const indicador = municipality.indicador?.find(
-            (item) => item.tipo === indicatorType
-          );
-
+          const indicador = municipality.indicador?.find((item) => item.tipo === indicatorType);
           const percentageValue = indicador?.valor || 0;
-
-          labels.push(`${ano} - ${nomeMunicipio}`);
-          percentages.push(percentageValue.toFixed(2));
-
+          rows.push({ ano, nomeMunicipio, percentageValue, codigoMunicipio });
           if (!municipalityColorsTemp[codigoMunicipio]) {
-            const colorIndex =
-              Object.keys(municipalityColorsTemp).length % colorPalette.length;
+            const colorIndex = Object.keys(municipalityColorsTemp).length % colorPalette.length;
             municipalityColorsTemp[codigoMunicipio] = {
               color: colorPalette[colorIndex],
               name: nomeMunicipio,
             };
           }
-
-          backgroundColors.push(municipalityColorsTemp[codigoMunicipio].color);
-          borderColors.push(municipalityColorsTemp[codigoMunicipio].color);
         });
       });
     });
   });
+
+  // Ordenar por ano e nomeMunicipio
+  rows.sort((a, b) => {
+    if (a.ano !== b.ano) return a.ano - b.ano;
+    return a.nomeMunicipio.localeCompare(b.nomeMunicipio);
+  });
+
+  const labels = rows.map(row => `${row.ano} - ${row.nomeMunicipio}`);
+  const percentages = rows.map(row => row.percentageValue.toFixed(2));
+  const backgroundColors = rows.map(row => municipalityColorsTemp[row.codigoMunicipio].color);
+  const borderColors = backgroundColors;
 
   return {
     chartData: {
