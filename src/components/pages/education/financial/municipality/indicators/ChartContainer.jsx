@@ -816,12 +816,19 @@ function ChartContainer() {
   // Escutar eventos de filtro aplicados
   useEffect(() => {
     const handleApplyFilters = (event) => {
-      handleFilterChange(event.detail);
+      const { municipalIndicatorType, ...restFilters } = event.detail;
+      
+      // Atualizar o indicador selecionado se vier do evento
+      if (municipalIndicatorType && municipalIndicatorType !== selectedTable) {
+        setSelectedTable(municipalIndicatorType);
+      }
+      
+      handleFilterChange(restFilters);
     };
 
     window.addEventListener('applyFinancialFilters', handleApplyFilters);
     return () => window.removeEventListener('applyFinancialFilters', handleApplyFilters);
-  }, [handleFilterChange]);
+  }, [handleFilterChange, selectedTable]);
 
   const handlePageChange = (event, newPage) => {
     setPage(newPage);
@@ -942,16 +949,6 @@ function ChartContainer() {
 
           {!loading && !error && apiData && (
             <>
-
-
-
-              {chartTitle && (
-                <Box sx={{ padding: 2 }}>
-                  <Typography variant="h6" sx={{ marginBottom: 2, textAlign: 'center' }}>
-                    {chartTitle}
-                  </Typography>
-                </Box>
-              )}
               {selectedTable === "expensesBasicEducationFundeb" && (
                 <ChartComponent
                   key={selectedTable + JSON.stringify(apiData)}
@@ -978,6 +975,18 @@ function ChartContainer() {
 
               {selectedTable === "financingCapacity" && (
                 <FinancingCapacityCharts data={apiData} title={chartTitle + " - Capacidade de Financiamento"} />
+              )}
+
+              {selectedTable === "rpebComposition" && (
+                <RpebCompositionCharts data={apiData} title={chartTitle + " - Composição da RPEB"} />
+              )}
+
+              {selectedTable === "resourcesApplicationControl" && (
+                <ResourcesApplicationControlCharts data={apiData} title={chartTitle + " - Controle da Aplicação de Recursos"} />
+              )}
+
+              {selectedTable === "educationExpenseComposition" && (
+                <EducationExpenseCompositionCharts data={apiData} title={chartTitle + " - Composição das Despesas em Educação"} />
               )}
 
               <CustomPagination

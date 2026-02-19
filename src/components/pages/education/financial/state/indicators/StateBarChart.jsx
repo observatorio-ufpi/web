@@ -32,19 +32,34 @@ const StateBarChart = ({ chartData, title }) => {
 
   const downloadTableData = () => {
     const wb = XLSX.utils.book_new();
+    const fonte = "Fonte: SIOPE/FNDE - Elaboração: OPEPI/UFPI";
 
-    // Preparar dados para o Excel
+    // Cabeçalho com colunas dos datasets
+    const headers = ['Ano', ...chartData.datasets.map(dataset => dataset.label)];
+    const numCols = headers.length;
+
+    // Preparar dados para o Excel com título e fonte
     const wsData = [
-      ['Ano', ...chartData.datasets.map(dataset => dataset.label)],
+      [title], // Linha do título
+      [], // Linha vazia
+      headers, // Cabeçalho
       ...chartData.labels.map((label, index) => {
         return [
           label,
           ...chartData.datasets.map(dataset => dataset.data[index])
         ];
-      })
+      }),
+      [], // Linha vazia
+      [fonte], // Linha da fonte
     ];
 
     const ws = XLSX.utils.aoa_to_sheet(wsData);
+    
+    // Mesclar célula do título
+    ws['!merges'] = [
+      { s: { r: 0, c: 0 }, e: { r: 0, c: numCols - 1 } }
+    ];
+    
     XLSX.utils.book_append_sheet(wb, ws, 'Dados');
 
     // Salvar arquivo

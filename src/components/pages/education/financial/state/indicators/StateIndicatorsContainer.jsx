@@ -88,10 +88,18 @@ function StateIndicatorsContainer() {
   // Escutar eventos de filtro aplicados
   useEffect(() => {
     const handleApplyFilters = (event) => {
-      setStartYear(event.detail.anoInicial);
-      setEndYear(event.detail.anoFinal);
+      const { anoInicial, anoFinal, stateIndicatorType } = event.detail;
+      setStartYear(anoInicial);
+      setEndYear(anoFinal);
+      
+      // Atualizar o indicador selecionado se vier do evento
+      const indicatorToLoad = stateIndicatorType || selectedIndicator;
+      if (stateIndicatorType && stateIndicatorType !== selectedIndicator) {
+        setSelectedIndicator(stateIndicatorType);
+      }
+      
       setHasInitialLoad(true);
-      loadCSVData(selectedIndicator);
+      loadCSVData(indicatorToLoad);
     };
 
     window.addEventListener('applyFinancialFilters', handleApplyFilters);

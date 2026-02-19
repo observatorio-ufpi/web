@@ -18,7 +18,7 @@ const FinancialDataPage = ({ children, currentCategory }) => {
     },
     { 
       id: 'estado', 
-      label: 'Dados por Estado',
+      label: 'Dados Estaduais',
       description: 'Acesse dados financeiros consolidados do Piauí',
       path: '/estado'
     },

@@ -39,7 +39,8 @@ const StateRevenueTableContainer = () => {
   const handleFilter = () => {
     setHasInitialLoad(true);
     const yearDisplay = startYear === endYear ? startYear : `${startYear}-${endYear}`;
-    setTableTitle(`Dados Estaduais - Piauí (${yearDisplay})`);
+    const tableName = stateTableNames[selectedTable];
+    setTableTitle(`${tableName} (${yearDisplay})`);
     refetch();
   };
 
@@ -48,17 +49,28 @@ const StateRevenueTableContainer = () => {
     const handleApplyFilters = (event) => {
       setStartYear(event.detail.anoInicial);
       setEndYear(event.detail.anoFinal);
+      
+      // Atualizar o tipo de tabela se foi passado no evento
+      if (event.detail.stateTableType) {
+        setSelectedTable(event.detail.stateTableType);
+      }
+      
       setHasInitialLoad(true);
       const yearDisplay = event.detail.anoInicial === event.detail.anoFinal 
         ? event.detail.anoInicial 
         : `${event.detail.anoInicial}-${event.detail.anoFinal}`;
-      setTableTitle(`Dados Estaduais - Piauí (${yearDisplay})`);
+      
+      // Incluir o nome da tabela no título
+      const tableName = event.detail.stateTableType 
+        ? stateTableNames[event.detail.stateTableType] 
+        : stateTableNames[selectedTable];
+      setTableTitle(`${tableName} (${yearDisplay})`);
       refetch();
     };
 
     window.addEventListener('applyFinancialFilters', handleApplyFilters);
     return () => window.removeEventListener('applyFinancialFilters', handleApplyFilters);
-  }, [refetch]);
+  }, [refetch, selectedTable]);
 
   return (
     <div className='app-container'>
