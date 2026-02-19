@@ -13,6 +13,7 @@ const FinancialCategorySidebar = () => {
   const [selectedMunicipio, setSelectedMunicipio] = useState(null);
   const [anoInicial, setAnoInicial] = useState(2007);
   const [anoFinal, setAnoFinal] = useState(2024);
+  const [selectedTableType, setSelectedTableType] = useState('ownRevenues');
 
   const handleVoltar = () => {
     navigate('/');
@@ -37,6 +38,9 @@ const FinancialCategorySidebar = () => {
     setSelectedMunicipio(filters.codigoMunicipio);
     setAnoInicial(filters.anoInicial);
     setAnoFinal(filters.anoFinal);
+    if (filters.tableType) {
+      setSelectedTableType(filters.tableType);
+    }
     
     // Disparar evento para o RevenueTableContainer
     window.dispatchEvent(new CustomEvent('applyFinancialFilters', {
@@ -116,6 +120,8 @@ const FinancialCategorySidebar = () => {
               anoInicial={anoInicial}
               anoFinal={anoFinal}
               filtersExpanded={true}
+              showTableTypeFilter={currentCategory === 'municipios'}
+              selectedTableType={selectedTableType}
             />
           </div>
 
