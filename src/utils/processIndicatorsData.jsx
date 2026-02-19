@@ -4,37 +4,76 @@ const createProcessFunction = (indicatorType) => (rawData, colorPalette) => {
   let rows = [];
   const municipalityColorsTemp = {};
 
-  Object.entries(rawData).forEach(([year, dataPerYear]) => {
-    Object.keys(dataPerYear).forEach((key) => {
-      Object.entries(dataPerYear[key]).forEach(([key, data]) => {
-        data.forEach((municipality) => {
-          const codigoMunicipio = municipality.codigoMunicipio;
-          const nomeMunicipio = municipios[codigoMunicipio]?.nomeMunicipio || "";
-          const ano = municipality.ano;
-          const indicador = municipality.indicador?.find((item) => item.tipo === indicatorType);
-          const percentageValue = indicador?.valor || 0;
-          rows.push({ ano, nomeMunicipio, percentageValue, codigoMunicipio });
-          if (!municipalityColorsTemp[codigoMunicipio]) {
-            const colorIndex = Object.keys(municipalityColorsTemp).length % colorPalette.length;
-            municipalityColorsTemp[codigoMunicipio] = {
-              color: colorPalette[colorIndex],
-              name: nomeMunicipio,
-            };
-          }
-        });
+  // Extrair dados - verificar se vem com estrutura de paginação ou diretamente
+  const dataToProcess = rawData?.data || rawData;
+  
+  if (!dataToProcess || typeof dataToProcess !== 'object') {
+    console.warn('processIndicatorsData: dados inválidos ou vazios', rawData);
+    return {
+      chartData: {
+        labels: [],
+        datasets: [{
+          label: `Composição ${indicatorType}`,
+          data: [],
+          backgroundColor: [],
+          borderColor: [],
+          borderWidth: 1,
+        }],
+      },
+      municipalityColors: {},
+    };
+  }
+
+  // Função auxiliar para processar cada item de dados
+  const processDataItem = (item) => {
+    const codigoMunicipio = item.codigoMunicipio;
+    const nomeMunicipio = municipios[codigoMunicipio]?.nomeMunicipio || `Município ${codigoMunicipio}`;
+    const ano = item.ano;
+    const indicador = item.indicador?.find((ind) => ind.tipo === indicatorType);
+    const percentageValue = indicador?.valor || 0;
+    
+    rows.push({ ano, nomeMunicipio, percentageValue, codigoMunicipio });
+    
+    if (!municipalityColorsTemp[codigoMunicipio]) {
+      const colorIndex = Object.keys(municipalityColorsTemp).length % colorPalette.length;
+      municipalityColorsTemp[codigoMunicipio] = {
+        color: colorPalette[colorIndex],
+        name: nomeMunicipio,
+      };
+    }
+  };
+
+  // Iterar pela estrutura de dados (pode ser agrupada por município ou por ano)
+  Object.entries(dataToProcess).forEach(([groupKey, groupData]) => {
+    // groupData é o objeto com os períodos (revenues0708, revenues0914, etc.)
+    if (groupData && typeof groupData === 'object') {
+      Object.entries(groupData).forEach(([periodKey, periodData]) => {
+        // periodData é o array de dados do período
+        if (Array.isArray(periodData)) {
+          periodData.forEach((item) => {
+            if (item && item.codigoMunicipio) {
+              processDataItem(item);
+            }
+          });
+        }
       });
-    });
+    }
   });
 
   // Ordenar por ano e nomeMunicipio
   rows.sort((a, b) => {
-    if (a.ano !== b.ano) return a.ano - b.ano;
-    return a.nomeMunicipio.localeCompare(b.nomeMunicipio);
+    const anoA = parseInt(a.ano) || 0;
+    const anoB = parseInt(b.ano) || 0;
+    if (anoA !== anoB) return anoA - anoB;
+    return (a.nomeMunicipio || '').localeCompare(b.nomeMunicipio || '');
   });
 
   const labels = rows.map(row => `${row.ano} - ${row.nomeMunicipio}`);
-  const percentages = rows.map(row => row.percentageValue.toFixed(2));
-  const backgroundColors = rows.map(row => municipalityColorsTemp[row.codigoMunicipio].color);
+  const percentages = rows.map(row => {
+    const value = parseFloat(row.percentageValue);
+    return isNaN(value) ? 0 : value.toFixed(2);
+  });
+  const backgroundColors = rows.map(row => municipalityColorsTemp[row.codigoMunicipio]?.color || colorPalette[0]);
   const borderColors = backgroundColors;
 
   return {

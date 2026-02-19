@@ -79,7 +79,7 @@ function RevenueTableContainer() {
   const [selectedMunicipio, setSelectedMunicipio] = useState(null);
   const [groupType, setGroupType] = useState("municipio");
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
+  const [limit, setLimit] = useState(100);
   const [totalPages, setTotalPages] = useState(1);
   const [tableTitle, setTableTitle] = useState("");
   const [filters, setFilters] = useState({
@@ -339,6 +339,43 @@ function RevenueTableContainer() {
     });
     
     return consolidatedData;
+  };
+
+  // Função para preparar dados de um município específico para a tabela
+  const prepareDataForMunicipio = (data, codigoMunicipio) => {
+    if (!data || !data[codigoMunicipio]) return {};
+    
+    const municipioData = data[codigoMunicipio];
+    const preparedData = {};
+    
+    // Agrupar por período (revenues0708, revenues09, etc.)
+    Object.entries(municipioData).forEach(([period, records]) => {
+      if (Array.isArray(records)) {
+        records.forEach((record) => {
+          const year = record.ano ? String(record.ano) : period;
+          if (!preparedData[year]) {
+            preparedData[year] = [];
+          }
+          preparedData[year].push(record);
+        });
+      }
+    });
+    
+    return preparedData;
+  };
+
+  // Função para obter lista de municípios do apiData
+  const getMunicipiosFromData = (data) => {
+    if (!data) return [];
+    return Object.keys(data).filter(key => {
+      // Verificar se a chave parece ser código de município (6 ou 7 dígitos numéricos)
+      return /^\d{6,7}$/.test(key);
+    });
+  };
+
+  // Função para obter o nome do município
+  const getNomeMunicipio = (codigoMunicipio) => {
+    return municipios[codigoMunicipio]?.nomeMunicipio || `Município ${codigoMunicipio}`;
   };
 
   const downloadAllTables = () => {
@@ -744,150 +781,152 @@ function RevenueTableContainer() {
                   )}
                 </>
               ) : groupType === "municipio" ? (
-                // Renderização para dados agrupados por MUNICÍPIO (UMA ÚNICA TABELA com todos os municípios, consolidado por ano)
+                // Renderização para dados agrupados por MUNICÍPIO (UMA TABELA POR MUNICÍPIO)
                 <>
-                  {selectedTable === "allTables"
-                    ? Object.keys(consolidateDataByMunicipio(apiData)).map((year) =>
-                        Object.keys(consolidateDataByMunicipio(apiData)[year] || {}).map((revenueType) => (
-                          <div key={`${year}-${revenueType}`}>
-                            {selectedTable === "allTables" && (
-                              <RevenueTable
-                                data={consolidateDataByMunicipio(apiData)}
-                                transformDataFunction={transformDataForTableRevenues}
-                                standardizeTypeFunction={standardizedTypeAllTables}
-                                tableName="Tabelão"
-                                keyTable="municipios_consolidado"
-                                groupType={groupType}
-                              />
-                            )}
-                          </div>
-                        ))
-                      )
-                    : selectedTable === "ownRevenues" && (
+                  {getMunicipiosFromData(apiData).map((codigoMunicipio) => (
+                    <div key={codigoMunicipio} style={{ marginBottom: '2rem' }}>
+                      <Box sx={{ padding: 2, backgroundColor: '#e3f2fd', borderRadius: 1, marginBottom: 1 }}>
+                        <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+                          {getNomeMunicipio(codigoMunicipio)} (IBGE: {codigoMunicipio})
+                        </Typography>
+                      </Box>
+                      {selectedTable === "ownRevenues" && (
                         <RevenueTable
-                          data={consolidateDataByMunicipio(apiData)}
+                          data={prepareDataForMunicipio(apiData, codigoMunicipio)}
                           transformDataFunction={transformDataForTableRevenues}
                           standardizeTypeFunction={standardizedTypeOwnRevenues}
                           tableMapping={mapOwnRevenues}
                           tableName="Impostos Próprios"
-                          keyTable="municipios_consolidado"
+                          keyTable={`municipio_${codigoMunicipio}`}
                           groupType={groupType}
                           enableMonetaryCorrection={true}
                         />
                       )}
-                  {selectedTable === "constitutionalTransfersRevenue" && (
-                    <RevenueTable
-                      data={consolidateDataByMunicipio(apiData)}
-                      transformDataFunction={transformDataForTableRevenues}
-                      standardizeTypeFunction={standardizedTypeConstitutionalTransfersRevenue}
-                      tableMapping={mapConstitutionalTransfersRevenue}
-                      tableName="Receita de transferências constitucionais e legais"
-                      keyTable="municipios_consolidado"
-                      groupType={groupType}
-                      enableMonetaryCorrection={true}
-                    />
-                  )}
-                  {selectedTable === "municipalTaxesRevenues" && (
-                    <RevenueTable
-                      data={consolidateDataByMunicipio(apiData)}
-                      transformDataFunction={transformDataForTableRevenues}
-                      standardizeTypeFunction={standardizeTypeMunicipalTaxesRevenues}
-                      tableMapping={mapMunicipalTaxesRevenues}
-                      tableName="Receita Líquida de Impostos do Município"
-                      keyTable="municipios_consolidado"
-                      groupType={groupType}
-                      enableMonetaryCorrection={true}
-                    />
-                  )}
-                  {selectedTable === "additionalEducationRevenue" && (
-                    <RevenueTable
-                      data={consolidateDataByMunicipio(apiData)}
-                      transformDataFunction={transformDataForTableRevenues}
-                      standardizeTypeFunction={standardizeTypeAdditionalEducationRevenues}
-                      tableMapping={mapAdditionalMunicipalEducationRevenue}
-                      tableName="Receitas adicionais da educação no Município"
-                      keyTable="municipios_consolidado"
-                      groupType={groupType}
-                      enableMonetaryCorrection={true}
-                    />
-                  )}
-                  {selectedTable === "municipalFundebFundefComposition" && (
-                    <RevenueTable
-                      data={consolidateDataByMunicipio(apiData)}
-                      transformDataFunction={transformDataForTableRevenues}
-                      standardizeTypeFunction={standardizedTypeMunicipalFundebFundefComposition}
-                      tableMapping={mapMunicipalFundebFundefComposition}
-                      tableName="Composição do Fundef/Fundeb no município"
-                      keyTable="municipios_consolidado"
-                      groupType={groupType}
-                    />
-                  )}
-                  {selectedTable === "complementationFundebFundef" && (
-                    <RevenueTable
-                      data={consolidateDataByMunicipio(apiData)}
-                      transformDataFunction={transformDataForTableRevenues}
-                      standardizeTypeFunction={standardizedTypeComplementationFundebFundef}
-                      tableMapping={mapComplementationFundebFundef}
-                      tableName="Composição da complementação do Fundef/Fundeb"
-                      keyTable="municipios_consolidado"
-                      groupType={groupType}
-                    />
-                  )}
-                  {selectedTable === "constitutionalLimitMde" && (
-                    <RevenueTable
-                      data={consolidateDataByMunicipio(apiData)}
-                      transformDataFunction={transformDataForTableRevenues}
-                      standardizeTypeFunction={standardizedTypeConstitutionalLimitMde}
-                      tableMapping={mapConstitutionalLimitMde}
-                      tableName="Limite constitucional em MDE no município"
-                      keyTable="municipios_consolidado"
-                      groupType={groupType}
-                    />
-                  )}
-                  {selectedTable === "expensesBasicEducationFundeb" && (
-                    <RevenueTable
-                      data={consolidateDataByMunicipio(apiData)}
-                      transformDataFunction={transformDataForTableRevenues}
-                      standardizeTypeFunction={standardizedTypeExpensesBasicEducationFundeb}
-                      tableMapping={mapExpensesBasicEducationFundeb}
-                      tableName="Despesas com profissionais da educação básica com o Fundef/Fundeb"
-                      keyTable="municipios_consolidado"
-                      groupType={groupType}
-                    />
-                  )}
-                  {selectedTable === "areasActivityExpense" && (
-                    <RevenueTable
-                      data={consolidateDataByMunicipio(apiData)}
-                      transformDataFunction={transformDataForTableRevenues}
-                      standardizeTypeFunction={standardizedTypeAreasActivityExpense}
-                      tableMapping={mapAreasActivityExpense}
-                      tableName="Despesas em MDE por área de atuação"
-                      keyTable="municipios_consolidado"
-                      groupType={groupType}
-                    />
-                  )}
-                  {selectedTable === "basicEducationMinimalPotential" && (
-                    <RevenueTable
-                      data={consolidateDataByMunicipio(apiData)}
-                      transformDataFunction={transformDataForTableRevenues}
-                      standardizeTypeFunction={standardizedTypeBasicEducationMinimalPotential}
-                      tableMapping={mapBasicEducationMinimalPotential}
-                      tableName="Receita Potencial Mínima vinculada à Educação Básica"
-                      keyTable="municipios_consolidado"
-                      groupType={groupType}
-                    />
-                  )}
-                  {selectedTable === "complementaryProtocol" && (
-                    <RevenueTable
-                      data={consolidateDataByMunicipio(apiData)}
-                      transformDataFunction={transformDataForTableRevenues}
-                      standardizeTypeFunction={standardizedTypeComplementaryProtocol}
-                      tableMapping={mapComplementaryProtocol}
-                      tableName="Protocolo Complementar"
-                      keyTable="municipios_consolidado"
-                      groupType={groupType}
-                    />
-                  )}
+                      {selectedTable === "constitutionalTransfersRevenue" && (
+                        <RevenueTable
+                          data={prepareDataForMunicipio(apiData, codigoMunicipio)}
+                          transformDataFunction={transformDataForTableRevenues}
+                          standardizeTypeFunction={standardizedTypeConstitutionalTransfersRevenue}
+                          tableMapping={mapConstitutionalTransfersRevenue}
+                          tableName="Receita de transferências constitucionais e legais"
+                          keyTable={`municipio_${codigoMunicipio}`}
+                          groupType={groupType}
+                          enableMonetaryCorrection={true}
+                        />
+                      )}
+                      {selectedTable === "municipalTaxesRevenues" && (
+                        <RevenueTable
+                          data={prepareDataForMunicipio(apiData, codigoMunicipio)}
+                          transformDataFunction={transformDataForTableRevenues}
+                          standardizeTypeFunction={standardizeTypeMunicipalTaxesRevenues}
+                          tableMapping={mapMunicipalTaxesRevenues}
+                          tableName="Receita Líquida de Impostos do Município"
+                          keyTable={`municipio_${codigoMunicipio}`}
+                          groupType={groupType}
+                          enableMonetaryCorrection={true}
+                        />
+                      )}
+                      {selectedTable === "additionalEducationRevenue" && (
+                        <RevenueTable
+                          data={prepareDataForMunicipio(apiData, codigoMunicipio)}
+                          transformDataFunction={transformDataForTableRevenues}
+                          standardizeTypeFunction={standardizeTypeAdditionalEducationRevenues}
+                          tableMapping={mapAdditionalMunicipalEducationRevenue}
+                          tableName="Receitas adicionais da educação no Município"
+                          keyTable={`municipio_${codigoMunicipio}`}
+                          groupType={groupType}
+                          enableMonetaryCorrection={true}
+                        />
+                      )}
+                      {selectedTable === "municipalFundebFundefComposition" && (
+                        <RevenueTable
+                          data={prepareDataForMunicipio(apiData, codigoMunicipio)}
+                          transformDataFunction={transformDataForTableRevenues}
+                          standardizeTypeFunction={standardizedTypeMunicipalFundebFundefComposition}
+                          tableMapping={mapMunicipalFundebFundefComposition}
+                          tableName="Composição do Fundef/Fundeb no município"
+                          keyTable={`municipio_${codigoMunicipio}`}
+                          groupType={groupType}
+                        />
+                      )}
+                      {selectedTable === "complementationFundebFundef" && (
+                        <RevenueTable
+                          data={prepareDataForMunicipio(apiData, codigoMunicipio)}
+                          transformDataFunction={transformDataForTableRevenues}
+                          standardizeTypeFunction={standardizedTypeComplementationFundebFundef}
+                          tableMapping={mapComplementationFundebFundef}
+                          tableName="Composição da complementação do Fundef/Fundeb"
+                          keyTable={`municipio_${codigoMunicipio}`}
+                          groupType={groupType}
+                        />
+                      )}
+                      {selectedTable === "constitutionalLimitMde" && (
+                        <RevenueTable
+                          data={prepareDataForMunicipio(apiData, codigoMunicipio)}
+                          transformDataFunction={transformDataForTableRevenues}
+                          standardizeTypeFunction={standardizedTypeConstitutionalLimitMde}
+                          tableMapping={mapConstitutionalLimitMde}
+                          tableName="Limite constitucional em MDE no município"
+                          keyTable={`municipio_${codigoMunicipio}`}
+                          groupType={groupType}
+                        />
+                      )}
+                      {selectedTable === "expensesBasicEducationFundeb" && (
+                        <RevenueTable
+                          data={prepareDataForMunicipio(apiData, codigoMunicipio)}
+                          transformDataFunction={transformDataForTableRevenues}
+                          standardizeTypeFunction={standardizedTypeExpensesBasicEducationFundeb}
+                          tableMapping={mapExpensesBasicEducationFundeb}
+                          tableName="Despesas com profissionais da educação básica com o Fundef/Fundeb"
+                          keyTable={`municipio_${codigoMunicipio}`}
+                          groupType={groupType}
+                        />
+                      )}
+                      {selectedTable === "areasActivityExpense" && (
+                        <RevenueTable
+                          data={prepareDataForMunicipio(apiData, codigoMunicipio)}
+                          transformDataFunction={transformDataForTableRevenues}
+                          standardizeTypeFunction={standardizedTypeAreasActivityExpense}
+                          tableMapping={mapAreasActivityExpense}
+                          tableName="Despesas em MDE por área de atuação"
+                          keyTable={`municipio_${codigoMunicipio}`}
+                          groupType={groupType}
+                        />
+                      )}
+                      {selectedTable === "basicEducationMinimalPotential" && (
+                        <RevenueTable
+                          data={prepareDataForMunicipio(apiData, codigoMunicipio)}
+                          transformDataFunction={transformDataForTableRevenues}
+                          standardizeTypeFunction={standardizedTypeBasicEducationMinimalPotential}
+                          tableMapping={mapBasicEducationMinimalPotential}
+                          tableName="Receita Potencial Mínima vinculada à Educação Básica"
+                          keyTable={`municipio_${codigoMunicipio}`}
+                          groupType={groupType}
+                        />
+                      )}
+                      {selectedTable === "complementaryProtocol" && (
+                        <RevenueTable
+                          data={prepareDataForMunicipio(apiData, codigoMunicipio)}
+                          transformDataFunction={transformDataForTableRevenues}
+                          standardizeTypeFunction={standardizedTypeComplementaryProtocol}
+                          tableMapping={mapComplementaryProtocol}
+                          tableName="Protocolo Complementar"
+                          keyTable={`municipio_${codigoMunicipio}`}
+                          groupType={groupType}
+                        />
+                      )}
+                      {selectedTable === "allTables" && (
+                        <RevenueTable
+                          data={prepareDataForMunicipio(apiData, codigoMunicipio)}
+                          transformDataFunction={transformDataForTableRevenues}
+                          standardizeTypeFunction={standardizedTypeAllTables}
+                          tableName="Tabelão"
+                          keyTable={`municipio_${codigoMunicipio}`}
+                          groupType={groupType}
+                        />
+                      )}
+                    </div>
+                  ))}
                 </>
               ) : (
                 // Renderização para dados agrupados por ANO (múltiplas tabelas, uma por ano)
