@@ -14,6 +14,9 @@ const FinancialCategorySidebar = () => {
   const [anoInicial, setAnoInicial] = useState(2007);
   const [anoFinal, setAnoFinal] = useState(2024);
   const [selectedTableType, setSelectedTableType] = useState('ownRevenues');
+  const [selectedStateTableType, setSelectedStateTableType] = useState('tabela1');
+  const [selectedStateIndicatorType, setSelectedStateIndicatorType] = useState('revenueComposition');
+  const [selectedMunicipalIndicatorType, setSelectedMunicipalIndicatorType] = useState('constitutionalLimitMde');
 
   const handleVoltar = () => {
     navigate('/');
@@ -41,6 +44,15 @@ const FinancialCategorySidebar = () => {
     if (filters.tableType) {
       setSelectedTableType(filters.tableType);
     }
+    if (filters.stateTableType) {
+      setSelectedStateTableType(filters.stateTableType);
+    }
+    if (filters.stateIndicatorType) {
+      setSelectedStateIndicatorType(filters.stateIndicatorType);
+    }
+    if (filters.municipalIndicatorType) {
+      setSelectedMunicipalIndicatorType(filters.municipalIndicatorType);
+    }
     
     // Disparar evento para o RevenueTableContainer
     window.dispatchEvent(new CustomEvent('applyFinancialFilters', {
@@ -49,8 +61,8 @@ const FinancialCategorySidebar = () => {
   };
 
   const categories = [
-    { id: 'municipios', label: 'Dados por Município', path: '/municipios' },
-    { id: 'estado', label: 'Dados por Estado', path: '/estado' },
+    { id: 'municipios', label: 'Dados Municipais', path: '/municipios' },
+    { id: 'estado', label: 'Dados Estaduais', path: '/estado' },
     { id: 'indicadores', label: 'Indicadores - Município', path: '/indicadores' },
     { id: 'indicadores-estaduais', label: 'Indicadores - Estado', path: '/indicadores-estaduais' }
   ];
@@ -119,9 +131,16 @@ const FinancialCategorySidebar = () => {
               gerenciaRegionalMunicipio=""
               anoInicial={anoInicial}
               anoFinal={anoFinal}
-              filtersExpanded={true}
+              filtersExpanded={currentCategory === 'municipios'}
               showTableTypeFilter={currentCategory === 'municipios'}
               selectedTableType={selectedTableType}
+              showStateTableTypeFilter={currentCategory === 'estado'}
+              selectedStateTableType={selectedStateTableType}
+              showStateIndicatorTypeFilter={currentCategory === 'indicadores-estaduais'}
+              selectedStateIndicatorType={selectedStateIndicatorType}
+              showMunicipalIndicatorTypeFilter={currentCategory === 'indicadores'}
+              selectedMunicipalIndicatorType={selectedMunicipalIndicatorType}
+              showMunicipioFilters={currentCategory === 'municipios' || currentCategory === 'indicadores'}
             />
           </div>
 

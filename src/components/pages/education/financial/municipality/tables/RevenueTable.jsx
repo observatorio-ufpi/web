@@ -12,7 +12,7 @@ import TableRow from "@mui/material/TableRow";
 import { ThemeProvider, createTheme, styled, useTheme } from "@mui/material/styles";
 import React, { useState, useEffect, useMemo } from "react";
 import * as XLSX from "xlsx";
-import { municipios } from "../../../../../../utils/municipios.mapping";
+import { municipios, Regioes, FaixaPopulacional } from "../../../../../../utils/municipios.mapping";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Switch from "@mui/material/Switch";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -67,6 +67,10 @@ const RevenueTable = ({
   keyTable,
   groupType,
   enableMonetaryCorrection = false,
+  anoInicial = null,
+  anoFinal = null,
+  nomeMunicipio = null,
+  filtrosAplicados = null,
 }) => {
   const globalTheme = useTheme();
   const [useMonetaryCorrection, setUseMonetaryCorrection] = useState(false);
@@ -209,9 +213,47 @@ const RevenueTable = ({
   };
 
   const downloadExcel = () => {
+    // Gerar período e metadados
+    const periodoLabel = anoInicial && anoFinal 
+      ? (anoInicial === anoFinal ? `${anoInicial}` : `${anoInicial}-${anoFinal}`)
+      : '';
+    const municipioLabel = nomeMunicipio ? nomeMunicipio.replace(/\s+/g, '_') : '';
+    const tituloCompleto = nomeMunicipio 
+      ? `${tableName} - ${nomeMunicipio}${periodoLabel ? ` (${periodoLabel})` : ''}`
+      : `${tableName}${periodoLabel ? ` (${periodoLabel})` : ''}`;
+    const fonte = "Fonte: SIOPE/FNDE - Elaboração: OPEPI/UFPI";
+    
+    // Construir nome do arquivo com filtros aplicados
+    const nomeArquivoParts = [tableName.replace(/\s+/g, '_')];
+    if (periodoLabel) nomeArquivoParts.push(periodoLabel);
+    if (municipioLabel) nomeArquivoParts.push(municipioLabel);
+    
+    // Adicionar filtros extras se disponíveis
+    if (filtrosAplicados) {
+      if (filtrosAplicados.territorioDeDesenvolvimentoMunicipio) {
+        const territorioLabel = Regioes[filtrosAplicados.territorioDeDesenvolvimentoMunicipio] || filtrosAplicados.territorioDeDesenvolvimentoMunicipio;
+        nomeArquivoParts.push(`TD_${territorioLabel.replace(/\s+/g, '_')}`);
+      }
+      if (filtrosAplicados.faixaPopulacionalMunicipio) {
+        const faixaLabel = FaixaPopulacional[filtrosAplicados.faixaPopulacionalMunicipio] || filtrosAplicados.faixaPopulacionalMunicipio;
+        nomeArquivoParts.push(`FP_${faixaLabel.replace(/\s+/g, '_').replace(/[^\w]/g, '')}`);
+      }
+      if (filtrosAplicados.aglomeradoMunicipio) {
+        nomeArquivoParts.push(`Agl_${filtrosAplicados.aglomeradoMunicipio}`);
+      }
+      if (filtrosAplicados.gerenciaRegionalMunicipio) {
+        nomeArquivoParts.push(`GRE_${filtrosAplicados.gerenciaRegionalMunicipio}`);
+      }
+    }
+    
+    nomeArquivoParts.push(keyTable);
+    const nomeArquivoBase = nomeArquivoParts.join('_').replace(/[<>:"/\\|?*]/g, '');
+
     if (groupType === "municipio") {
       const wb = XLSX.utils.book_new();
       const wsData = [
+        [tituloCompleto], // Linha do título
+        [], // Linha vazia
         ["Ano", ...types],
         ...rows.map((row) => {
           return [
@@ -229,16 +271,25 @@ const RevenueTable = ({
             }),
           ];
         }),
+        [], // Linha vazia
+        [fonte], // Linha da fonte
       ];
       const ws = XLSX.utils.aoa_to_sheet(wsData);
+      
+      // Mesclar célula do título
+      ws['!merges'] = [
+        { s: { r: 0, c: 0 }, e: { r: 0, c: types.length } }
+      ];
+      
       XLSX.utils.book_append_sheet(wb, ws, "Receitas");
-      const fileName = `${tableName}_${keyTable}.xlsx`; // Nome do arquivo incluindo o nome da tabela e o município
-      XLSX.writeFile(wb, fileName);
+      XLSX.writeFile(wb, `${nomeArquivoBase}.xlsx`);
     }
 
     if (groupType === "ano" || groupType === "desagregado") {
       const wb = XLSX.utils.book_new();
       const wsData = [
+        [tituloCompleto], // Linha do título
+        [], // Linha vazia
         ["Município (IBGE)", ...types],
         ...rows.map((row) => {
           return [
@@ -256,15 +307,58 @@ const RevenueTable = ({
             }),
           ];
         }),
+        [], // Linha vazia
+        [fonte], // Linha da fonte
       ];
       const ws = XLSX.utils.aoa_to_sheet(wsData);
+      
+      // Mesclar célula do título
+      ws['!merges'] = [
+        { s: { r: 0, c: 0 }, e: { r: 0, c: types.length } }
+      ];
+      
       XLSX.utils.book_append_sheet(wb, ws, "Receitas");
-      const fileName = `${tableName}_${keyTable}.xlsx`; // Nome do arquivo incluindo o nome da tabela e o município
-      XLSX.writeFile(wb, fileName);
+      XLSX.writeFile(wb, `${nomeArquivoBase}.xlsx`);
     }
   };
 
   const downloadPDF = () => {
+    // Gerar período e metadados
+    const periodoLabel = anoInicial && anoFinal 
+      ? (anoInicial === anoFinal ? `${anoInicial}` : `${anoInicial}-${anoFinal}`)
+      : '';
+    const municipioLabel = nomeMunicipio ? nomeMunicipio.replace(/\s+/g, '_') : '';
+    const tituloCompleto = nomeMunicipio 
+      ? `${tableName} - ${nomeMunicipio}${periodoLabel ? ` (${periodoLabel})` : ''}`
+      : `${tableName}${periodoLabel ? ` (${periodoLabel})` : ''}`;
+    const fonte = "Fonte: SIOPE/FNDE - Elaboração: OPEPI/UFPI";
+
+    // Construir nome do arquivo com filtros aplicados
+    const nomeArquivoParts = [tableName.replace(/\s+/g, '_')];
+    if (periodoLabel) nomeArquivoParts.push(periodoLabel);
+    if (municipioLabel) nomeArquivoParts.push(municipioLabel);
+    
+    // Adicionar filtros extras se disponíveis
+    if (filtrosAplicados) {
+      if (filtrosAplicados.territorioDeDesenvolvimentoMunicipio) {
+        const territorioLabel = Regioes[filtrosAplicados.territorioDeDesenvolvimentoMunicipio] || filtrosAplicados.territorioDeDesenvolvimentoMunicipio;
+        nomeArquivoParts.push(`TD_${territorioLabel.replace(/\s+/g, '_')}`);
+      }
+      if (filtrosAplicados.faixaPopulacionalMunicipio) {
+        const faixaLabel = FaixaPopulacional[filtrosAplicados.faixaPopulacionalMunicipio] || filtrosAplicados.faixaPopulacionalMunicipio;
+        nomeArquivoParts.push(`FP_${faixaLabel.replace(/\s+/g, '_').replace(/[^\w]/g, '')}`);
+      }
+      if (filtrosAplicados.aglomeradoMunicipio) {
+        nomeArquivoParts.push(`Agl_${filtrosAplicados.aglomeradoMunicipio}`);
+      }
+      if (filtrosAplicados.gerenciaRegionalMunicipio) {
+        nomeArquivoParts.push(`GRE_${filtrosAplicados.gerenciaRegionalMunicipio}`);
+      }
+    }
+    
+    nomeArquivoParts.push(keyTable);
+    const nomeArquivoBase = nomeArquivoParts.join('_').replace(/[<>:"/\\|?*]/g, '');
+
     const doc = new jsPDF();
     const headers = [
       groupType === "ano" || groupType === "desagregado" ? "Município (IBGE)" : "Ano",
@@ -289,10 +383,15 @@ const RevenueTable = ({
       ];
     });
 
+    // Adicionar título
+    doc.setFontSize(14);
+    doc.setFont(undefined, 'bold');
+    doc.text(tituloCompleto, 14, 15);
+
     doc.autoTable({
       head: [headers],
       body: dataForTable,
-      startY: 20,
+      startY: 25,
       styles: {
         fontSize: 8,
         cellPadding: 2,
@@ -315,8 +414,14 @@ const RevenueTable = ({
       },
     });
 
+    // Adicionar fonte no rodapé
+    const finalY = doc.lastAutoTable.finalY || 25;
+    doc.setFontSize(9);
+    doc.setFont(undefined, 'normal');
+    doc.text(fonte, 14, finalY + 10);
+
     // Salvar PDF
-    doc.save(`${tableName}_${keyTable}.pdf`);
+    doc.save(`${nomeArquivoBase}.pdf`);
   };
 
   const handleMonetaryCorrectionToggle = (event) => {

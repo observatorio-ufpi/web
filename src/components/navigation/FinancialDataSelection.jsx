@@ -82,7 +82,7 @@ const FinancialDataSelection = () => {
           </Card>
         </div>
         
-        {/* Card 2 - Dados por Estado */}
+        {/* Card 2 - Dados Estaduais */}
         <div 
           style={{
             flex: '1 1 300px',
@@ -100,7 +100,7 @@ const FinancialDataSelection = () => {
                 }}
               />
               <Typography variant="h6" component="h2" gutterBottom>
-                Dados por Estado
+                Dados Estaduais
               </Typography>
               <Typography variant="body2" color="textSecondary">
                 Acesse dados financeiros consolidados do estado do Piauí.

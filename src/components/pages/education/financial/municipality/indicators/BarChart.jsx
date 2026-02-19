@@ -32,10 +32,13 @@ const BarChart = ({ chartData, title }) => {
 
   const downloadTableData = () => {
     const wb = XLSX.utils.book_new();
+    const fonte = "Fonte: SIOPE/FNDE - Elaboração: OPEPI/UFPI";
 
-    // Preparar dados para o Excel
+    // Preparar dados para o Excel com título e fonte
     const wsData = [
-      ['Município', 'Ano', title], // Reordenado o cabeçalho
+      [title], // Linha do título
+      [], // Linha vazia
+      ['Município', 'Ano', 'Valor'], // Cabeçalho
       ...chartData.labels.map((label, index) => {
         const [ano, municipio] = label.split(' - ');
         return [
@@ -43,10 +46,19 @@ const BarChart = ({ chartData, title }) => {
           ano,       // Ano depois
           chartData.datasets[0].data[index]
         ];
-      })
+      }),
+      [], // Linha vazia
+      [fonte], // Linha da fonte
     ];
 
     const ws = XLSX.utils.aoa_to_sheet(wsData);
+    
+    // Mesclar célula do título
+    const numCols = 3;
+    ws['!merges'] = [
+      { s: { r: 0, c: 0 }, e: { r: 0, c: numCols - 1 } }
+    ];
+    
     XLSX.utils.book_append_sheet(wb, ws, 'Dados');
 
     // Salvar arquivo
