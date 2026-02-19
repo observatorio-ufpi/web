@@ -292,6 +292,10 @@ function RevenueTableContainer() {
   // Ouvir eventos do sidebar
   useEffect(() => {
     const handleApplyFilters = (event) => {
+      // Atualizar o tipo de tabela se foi passado no evento
+      if (event.detail.tableType) {
+        setSelectedTable(event.detail.tableType);
+      }
       handleFilterChange(event.detail);
     };
 

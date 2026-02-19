@@ -11,6 +11,19 @@ const findMunicipioCodigo = (nomeMunicipio) => {
   );
 };
 
+// Opções de tipos de tabela para dados municipais
+const tableTypeOptions = [
+  { value: 'ownRevenues', label: 'Receita de impostos próprios' },
+  { value: 'constitutionalTransfersRevenue', label: 'Receita de transferências constitucionais e legais' },
+  { value: 'municipalTaxesRevenues', label: 'Receita Líquida de Impostos do Município' },
+  { value: 'additionalEducationRevenue', label: 'Receitas adicionais da educação no Município' },
+  { value: 'municipalFundebFundefComposition', label: 'Composição do Fundeb no Município' },
+  { value: 'complementationFundebFundef', label: 'Composição da complementação do Fundeb' },
+  { value: 'constitutionalLimitMde', label: 'Limite constitucional em MDE no Município' },
+  { value: 'expensesBasicEducationFundeb', label: 'Despesas com profissionais da Educação básica do Fundeb' },
+  { value: 'basicEducationMinimalPotential', label: 'Receita Potencial Mínima vinculada à Educação Básica (RPEB)' },
+];
+
 const FilterComponent = ({
   onFilterChange,
   selectedMunicipio,
@@ -21,6 +34,8 @@ const FilterComponent = ({
   anoInicial,
   anoFinal,
   filtersExpanded = false,
+  showTableTypeFilter = false,
+  selectedTableType = 'ownRevenues',
 }) => {
   // Referência para o portal dos menus dropdown
   const menuPortalTarget = typeof document !== 'undefined' ? document.body : null;
@@ -55,6 +70,13 @@ const FilterComponent = ({
   );
   const [gerenciaState, setGerenciaRegionalMunicipio] = useState(
     gerenciaRegionalMunicipio && gerenciaRegionalMunicipio !== 'undefined' ? { value: gerenciaRegionalMunicipio, label: `${gerenciaRegionalMunicipio}ª GRE` } : null
+  );
+
+  // Estado para o tipo de tabela
+  const [tableTypeState, setTableTypeState] = useState(
+    selectedTableType ? 
+      tableTypeOptions.find(opt => opt.value === selectedTableType) || tableTypeOptions[0]
+      : tableTypeOptions[0]
   );
 
   // Lógica de filtros dependentes - baseado nos filtros de localização
@@ -169,6 +191,7 @@ const FilterComponent = ({
       gerenciaRegionalMunicipio: gerenciaState ? gerenciaState.value : null,
       anoInicial: filters.anoInicial,
       anoFinal: filters.anoFinal,
+      tableType: tableTypeState ? tableTypeState.value : 'ownRevenues',
       loading: true,
     });
   };
@@ -180,6 +203,7 @@ const FilterComponent = ({
     setAglomeradoMunicipio(null);
     setGerenciaRegionalMunicipio(null);
     setFilters({...filters, anoInicial: 2007, anoFinal: 2024});
+    setTableTypeState(tableTypeOptions[0]); // Reset para o primeiro tipo (ownRevenues)
     
     onFilterChange({
       codigoMunicipio: null,
@@ -190,6 +214,7 @@ const FilterComponent = ({
       gerenciaRegionalMunicipio: null,
       anoInicial: 2007,
       anoFinal: 2024,
+      tableType: 'ownRevenues',
       loading: false,
     });
   };
@@ -279,6 +304,20 @@ const FilterComponent = ({
             </div>
           </div>
         </Collapse>
+
+        {/* Tipo de Dados - Exibido apenas quando showTableTypeFilter é true */}
+        {showTableTypeFilter && (
+          <div className="w-full border-t pt-3">
+            <label className="block text-xs font-medium text-gray-600 mb-1">Tipo de Dados</label>
+            <Select
+              value={tableTypeState}
+              onChange={setTableTypeState}
+              options={tableTypeOptions}
+              placeholder="Selecione o tipo..."
+              size="xs"
+            />
+          </div>
+        )}
 
         {/* Período */}
         <div className="w-full border-t pt-3">
