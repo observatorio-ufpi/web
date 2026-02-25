@@ -131,7 +131,7 @@ const FinancialCategorySidebar = () => {
               gerenciaRegionalMunicipio=""
               anoInicial={anoInicial}
               anoFinal={anoFinal}
-              filtersExpanded={currentCategory === 'municipios'}
+              filtersExpanded={currentCategory === 'municipios' || currentCategory === 'indicadores'}
               showTableTypeFilter={currentCategory === 'municipios'}
               selectedTableType={selectedTableType}
               showStateTableTypeFilter={currentCategory === 'estado'}
