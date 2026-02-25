@@ -181,7 +181,7 @@ function StateIndicatorsContainer() {
             </>
           )}
 
-          {!loading && !error && !apiData && hasInitialLoad && (
+          {!loading && !error && (!apiData || Object.keys(apiData).length === 0) && hasInitialLoad && (
             <div style={{ 
               textAlign: 'center', 
               padding: '40px 20px',
@@ -192,7 +192,7 @@ function StateIndicatorsContainer() {
             </div>
           )}
 
-          {!loading && !error && apiData && (
+          {!loading && !error && apiData && Object.keys(apiData).length > 0 && (
             <>
               {chartTitle && (
                 <Box sx={{ padding: 2 }}>

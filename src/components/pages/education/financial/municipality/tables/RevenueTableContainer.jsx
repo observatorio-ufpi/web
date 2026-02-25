@@ -199,6 +199,18 @@ function RevenueTableContainer() {
   };
 
   const handleFilterChange = (filterData) => {
+    // Limpar dados antigos para evitar oscilação/dados incorretos
+    setApiData(null);
+    setError(null);
+    
+    // Capturar o tableType do filterData para usar na requisição e no título
+    const tableTypeToUse = filterData.tableType || selectedTable;
+    
+    // Atualizar o selectedTable se veio um tableType diferente
+    if (filterData.tableType && filterData.tableType !== selectedTable) {
+      setSelectedTable(filterData.tableType);
+    }
+    
     setSelectedMunicipio(filterData.codigoMunicipio);
     
     // Atualizar todos os filtros no estado
@@ -220,8 +232,8 @@ function RevenueTableContainer() {
     
     // Usar os valores dos filtros diretamente em vez de aguardar o estado ser atualizado
     const apiGroupType = groupType === 'desagregado' ? 'municipio' : groupType;
-    console.log('Chamando fetchData com:', { selectedTable, apiGroupType, filters: newFilters });
-    fetchData(selectedTable, apiGroupType, {
+    console.log('Chamando fetchData com:', { tableTypeToUse, apiGroupType, filters: newFilters });
+    fetchData(tableTypeToUse, apiGroupType, {
       codigoMunicipio: filterData.codigoMunicipio,
       territorioDeDesenvolvimentoMunicipio: filterData.territorioDeDesenvolvimentoMunicipio,
       faixaPopulacionalMunicipio: filterData.faixaPopulacionalMunicipio,
@@ -241,8 +253,8 @@ function RevenueTableContainer() {
         let ibgeCode = newFilters.codigoMunicipio ? ` (IBGE: ${newFilters.codigoMunicipio})` : '';
         const yearDisplay = newFilters.anoInicial === newFilters.anoFinal ? newFilters.anoInicial : `${newFilters.anoInicial}-${newFilters.anoFinal}`;
         
-        // Obter o nome da tabela selecionada
-        const tableLabel = tableOptions.find(t => t.value === selectedTable)?.label || selectedTable;
+        // Obter o nome da tabela selecionada (usar tableTypeToUse capturado)
+        const tableLabel = tableOptions.find(t => t.value === tableTypeToUse)?.label || tableTypeToUse;
         
         // Construir partes do título
         let titleParts = [`${tableLabel} - ${locationName}${ibgeCode} (${yearDisplay})`];
@@ -296,16 +308,12 @@ function RevenueTableContainer() {
   // Ouvir eventos do sidebar
   useEffect(() => {
     const handleApplyFilters = (event) => {
-      // Atualizar o tipo de tabela se foi passado no evento
-      if (event.detail.tableType) {
-        setSelectedTable(event.detail.tableType);
-      }
       handleFilterChange(event.detail);
     };
 
     window.addEventListener('applyFinancialFilters', handleApplyFilters);
     return () => window.removeEventListener('applyFinancialFilters', handleApplyFilters);
-  }, [handleFilterChange]);
+  }, []);
 
   // Função para consolidar dados de múltiplos municípios agrupados por ano
   const consolidateDataByMunicipio = (data) => {
@@ -957,7 +965,7 @@ function RevenueTableContainer() {
           </Typography>
           )}
 
-          {!loading && !error && !apiData && hasInitialLoad && (
+          {!loading && !error && (!apiData || Object.keys(apiData).length === 0) && hasInitialLoad && (
             <div style={{ 
               textAlign: 'center', 
               padding: '40px 20px',
@@ -968,7 +976,7 @@ function RevenueTableContainer() {
             </div>
           )}
 
-          {!loading && !error && apiData && (
+          {!loading && !error && apiData && Object.keys(apiData).length > 0 && (
             <>
               {tableTitle && (
                 <Box sx={{ padding: 2 }}>
