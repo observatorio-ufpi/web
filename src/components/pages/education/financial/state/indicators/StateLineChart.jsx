@@ -2,7 +2,8 @@ import React from 'react';
 import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
 import zoomPlugin from 'chartjs-plugin-zoom';
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
+import { saveAs } from 'file-saver';
 import { FaFileExcel, FaDownload, FaUndo } from 'react-icons/fa';
 import Button from '@mui/material/Button';
 import { Box } from '@mui/material';
@@ -30,25 +31,63 @@ const StateLineChart = ({ chartData, title, yAxisLabel = 'Valor (%)' }) => {
     }
   };
 
-  const downloadTableData = () => {
-    const wb = XLSX.utils.book_new();
+  const downloadTableData = async () => {
+    const fonte = "Fonte: SIOPE/FNDE - Elaboração: OPEPI/UFPI";
 
-    // Preparar dados para o Excel
-    const wsData = [
-      ['Ano', ...chartData.datasets.map(dataset => dataset.label)],
-      ...chartData.labels.map((label, index) => {
-        return [
-          label,
-          ...chartData.datasets.map(dataset => dataset.data[index])
-        ];
-      })
-    ];
-
-    const ws = XLSX.utils.aoa_to_sheet(wsData);
-    XLSX.utils.book_append_sheet(wb, ws, 'Dados');
-
+    // Criar workbook com ExcelJS
+    const workbook = new ExcelJS.Workbook();
+    workbook.creator = 'OPEPI/UFPI';
+    workbook.created = new Date();
+    
+    const worksheet = workbook.addWorksheet('Dados');
+    
+    // Cabeçalho com colunas dos datasets
+    const headers = ['Ano', ...chartData.datasets.map(dataset => dataset.label)];
+    const numCols = headers.length;
+    
+    // Adicionar título
+    worksheet.addRow([title]);
+    worksheet.mergeCells(1, 1, 1, numCols);
+    worksheet.getCell('A1').font = { bold: true, size: 14 };
+    worksheet.getCell('A1').alignment = { horizontal: 'center' };
+    
+    // Linha vazia
+    worksheet.addRow([]);
+    
+    // Cabeçalhos
+    const headerRow = worksheet.addRow(headers);
+    headerRow.font = { bold: true };
+    headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFCCCCCC' } };
+    headerRow.alignment = { horizontal: 'center' };
+    
+    // Dados
+    chartData.labels.forEach((label, index) => {
+      const dataRow = [label];
+      chartData.datasets.forEach(dataset => {
+        const value = dataset.data[index];
+        dataRow.push(typeof value === 'number' ? value : (parseFloat(String(value).replace(/[.\s]/g, '').replace(',', '.')) || value));
+      });
+      worksheet.addRow(dataRow);
+    });
+    
+    // Linha vazia
+    worksheet.addRow([]);
+    
+    // Fonte
+    worksheet.addRow([fonte]);
+    
+    // Configurar largura das colunas
+    worksheet.getColumn(1).width = 12;
+    for (let i = 2; i <= numCols; i++) {
+      worksheet.getColumn(i).width = 18;
+      worksheet.getColumn(i).numFmt = '#,##0.00';
+      worksheet.getColumn(i).alignment = { horizontal: 'right' };
+    }
+    
     // Salvar arquivo
-    XLSX.writeFile(wb, `${title.replace(/\s+/g, '_')}.xlsx`);
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    saveAs(blob, `${title.replace(/\s+/g, '_')}.xlsx`);
   };
 
   return (

@@ -133,15 +133,46 @@ const TableExport = ({
       console.log('Headers for PDF export:', displayHeaders);
       console.log('Table Rows for PDF export:', tableRows);
 
+      // Identificar colunas numéricas para alinhar à direita
+      const numericColumnIndices = [];
+      if (tableRows.length > 0) {
+        headers.forEach((header, index) => {
+          // Verificar se a coluna é numérica (excluindo código e ano)
+          const isNumericColumn = tableRows.some(row => {
+            const value = row[index];
+            if (value === '' || value === null || value === undefined) return false;
+            // Remover formatação para verificar se é número
+            const cleanValue = String(value).replace(/[.\s]/g, '').replace(',', '.');
+            return !isNaN(parseFloat(cleanValue)) && isFinite(cleanValue);
+          });
+          // Não alinhar à direita colunas como código, município, ano, etc.
+          const isTextColumn = header.toLowerCase().includes('codigo') || 
+                               header.toLowerCase().includes('municipio') || 
+                               header.toLowerCase().includes('nome') ||
+                               header.toLowerCase().includes('tipo') ||
+                               header === 'ano';
+          if (isNumericColumn && !isTextColumn) {
+            numericColumnIndices.push(index);
+          }
+        });
+      }
+
+      // Criar estilos de coluna para alinhar números à direita
+      const columnStyles = {};
+      numericColumnIndices.forEach(index => {
+        columnStyles[index] = { halign: 'right' };
+      });
+
       // Adicionar a tabela com autoTable
       pdf.autoTable({
         head: [displayHeaders],
         body: tableRows,
         startY: tableTitle ? 60 : 40,
         margin: { top: 60, right: 40, bottom: 40, left: 40 },
-        styles: { overflow: 'linebreak', cellWidth: 'auto', fontSize: 10, halign: 'center', valign: 'middle' },
+        styles: { overflow: 'linebreak', cellWidth: 'auto', fontSize: 10, halign: 'left', valign: 'middle' },
         headStyles: { fillColor: [204, 204, 204], textColor: [0, 0, 0], fontStyle: 'bold', halign: 'center' },
-        bodyStyles: { valign: 'middle' }
+        bodyStyles: { valign: 'middle' },
+        columnStyles: columnStyles
       });
 
       // Adicionar o gráfico em uma nova página se existir
@@ -224,18 +255,37 @@ const TableExport = ({
         pattern: 'solid',
         fgColor: { argb: 'FFCCCCCC' }
       };
+      headerRowObj.alignment = { horizontal: 'center', vertical: 'middle' };
 
-      // Adicionar dados (substituindo valores vazios por 0)
+      // Identificar colunas numéricas
+      const numericColumnIndices = [];
+      const textColumnNames = ['codigo', 'municipio', 'nome', 'tipo', 'ano', 'codigomunicipio', 'nomemunicipio'];
+      headers.forEach((header, index) => {
+        const isTextColumn = textColumnNames.some(name => header.toLowerCase().includes(name));
+        if (!isTextColumn) {
+          numericColumnIndices.push(index);
+        }
+      });
+
+      // Adicionar dados (mantendo números como números)
       exportData.forEach(item => {
         const row = [];
-        headers.forEach(header => {
+        headers.forEach((header, index) => {
           const value = item[header];
-          // Formatar números com vírgula
           if (value === '' || value === null || value === undefined) {
             row.push('');
-          } else if (header === 'total' || typeof value === 'number' || !isNaN(Number(value))) {
-            // Se for número, formatar com vírgula
-            row.push(formatNumberWithComma(value));
+          } else if (numericColumnIndices.includes(index)) {
+            // Converter para número se possível
+            let numValue;
+            if (typeof value === 'number') {
+              numValue = value;
+            } else {
+              // Remover formatação brasileira (pontos de milhar, vírgula decimal)
+              const cleanValue = String(value).replace(/[.\s]/g, '').replace(',', '.');
+              numValue = parseFloat(cleanValue);
+            }
+            // Se for um número válido, usar como número; senão, usar valor original
+            row.push(isNaN(numValue) ? value : numValue);
           } else {
             row.push(value);
           }
@@ -243,9 +293,24 @@ const TableExport = ({
         dataWorksheet.addRow(row);
       });
 
+      // Aplicar formatação numérica e alinhamento às colunas numéricas
+      numericColumnIndices.forEach(index => {
+        const colNumber = index + 1; // ExcelJS usa índice baseado em 1
+        dataWorksheet.getColumn(colNumber).numFmt = '#,##0.00'; // Formato brasileiro
+        dataWorksheet.getColumn(colNumber).alignment = { horizontal: 'right', vertical: 'middle' };
+      });
+
+      // Alinhar colunas de texto à esquerda
+      headers.forEach((header, index) => {
+        if (!numericColumnIndices.includes(index)) {
+          const colNumber = index + 1;
+          dataWorksheet.getColumn(colNumber).alignment = { horizontal: 'left', vertical: 'middle' };
+        }
+      });
+
       // Auto-ajustar largura das colunas
       dataWorksheet.columns.forEach(column => {
-        column.width = 15;
+        column.width = 18;
       });
 
 
