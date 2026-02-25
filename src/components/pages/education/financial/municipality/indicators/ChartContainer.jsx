@@ -182,9 +182,12 @@ function ChartContainer() {
     }
   }, [apiData, hasInitialLoad, filters.anoInicial, filters.anoFinal, selectedMunicipio]);
 
-  const fetchTableData = (customFilters = null) => {
+  const fetchTableData = (customFilters = null, indicatorType = null) => {
     if (loading) return; // Evita múltiplas chamadas simultâneas
     setLoading(true);
+    
+    // Usar o indicatorType passado ou o estado atual
+    const tableToUse = indicatorType || selectedTable;
 
     // Usar filtros customizados se fornecidos, senão usar os estados
     const currentFilters = customFilters || {
@@ -199,7 +202,7 @@ function ChartContainer() {
       limit,
     };
 
-    if (selectedTable === "revenueComposition") {
+    if (tableToUse === "revenueComposition") {
       // Fetch all revenue composition indicators
       Promise.all([
         fetchData("iptu-composition", groupType, {
@@ -458,7 +461,7 @@ function ChartContainer() {
           setError(error.message);
           setLoading(false);
         });
-    } else if (selectedTable === "rpebComposition") {
+    } else if (tableToUse === "rpebComposition") {
       Promise.all([
         fetchData("fundeb_participation_mde", groupType, {
           codigoMunicipio: currentFilters.codigoMunicipio,
@@ -534,7 +537,7 @@ function ChartContainer() {
           setError(error.message);
           setLoading(false);
         });
-    } else if (selectedTable === "educationExpenseComposition") {
+    } else if (tableToUse === "educationExpenseComposition") {
       Promise.all([
         fetchData("mde_total_expense", groupType, {
           codigoMunicipio: currentFilters.codigoMunicipio,
@@ -624,7 +627,7 @@ function ChartContainer() {
           setError(error.message);
           setLoading(false);
         });
-    } else if (selectedTable === "resourcesApplicationControl") {
+    } else if (tableToUse === "resourcesApplicationControl") {
       Promise.all([
         fetchData("aplicacao_mde", groupType, {
           codigoMunicipio: currentFilters.codigoMunicipio,
@@ -700,7 +703,7 @@ function ChartContainer() {
           setError(error.message);
           setLoading(false);
         });
-    } else if (selectedTable === "financingCapacity") {
+    } else if (tableToUse === "financingCapacity") {
       Promise.all([
         fetchData("composicao_fundeb_financiamento", groupType, {
           codigoMunicipio: currentFilters.codigoMunicipio,
@@ -747,7 +750,7 @@ function ChartContainer() {
         });
     } else {
       // Existing fetch logic for other tables
-      fetchData(selectedTable, groupType, {
+      fetchData(tableToUse, groupType, {
         codigoMunicipio: currentFilters.codigoMunicipio,
         territorioDeDesenvolvimentoMunicipio: currentFilters.territorioDeDesenvolvimentoMunicipio,
         faixaPopulacionalMunicipio: currentFilters.faixaPopulacionalMunicipio,
@@ -785,7 +788,19 @@ function ChartContainer() {
     // Não carrega dados automaticamente - aguarda o usuário filtrar
   };
 
-  const handleFilterChange = (filters) => {
+  const handleFilterChange = (filters, indicatorType = null) => {
+    // Limpar dados antigos para evitar oscilação/dados incorretos
+    setApiData(null);
+    setError(null);
+    
+    // Capturar o indicatorType para usar na requisição
+    const indicatorToUse = indicatorType || selectedTable;
+    
+    // Atualizar o selectedTable se veio um indicatorType diferente
+    if (indicatorType && indicatorType !== selectedTable) {
+      setSelectedTable(indicatorType);
+    }
+    
     setSelectedMunicipio(filters.codigoMunicipio);
     setTerritorioDeDesenvolvimentoMunicipio(filters.territorioDeDesenvolvimentoMunicipio);
     setFaixaPopulacionalMunicipio(filters.faixaPopulacionalMunicipio);
@@ -810,7 +825,7 @@ function ChartContainer() {
       anoFinal: filters.anoFinal,
       page: 1,
       limit: limit,
-    });
+    }, indicatorToUse);
   };
 
   // Escutar eventos de filtro aplicados
@@ -818,17 +833,12 @@ function ChartContainer() {
     const handleApplyFilters = (event) => {
       const { municipalIndicatorType, ...restFilters } = event.detail;
       
-      // Atualizar o indicador selecionado se vier do evento
-      if (municipalIndicatorType && municipalIndicatorType !== selectedTable) {
-        setSelectedTable(municipalIndicatorType);
-      }
-      
-      handleFilterChange(restFilters);
+      handleFilterChange(restFilters, municipalIndicatorType);
     };
 
     window.addEventListener('applyFinancialFilters', handleApplyFilters);
     return () => window.removeEventListener('applyFinancialFilters', handleApplyFilters);
-  }, [handleFilterChange, selectedTable]);
+  }, []);
 
   const handlePageChange = (event, newPage) => {
     setPage(newPage);
@@ -936,7 +946,7 @@ function ChartContainer() {
             </>
           )}
 
-          {!loading && !error && !apiData && hasInitialLoad && (
+          {!loading && !error && (!apiData || Object.keys(apiData).length === 0) && hasInitialLoad && (
             <div style={{ 
               textAlign: 'center', 
               padding: '40px 20px',
@@ -947,7 +957,7 @@ function ChartContainer() {
             </div>
           )}
 
-          {!loading && !error && apiData && (
+          {!loading && !error && apiData && Object.keys(apiData).length > 0 && (
             <>
               {selectedTable === "expensesBasicEducationFundeb" && (
                 <ChartComponent

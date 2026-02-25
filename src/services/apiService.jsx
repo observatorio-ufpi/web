@@ -110,6 +110,8 @@ const endpoints = {
 
 export const fetchData = async (table, groupType, filters) => {
   try {
+    console.log('[apiService.fetchData] Recebido:', { table, groupType, filters });
+    
     const queryParams = new URLSearchParams({
       ...(filters.codigoMunicipio && { codigoMunicipio: filters.codigoMunicipio }),
       ...(filters.territorioDeDesenvolvimentoMunicipio && {
@@ -131,8 +133,11 @@ export const fetchData = async (table, groupType, filters) => {
       ...(filters.limit && { limit: filters.limit }),
     });
 
+    const url = `${endpoints[table]}/${groupType}?${queryParams}`;
+    console.log('[apiService.fetchData] URL chamada:', url);
+    
     const response = await fetch(
-      `${endpoints[table]}/${groupType}?${queryParams}`,
+      url,
       {
         method: 'GET',
         headers: {
