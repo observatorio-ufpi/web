@@ -11,7 +11,8 @@ import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import { ThemeProvider, createTheme, styled, useTheme } from "@mui/material/styles";
 import React, { useState, useEffect, useMemo } from "react";
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
+import { saveAs } from "file-saver";
 import { municipios, Regioes, FaixaPopulacional } from "../../../../../../utils/municipios.mapping";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Switch from "@mui/material/Switch";
@@ -212,7 +213,7 @@ const RevenueTable = ({
     }
   };
 
-  const downloadExcel = () => {
+  const downloadExcel = async () => {
     // Gerar período e metadados
     const periodoLabel = anoInicial && anoFinal 
       ? (anoInicial === anoFinal ? `${anoInicial}` : `${anoInicial}-${anoFinal}`)
@@ -249,77 +250,109 @@ const RevenueTable = ({
     nomeArquivoParts.push(keyTable);
     const nomeArquivoBase = nomeArquivoParts.join('_').replace(/[<>:"/\\|?*]/g, '');
 
+    // Criar workbook com ExcelJS
+    const workbook = new ExcelJS.Workbook();
+    workbook.creator = 'OPEPI/UFPI';
+    workbook.created = new Date();
+    
+    const worksheet = workbook.addWorksheet('Receitas');
+
     if (groupType === "municipio") {
-      const wb = XLSX.utils.book_new();
-      const wsData = [
-        [tituloCompleto], // Linha do título
-        [], // Linha vazia
-        ["Ano", ...types],
-        ...rows.map((row) => {
-          return [
-            row,
-            ...types.map((type) => {
-              if (
-                finalDisplayData[type] &&
-                finalDisplayData[type][row] !== undefined
-              ) {
-                // Para Excel, manter valores numéricos para formatação adequada
-                return finalDisplayData[type][row];
-              } else {
-                return "-";
-              }
-            }),
-          ];
-        }),
-        [], // Linha vazia
-        [fonte], // Linha da fonte
-      ];
-      const ws = XLSX.utils.aoa_to_sheet(wsData);
+      // Adicionar título
+      worksheet.addRow([tituloCompleto]);
+      worksheet.mergeCells(1, 1, 1, types.length + 1);
+      worksheet.getCell('A1').font = { bold: true, size: 14 };
+      worksheet.getCell('A1').alignment = { horizontal: 'center' };
       
-      // Mesclar célula do título
-      ws['!merges'] = [
-        { s: { r: 0, c: 0 }, e: { r: 0, c: types.length } }
-      ];
+      // Linha vazia
+      worksheet.addRow([]);
       
-      XLSX.utils.book_append_sheet(wb, ws, "Receitas");
-      XLSX.writeFile(wb, `${nomeArquivoBase}.xlsx`);
+      // Cabeçalhos
+      const headerRow = worksheet.addRow(["Ano", ...types]);
+      headerRow.font = { bold: true };
+      headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFCCCCCC' } };
+      headerRow.alignment = { horizontal: 'center' };
+      
+      // Dados
+      rows.forEach((row) => {
+        const dataRow = [row];
+        types.forEach((type) => {
+          if (finalDisplayData[type] && finalDisplayData[type][row] !== undefined) {
+            const value = finalDisplayData[type][row];
+            dataRow.push(typeof value === 'number' ? value : (parseFloat(String(value).replace(/[.\s]/g, '').replace(',', '.')) || value));
+          } else {
+            dataRow.push("");
+          }
+        });
+        worksheet.addRow(dataRow);
+      });
+      
+      // Linha vazia
+      worksheet.addRow([]);
+      
+      // Fonte
+      worksheet.addRow([fonte]);
+      
+      // Configurar largura das colunas
+      worksheet.getColumn(1).width = 12;
+      for (let i = 2; i <= types.length + 1; i++) {
+        worksheet.getColumn(i).width = 20;
+        // Aplicar formato numérico
+        worksheet.getColumn(i).numFmt = '#,##0.00';
+        worksheet.getColumn(i).alignment = { horizontal: 'right' };
+      }
     }
 
     if (groupType === "ano" || groupType === "desagregado") {
-      const wb = XLSX.utils.book_new();
-      const wsData = [
-        [tituloCompleto], // Linha do título
-        [], // Linha vazia
-        ["Município (IBGE)", ...types],
-        ...rows.map((row) => {
-          return [
-            `${municipios[row]?.nomeMunicipio || row} (${row})`,
-            ...types.map((type) => {
-              if (
-                finalDisplayData[type] &&
-                finalDisplayData[type][row] !== undefined
-              ) {
-                // Para Excel, manter valores numéricos para formatação adequada
-                return finalDisplayData[type][row];
-              } else {
-                return "-";
-              }
-            }),
-          ];
-        }),
-        [], // Linha vazia
-        [fonte], // Linha da fonte
-      ];
-      const ws = XLSX.utils.aoa_to_sheet(wsData);
+      // Adicionar título
+      worksheet.addRow([tituloCompleto]);
+      worksheet.mergeCells(1, 1, 1, types.length + 1);
+      worksheet.getCell('A1').font = { bold: true, size: 14 };
+      worksheet.getCell('A1').alignment = { horizontal: 'center' };
       
-      // Mesclar célula do título
-      ws['!merges'] = [
-        { s: { r: 0, c: 0 }, e: { r: 0, c: types.length } }
-      ];
+      // Linha vazia
+      worksheet.addRow([]);
       
-      XLSX.utils.book_append_sheet(wb, ws, "Receitas");
-      XLSX.writeFile(wb, `${nomeArquivoBase}.xlsx`);
+      // Cabeçalhos
+      const headerRow = worksheet.addRow(["Município (IBGE)", ...types]);
+      headerRow.font = { bold: true };
+      headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFCCCCCC' } };
+      headerRow.alignment = { horizontal: 'center' };
+      
+      // Dados
+      rows.forEach((row) => {
+        const dataRow = [`${municipios[row]?.nomeMunicipio || row} (${row})`];
+        types.forEach((type) => {
+          if (finalDisplayData[type] && finalDisplayData[type][row] !== undefined) {
+            const value = finalDisplayData[type][row];
+            dataRow.push(typeof value === 'number' ? value : (parseFloat(String(value).replace(/[.\s]/g, '').replace(',', '.')) || value));
+          } else {
+            dataRow.push("");
+          }
+        });
+        worksheet.addRow(dataRow);
+      });
+      
+      // Linha vazia
+      worksheet.addRow([]);
+      
+      // Fonte
+      worksheet.addRow([fonte]);
+      
+      // Configurar largura das colunas
+      worksheet.getColumn(1).width = 35;
+      for (let i = 2; i <= types.length + 1; i++) {
+        worksheet.getColumn(i).width = 20;
+        // Aplicar formato numérico
+        worksheet.getColumn(i).numFmt = '#,##0.00';
+        worksheet.getColumn(i).alignment = { horizontal: 'right' };
+      }
     }
+    
+    // Salvar arquivo
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    saveAs(blob, `${nomeArquivoBase}.xlsx`);
   };
 
   const downloadPDF = () => {
@@ -388,6 +421,12 @@ const RevenueTable = ({
     doc.setFont(undefined, 'bold');
     doc.text(tituloCompleto, 14, 15);
 
+    // Criar estilos de coluna para alinhar números à direita (todas exceto a primeira coluna)
+    const columnStyles = {};
+    for (let i = 1; i < headers.length; i++) {
+      columnStyles[i] = { halign: 'right' };
+    }
+
     doc.autoTable({
       head: [headers],
       body: dataForTable,
@@ -395,15 +434,18 @@ const RevenueTable = ({
       styles: {
         fontSize: 8,
         cellPadding: 2,
+        halign: 'left',
       },
       headStyles: {
         fillColor: [66, 66, 66],
         textColor: 255,
         fontStyle: "bold",
+        halign: 'center',
       },
       alternateRowStyles: {
         fillColor: [245, 245, 245],
       },
+      columnStyles: columnStyles,
       theme: "grid",
       didDrawPage: function (data) {
         // Ajusta automaticamente a largura das colunas baseado no conteúdo

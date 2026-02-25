@@ -16,7 +16,8 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { ptBR } from 'date-fns/locale';
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
+import { saveAs } from 'file-saver';
 import { fetchIPCAData, calculateMonetaryCorrection, getMaxIPCADate } from '../../../../../utils/bacenApi.jsx';
 import '../../../../../style/Buttons.css';
 
@@ -285,27 +286,69 @@ const StateRevenueTable = ({ csvData, tableName, startYear, endYear, enableMonet
     setTargetDate(newDate);
   };
 
-  const downloadExcel = () => {
-    const wb = XLSX.utils.book_new();
+  const downloadExcel = async () => {
+    // Criar workbook com ExcelJS
+    const workbook = new ExcelJS.Workbook();
+    workbook.creator = 'OPEPI/UFPI';
+    workbook.created = new Date();
     
-    // Preparar dados para Excel com anos nas linhas e tipos nas colunas
-    const wsData = [
-      ['Ano', ...data.types],
-      ...data.years.map(year => [
-        year,
-        ...data.types.map(type => {
-          const value = finalDisplayData[type] && finalDisplayData[type][year] !== undefined 
-            ? finalDisplayData[type][year] 
-            : data.valuesByTypeAndYear[type][year];
-          return value !== undefined && value !== null ? value : '-';
-        })
-      ])
-    ];
+    const worksheet = workbook.addWorksheet('Dados do Estado');
     
-    const ws = XLSX.utils.aoa_to_sheet(wsData);
-    XLSX.utils.book_append_sheet(wb, ws, 'Dados do Estado');
+    const tituloCompleto = `${tableName} - Estado do Piauí (${startYear}-${endYear})`;
+    const fonte = "Fonte: SIOPE/FNDE - Elaboração: OPEPI/UFPI";
+    const numCols = data.types.length + 1;
+    
+    // Adicionar título
+    worksheet.addRow([tituloCompleto]);
+    worksheet.mergeCells(1, 1, 1, numCols);
+    worksheet.getCell('A1').font = { bold: true, size: 14 };
+    worksheet.getCell('A1').alignment = { horizontal: 'center' };
+    
+    // Linha vazia
+    worksheet.addRow([]);
+    
+    // Cabeçalhos
+    const headerRow = worksheet.addRow(['Ano', ...data.types]);
+    headerRow.font = { bold: true };
+    headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFCCCCCC' } };
+    headerRow.alignment = { horizontal: 'center' };
+    
+    // Dados
+    data.years.forEach(year => {
+      const dataRow = [year];
+      data.types.forEach(type => {
+        const value = finalDisplayData[type] && finalDisplayData[type][year] !== undefined 
+          ? finalDisplayData[type][year] 
+          : data.valuesByTypeAndYear[type][year];
+        if (value === undefined || value === null) {
+          dataRow.push("");
+        } else {
+          dataRow.push(typeof value === 'number' ? value : (parseFloat(String(value).replace(/[.\s]/g, '').replace(',', '.')) || value));
+        }
+      });
+      worksheet.addRow(dataRow);
+    });
+    
+    // Linha vazia
+    worksheet.addRow([]);
+    
+    // Fonte
+    worksheet.addRow([fonte]);
+    
+    // Configurar largura das colunas
+    worksheet.getColumn(1).width = 12;
+    for (let i = 2; i <= numCols; i++) {
+      worksheet.getColumn(i).width = 20;
+      // Aplicar formato numérico
+      worksheet.getColumn(i).numFmt = '#,##0.00';
+      worksheet.getColumn(i).alignment = { horizontal: 'right' };
+    }
+    
+    // Salvar arquivo
     const fileName = `${tableName}_${startYear}-${endYear}.xlsx`;
-    XLSX.writeFile(wb, fileName);
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    saveAs(blob, fileName);
   };
 
   const downloadPDF = () => {
@@ -314,6 +357,9 @@ const StateRevenueTable = ({ csvData, tableName, startYear, endYear, enableMonet
       "Ano",
       ...data.types,
     ];
+    
+    const tituloCompleto = `${tableName} - Estado do Piauí (${startYear}-${endYear})`;
+    const fonte = "Fonte: SIOPE/FNDE - Elaboração: OPEPI/UFPI";
 
     const dataForTable = data.years.map((year) => {
       return [
@@ -334,22 +380,36 @@ const StateRevenueTable = ({ csvData, tableName, startYear, endYear, enableMonet
       ];
     });
 
+    // Criar estilos de coluna para alinhar números à direita (todas exceto a primeira coluna)
+    const columnStyles = {};
+    for (let i = 1; i < headers.length; i++) {
+      columnStyles[i] = { halign: 'right' };
+    }
+    
+    // Adicionar título
+    doc.setFontSize(14);
+    doc.setFont(undefined, 'bold');
+    doc.text(tituloCompleto, doc.internal.pageSize.width / 2, 15, { align: 'center' });
+
     doc.autoTable({
       head: [headers],
       body: dataForTable,
-      startY: 20,
+      startY: 25,
       styles: {
         fontSize: 8,
         cellPadding: 2,
+        halign: 'left',
       },
       headStyles: {
         fillColor: [66, 66, 66],
         textColor: 255,
         fontStyle: "bold",
+        halign: 'center',
       },
       alternateRowStyles: {
         fillColor: [245, 245, 245],
       },
+      columnStyles: columnStyles,
       theme: "grid",
       didDrawPage: function (data) {
         // Ajusta automaticamente a largura das colunas baseado no conteúdo
@@ -359,6 +419,12 @@ const StateRevenueTable = ({ csvData, tableName, startYear, endYear, enableMonet
         });
       },
     });
+    
+    // Adicionar fonte no final
+    const finalY = doc.lastAutoTable.finalY || 25;
+    doc.setFontSize(9);
+    doc.setFont(undefined, 'normal');
+    doc.text(fonte, 14, finalY + 10);
 
     // Salvar PDF
     doc.save(`${tableName}_${startYear}-${endYear}.pdf`);
