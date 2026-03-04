@@ -98,7 +98,7 @@ const BarChart = ({ chartData, title }) => {
               title: {
                 display: true,
                 text: title,
-                font: { size: 16, weight: 'bold', family: 'Roboto, sans-serif' },
+                font: { size: 20, weight: 'bold', family: 'Roboto, sans-serif' },
                 color: '#333',
                 padding: { top: 10, bottom: 20 }
               },

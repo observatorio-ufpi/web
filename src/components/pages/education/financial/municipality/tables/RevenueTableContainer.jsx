@@ -981,8 +981,8 @@ function RevenueTableContainer() {
               {tableTitle && (
                 <Box sx={{ padding: 2 }}>
                   <Typography 
-                    variant="h6" 
-                    sx={{ marginBottom: 2, textAlign: 'center' }}
+                    variant="h5" 
+                    sx={{ marginBottom: 2, textAlign: 'center', fontWeight: 'bold', fontSize: '1.5rem' }}
                   >
                     {tableTitle}
                   </Typography>

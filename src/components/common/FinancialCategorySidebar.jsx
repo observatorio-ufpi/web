@@ -16,7 +16,8 @@ const FinancialCategorySidebar = () => {
   const [selectedTableType, setSelectedTableType] = useState('ownRevenues');
   const [selectedStateTableType, setSelectedStateTableType] = useState('tabela1');
   const [selectedStateIndicatorType, setSelectedStateIndicatorType] = useState('revenueComposition');
-  const [selectedMunicipalIndicatorType, setSelectedMunicipalIndicatorType] = useState('constitutionalLimitMde');
+  const [selectedMunicipalIndicatorType, setSelectedMunicipalIndicatorType] = useState('financasPublicas');
+  const [selectedMunicipalSubIndicatorType, setSelectedMunicipalSubIndicatorType] = useState('composicaoReceitas');
 
   const handleVoltar = () => {
     navigate('/');
@@ -53,6 +54,9 @@ const FinancialCategorySidebar = () => {
     if (filters.municipalIndicatorType) {
       setSelectedMunicipalIndicatorType(filters.municipalIndicatorType);
     }
+    if (filters.municipalSubIndicatorType) {
+      setSelectedMunicipalSubIndicatorType(filters.municipalSubIndicatorType);
+    }
     
     // Disparar evento para o RevenueTableContainer
     window.dispatchEvent(new CustomEvent('applyFinancialFilters', {
@@ -81,23 +85,23 @@ const FinancialCategorySidebar = () => {
       <aside
         className={`${
           isOpen ? 'translate-x-0' : '-translate-x-full'
-        } fixed left-0 top-0 h-screen w-64 overflow-y-auto transition-transform duration-300 ease-in-out z-40 shadow-lg sidebar-scroll`}
+        } fixed left-0 top-0 h-screen overflow-y-auto transition-transform duration-300 ease-in-out z-40 shadow-lg sidebar-scroll`}
         style={{
-          width: isOpen ? '16rem' : '4rem',
+          width: isOpen ? '20rem' : '4rem',
           backgroundColor: '#E8E4E3'
         }}
       >
         {/* Header da Sidebar */}
-        <div className="p-6 md:p-6 lg:p-6 xl:p-6 2xl:p-6 p-3 sm:p-4 md:p-6 border-b border-gray-200">
-          <div className="flex items-center mt-8 mb-4">
+        <div className="p-3 border-b border-gray-200">
+          <div className="flex items-center mt-8 mb-2">
             <Link to="/" className="flex items-center">
               <img
                 src="/images/logos/logo-opepi-v2.png"
                 alt="opepi"
-                className="h-14 md:h-14 lg:h-14 xl:h-14 2xl:h-14 h-8 sm:h-10 md:h-14 w-auto mr-3"
+                className="h-10 w-auto mr-2"
               />
-              <div className={`${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>
-                <p className="text-sm text-gray-600 leading-tight">
+              <div className={`${isOpen ? 'block' : 'hidden'} md:block`}>
+                <p className="text-xs text-gray-600 leading-tight">
                   observatório da política educacional piauiense
                 </p>
               </div>
@@ -108,20 +112,20 @@ const FinancialCategorySidebar = () => {
         <hr className="border-gray-300" />
 
         {/* Navegação */}
-        <nav className="p-6 md:p-6 lg:p-6 xl:p-6 xl:p-6 2xl:p-6 p-3 sm:p-4 md:p-6">
+        <nav className="p-3">
           {/* Categoria Selecionada */}
-          <div className="mb-8">
-            <h3 className={`text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4 ${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>
+          <div className="mb-3">
+            <h3 className={`text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 ${isOpen ? 'block' : 'hidden'} md:block`}>
               Categoria
             </h3>
-            <div className={`${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>
-              <p className="text-sm font-medium text-gray-800 mb-4">
+            <div className={`${isOpen ? 'block' : 'hidden'} md:block`}>
+              <p className="text-xs font-medium text-gray-800 mb-2">
                 {categories.find(c => c.id === currentCategory)?.label}
               </p>
             </div>
           </div>
           {/* Filtros */}
-          <div className="mb-8">
+          <div className="mb-3">
             <FilterComponent
               onFilterChange={handleFilterChange}
               selectedMunicipio={selectedMunicipio}
@@ -140,58 +144,59 @@ const FinancialCategorySidebar = () => {
               selectedStateIndicatorType={selectedStateIndicatorType}
               showMunicipalIndicatorTypeFilter={currentCategory === 'indicadores'}
               selectedMunicipalIndicatorType={selectedMunicipalIndicatorType}
+              selectedMunicipalSubIndicatorType={selectedMunicipalSubIndicatorType}
               showMunicipioFilters={currentCategory === 'municipios' || currentCategory === 'indicadores'}
             />
           </div>
 
           {/* Alternar para Dados Educacionais */}
-          <div className="mb-8">
-            <h3 className={`text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4 ${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>
+          <div className="mb-3">
+            <h3 className={`text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 ${isOpen ? 'block' : 'hidden'} md:block`}>
               Alternar para
             </h3>
-            <ul className="space-y-2">
+            <ul className="space-y-1">
               <li>
                 <button
                   onClick={() => navigate('/dados-educacionais')}
-                  className={`w-full flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 text-gray-700 hover:bg-orange-100 hover:text-orange-700`}
+                  className={`w-full flex items-center px-2 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 text-gray-700 hover:bg-orange-100 hover:text-orange-700`}
                 >
-                  <FaGraduationCap className="mr-3 text-lg flex-shrink-0" />
-                  <span className={`${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>Dados Educacionais</span>
+                  <FaGraduationCap className="mr-2 text-sm flex-shrink-0" />
+                  <span className={`${isOpen ? 'block' : 'hidden'} md:block`}>Dados Educacionais</span>
                 </button>
               </li>
             </ul>
           </div>
 
           {/* Sobre o Projeto */}
-          <div className="mb-8">
-            <h3 className={`text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4 ${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>
+          <div className="mb-3">
+            <h3 className={`text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 ${isOpen ? 'block' : 'hidden'} md:block`}>
               sobre o projeto
             </h3>
-            <ul className="space-y-2">
+            <ul className="space-y-1">
               <li>
                 <Link
                   to="/quem-somos"
-                  className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  className={`flex items-center px-2 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
                     location.pathname === '/quem-somos'
                       ? 'bg-green-100 text-green-700'
                       : 'text-gray-700 hover:bg-gray-100'
                   }`}
                 >
-                  <FaInfoCircle className="mr-3 text-lg flex-shrink-0" />
-                  <span className={`${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>Quem somos</span>
+                  <FaInfoCircle className="mr-2 text-sm flex-shrink-0" />
+                  <span className={`${isOpen ? 'block' : 'hidden'} md:block`}>Quem somos</span>
                 </Link>
               </li>
               <li>
                 <Link
                   to="/repositorio"
-                  className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  className={`flex items-center px-2 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
                     location.pathname === '/repositorio'
                       ? 'bg-green-100 text-green-700'
                       : 'text-gray-700 hover:bg-gray-100'
                   }`}
                 >
-                  <FaInfoCircle className="mr-3 text-lg flex-shrink-0" />
-                  <span className={`${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>Repositório</span>
+                  <FaInfoCircle className="mr-2 text-sm flex-shrink-0" />
+                  <span className={`${isOpen ? 'block' : 'hidden'} md:block`}>Repositório</span>
                 </Link>
               </li>
             </ul>
@@ -199,13 +204,13 @@ const FinancialCategorySidebar = () => {
         </nav>
 
         {/* Footer da Sidebar */}
-        <div className="p-6 md:p-6 lg:p-6 xl:p-6 2xl:p-6 p-3 sm:p-4 md:p-6 border-t border-gray-200 mt-auto">
+        <div className="p-3 border-t border-gray-200 mt-auto">
           <button
             onClick={handleVoltar}
-            className="flex items-center text-gray-600 hover:text-gray-900 transition-colors text-sm font-medium"
+            className="flex items-center text-gray-600 hover:text-gray-900 transition-colors text-xs font-medium"
           >
             <FaArrowLeft className="mr-2 flex-shrink-0" />
-            <span className={`${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>voltar</span>
+            <span className={`${isOpen ? 'block' : 'hidden'} md:block`}>voltar</span>
           </button>
         </div>
       </aside>

@@ -7,6 +7,22 @@ import "../../../../../../style/ChartPagination.css";
 import {
   processBasicEducationData,
   processMDEData,
+  processParticipacaoImpostosPropriosData,
+  processParticipacaoTransferenciasData,
+  processRazaoImpostosTransferenciasData,
+  processRazaoTransferenciasImpostosData,
+  processParticipacaoFundebData,
+  processParticipacaoFundebMdeData,
+  processResultadoLiquidoFundebData,
+  processParticipacaoComplementacaoUniaoData,
+  processDespesaPessoalAtivoData,
+  processDespesaPessoalInativoData,
+  processDespesaCapitalData,
+  processTransferenciasPrivadasData,
+  processVaatEducacaoInfantilData,
+  processVaatDespesaCapitalData,
+  processRpebData,
+  processDespesaTotalMdeData,
 } from "../../../../../../utils/processDataCharts";
 import ChartComponent from "./ChartComponent";
 import CustomPagination from "../../../../../helpers/CustomPagination";
@@ -22,15 +38,117 @@ import { Typography, Button, Box } from "@mui/material";
 import { ExpandMore, ExpandLess } from '@mui/icons-material';
 import { municipios } from "../../../../../../utils/municipios.mapping";
 
-// Opções para os selects
+// Componente de "Em Construção"
+const UnderConstruction = ({ indicatorName }) => (
+  <Box sx={{ 
+    textAlign: 'center', 
+    padding: '80px 40px', 
+    backgroundColor: '#fff8e1', 
+    borderRadius: '16px', 
+    border: '3px dashed #ffb300', 
+    margin: '30px auto',
+    maxWidth: '600px',
+    boxShadow: '0 4px 20px rgba(255, 179, 0, 0.15)'
+  }}>
+    <Box sx={{ fontSize: '64px', marginBottom: '20px' }}>
+      🚧
+    </Box>
+    <Typography variant="h4" sx={{ 
+      color: '#ff8f00', 
+      fontWeight: 'bold', 
+      marginBottom: '16px',
+      fontSize: '28px'
+    }}>
+      Em Construção
+    </Typography>
+    <Typography variant="body1" sx={{ 
+      color: '#6d4c00', 
+      fontSize: '16px',
+      lineHeight: 1.6,
+      marginBottom: '8px'
+    }}>
+      {indicatorName ? `O indicador "${indicatorName}"` : 'Este indicador'} está sendo desenvolvido
+    </Typography>
+    <Typography variant="body2" sx={{ 
+      color: '#8d6e00', 
+      fontSize: '14px'
+    }}>
+      Estará disponível em breve!
+    </Typography>
+  </Box>
+);
+
+// 5 Indicadores principais
 const indicatorOptions = [
-  { value: 'constitutionalLimitMde', label: 'Percentual aplicado em MDE' },
-  { value: 'expensesBasicEducationFundeb', label: 'Percentual do fundeb nos profissionais de educação básica' },
-  { value: 'revenueComposition', label: 'Composição das Receitas Impostos e Transferências Constitucionais e Legais [%]' },
-  { value: 'financingCapacity', label: 'Capacidade de Financiamento' },
-  { value: 'rpebComposition', label: 'Composição da Receita Potencial da Educação Básica [%]' },
-  { value: 'resourcesApplicationControl', label: 'Controle da Aplicação de Recursos' },
-  { value: 'educationExpenseComposition', label: 'Composição das Despesas em Educação [%]' },
+  { value: 'financasPublicas', label: '1 - Indicadores de Finanças Públicas' },
+  { value: 'capacidadeFinanciamento', label: '2 - Capacidade de Financiamento' },
+  { value: 'recursosFundeb', label: '3 - Indicadores dos Recursos do Fundeb' },
+  { value: 'controleAplicacao', label: '4 - Controle da Aplicação dos Recursos' },
+  { value: 'investimentoEducacao', label: '5 - Investimento em Educação' },
+];
+
+// Subindicadores para cada indicador principal
+const subIndicatorOptions = {
+  financasPublicas: [
+    { value: 'composicaoReceitas', label: '1.1 - Composição das Receitas Impostos e Transferências [%]' },
+    { value: 'participacaoImpostosProprios', label: '1.2 - Participação da receita de impostos próprios [%]' },
+    { value: 'participacaoTransferencias', label: '1.3 - Participação das transferências [%]' },
+    { value: 'razaoImpostosTransferencias', label: '1.4 - Razão entre impostos próprios e transferências' },
+    { value: 'razaoTransferenciasImpostos', label: '1.5 - Razão entre transferências e impostos próprios' },
+    { value: 'participacaoFundeb', label: '1.6 - Participação do FUNDEB [%]' },
+    { value: 'receitasPorMatricula', label: '1.7 - Receitas por Matrícula na Educação Básica [R$]' },
+  ],
+  capacidadeFinanciamento: [
+    { value: 'rpeb', label: '2.1 - Receita Potencial Mínima Vinculada à Educação Básica (RPEb) [R$]' },
+    { value: 'composicaoRpeb', label: '2.2 - Composição da RPEB [%]' },
+    { value: 'rpebAlunoAno', label: '2.3 - RPEb-aluno (ano) [R$]' },
+    { value: 'rpebAlunoMes', label: '2.4 - RPEb-aluno (mês) [R$]' },
+    { value: 'participacaoFundebRpeb', label: '2.5 - Participação do Fundeb na RPEb [%]' },
+  ],
+  recursosFundeb: [
+    { value: 'participacaoFundebMde', label: '3.1 - Participação do Fundeb na despesa em MDE [%]' },
+    { value: 'resultadoLiquidoFundeb', label: '3.2 - Resultado Líquido do Fundeb [%]' },
+    { value: 'participacaoComplementacaoUniao', label: '3.3 - Participação da complementação da União no FUNDEB [%]' },
+  ],
+  controleAplicacao: [
+    { value: 'aplicacaoMde', label: '4.1 - Aplicação em MDE (>=25%) [%]' },
+    { value: 'aplicacaoFundebProfissionais', label: '4.2 - Aplicação do Fundeb nos profissionais (>=70%) [%]' },
+    { value: 'aplicacaoVaatInfantil', label: '4.3 - Aplicação do VAAT na Educação Infantil (>=50%) [%]' },
+    { value: 'aplicacaoVaatCapital', label: '4.4 - Aplicação do VAAT em Despesa de Capital (>=15%) [%]' },
+    { value: 'despesaEducacaoPib', label: '4.5 - Despesa total com educação em relação ao PIB [%]' },
+  ],
+  investimentoEducacao: [
+    { value: 'despesaTotalEducacao', label: '5.1 - Despesa total com Educação [R$]' },
+    { value: 'gastoAlunoAno', label: '5.2.1 - Gasto-Aluno (ano) [R$]' },
+    { value: 'gastoAlunoMes', label: '5.2.2 - Gasto-Aluno (mês) [R$]' },
+    { value: 'despesaPessoalAtivo', label: '5.3 - Despesa com pessoal ativo [%]' },
+    { value: 'despesaPessoalInativo', label: '5.4 - Despesa com pessoal inativo [%]' },
+    { value: 'despesaCapital', label: '5.5 - Despesa de Capital [%]' },
+    { value: 'transferenciasPrivadas', label: '5.6 - Transferências às instituições privadas [%]' },
+  ],
+};
+
+// Mapeamento de subindicadores para endpoints (subindicadores implementados)
+const implementedSubIndicators = [
+  'composicaoReceitas',
+  'participacaoImpostosProprios', 
+  'participacaoTransferencias',
+  'razaoImpostosTransferencias',
+  'razaoTransferenciasImpostos',
+  'participacaoFundeb',
+  'rpeb',
+  'aplicacaoMde',
+  'aplicacaoFundebProfissionais',
+  'aplicacaoVaatInfantil',
+  'aplicacaoVaatCapital',
+  'participacaoFundebMde',
+  'resultadoLiquidoFundeb',
+  'participacaoComplementacaoUniao',
+  'despesaTotalEducacao',
+  'despesaPessoalAtivo',
+  'despesaPessoalInativo',
+  'despesaCapital',
+  'transferenciasPrivadas',
 ];
 
 const groupTypeOptions = [
@@ -148,7 +266,9 @@ function ChartContainer() {
   const [apiData, setApiData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [selectedTable, setSelectedTable] = useState("constitutionalLimitMde");
+  const [selectedIndicator, setSelectedIndicator] = useState("financasPublicas");
+  const [selectedSubIndicator, setSelectedSubIndicator] = useState("composicaoReceitas");
+  const [selectedTable, setSelectedTable] = useState("composicaoReceitas"); // Mantido para compatibilidade
   const [selectedMunicipio, setSelectedMunicipio] = useState(null);
   const [territorioDeDesenvolvimentoMunicipio, setTerritorioDeDesenvolvimentoMunicipio] = useState(null);
   const [faixaPopulacionalMunicipio, setFaixaPopulacionalMunicipio] = useState(null);
@@ -165,6 +285,11 @@ function ChartContainer() {
     anoInicial: 2007,
     anoFinal: 2024,
   });
+
+  // Verificar se o subindicador está implementado
+  const isSubIndicatorImplemented = (subIndicator) => {
+    return implementedSubIndicators.includes(subIndicator);
+  };
 
   // Atualizar título quando dados forem carregados
   useEffect(() => {
@@ -186,8 +311,54 @@ function ChartContainer() {
     if (loading) return; // Evita múltiplas chamadas simultâneas
     setLoading(true);
     
+    // Mapeamento de novos subindicadores para lógica de fetch existente
+    const subIndicatorMapping = {
+      // Finanças Públicas
+      'composicaoReceitas': 'revenueComposition',
+      'participacaoImpostosProprios': 'participacao-receita-impostos-proprios',
+      'participacaoTransferencias': 'participacao-transferencias',
+      'razaoImpostosTransferencias': 'razao-impostos-transferencias',
+      'razaoTransferenciasImpostos': 'razao-transferencias-impostos',
+      'participacaoFundeb': 'participacao-fundeb',
+      'receitasPorMatricula': null, // Em desenvolvimento
+      // Capacidade de Financiamento
+      'rpeb': 'composicao_rpeb_financiamento',
+      'composicaoRpeb': null,
+      'rpebAlunoAno': null,
+      'rpebAlunoMes': null,
+      'participacaoFundebRpeb': null,
+      // Recursos do Fundeb
+      'participacaoFundebMde': 'rpebComposition',
+      'resultadoLiquidoFundeb': 'rpebComposition',
+      'participacaoComplementacaoUniao': 'rpebComposition',
+      // Controle da Aplicação
+      'aplicacaoMde': 'constitutionalLimitMde',
+      'aplicacaoFundebProfissionais': 'expensesBasicEducationFundeb',
+      'aplicacaoVaatInfantil': 'aplicacao_vaat_educacao_infantil',
+      'aplicacaoVaatCapital': 'aplicacao_vaat_despesa_capital',
+      'despesaEducacaoPib': null,
+      // Investimento em Educação
+      'despesaTotalEducacao': 'mde_total_expense',
+      'gastoAlunoAno': null,
+      'gastoAlunoMes': null,
+      'despesaPessoalAtivo': 'educationExpenseComposition',
+      'despesaPessoalInativo': 'educationExpenseComposition',
+      'despesaCapital': 'educationExpenseComposition',
+      'transferenciasPrivadas': 'educationExpenseComposition',
+    };
+    
     // Usar o indicatorType passado ou o estado atual
-    const tableToUse = indicatorType || selectedTable;
+    const rawIndicator = indicatorType || selectedTable;
+    
+    // Mapear para o nome antigo ou usar como está
+    const tableToUse = subIndicatorMapping[rawIndicator] || rawIndicator;
+    
+    // Se não tem mapeamento (null), significa que está em desenvolvimento
+    if (tableToUse === null) {
+      setLoading(false);
+      setApiData(null);
+      return;
+    }
 
     // Usar filtros customizados se fornecidos, senão usar os estados
     const currentFilters = customFilters || {
@@ -337,61 +508,6 @@ function ChartContainer() {
           page: currentFilters.page,
           limit: currentFilters.limit,
         }),
-        fetchData("participacao-receita-impostos-proprios", groupType, {
-          codigoMunicipio: currentFilters.codigoMunicipio,
-          territorioDeDesenvolvimentoMunicipio: currentFilters.territorioDeDesenvolvimentoMunicipio,
-          faixaPopulacionalMunicipio: currentFilters.faixaPopulacionalMunicipio,
-          aglomeradoMunicipio: currentFilters.aglomeradoMunicipio,
-          gerenciaRegionalMunicipio: currentFilters.gerenciaRegionalMunicipio,
-          anoInicial: currentFilters.anoInicial,
-          anoFinal: currentFilters.anoFinal,
-          page: currentFilters.page,
-          limit: currentFilters.limit,
-        }),
-        fetchData("participacao-transferencias", groupType, {
-          codigoMunicipio: currentFilters.codigoMunicipio,
-          territorioDeDesenvolvimentoMunicipio: currentFilters.territorioDeDesenvolvimentoMunicipio,
-          faixaPopulacionalMunicipio: currentFilters.faixaPopulacionalMunicipio,
-          aglomeradoMunicipio: currentFilters.aglomeradoMunicipio,
-          gerenciaRegionalMunicipio: currentFilters.gerenciaRegionalMunicipio,
-          anoInicial: currentFilters.anoInicial,
-          anoFinal: currentFilters.anoFinal,
-          page: currentFilters.page,
-          limit: currentFilters.limit,
-        }),
-        fetchData("razao-impostos-transferencias", groupType, {
-          codigoMunicipio: currentFilters.codigoMunicipio,
-          territorioDeDesenvolvimentoMunicipio: currentFilters.territorioDeDesenvolvimentoMunicipio,
-          faixaPopulacionalMunicipio: currentFilters.faixaPopulacionalMunicipio,
-          aglomeradoMunicipio: currentFilters.aglomeradoMunicipio,
-          gerenciaRegionalMunicipio: currentFilters.gerenciaRegionalMunicipio,
-          anoInicial: currentFilters.anoInicial,
-          anoFinal: currentFilters.anoFinal,
-          page: currentFilters.page,
-          limit: currentFilters.limit,
-        }),
-        fetchData("razao-transferencias-impostos", groupType, {
-          codigoMunicipio: currentFilters.codigoMunicipio,
-          territorioDeDesenvolvimentoMunicipio: currentFilters.territorioDeDesenvolvimentoMunicipio,
-          faixaPopulacionalMunicipio: currentFilters.faixaPopulacionalMunicipio,
-          aglomeradoMunicipio: currentFilters.aglomeradoMunicipio,
-          gerenciaRegionalMunicipio: currentFilters.gerenciaRegionalMunicipio,
-          anoInicial: currentFilters.anoInicial,
-          anoFinal: currentFilters.anoFinal,
-          page: currentFilters.page,
-          limit: currentFilters.limit,
-        }),
-        fetchData("participacao-fundeb", groupType, {
-          codigoMunicipio: currentFilters.codigoMunicipio,
-          territorioDeDesenvolvimentoMunicipio: currentFilters.territorioDeDesenvolvimentoMunicipio,
-          faixaPopulacionalMunicipio: currentFilters.faixaPopulacionalMunicipio,
-          aglomeradoMunicipio: currentFilters.aglomeradoMunicipio,
-          gerenciaRegionalMunicipio: currentFilters.gerenciaRegionalMunicipio,
-          anoInicial: currentFilters.anoInicial,
-          anoFinal: currentFilters.anoFinal,
-          page: currentFilters.page,
-          limit: currentFilters.limit,
-        }),
       ])
         .then(
           ([
@@ -407,11 +523,6 @@ function ChartContainer() {
             icmsDesoneracao,
             cotaParteIpi,
             cotaParteItr,
-            participacaoReceitaImpostosProprios,
-            participacaoTransferencias,
-            razaoImpostosTransferencias,
-            razaoTransferenciasImpostos,
-            participacaoFundeb,
           ]) => {
             setApiData({
               iptu,
@@ -426,11 +537,6 @@ function ChartContainer() {
               icmsDesoneracao,
               cotaParteIpi,
               cotaParteItr,
-              participacaoReceitaImpostosProprios,
-              participacaoTransferencias,
-              razaoImpostosTransferencias,
-              razaoTransferenciasImpostos,
-              participacaoFundeb,
             });
             setLoading(false);
             setTotalPages(Math.max(
@@ -447,11 +553,6 @@ function ChartContainer() {
                 icmsDesoneracao,
                 cotaParteIpi,
                 cotaParteItr,
-                participacaoReceitaImpostosProprios,
-                participacaoTransferencias,
-                razaoImpostosTransferencias,
-                razaoTransferenciasImpostos,
-                participacaoFundeb,
               }).map((data) => data.pagination?.totalPages || 1)
             ));
           }
@@ -831,9 +932,18 @@ function ChartContainer() {
   // Escutar eventos de filtro aplicados
   useEffect(() => {
     const handleApplyFilters = (event) => {
-      const { municipalIndicatorType, ...restFilters } = event.detail;
+      const { municipalIndicatorType, municipalSubIndicatorType, ...restFilters } = event.detail;
       
-      handleFilterChange(restFilters, municipalIndicatorType);
+      // Atualizar indicador e subindicador selecionados
+      if (municipalIndicatorType) {
+        setSelectedIndicator(municipalIndicatorType);
+      }
+      if (municipalSubIndicatorType) {
+        setSelectedSubIndicator(municipalSubIndicatorType);
+        setSelectedTable(municipalSubIndicatorType);
+      }
+      
+      handleFilterChange(restFilters, municipalSubIndicatorType || municipalIndicatorType);
     };
 
     window.addEventListener('applyFinancialFilters', handleApplyFilters);
@@ -883,7 +993,13 @@ function ChartContainer() {
         <div className="data-section">
           {loading && <Loading />}
 
-          {!loading && error && (
+          {/* Se não está implementado, mostrar "Em Construção" mesmo que tenha erro */}
+          {!loading && !isSubIndicatorImplemented(selectedSubIndicator) && (
+            <UnderConstruction indicatorName={subIndicatorOptions[selectedIndicator]?.find(opt => opt.value === selectedSubIndicator)?.label} />
+          )}
+
+          {/* Mostrar erro apenas se o indicador está implementado */}
+          {!loading && error && isSubIndicatorImplemented(selectedSubIndicator) && (
             <div style={{ 
               textAlign: 'center', 
               padding: '40px 20px',
@@ -894,56 +1010,20 @@ function ChartContainer() {
             </div>
           )}
 
-          {!loading && !error && !apiData && !hasInitialLoad && (
-            <>
-              {/* Mostrar mensagem de desenvolvimento imediatamente */}
-              {(selectedTable === "rpebComposition" || 
-                selectedTable === "resourcesApplicationControl" || 
-                selectedTable === "educationExpenseComposition") ? (
-                <div style={{ 
-                  textAlign: 'center', 
-                  padding: '60px 20px',
-                  backgroundColor: '#f8f9fa',
-                  borderRadius: '8px',
-                  border: '2px dashed #dee2e6',
-                  margin: '20px 0'
-                }}>
-                  <Typography 
-                    variant="h4" 
-                    sx={{ 
-                      color: '#6c757d',
-                      fontWeight: 'bold',
-                      marginBottom: '16px'
-                    }}
-                  >
-                    🚧 Em Desenvolvimento
-                  </Typography>
-                  <Typography 
-                    variant="body1" 
-                    sx={{ 
-                      color: '#6c757d',
-                      fontSize: '16px'
-                    }}
-                  >
-                    Este indicador está sendo desenvolvido e estará disponível em breve.
-                  </Typography>
-                </div>
-              ) : (
-                <Typography 
-                  variant="body1" 
-                  sx={{ 
-                    textAlign: 'center',
-                    fontSize: '18px',
-                    fontWeight: 'bold',
-                    margin: '20px auto',
-                    maxWidth: '400px',
-                    color: theme.palette.primary.main
-                  }}
-                >
-                  Selecione os filtros desejados na lateral e clique em "Filtrar" para montar uma consulta.
-                </Typography>
-              )}
-            </>
+          {!loading && !error && !apiData && !hasInitialLoad && isSubIndicatorImplemented(selectedSubIndicator) && (
+            <Typography 
+              variant="body1" 
+              sx={{ 
+                textAlign: 'center',
+                fontSize: '18px',
+                fontWeight: 'bold',
+                margin: '20px auto',
+                maxWidth: '400px',
+                color: theme.palette.primary.main
+              }}
+            >
+              Selecione os filtros desejados na lateral e clique em "Filtrar" para montar uma consulta.
+            </Typography>
           )}
 
           {!loading && !error && (!apiData || Object.keys(apiData).length === 0) && hasInitialLoad && (
@@ -959,44 +1039,199 @@ function ChartContainer() {
 
           {!loading && !error && apiData && Object.keys(apiData).length > 0 && (
             <>
-              {selectedTable === "expensesBasicEducationFundeb" && (
-                <ChartComponent
-                  key={selectedTable + JSON.stringify(apiData)}
-                  indicatorType={selectedTable}
-                  processDataFunction={processBasicEducationData}
-                  title={chartTitle + " - % do Fundeb nos profissionais de educação básica"}
-                  data={apiData}
-                />
+              {/* Indicador 1: Finanças Públicas */}
+              {selectedIndicator === "financasPublicas" && (
+                <>
+                  {selectedSubIndicator === "composicaoReceitas" && (
+                    <RevenueCompositionCharts data={apiData} title={chartTitle + " - Composição das Receitas"} />
+                  )}
+                  {selectedSubIndicator === "participacaoImpostosProprios" && (
+                    <ChartComponent
+                      key={selectedSubIndicator + JSON.stringify(apiData)}
+                      indicatorType="participacao-receita-impostos-proprios"
+                      processDataFunction={processParticipacaoImpostosPropriosData}
+                      title={chartTitle + " - Participação da receita de impostos próprios [%]"}
+                      data={apiData}
+                    />
+                  )}
+                  {selectedSubIndicator === "participacaoTransferencias" && (
+                    <ChartComponent
+                      key={selectedSubIndicator + JSON.stringify(apiData)}
+                      indicatorType="participacao-transferencias"
+                      processDataFunction={processParticipacaoTransferenciasData}
+                      title={chartTitle + " - Participação das transferências [%]"}
+                      data={apiData}
+                    />
+                  )}
+                  {selectedSubIndicator === "razaoImpostosTransferencias" && (
+                    <ChartComponent
+                      key={selectedSubIndicator + JSON.stringify(apiData)}
+                      indicatorType="razao-impostos-transferencias"
+                      processDataFunction={processRazaoImpostosTransferenciasData}
+                      title={chartTitle + " - Razão entre impostos próprios e transferências"}
+                      data={apiData}
+                    />
+                  )}
+                  {selectedSubIndicator === "razaoTransferenciasImpostos" && (
+                    <ChartComponent
+                      key={selectedSubIndicator + JSON.stringify(apiData)}
+                      indicatorType="razao-transferencias-impostos"
+                      processDataFunction={processRazaoTransferenciasImpostosData}
+                      title={chartTitle + " - Razão entre transferências e impostos próprios"}
+                      data={apiData}
+                    />
+                  )}
+                  {selectedSubIndicator === "participacaoFundeb" && (
+                    <ChartComponent
+                      key={selectedSubIndicator + JSON.stringify(apiData)}
+                      indicatorType="participacao-fundeb"
+                      processDataFunction={processParticipacaoFundebData}
+                      title={chartTitle + " - Participação do FUNDEB [%]"}
+                      data={apiData}
+                    />
+                  )}
+                </>
               )}
 
-              {selectedTable === "constitutionalLimitMde" && (
-                <ChartComponent
-                  key={selectedTable + JSON.stringify(apiData)}
-                  indicatorType={selectedTable}
-                  processDataFunction={processMDEData}
-                  title={chartTitle + " - % Aplicado em MDE por Município"}
-                  data={apiData}
-                />
+              {/* Indicador 2: Capacidade de Financiamento */}
+              {selectedIndicator === "capacidadeFinanciamento" && (
+                <>
+                  {selectedSubIndicator === "rpeb" && (
+                    <ChartComponent
+                      key={selectedSubIndicator + JSON.stringify(apiData)}
+                      indicatorType="composicao_rpeb_financiamento"
+                      processDataFunction={processRpebData}
+                      title={chartTitle + " - Receita Potencial Mínima Vinculada à Educação Básica (RPEb) [R$]"}
+                      data={apiData}
+                    />
+                  )}
+                </>
               )}
 
-              {selectedTable === "revenueComposition" && (
-                <RevenueCompositionCharts data={apiData} title={chartTitle + " - Composição das Receitas"} />
+              {/* Indicador 3: Recursos do Fundeb */}
+              {selectedIndicator === "recursosFundeb" && (
+                <>
+                  {selectedSubIndicator === "participacaoFundebMde" && (
+                    <ChartComponent
+                      key={selectedSubIndicator + JSON.stringify(apiData)}
+                      indicatorType="fundeb_participation_mde"
+                      processDataFunction={processParticipacaoFundebMdeData}
+                      title={chartTitle + " - Participação do Fundeb na despesa em MDE [%]"}
+                      data={apiData?.fundebParticipationMde}
+                    />
+                  )}
+                  {selectedSubIndicator === "resultadoLiquidoFundeb" && (
+                    <ChartComponent
+                      key={selectedSubIndicator + JSON.stringify(apiData)}
+                      indicatorType="resultado_liquido_fundeb"
+                      processDataFunction={processResultadoLiquidoFundebData}
+                      title={chartTitle + " - Resultado Líquido do Fundeb [%]"}
+                      data={apiData?.resultadoLiquidoFundeb}
+                    />
+                  )}
+                  {selectedSubIndicator === "participacaoComplementacaoUniao" && (
+                    <ChartComponent
+                      key={selectedSubIndicator + JSON.stringify(apiData)}
+                      indicatorType="participacao_complementacao_uniao"
+                      processDataFunction={processParticipacaoComplementacaoUniaoData}
+                      title={chartTitle + " - Participação da complementação da União no FUNDEB [%]"}
+                      data={apiData?.participacaoComplementacaoUniao}
+                    />
+                  )}
+                </>
               )}
 
-              {selectedTable === "financingCapacity" && (
-                <FinancingCapacityCharts data={apiData} title={chartTitle + " - Capacidade de Financiamento"} />
+              {/* Indicador 4: Controle da Aplicação dos Recursos */}
+              {selectedIndicator === "controleAplicacao" && (
+                <>
+                  {selectedSubIndicator === "aplicacaoMde" && (
+                    <ChartComponent
+                      key={selectedSubIndicator + JSON.stringify(apiData)}
+                      indicatorType={selectedSubIndicator}
+                      processDataFunction={processMDEData}
+                      title={chartTitle + " - Aplicação em MDE (>=25%) [%]"}
+                      data={apiData}
+                    />
+                  )}
+                  {selectedSubIndicator === "aplicacaoFundebProfissionais" && (
+                    <ChartComponent
+                      key={selectedSubIndicator + JSON.stringify(apiData)}
+                      indicatorType={selectedSubIndicator}
+                      processDataFunction={processBasicEducationData}
+                      title={chartTitle + " - Aplicação do Fundeb nos profissionais (>=70%) [%]"}
+                      data={apiData}
+                    />
+                  )}
+                  {selectedSubIndicator === "aplicacaoVaatInfantil" && (
+                    <ChartComponent
+                      key={selectedSubIndicator + JSON.stringify(apiData)}
+                      indicatorType="aplicacao_vaat_educacao_infantil"
+                      processDataFunction={processVaatEducacaoInfantilData}
+                      title={chartTitle + " - Aplicação VAAT Educação Infantil (>=50%) [%]"}
+                      data={apiData}
+                    />
+                  )}
+                  {selectedSubIndicator === "aplicacaoVaatCapital" && (
+                    <ChartComponent
+                      key={selectedSubIndicator + JSON.stringify(apiData)}
+                      indicatorType="aplicacao_vaat_despesa_capital"
+                      processDataFunction={processVaatDespesaCapitalData}
+                      title={chartTitle + " - Aplicação VAAT Despesa de Capital (>=15%) [%]"}
+                      data={apiData}
+                    />
+                  )}
+                </>
               )}
 
-              {selectedTable === "rpebComposition" && (
-                <RpebCompositionCharts data={apiData} title={chartTitle + " - Composição da RPEB"} />
-              )}
-
-              {selectedTable === "resourcesApplicationControl" && (
-                <ResourcesApplicationControlCharts data={apiData} title={chartTitle + " - Controle da Aplicação de Recursos"} />
-              )}
-
-              {selectedTable === "educationExpenseComposition" && (
-                <EducationExpenseCompositionCharts data={apiData} title={chartTitle + " - Composição das Despesas em Educação"} />
+              {/* Indicador 5: Investimento em Educação */}
+              {selectedIndicator === "investimentoEducacao" && (
+                <>
+                  {selectedSubIndicator === "despesaTotalEducacao" && (
+                    <ChartComponent
+                      key={selectedSubIndicator + JSON.stringify(apiData)}
+                      indicatorType="mde_total_expense"
+                      processDataFunction={processDespesaTotalMdeData}
+                      title={chartTitle + " - Despesa Total com Educação (MDE) [R$]"}
+                      data={apiData}
+                    />
+                  )}
+                  {selectedSubIndicator === "despesaPessoalAtivo" && (
+                    <ChartComponent
+                      key={selectedSubIndicator + JSON.stringify(apiData)}
+                      indicatorType="mde_pessoal_ativo"
+                      processDataFunction={processDespesaPessoalAtivoData}
+                      title={chartTitle + " - Despesa com pessoal ativo [%]"}
+                      data={apiData?.mdePessoalAtivo}
+                    />
+                  )}
+                  {selectedSubIndicator === "despesaPessoalInativo" && (
+                    <ChartComponent
+                      key={selectedSubIndicator + JSON.stringify(apiData)}
+                      indicatorType="mde_pessoal_inativo"
+                      processDataFunction={processDespesaPessoalInativoData}
+                      title={chartTitle + " - Despesa com pessoal inativo [%]"}
+                      data={apiData?.mdePessoalInativo}
+                    />
+                  )}
+                  {selectedSubIndicator === "despesaCapital" && (
+                    <ChartComponent
+                      key={selectedSubIndicator + JSON.stringify(apiData)}
+                      indicatorType="mde_capital"
+                      processDataFunction={processDespesaCapitalData}
+                      title={chartTitle + " - Despesa de Capital [%]"}
+                      data={apiData?.mdeCapital}
+                    />
+                  )}
+                  {selectedSubIndicator === "transferenciasPrivadas" && (
+                    <ChartComponent
+                      key={selectedSubIndicator + JSON.stringify(apiData)}
+                      indicatorType="mde_transferencias_instituicoes_privadas"
+                      processDataFunction={processTransferenciasPrivadasData}
+                      title={chartTitle + " - Transferências às instituições privadas [%]"}
+                      data={apiData?.mdeTransferenciasInstituicoesPrivadas}
+                    />
+                  )}
+                </>
               )}
 
               <CustomPagination

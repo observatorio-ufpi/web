@@ -40,8 +40,8 @@ const FinancialLayout = () => {
   // Valor do contexto
   const sidebarValue = {
     isOpen,
-    width: isOpen ? '16rem' : '0rem',
-    marginLeft: isOpen ? '16rem' : '0rem',
+    width: isOpen ? '20rem' : '0rem',
+    marginLeft: isOpen ? '20rem' : '0rem',
     setIsOpen
   };
 
@@ -53,7 +53,7 @@ const FinancialLayout = () => {
           <FinancialCategorySidebar />
           
           {/* Conteúdo principal */}
-          <div className={`transition-all duration-300 ${window.innerWidth >= 768 ? '' : 'w-full'}`} style={{ marginLeft: window.innerWidth >= 768 ? (isOpen ? '16rem' : '0rem') : '0rem' }}>
+          <div className={`transition-all duration-300 ${window.innerWidth >= 768 ? '' : 'w-full'}`} style={{ marginLeft: window.innerWidth >= 768 ? (isOpen ? '20rem' : '0rem') : '0rem' }}>
             {/* Área de conteúdo */}
             <main className="min-h-screen p-3 sm:p-4 md:p-6">
               <Outlet />

@@ -173,7 +173,7 @@ const StateChartComponent = ({
         marginBottom: '20px',
         width: '100%',
       }}>
-        <Typography variant="h6" component="h3">{title}</Typography>
+        <Typography variant="h5" component="h3" sx={{ fontWeight: 'bold', fontSize: '1.5rem' }}>{title}</Typography>
         {enableMonetaryCorrection && (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
             <FormControlLabel

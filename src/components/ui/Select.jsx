@@ -14,6 +14,7 @@ const CustomSelect = ({
   ...props 
 }) => {
   const sizes = {
+    xxs: 'text-[10px]',
     xs: 'text-xs',
     small: 'text-sm',
     medium: 'text-base',
@@ -29,7 +30,7 @@ const CustomSelect = ({
       border: state.isFocused ? '2px solid #8b5cf6' : '2px solid #e5e7eb',
       borderRadius: '8px',
       boxShadow: state.isFocused ? '0 0 0 1px #8b5cf6' : 'none',
-      minHeight: size === 'xs' ? '28px' : size === 'small' ? '36px' : size === 'large' ? '48px' : '40px',
+      minHeight: size === 'xxs' ? '24px' : size === 'xs' ? '28px' : size === 'small' ? '36px' : size === 'large' ? '48px' : '40px',
       '&:hover': {
         border: '2px solid #8b5cf6'
       }
@@ -69,11 +70,11 @@ const CustomSelect = ({
     }),
     valueContainer: (provided) => ({
       ...provided,
-      padding: size === 'xs' ? '2px 6px' : size === 'small' ? '4px 8px' : size === 'large' ? '12px 16px' : '8px 12px'
+      padding: size === 'xxs' ? '0px 4px' : size === 'xs' ? '2px 6px' : size === 'small' ? '4px 8px' : size === 'large' ? '12px 16px' : '8px 12px'
     }),
     indicatorsContainer: (provided) => ({
       ...provided,
-      padding: size === 'xs' ? '2px 6px' : size === 'small' ? '4px 8px' : size === 'large' ? '12px 16px' : '8px 12px'
+      padding: size === 'xxs' ? '0px 2px' : size === 'xs' ? '2px 6px' : size === 'small' ? '4px 8px' : size === 'large' ? '12px 16px' : '8px 12px'
     })
   };
   

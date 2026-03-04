@@ -145,23 +145,23 @@ const EducationCategorySidebar = () => {
       <aside
         className={`${
           isOpen ? 'translate-x-0' : '-translate-x-full'
-        } fixed left-0 top-0 h-screen w-64 overflow-y-auto transition-transform duration-300 ease-in-out z-40 shadow-lg sidebar-scroll`}
+        } fixed left-0 top-0 h-screen overflow-y-auto transition-transform duration-300 ease-in-out z-40 shadow-lg sidebar-scroll`}
         style={{
-          width: isOpen ? '16rem' : '4rem',
+          width: isOpen ? '20rem' : '4rem',
           backgroundColor: '#E8E4E3'
         }}
       >
         {/* Header da Sidebar */}
-        <div className="p-6 md:p-6 lg:p-6 xl:p-6 2xl:p-6 p-3 sm:p-4 md:p-6 border-b border-gray-200">
-          <div className="flex items-center mt-8 mb-4">
+        <div className="p-3 border-b border-gray-200">
+          <div className="flex items-center mt-8 mb-2">
             <Link to="/" className="flex items-center">
               <img
                 src="/images/logos/logo-opepi-v2.png"
                 alt="opepi"
-                className="h-14 md:h-14 lg:h-14 xl:h-14 2xl:h-14 h-8 sm:h-10 md:h-14 w-auto mr-3"
+                className="h-10 w-auto mr-2"
               />
-              <div className={`${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>
-                <p className="text-sm text-gray-600 leading-tight">
+              <div className={`${isOpen ? 'block' : 'hidden'} md:block`}>
+                <p className="text-xs text-gray-600 leading-tight">
                   observatório da política educacional piauiense
                 </p>
               </div>
@@ -172,14 +172,14 @@ const EducationCategorySidebar = () => {
         <hr className="border-gray-300" />
 
         {/* Navegação */}
-        <nav className="p-6 md:p-6 lg:p-6 xl:p-6 xl:p-6 2xl:p-6 p-3 sm:p-4 md:p-6 space-y-6">
+        <nav className="p-3 space-y-3">
           {/* Categoria Atual */}
           <div>
-            <h3 className={`text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4 ${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>
+            <h3 className={`text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 ${isOpen ? 'block' : 'hidden'} md:block`}>
               Categoria
             </h3>
-            <div className={`${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>
-              <p className="text-sm font-medium text-gray-800">
+            <div className={`${isOpen ? 'block' : 'hidden'} md:block`}>
+              <p className="text-xs font-medium text-gray-800">
                 {categories.find(c => c.id === currentCategory)?.label}
               </p>
             </div>
@@ -188,7 +188,7 @@ const EducationCategorySidebar = () => {
           {/* Tipo de Dado */}
           {currentCategory !== 'condicoes' && (
             <div>
-              <label className={`text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block ${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>
+              <label className={`text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 block ${isOpen ? 'block' : 'hidden'} md:block`}>
                 Tipo
               </label>
               <Select
@@ -209,7 +209,7 @@ const EducationCategorySidebar = () => {
 
           {/* Filtros Múltiplos */}
           <div>
-            <label className={`text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block ${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>
+            <label className={`text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 block ${isOpen ? 'block' : 'hidden'} md:block`}>
               Filtros
             </label>
             {currentCategory === 'basica' && (
@@ -277,7 +277,7 @@ const EducationCategorySidebar = () => {
 
           {/* Período */}
           <div>
-            <label className={`text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block ${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>
+            <label className={`text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 block ${isOpen ? 'block' : 'hidden'} md:block`}>
               Período
             </label>
             <YearRangeFilter
@@ -293,10 +293,10 @@ const EducationCategorySidebar = () => {
           {/* Localização */}
           {(currentCategory === 'basica' || currentCategory === 'superior' || currentCategory === 'condicoes') && (
             <div>
-              <h3 className={`text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 ${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>
+              <h3 className={`text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 ${isOpen ? 'block' : 'hidden'} md:block`}>
                 Localização
               </h3>
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 {/* Município */}
                 <Select
                   value={filteredMunicipioOptions.find(option => option.value === filters.city) || null}
@@ -335,33 +335,40 @@ const EducationCategorySidebar = () => {
                   disabled={otherLocalityDisabled}
                 />
 
-                {/* Aglomerado */}
-                <Select
-                  value={filteredAglomeradoOptions.find(option => option.value === filters.aglomerado) || null}
-                  onChange={(selectedOption) => filters.setAglomerado?.(selectedOption ? selectedOption.value : '')}
-                  options={filteredAglomeradoOptions}
-                  placeholder="Aglomerado - AG"
-                  size="xs"
-                  isClearable={true}
-                  disabled={otherLocalityDisabled}
-                />
+                {/* Aglomerado e Gerência em linha */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-0.5">Aglomerado</label>
+                    <Select
+                      value={filteredAglomeradoOptions.find(option => option.value === filters.aglomerado) || null}
+                      onChange={(selectedOption) => filters.setAglomerado?.(selectedOption ? selectedOption.value : '')}
+                      options={filteredAglomeradoOptions}
+                      placeholder="AG"
+                      size="xxs"
+                      isClearable={true}
+                      disabled={otherLocalityDisabled}
+                    />
+                  </div>
 
-                {/* Gerência */}
-                <Select
-                  value={filteredGerenciaOptions.find(option => option.value === filters.gerencia) || null}
-                  onChange={(selectedOption) => filters.setGerencia?.(selectedOption ? selectedOption.value : '')}
-                  options={filteredGerenciaOptions}
-                  placeholder="Gerência - GRE"
-                  size="xs"
-                  isClearable={true}
-                  disabled={otherLocalityDisabled}
-                />
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-0.5">Gerência</label>
+                    <Select
+                      value={filteredGerenciaOptions.find(option => option.value === filters.gerencia) || null}
+                      onChange={(selectedOption) => filters.setGerencia?.(selectedOption ? selectedOption.value : '')}
+                      options={filteredGerenciaOptions}
+                      placeholder="GRE"
+                      size="xxs"
+                      isClearable={true}
+                      disabled={otherLocalityDisabled}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           )}
 
           {/* Botões de Ação */}
-          <div className="flex flex-col gap-2 pt-4 border-t border-gray-200">
+          <div className="flex gap-2 pt-2 border-t border-gray-200">
             <Button
               variant="contained"
               fullWidth
@@ -378,10 +385,11 @@ const EducationCategorySidebar = () => {
               }}
               sx={{
                 textTransform: 'none',
-                fontSize: '0.875rem'
+                fontSize: '0.75rem',
+                py: 0.5
               }}
             >
-              Mostrar resultados
+              Mostrar
             </Button>
             <Button
               variant="outlined"
@@ -409,7 +417,8 @@ const EducationCategorySidebar = () => {
               }}
               sx={{
                 textTransform: 'none',
-                fontSize: '0.875rem',
+                fontSize: '0.75rem',
+                py: 0.5,
                 backgroundColor: '#f0f0f0',
                 color: '#000',
                 '&:hover': {
@@ -423,48 +432,48 @@ const EducationCategorySidebar = () => {
 
           {/* Alternar para Dados Financeiros */}
           <div>
-            <h3 className={`text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 ${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>
+            <h3 className={`text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 ${isOpen ? 'block' : 'hidden'} md:block`}>
               Alternar para
             </h3>
             <button
               onClick={() => navigate('/dados-financeiros')}
-              className={`w-full flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 text-gray-700 hover:bg-yellow-100 hover:text-yellow-700`}
+              className={`w-full flex items-center px-2 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 text-gray-700 hover:bg-yellow-100 hover:text-yellow-700`}
             >
-              <FaDollarSign className="mr-3 text-lg flex-shrink-0" />
-              <span className={`${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>Dados Financeiros</span>
+              <FaDollarSign className="mr-2 text-sm flex-shrink-0" />
+              <span className={`${isOpen ? 'block' : 'hidden'} md:block`}>Dados Financeiros</span>
             </button>
           </div>
 
           {/* Sobre o Projeto */}
-          <div className="mb-8">
-            <h3 className={`text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4 ${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>
+          <div className="mb-3">
+            <h3 className={`text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 ${isOpen ? 'block' : 'hidden'} md:block`}>
               sobre o projeto
             </h3>
-            <ul className="space-y-2">
+            <ul className="space-y-1">
               <li>
                 <Link
                   to="/quem-somos"
-                  className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  className={`flex items-center px-2 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
                     location.pathname === '/quem-somos'
                       ? 'bg-green-100 text-green-700'
                       : 'text-gray-700 hover:bg-gray-100'
                   }`}
                 >
-                  <FaInfoCircle className="mr-3 text-lg flex-shrink-0" />
-                  <span className={`${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>Quem somos</span>
+                  <FaInfoCircle className="mr-2 text-sm flex-shrink-0" />
+                  <span className={`${isOpen ? 'block' : 'hidden'} md:block`}>Quem somos</span>
                 </Link>
               </li>
               <li>
                 <Link
                   to="/repositorio"
-                  className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  className={`flex items-center px-2 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
                     location.pathname === '/repositorio'
                       ? 'bg-green-100 text-green-700'
                       : 'text-gray-700 hover:bg-gray-100'
                   }`}
                 >
-                  <FaInfoCircle className="mr-3 text-lg flex-shrink-0" />
-                  <span className={`${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>Repositório</span>
+                  <FaInfoCircle className="mr-2 text-sm flex-shrink-0" />
+                  <span className={`${isOpen ? 'block' : 'hidden'} md:block`}>Repositório</span>
                 </Link>
               </li>
             </ul>
@@ -472,13 +481,13 @@ const EducationCategorySidebar = () => {
         </nav>
 
         {/* Footer da Sidebar */}
-        <div className="p-6 md:p-6 lg:p-6 xl:p-6 2xl:p-6 p-3 sm:p-4 md:p-6 border-t border-gray-200 mt-auto">
+        <div className="p-3 border-t border-gray-200 mt-auto">
           <button
             onClick={handleVoltar}
-            className="flex items-center text-gray-600 hover:text-gray-900 transition-colors text-sm font-medium"
+            className="flex items-center text-gray-600 hover:text-gray-900 transition-colors text-xs font-medium"
           >
             <FaArrowLeft className="mr-2 flex-shrink-0" />
-            <span className={`${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>voltar</span>
+            <span className={`${isOpen ? 'block' : 'hidden'} md:block`}>voltar</span>
           </button>
         </div>
       </aside>
