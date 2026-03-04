@@ -93,6 +93,14 @@ const ChartComponent = ({
 
   useEffect(() => {
     const getData = async () => {
+      // Verificar se data é válido antes de processar
+      if (!data || typeof data !== 'object') {
+        setChartData({ labels: [], datasets: [] });
+        setMunicipalityColors({});
+        setLoading(false);
+        return;
+      }
+
       try {
         setLoading(true);
         const processedData = processDataFunction(data, colorPalette);
@@ -149,7 +157,7 @@ const ChartComponent = ({
     };
 
     getData();
-  }, [indicatorType, processDataFunction, useMonetaryCorrection, targetDate]);
+  }, [indicatorType, processDataFunction, useMonetaryCorrection, targetDate, data]);
 
   const handleMonetaryCorrectionToggle = (event) => {
     setUseMonetaryCorrection(event.target.checked);
@@ -169,12 +177,11 @@ const ChartComponent = ({
     }}>
       <Box sx={{
         display: 'flex',
-        justifyContent: 'space-between',
+        justifyContent: 'flex-end',
         alignItems: 'center',
         marginBottom: '20px',
         width: '100%',
       }}>
-        <Typography variant="h6" component="h3">{title}</Typography>
         {enableMonetaryCorrection && (
           <Box sx={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
             <FormControlLabel

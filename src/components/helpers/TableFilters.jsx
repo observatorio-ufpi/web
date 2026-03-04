@@ -51,16 +51,55 @@ const stateIndicatorTypeOptions = [
   { value: 'rpeb', label: 'Composição da Receita Potencial de Educação (RPEB)' },
 ];
 
-// Opções de tipos de indicadores municipais
+// Opções de tipos de indicadores municipais (5 categorias principais)
 const municipalIndicatorTypeOptions = [
-  { value: 'constitutionalLimitMde', label: 'Percentual aplicado em MDE' },
-  { value: 'expensesBasicEducationFundeb', label: 'Percentual do Fundeb nos profissionais' },
-  { value: 'revenueComposition', label: 'Composição das Receitas' },
-  { value: 'financingCapacity', label: 'Capacidade de Financiamento' },
-  { value: 'rpebComposition', label: 'Composição da RPEB' },
-  { value: 'resourcesApplicationControl', label: 'Controle da Aplicação de Recursos' },
-  { value: 'educationExpenseComposition', label: 'Composição das Despesas em Educação' },
+  { value: 'financasPublicas', label: '1 - Indicadores de Finanças Públicas' },
+  { value: 'capacidadeFinanciamento', label: '2 - Capacidade de Financiamento' },
+  { value: 'recursosFundeb', label: '3 - Indicadores dos Recursos do Fundeb' },
+  { value: 'controleAplicacao', label: '4 - Controle da Aplicação dos Recursos' },
+  { value: 'investimentoEducacao', label: '5 - Investimento em Educação' },
 ];
+
+// Subindicadores para cada indicador principal
+const municipalSubIndicatorOptions = {
+  financasPublicas: [
+    { value: 'composicaoReceitas', label: '1.1 - Composição das Receitas Impostos e Transferências [%]' },
+    { value: 'participacaoImpostosProprios', label: '1.2 - Participação da receita de impostos próprios [%]' },
+    { value: 'participacaoTransferencias', label: '1.3 - Participação das transferências [%]' },
+    { value: 'razaoImpostosTransferencias', label: '1.4 - Razão entre impostos próprios e transferências' },
+    { value: 'razaoTransferenciasImpostos', label: '1.5 - Razão entre transferências e impostos próprios' },
+    { value: 'participacaoFundeb', label: '1.6 - Participação do FUNDEB [%]' },
+    { value: 'receitasPorMatricula', label: '1.7 - Receitas por Matrícula na Educação Básica [R$]' },
+  ],
+  capacidadeFinanciamento: [
+    { value: 'rpeb', label: '2.1 - Receita Potencial Mínima Vinculada à Educação Básica (RPEb) [R$]' },
+    { value: 'composicaoRpeb', label: '2.2 - Composição da RPEB [%]' },
+    { value: 'rpebAlunoAno', label: '2.3 - RPEb-aluno (ano) [R$]' },
+    { value: 'rpebAlunoMes', label: '2.4 - RPEb-aluno (mês) [R$]' },
+    { value: 'participacaoFundebRpeb', label: '2.5 - Participação do Fundeb na RPEb [%]' },
+  ],
+  recursosFundeb: [
+    { value: 'participacaoFundebMde', label: '3.1 - Participação do Fundeb na despesa em MDE [%]' },
+    { value: 'resultadoLiquidoFundeb', label: '3.2 - Resultado Líquido do Fundeb [%]' },
+    { value: 'participacaoComplementacaoUniao', label: '3.3 - Participação da complementação da União no FUNDEB [%]' },
+  ],
+  controleAplicacao: [
+    { value: 'aplicacaoMde', label: '4.1 - Aplicação em MDE (>=25%) [%]' },
+    { value: 'aplicacaoFundebProfissionais', label: '4.2 - Aplicação do Fundeb nos profissionais (>=70%) [%]' },
+    { value: 'aplicacaoVaatInfantil', label: '4.3 - Aplicação do VAAT na Educação Infantil (>=50%) [%]' },
+    { value: 'aplicacaoVaatCapital', label: '4.4 - Aplicação do VAAT em Despesa de Capital (>=15%) [%]' },
+    { value: 'despesaEducacaoPib', label: '4.5 - Despesa total com educação em relação ao PIB [%]' },
+  ],
+  investimentoEducacao: [
+    { value: 'despesaTotalEducacao', label: '5.1 - Despesa total com Educação [R$]' },
+    { value: 'gastoAlunoAno', label: '5.2.1 - Gasto-Aluno (ano) [R$]' },
+    { value: 'gastoAlunoMes', label: '5.2.2 - Gasto-Aluno (mês) [R$]' },
+    { value: 'despesaPessoalAtivo', label: '5.3 - Despesa com pessoal ativo [%]' },
+    { value: 'despesaPessoalInativo', label: '5.4 - Despesa com pessoal inativo [%]' },
+    { value: 'despesaCapital', label: '5.5 - Despesa de Capital [%]' },
+    { value: 'transferenciasPrivadas', label: '5.6 - Transferências às instituições privadas [%]' },
+  ],
+};
 
 const FilterComponent = ({
   onFilterChange,
@@ -79,7 +118,8 @@ const FilterComponent = ({
   selectedTableType = 'ownRevenues',
   selectedStateTableType = 'tabela1',
   selectedStateIndicatorType = 'revenueComposition',
-  selectedMunicipalIndicatorType = 'constitutionalLimitMde',
+  selectedMunicipalIndicatorType = 'financasPublicas',
+  selectedMunicipalSubIndicatorType = 'composicaoReceitas',
   showMunicipioFilters = true,
 }) => {
   // Referência para o portal dos menus dropdown
@@ -144,6 +184,17 @@ const FilterComponent = ({
       municipalIndicatorTypeOptions.find(opt => opt.value === selectedMunicipalIndicatorType) || municipalIndicatorTypeOptions[0]
       : municipalIndicatorTypeOptions[0]
   );
+
+  // Estado para o subindicador (municipal)
+  const getInitialSubIndicator = () => {
+    const indicatorType = selectedMunicipalIndicatorType || 'financasPublicas';
+    const subOptions = municipalSubIndicatorOptions[indicatorType] || [];
+    if (selectedMunicipalSubIndicatorType) {
+      return subOptions.find(opt => opt.value === selectedMunicipalSubIndicatorType) || subOptions[0];
+    }
+    return subOptions[0] || null;
+  };
+  const [municipalSubIndicatorState, setMunicipalSubIndicatorState] = useState(getInitialSubIndicator());
 
   // Lógica de filtros dependentes - baseado nos filtros de localização
   const baseFilteredMunicipios = useMemo(() => {
@@ -260,7 +311,8 @@ const FilterComponent = ({
       tableType: tableTypeState ? tableTypeState.value : 'ownRevenues',
       stateTableType: stateTableTypeState ? stateTableTypeState.value : 'tabela1',
       stateIndicatorType: stateIndicatorTypeState ? stateIndicatorTypeState.value : 'revenueComposition',
-      municipalIndicatorType: municipalIndicatorTypeState ? municipalIndicatorTypeState.value : 'constitutionalLimitMde',
+      municipalIndicatorType: municipalIndicatorTypeState ? municipalIndicatorTypeState.value : 'financasPublicas',
+      municipalSubIndicatorType: municipalSubIndicatorState ? municipalSubIndicatorState.value : 'composicaoReceitas',
       loading: true,
     });
   };
@@ -276,6 +328,7 @@ const FilterComponent = ({
     setStateTableTypeState(stateTableTypeOptions[0]); // Reset para o primeiro tipo estadual (tabela1)
     setStateIndicatorTypeState(stateIndicatorTypeOptions[0]); // Reset para o primeiro tipo de indicador estadual
     setMunicipalIndicatorTypeState(municipalIndicatorTypeOptions[0]); // Reset para o primeiro tipo de indicador municipal
+    setMunicipalSubIndicatorState(municipalSubIndicatorOptions['financasPublicas'][0]); // Reset para o primeiro subindicador
     
     onFilterChange({
       codigoMunicipio: null,
@@ -289,7 +342,8 @@ const FilterComponent = ({
       tableType: 'ownRevenues',
       stateTableType: 'tabela1',
       stateIndicatorType: 'revenueComposition',
-      municipalIndicatorType: 'constitutionalLimitMde',
+      municipalIndicatorType: 'financasPublicas',
+      municipalSubIndicatorType: 'composicaoReceitas',
       loading: false,
     });
   };
@@ -297,20 +351,95 @@ const FilterComponent = ({
 
 
   return (
-    <div className="flex flex-col gap-4 p-0 m-0 w-full">
+    <div className="flex flex-col gap-2 p-0 m-0 w-full">
       {/* Header de Filtros */}
-      <div className="flex items-center justify-between bg-gray-100 rounded-lg p-3 mb-2">
-        <h3 className="text-sm font-semibold text-gray-700">Filtros</h3>
+      <div className="flex items-center justify-between bg-gray-100 rounded-lg p-2 mb-1">
+        <h3 className="text-xs font-semibold text-gray-700">Filtros</h3>
       </div>
 
       {/* Filtros recolhíveis */}
-      <div className="flex flex-col gap-3 w-full">
+      <div className="flex flex-col gap-2 w-full">
+        {/* Tipo de Dados Municipal - Exibido apenas quando showTableTypeFilter é true */}
+        {showTableTypeFilter && (
+          <div className="w-full">
+            <label className="block text-xs font-medium text-gray-600 mb-0.5">Tipo de Dados</label>
+            <Select
+              value={tableTypeState}
+              onChange={setTableTypeState}
+              options={tableTypeOptions}
+              placeholder="Selecione o tipo..."
+              size="xs"
+            />
+          </div>
+        )}
+
+        {/* Tipo de Dados Estadual - Exibido apenas quando showStateTableTypeFilter é true */}
+        {showStateTableTypeFilter && (
+          <div className="w-full">
+            <label className="block text-xs font-medium text-gray-600 mb-0.5">Tipo de Dados</label>
+            <Select
+              value={stateTableTypeState}
+              onChange={setStateTableTypeState}
+              options={stateTableTypeOptions}
+              placeholder="Selecione o tipo..."
+              size="xs"
+            />
+          </div>
+        )}
+
+        {/* Tipo de Indicador Estadual - Exibido apenas quando showStateIndicatorTypeFilter é true */}
+        {showStateIndicatorTypeFilter && (
+          <div className="w-full">
+            <label className="block text-xs font-medium text-gray-600 mb-0.5">Tipo de Indicador</label>
+            <Select
+              value={stateIndicatorTypeState}
+              onChange={setStateIndicatorTypeState}
+              options={stateIndicatorTypeOptions}
+              placeholder="Selecione o indicador..."
+              size="xs"
+            />
+          </div>
+        )}
+
+        {/* Tipo de Indicador Municipal - Exibido apenas quando showMunicipalIndicatorTypeFilter é true */}
+        {showMunicipalIndicatorTypeFilter && (
+          <div className="w-full">
+            <label className="block text-xs font-medium text-gray-600 mb-0.5">Indicador</label>
+            <Select
+              value={municipalIndicatorTypeState}
+              onChange={(newValue) => {
+                setMunicipalIndicatorTypeState(newValue);
+                // Resetar subindicador quando mudar o indicador
+                const subOptions = municipalSubIndicatorOptions[newValue?.value] || [];
+                setMunicipalSubIndicatorState(subOptions[0] || null);
+              }}
+              options={municipalIndicatorTypeOptions}
+              placeholder="Selecione o indicador..."
+              size="xs"
+            />
+          </div>
+        )}
+
+        {/* Subindicador Municipal - Exibido apenas quando showMunicipalIndicatorTypeFilter é true */}
+        {showMunicipalIndicatorTypeFilter && municipalIndicatorTypeState && (
+          <div className="w-full">
+            <label className="block text-xs font-medium text-gray-600 mb-0.5">Subindicador</label>
+            <Select
+              value={municipalSubIndicatorState}
+              onChange={setMunicipalSubIndicatorState}
+              options={municipalSubIndicatorOptions[municipalIndicatorTypeState.value] || []}
+              placeholder="Selecione o subindicador..."
+              size="xs"
+            />
+          </div>
+        )}
+
         {/* Filtros de Município - Exibidos apenas quando showMunicipioFilters é true */}
         {showMunicipioFilters && (
           <>
             {/* Município - Sempre visível */}
             <div className="w-full">
-              <label className="block text-xs font-medium text-gray-600 mb-1">Município</label>
+              <label className="block text-xs font-medium text-gray-600 mb-0.5">Município</label>
               <Select
                 value={selectedMunicipioState}
                 onChange={setSelectedMunicipio}
@@ -323,10 +452,10 @@ const FilterComponent = ({
 
             {/* Collapser para filtros de localização */}
             <Collapse in={filtersExpanded} timeout="auto" unmountOnExit>
-              <div className="flex flex-col gap-3 w-full border-t pt-3">
+              <div className="flex flex-col gap-2 w-full border-t pt-2">
                 {/* Território */}
                 <div className="w-full">
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Território</label>
+                  <label className="block text-xs font-medium text-gray-600 mb-0.5">Território</label>
                   <Select
                     value={territorioState}
                     onChange={setTerritorioDeDesenvolvimentoMunicipio}
@@ -340,7 +469,7 @@ const FilterComponent = ({
 
                 {/* Faixa Populacional */}
                 <div className="w-full">
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Faixa Populacional</label>
+                  <label className="block text-xs font-medium text-gray-600 mb-0.5">Faixa Populacional</label>
                   <Select
                     value={faixaState}
                     onChange={setFaixaPopulacionalMunicipio}
@@ -352,98 +481,43 @@ const FilterComponent = ({
                   />
                 </div>
 
-                {/* Aglomerado */}
-                <div className="w-full">
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Aglomerado</label>
-                  <Select
-                    value={aglomeradoState}
-                    onChange={setAglomeradoMunicipio}
-                    options={filteredAglomeradoOptions}
-                    placeholder="Selecione..."
-                    size="xs"
-                    isClearable
-                    disabled={otherLocalityDisabled}
-                  />
-                </div>
+                {/* Aglomerado e Gerência em linha */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-0.5">Aglomerado</label>
+                    <Select
+                      value={aglomeradoState}
+                      onChange={setAglomeradoMunicipio}
+                      options={filteredAglomeradoOptions}
+                      placeholder="AG"
+                      size="xxs"
+                      isClearable
+                      disabled={otherLocalityDisabled}
+                    />
+                  </div>
 
-                {/* Gerência */}
-                <div className="w-full">
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Gerência Regional</label>
-                  <Select
-                    value={gerenciaState}
-                    onChange={setGerenciaRegionalMunicipio}
-                    options={filteredGerenciaOptions}
-                    placeholder="Selecione..."
-                    size="xs"
-                    isSearchable={false}
-                    isClearable
-                    disabled={otherLocalityDisabled}
-                  />
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-0.5">Gerência</label>
+                    <Select
+                      value={gerenciaState}
+                      onChange={setGerenciaRegionalMunicipio}
+                      options={filteredGerenciaOptions}
+                      placeholder="GRE"
+                      size="xxs"
+                      isSearchable={false}
+                      isClearable
+                      disabled={otherLocalityDisabled}
+                    />
+                  </div>
                 </div>
               </div>
             </Collapse>
           </>
         )}
 
-        {/* Tipo de Dados Municipal - Exibido apenas quando showTableTypeFilter é true */}
-        {showTableTypeFilter && (
-          <div className="w-full border-t pt-3">
-            <label className="block text-xs font-medium text-gray-600 mb-1">Tipo de Dados</label>
-            <Select
-              value={tableTypeState}
-              onChange={setTableTypeState}
-              options={tableTypeOptions}
-              placeholder="Selecione o tipo..."
-              size="xs"
-            />
-          </div>
-        )}
-
-        {/* Tipo de Dados Estadual - Exibido apenas quando showStateTableTypeFilter é true */}
-        {showStateTableTypeFilter && (
-          <div className="w-full border-t pt-3">
-            <label className="block text-xs font-medium text-gray-600 mb-1">Tipo de Dados</label>
-            <Select
-              value={stateTableTypeState}
-              onChange={setStateTableTypeState}
-              options={stateTableTypeOptions}
-              placeholder="Selecione o tipo..."
-              size="xs"
-            />
-          </div>
-        )}
-
-        {/* Tipo de Indicador Estadual - Exibido apenas quando showStateIndicatorTypeFilter é true */}
-        {showStateIndicatorTypeFilter && (
-          <div className="w-full border-t pt-3">
-            <label className="block text-xs font-medium text-gray-600 mb-1">Tipo de Indicador</label>
-            <Select
-              value={stateIndicatorTypeState}
-              onChange={setStateIndicatorTypeState}
-              options={stateIndicatorTypeOptions}
-              placeholder="Selecione o indicador..."
-              size="xs"
-            />
-          </div>
-        )}
-
-        {/* Tipo de Indicador Municipal - Exibido apenas quando showMunicipalIndicatorTypeFilter é true */}
-        {showMunicipalIndicatorTypeFilter && (
-          <div className="w-full border-t pt-3">
-            <label className="block text-xs font-medium text-gray-600 mb-1">Tipo de Indicador</label>
-            <Select
-              value={municipalIndicatorTypeState}
-              onChange={setMunicipalIndicatorTypeState}
-              options={municipalIndicatorTypeOptions}
-              placeholder="Selecione o indicador..."
-              size="xs"
-            />
-          </div>
-        )}
-
         {/* Período */}
-        <div className="w-full border-t pt-3">
-          <label className="block text-xs font-medium text-gray-600 mb-2">Período</label>
+        <div className="w-full border-t pt-2">
+          <label className="block text-xs font-medium text-gray-600 mb-1">Período</label>
           <YearRangeFilter
             startYear={filters.anoInicial}
             endYear={filters.anoFinal}
@@ -455,7 +529,7 @@ const FilterComponent = ({
         </div>
 
         {/* Botões */}
-        <div className="flex flex-col gap-2 w-full pt-3 border-t">
+        <div className="flex gap-2 w-full pt-2 border-t">
           <Button
             variant="contained"
             onClick={handleSearch}
@@ -463,10 +537,11 @@ const FilterComponent = ({
             size="small"
             sx={{
               textTransform: 'none',
-              fontSize: '0.875rem'
+              fontSize: '0.75rem',
+              py: 0.5
             }}
           >
-            Mostrar resultados
+            Mostrar
           </Button>
           <Button
             variant="outlined"
@@ -475,7 +550,8 @@ const FilterComponent = ({
             size="small"
             sx={{
               textTransform: 'none',
-              fontSize: '0.875rem',
+              fontSize: '0.75rem',
+              py: 0.5,
               backgroundColor: '#f0f0f0',
               color: '#000',
               '&:hover': {

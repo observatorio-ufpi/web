@@ -25,10 +25,10 @@ const YearRangeFilter = ({
   );
 
   return (
-    <div className={`flex flex-col gap-3 ${className}`}>
-      <div className="w-full">
+    <div className={`grid grid-cols-2 gap-3 ${className}`}>
+      <div>
         <label htmlFor="startYearSelect" className="block text-xs font-medium text-gray-600 mb-1">
-          Ano Inicial:
+          Inicial
         </label>
         <Select
           id="startYearSelect"
@@ -43,22 +43,22 @@ const YearRangeFilter = ({
             }
           }}
           options={yearOptions}
-          placeholder="Ano Inicial"
-          size="xs"
+          placeholder="Inicial"
+          size="xxs"
         />
       </div>
       
-      <div className="w-full">
+      <div>
         <label htmlFor="endYearSelect" className="block text-xs font-medium text-gray-600 mb-1">
-          Ano Final:
+          Final
         </label>
         <Select
           id="endYearSelect"
           value={endYearOptions.find(option => option.value === endYear)}
           onChange={(selectedOption) => onEndYearChange(selectedOption.value)}
           options={endYearOptions}
-          placeholder="Ano Final"
-          size="xs"
+          placeholder="Final"
+          size="xxs"
         />
       </div>
     </div>

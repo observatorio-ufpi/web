@@ -56,7 +56,7 @@ const PieChart = ({
         <h3 style={{
           textAlign: 'center',
           marginBottom: '20px',
-          fontSize: '16px',
+          fontSize: '20px',
           fontWeight: 'bold',
           color: '#333'
         }}>
