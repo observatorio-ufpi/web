@@ -1,29 +1,39 @@
-import React, { useMemo, useState } from 'react';
-import { FaArrowLeft, FaBars, FaInfoCircle, FaTimes, FaDollarSign } from 'react-icons/fa';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useSidebar } from '../layouts/EducationLayout';
-import { Select } from '../ui';
-import { Button } from '@mui/material';
-import { municipios, Regioes, FaixaPopulacional } from '../../utils/citiesMapping';
-import YearRangeFilter from '../helpers/YearRangeFilter';
-import { useEducationFilters } from '../../contexts/EducationFilterContext';
+import React, { useMemo, useState } from "react";
+import {
+  FaArrowLeft,
+  FaBars,
+  FaInfoCircle,
+  FaTimes,
+  FaDollarSign,
+} from "react-icons/fa";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useSidebar } from "../layouts/EducationLayout";
+import { Select } from "../ui";
+import { Button } from "@mui/material";
+import {
+  municipios,
+  Regioes,
+  FaixaPopulacional,
+} from "../../utils/citiesMapping";
+import YearRangeFilter from "../helpers/YearRangeFilter";
+import { useEducationFilters } from "../../contexts/EducationFilterContext";
 
 const EducationCategorySidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { isOpen, setIsOpen } = useSidebar();
   const filters = useEducationFilters();
-  
+
   // Estado local para o tipo selecionado por categoria
   const [selectedTypeByCategory, setSelectedTypeByCategory] = useState({
-    basica: 'enrollment',
-    superior: 'university/count',
-    taxas: 'pop_out_school',
-    condicoes: null
+    basica: "enrollment",
+    superior: "university/count",
+    taxas: "pop_out_school",
+    condicoes: "infraestrutura",
   });
 
   const handleVoltar = () => {
-    navigate('/');
+    navigate("/");
   };
 
   const toggleSidebar = () => {
@@ -32,105 +42,252 @@ const EducationCategorySidebar = () => {
 
   // Obter a categoria atual da URL
   const getCurrentCategory = () => {
-    if (location.pathname.includes('/basica')) return 'basica';
-    if (location.pathname.includes('/condicoes-de-oferta')) return 'condicoes';
-    if (location.pathname.includes('/superior')) return 'superior';
-    if (location.pathname.includes('/taxas')) return 'taxas';
-    return 'basica';
+    if (location.pathname.includes("/basica")) return "basica";
+    if (location.pathname.includes("/condicoes-de-oferta")) return "condicoes";
+    if (location.pathname.includes("/superior")) return "superior";
+    if (location.pathname.includes("/taxas")) return "taxas";
+    return "basica";
   };
 
   const currentCategory = getCurrentCategory();
 
   const categories = [
-    { id: 'basica', label: 'Educação Básica', path: '/dados-educacionais/basica' },
-    { id: 'condicoes', label: 'Condições de Oferta', path: '/dados-educacionais/condicoes-de-oferta' },
-    { id: 'superior', label: 'Educação Superior', path: '/dados-educacionais/superior' },
-    { id: 'taxas', label: 'Indicadores', path: '/dados-educacionais/taxas' }
+    {
+      id: "basica",
+      label: "Educação Básica",
+      path: "/dados-educacionais/basica",
+    },
+    {
+      id: "condicoes",
+      label: "Condições de Oferta",
+      path: "/dados-educacionais/condicoes-de-oferta",
+    },
+    {
+      id: "superior",
+      label: "Educação Superior",
+      path: "/dados-educacionais/superior",
+    },
+    { id: "taxas", label: "Indicadores", path: "/dados-educacionais/taxas" },
   ];
 
   // Mapear filtros por categoria
   const filtersByCategory = {
     basica: [
-      { value: 'enrollment', label: 'Matrículas' },
-      { value: 'school/count', label: 'Escolas' },
-      { value: 'class', label: 'Turmas' },
-      { value: 'teacher', label: 'Professores' },
-      { value: 'auxiliar', label: 'Pessoal Auxiliar' },
-      { value: 'employees', label: 'Funcionários' }
+      { value: "enrollment", label: "Matrículas" },
+      { value: "school/count", label: "Escolas" },
+      { value: "class", label: "Turmas" },
+      { value: "teacher", label: "Professores" },
+      { value: "auxiliar", label: "Pessoal Auxiliar" },
+      { value: "employees", label: "Funcionários" },
     ],
     superior: [
-      { value: 'university/count', label: 'Número de instituições' },
-      { value: 'university_enrollment', label: 'Matrículas' },
-      { value: 'university_teacher', label: 'Docentes' },
-      { value: 'course_count', label: 'Cursos' }
+      { value: "university/count", label: "Número de instituições" },
+      { value: "university_enrollment", label: "Matrículas" },
+      { value: "university_teacher", label: "Docentes" },
+      { value: "course_count", label: "Cursos" },
     ],
     taxas: [
-      { value: 'pop_out_school', label: 'Alunos fora da escola' },
-      { value: 'adjusted_liquid_frequency', label: 'Frequência líquida' },
-      { value: 'iliteracy_rate', label: 'Taxa de analfabetismo' },
-      { value: 'superior_education_conclusion_tax', label: 'Taxa de conclusão (superior)' },
-      { value: 'basic_education_conclusion', label: 'Taxa de conclusão (básico)' },
-      { value: 'instruction_level', label: 'Nível de instrução' }
+      { value: "pop_out_school", label: "Alunos fora da escola" },
+      { value: "adjusted_liquid_frequency", label: "Frequência líquida" },
+      { value: "iliteracy_rate", label: "Taxa de analfabetismo" },
+      {
+        value: "superior_education_conclusion_tax",
+        label: "Taxa de conclusão (superior)",
+      },
+      {
+        value: "basic_education_conclusion",
+        label: "Taxa de conclusão (básico)",
+      },
+      { value: "instruction_level", label: "Nível de instrução" },
     ],
-    condicoes: []
+    condicoes: [],
   };
 
   // Filtros de localização comuns
   const baseFilteredMunicipios = useMemo(() => {
     return Object.values(municipios).filter((m) => {
-      const territorioLabel = filters.territory ? Regioes[filters.territory] : null;
-      const faixaLabel = filters.faixaPopulacional ? FaixaPopulacional[filters.faixaPopulacional] : null;
+      const territorioLabel = filters.territory
+        ? Regioes[filters.territory]
+        : null;
+      const faixaLabel = filters.faixaPopulacional
+        ? FaixaPopulacional[filters.faixaPopulacional]
+        : null;
 
-      if (territorioLabel && m.territorioDesenvolvimento !== territorioLabel) return false;
+      if (territorioLabel && m.territorioDesenvolvimento !== territorioLabel)
+        return false;
       if (faixaLabel && m.faixaPopulacional !== faixaLabel) return false;
-      if (filters.aglomerado && String(m.aglomerado) !== String(filters.aglomerado)) return false;
+      if (
+        filters.aglomerado &&
+        String(m.aglomerado) !== String(filters.aglomerado)
+      )
+        return false;
       if (filters.gerencia) {
-        const gerencias = String(m.gerencia).split(',').map((g) => g.trim());
+        const gerencias = String(m.gerencia)
+          .split(",")
+          .map((g) => g.trim());
         if (!gerencias.includes(String(filters.gerencia))) return false;
       }
       return true;
     });
-  }, [filters.territory, filters.faixaPopulacional, filters.aglomerado, filters.gerencia]);
+  }, [
+    filters.territory,
+    filters.faixaPopulacional,
+    filters.aglomerado,
+    filters.gerencia,
+  ]);
 
   const otherLocalityDisabled = !!filters.city;
 
   const filteredMunicipioOptions = useMemo(() => {
     return Object.entries(municipios)
       .filter(([, m]) => baseFilteredMunicipios.includes(m))
-      .map(([key, { nomeMunicipio }]) => ({ value: key, label: nomeMunicipio }));
+      .map(([key, { nomeMunicipio }]) => ({
+        value: key,
+        label: nomeMunicipio,
+      }));
   }, [baseFilteredMunicipios]);
 
   const filteredTerritorioOptions = useMemo(() => {
-    const uniqueLabels = [...new Set(baseFilteredMunicipios.map((m) => m.territorioDesenvolvimento).filter(Boolean))];
+    const uniqueLabels = [
+      ...new Set(
+        baseFilteredMunicipios
+          .map((m) => m.territorioDesenvolvimento)
+          .filter(Boolean),
+      ),
+    ];
     return Object.entries(Regioes)
       .filter(([, label]) => uniqueLabels.includes(label))
       .map(([id, label]) => ({ value: id, label }));
   }, [baseFilteredMunicipios]);
 
   const filteredFaixaPopulacionalOptions = useMemo(() => {
-    const uniqueLabels = [...new Set(baseFilteredMunicipios.map((m) => m.faixaPopulacional).filter(Boolean))];
+    const uniqueLabels = [
+      ...new Set(
+        baseFilteredMunicipios.map((m) => m.faixaPopulacional).filter(Boolean),
+      ),
+    ];
     return Object.entries(FaixaPopulacional)
       .filter(([, label]) => uniqueLabels.includes(label))
       .map(([id, label]) => ({ value: id, label }));
   }, [baseFilteredMunicipios]);
 
   const filteredAglomeradoOptions = useMemo(() => {
-    return [...new Set(baseFilteredMunicipios.map((m) => m.aglomerado).filter((a) => a && a !== 'undefined'))]
+    return [
+      ...new Set(
+        baseFilteredMunicipios
+          .map((m) => m.aglomerado)
+          .filter((a) => a && a !== "undefined"),
+      ),
+    ]
       .sort((a, b) => Number(a) - Number(b))
       .map((a) => ({ value: a, label: `AG ${a}` }));
   }, [baseFilteredMunicipios]);
 
   const filteredGerenciaOptions = useMemo(() => {
-    return [...new Set(
-      baseFilteredMunicipios
-        .map((m) => m.gerencia)
-        .filter((g) => g && g !== 'undefined')
-        .flatMap((g) => (g.includes(',') ? g.split(',').map((x) => x.trim()) : [g]))
-    )]
+    return [
+      ...new Set(
+        baseFilteredMunicipios
+          .map((m) => m.gerencia)
+          .filter((g) => g && g !== "undefined")
+          .flatMap((g) =>
+            g.includes(",") ? g.split(",").map((x) => x.trim()) : [g],
+          ),
+      ),
+    ]
       .sort((a, b) => Number(a) - Number(b))
       .map((g) => ({ value: g, label: `${g}ª GRE` }));
   }, [baseFilteredMunicipios]);
+  const selectedFilterOptions = (filters.selectedFilters || []).filter(Boolean);
 
+  const structureOptions = selectedFilterOptions.map((item) => ({
+    value: item.value,
+    label: item.label,
+  }));
+  const isHistoricalRange = filters.startYear !== filters.endYear;
+  const YEAR_OPTION = { value: "ano", label: "Ano" };
+
+  const applyTableStructure = (selectedSide, selectedValue) => {
+    const value = selectedValue ? selectedValue.value : "";
+
+    const selectedFilters = selectedFilterOptions.map((f) => f.value);
+    // 2 filtros + ano único
+    if (!isHistoricalRange && selectedFilters.length === 2) {
+      // usuário limpou um lado
+      if (!value) {
+        const remainingFilter =
+          selectedSide === "row"
+            ? selectedFilters.find((f) => f !== filters.columnDimension) ||
+              filters.columnDimension
+            : selectedFilters.find((f) => f !== filters.rowDimension) ||
+              filters.rowDimension;
+
+        if (selectedSide === "row") {
+          filters.setRowDimension("");
+          filters.setColumnDimension(remainingFilter || "");
+        } else {
+          filters.setColumnDimension("");
+          filters.setRowDimension(remainingFilter || "");
+        }
+
+        return;
+      }
+
+      const otherFilter = selectedFilters.find((f) => f !== value);
+
+      if (selectedSide === "row") {
+        filters.setRowDimension(value);
+        filters.setColumnDimension(otherFilter || "");
+      } else {
+        filters.setColumnDimension(value);
+        filters.setRowDimension(otherFilter || "");
+      }
+
+      return;
+    }
+    // 1 filtro + ano único
+    if (!isHistoricalRange && selectedFilterOptions.length === 1) {
+      if (selectedSide === "row") {
+        filters.setRowDimension?.(value || "");
+        filters.setColumnDimension?.("");
+      } else {
+        filters.setColumnDimension?.(value || "");
+        filters.setRowDimension?.("");
+      }
+
+      return;
+    }
+    // série histórica + 1 filtro
+    if (isHistoricalRange && selectedFilters.length === 1) {
+      if (!value) {
+        filters.setRowDimension("");
+        filters.setColumnDimension("");
+        return;
+      }
+
+      if (selectedSide === "row") {
+        filters.setRowDimension(value);
+        filters.setColumnDimension("ano");
+      } else {
+        filters.setColumnDimension(value);
+        filters.setRowDimension("ano");
+      }
+
+      return;
+    }
+
+    // fallback
+    if (selectedSide === "row") {
+      filters.setRowDimension(value);
+    } else {
+      filters.setColumnDimension(value);
+    }
+  };
+
+  const canUseTableStructure =
+    currentCategory === "basica" &&
+    selectedFilterOptions.length > 0 &&
+    ((!isHistoricalRange && selectedFilterOptions.length <= 2) ||
+      (isHistoricalRange && selectedFilterOptions.length === 1));
   return (
     <>
       {/* Botão para abrir/fechar a sidebar */}
@@ -144,11 +301,11 @@ const EducationCategorySidebar = () => {
       {/* Sidebar */}
       <aside
         className={`${
-          isOpen ? 'translate-x-0' : '-translate-x-full'
+          isOpen ? "translate-x-0" : "-translate-x-full"
         } fixed left-0 top-0 h-screen overflow-y-auto transition-transform duration-300 ease-in-out z-40 shadow-lg sidebar-scroll`}
         style={{
-          width: isOpen ? '20rem' : '4rem',
-          backgroundColor: '#E8E4E3'
+          width: isOpen ? "20rem" : "4rem",
+          backgroundColor: "#E8E4E3",
         }}
       >
         {/* Header da Sidebar */}
@@ -160,7 +317,7 @@ const EducationCategorySidebar = () => {
                 alt="opepi"
                 className="h-10 w-auto mr-2"
               />
-              <div className={`${isOpen ? 'block' : 'hidden'} md:block`}>
+              <div className={`${isOpen ? "block" : "hidden"} md:block`}>
                 <p className="text-xs text-gray-600 leading-tight">
                   observatório da política educacional piauiense
                 </p>
@@ -175,30 +332,42 @@ const EducationCategorySidebar = () => {
         <nav className="p-3 space-y-3">
           {/* Categoria Atual */}
           <div>
-            <h3 className={`text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 ${isOpen ? 'block' : 'hidden'} md:block`}>
+            <h3
+              className={`text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 ${isOpen ? "block" : "hidden"} md:block`}
+            >
               Categoria
             </h3>
-            <div className={`${isOpen ? 'block' : 'hidden'} md:block`}>
+            <div className={`${isOpen ? "block" : "hidden"} md:block`}>
               <p className="text-xs font-medium text-gray-800">
-                {categories.find(c => c.id === currentCategory)?.label}
+                {categories.find((c) => c.id === currentCategory)?.label}
               </p>
             </div>
           </div>
 
           {/* Tipo de Dado */}
-          {currentCategory !== 'condicoes' && (
+          {currentCategory !== "condicoes" && (
             <div>
-              <label className={`text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 block ${isOpen ? 'block' : 'hidden'} md:block`}>
+              <label
+                className={`text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 block ${isOpen ? "block" : "hidden"} md:block`}
+              >
                 Tipo
               </label>
               <Select
-                value={filtersByCategory[currentCategory]?.find(opt => opt.value === selectedTypeByCategory[currentCategory]) || null}
+                value={
+                  filtersByCategory[currentCategory]?.find(
+                    (opt) =>
+                      opt.value === selectedTypeByCategory[currentCategory],
+                  ) || null
+                }
                 onChange={(selectedOption) => {
                   setSelectedTypeByCategory({
                     ...selectedTypeByCategory,
-                    [currentCategory]: selectedOption.value
+                    [currentCategory]: selectedOption.value,
                   });
                   if (filters.setType) filters.setType(selectedOption.value);
+                  filters.setSelectedFilters?.([]);
+                  filters.setRowDimension?.("");
+                  filters.setColumnDimension?.("");
                 }}
                 options={filtersByCategory[currentCategory] || []}
                 placeholder="Selecione o tipo"
@@ -209,64 +378,107 @@ const EducationCategorySidebar = () => {
 
           {/* Filtros Múltiplos */}
           <div>
-            <label className={`text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 block ${isOpen ? 'block' : 'hidden'} md:block`}>
+            <label
+              className={`text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 block ${isOpen ? "block" : "hidden"} md:block`}
+            >
               Filtros
             </label>
-            {currentCategory === 'basica' && (
+            {currentCategory === "basica" && (
               <Select
                 value={filters.selectedFilters}
                 onChange={(newValue) => {
-                  const isHistoricalRange = filters.startYear !== filters.endYear;
+                  const isHistoricalRange =
+                    filters.startYear !== filters.endYear;
+                  let finalValue = [];
+
                   if (isHistoricalRange) {
-                    filters.setSelectedFilters?.(newValue.slice(-1));
+                    finalValue = newValue.slice(-1);
                   } else if (newValue.length <= 2) {
-                    filters.setSelectedFilters?.(newValue);
+                    finalValue = newValue;
                   } else {
-                    filters.setSelectedFilters?.(newValue.slice(-2));
+                    finalValue = newValue.slice(-2);
+                  }
+
+                  filters.setSelectedFilters?.(finalValue);
+
+                  const values = finalValue.map((item) => item.value);
+
+                  if (
+                    filters.rowDimension &&
+                    filters.rowDimension !== "ano" &&
+                    !values.includes(filters.rowDimension)
+                  ) {
+                    filters.setRowDimension?.("");
+                  }
+
+                  if (
+                    filters.columnDimension &&
+                    filters.columnDimension !== "ano" &&
+                    !values.includes(filters.columnDimension)
+                  ) {
+                    filters.setColumnDimension?.("");
                   }
                 }}
                 options={[
-                  { value: 'etapa', label: 'Etapa de Ensino' },
-                  { value: 'localidade', label: 'Localidade' },
-                  { value: 'dependencia', label: 'Dependência Administrativa' },
-                  { value: 'municipio', label: 'Município' }
+                  { value: "etapa", label: "Etapa de Ensino" },
+                  { value: "localidade", label: "Localidade" },
+                  { value: "dependencia", label: "Dependência Administrativa" },
+                  { value: "municipio", label: "Município" },
                 ]}
                 isMulti
                 placeholder="Selecione filtros"
                 size="xs"
               />
             )}
-            {currentCategory === 'superior' && (
+            {currentCategory === "superior" && (
               <Select
                 value={filters.selectedFilters}
                 onChange={(newValue) => {
                   filters.setSelectedFilters?.(newValue);
                 }}
                 options={[
-                  { value: 'modalidade', label: 'Modalidade' },
-                  { value: 'categoriaAdministrativa', label: 'Categoria Administrativa' },
-                  { value: 'faixaEtariaSuperior', label: 'Faixa Etária' },
-                  { value: 'organizacaoAcademica', label: 'Organização Acadêmica' },
-                  { value: 'instituicaoEnsino', label: 'Instituição de Ensino' },
-                  { value: 'municipio', label: 'Município' }
+                  { value: "modalidade", label: "Modalidade" },
+                  {
+                    value: "categoriaAdministrativa",
+                    label: "Categoria Administrativa",
+                  },
+                  { value: "faixaEtariaSuperior", label: "Faixa Etária" },
+                  {
+                    value: "organizacaoAcademica",
+                    label: "Organização Acadêmica",
+                  },
+                  {
+                    value: "instituicaoEnsino",
+                    label: "Instituição de Ensino",
+                  },
+                  { value: "municipio", label: "Município" },
                 ]}
                 isMulti
                 placeholder="Selecione filtros"
                 size="xs"
               />
             )}
-            {currentCategory === 'condicoes' && (
+            {currentCategory === "condicoes" && (
               <Select
                 value={filters.selectedFilters}
                 onChange={(newValue) => {
                   filters.setSelectedFilters?.(newValue);
                 }}
                 options={[
-                  { value: 'local_funcionamento', label: 'Local de Funcionamento' },
-                  { value: 'infraestrutura_basica', label: 'Infraestrutura Básica' },
-                  { value: 'espacos_pedagogicos', label: 'Espaços Pedagógicos' },
-                  { value: 'equipamentos', label: 'Equipamentos' },
-                  { value: 'materiais', label: 'Materiais' }
+                  {
+                    value: "local_funcionamento",
+                    label: "Local de Funcionamento",
+                  },
+                  {
+                    value: "infraestrutura_basica",
+                    label: "Infraestrutura Básica",
+                  },
+                  {
+                    value: "espacos_pedagogicos",
+                    label: "Espaços Pedagógicos",
+                  },
+                  { value: "equipamentos", label: "Equipamentos" },
+                  { value: "materiais", label: "Materiais" },
                 ]}
                 isMulti
                 placeholder="Selecione aspectos"
@@ -277,7 +489,9 @@ const EducationCategorySidebar = () => {
 
           {/* Período */}
           <div>
-            <label className={`text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 block ${isOpen ? 'block' : 'hidden'} md:block`}>
+            <label
+              className={`text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 block ${isOpen ? "block" : "hidden"} md:block`}
+            >
               Período
             </label>
             <YearRangeFilter
@@ -289,18 +503,91 @@ const EducationCategorySidebar = () => {
               maxYear={2024}
             />
           </div>
-
-          {/* Localização */}
-          {(currentCategory === 'basica' || currentCategory === 'superior' || currentCategory === 'condicoes') && (
+          {/* Estrutura da Tabela */}
+          {canUseTableStructure && (
             <div>
-              <h3 className={`text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 ${isOpen ? 'block' : 'hidden'} md:block`}>
+              <label
+                className={`text-xs font-semibold text-gray-500 mb-1 block ${isOpen ? "block" : "hidden"} md:block`}
+              >
+                Estrutura da Tabela
+              </label>
+
+              <div className="space-y-1.5">
+                {/* Linhas */}
+                <Select
+                  value={
+                    [...structureOptions, YEAR_OPTION].find(
+                      (option) => option.value === filters.rowDimension,
+                    ) || null
+                  }
+                  onChange={(selectedOption) => {
+                    applyTableStructure("row", selectedOption);
+                  }}
+                  options={
+                    !isHistoricalRange && selectedFilterOptions.length === 2
+                      ? selectedFilterOptions
+                      : !isHistoricalRange && selectedFilterOptions.length === 1
+                        ? selectedFilterOptions
+                        : isHistoricalRange &&
+                            selectedFilterOptions.length === 1
+                          ? [...selectedFilterOptions, YEAR_OPTION]
+                          : []
+                  }
+                  placeholder="Linhas"
+                  size="xs"
+                  isClearable={true}
+                />
+
+                {/* Colunas */}
+                <Select
+                  value={
+                    [...structureOptions, YEAR_OPTION].find(
+                      (option) => option.value === filters.columnDimension,
+                    ) || null
+                  }
+                  onChange={(selectedOption) => {
+                    applyTableStructure("column", selectedOption);
+                  }}
+                  options={
+                    !isHistoricalRange && selectedFilterOptions.length === 2
+                      ? selectedFilterOptions
+                      : !isHistoricalRange && selectedFilterOptions.length === 1
+                        ? selectedFilterOptions
+                        : isHistoricalRange &&
+                            selectedFilterOptions.length === 1
+                          ? [...selectedFilterOptions, YEAR_OPTION]
+                          : []
+                  }
+                  placeholder="Colunas"
+                  size="xs"
+                  isClearable={true}
+                />
+              </div>
+            </div>
+          )}
+          {/* Localização */}
+          {(currentCategory === "basica" ||
+            currentCategory === "superior" ||
+            currentCategory === "condicoes") && (
+            <div>
+              <h3
+                className={`text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 ${isOpen ? "block" : "hidden"} md:block`}
+              >
                 Localização
               </h3>
               <div className="space-y-1.5">
                 {/* Município */}
                 <Select
-                  value={filteredMunicipioOptions.find(option => option.value === filters.city) || null}
-                  onChange={(selectedOption) => filters.setCity?.(selectedOption ? selectedOption.value : '')}
+                  value={
+                    filteredMunicipioOptions.find(
+                      (option) => option.value === filters.city,
+                    ) || null
+                  }
+                  onChange={(selectedOption) =>
+                    filters.setCity?.(
+                      selectedOption ? selectedOption.value : "",
+                    )
+                  }
                   options={filteredMunicipioOptions}
                   placeholder="Município"
                   size="xs"
@@ -309,10 +596,16 @@ const EducationCategorySidebar = () => {
 
                 {/* Território */}
                 <Select
-                  value={filteredTerritorioOptions.find(option => option.value === filters.territory) || null}
+                  value={
+                    filteredTerritorioOptions.find(
+                      (option) => option.value === filters.territory,
+                    ) || null
+                  }
                   onChange={(selectedOption) => {
-                    filters.setTerritory?.(selectedOption ? selectedOption.value : '');
-                    filters.setCity?.('');
+                    filters.setTerritory?.(
+                      selectedOption ? selectedOption.value : "",
+                    );
+                    filters.setCity?.("");
                   }}
                   options={filteredTerritorioOptions}
                   placeholder="Território"
@@ -323,10 +616,16 @@ const EducationCategorySidebar = () => {
 
                 {/* Faixa Populacional */}
                 <Select
-                  value={filteredFaixaPopulacionalOptions.find(option => option.value === filters.faixaPopulacional) || null}
+                  value={
+                    filteredFaixaPopulacionalOptions.find(
+                      (option) => option.value === filters.faixaPopulacional,
+                    ) || null
+                  }
                   onChange={(selectedOption) => {
-                    filters.setFaixaPopulacional?.(selectedOption ? selectedOption.value : '');
-                    filters.setCity?.('');
+                    filters.setFaixaPopulacional?.(
+                      selectedOption ? selectedOption.value : "",
+                    );
+                    filters.setCity?.("");
                   }}
                   options={filteredFaixaPopulacionalOptions}
                   placeholder="Faixa Populacional"
@@ -338,10 +637,20 @@ const EducationCategorySidebar = () => {
                 {/* Aglomerado e Gerência em linha */}
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-0.5">Aglomerado</label>
+                    <label className="block text-xs font-medium text-gray-600 mb-0.5">
+                      Aglomerado
+                    </label>
                     <Select
-                      value={filteredAglomeradoOptions.find(option => option.value === filters.aglomerado) || null}
-                      onChange={(selectedOption) => filters.setAglomerado?.(selectedOption ? selectedOption.value : '')}
+                      value={
+                        filteredAglomeradoOptions.find(
+                          (option) => option.value === filters.aglomerado,
+                        ) || null
+                      }
+                      onChange={(selectedOption) =>
+                        filters.setAglomerado?.(
+                          selectedOption ? selectedOption.value : "",
+                        )
+                      }
                       options={filteredAglomeradoOptions}
                       placeholder="AG"
                       size="xxs"
@@ -351,10 +660,20 @@ const EducationCategorySidebar = () => {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-0.5">Gerência</label>
+                    <label className="block text-xs font-medium text-gray-600 mb-0.5">
+                      Gerência
+                    </label>
                     <Select
-                      value={filteredGerenciaOptions.find(option => option.value === filters.gerencia) || null}
-                      onChange={(selectedOption) => filters.setGerencia?.(selectedOption ? selectedOption.value : '')}
+                      value={
+                        filteredGerenciaOptions.find(
+                          (option) => option.value === filters.gerencia,
+                        ) || null
+                      }
+                      onChange={(selectedOption) =>
+                        filters.setGerencia?.(
+                          selectedOption ? selectedOption.value : "",
+                        )
+                      }
                       options={filteredGerenciaOptions}
                       placeholder="GRE"
                       size="xxs"
@@ -376,17 +695,19 @@ const EducationCategorySidebar = () => {
               onClick={() => {
                 // Disparar a busca com o tipo selecionado localmente
                 const selectedType = selectedTypeByCategory[currentCategory];
-                window.dispatchEvent(new CustomEvent('applyFilters', { 
-                  detail: {
-                    ...filters,
-                    type: selectedType
-                  } 
-                }));
+                window.dispatchEvent(
+                  new CustomEvent("applyFilters", {
+                    detail: {
+                      ...filters,
+                      type: selectedType,
+                    },
+                  }),
+                );
               }}
               sx={{
-                textTransform: 'none',
-                fontSize: '0.75rem',
-                py: 0.5
+                textTransform: "none",
+                fontSize: "0.75rem",
+                py: 0.5,
               }}
             >
               Mostrar
@@ -397,33 +718,37 @@ const EducationCategorySidebar = () => {
               size="small"
               onClick={() => {
                 // Limpar todos os filtros
-                const defaultType = filtersByCategory[currentCategory]?.[0]?.value || 'enrollment';
+                const defaultType =
+                  filtersByCategory[currentCategory]?.[0]?.value ||
+                  "enrollment";
                 setSelectedTypeByCategory({
                   ...selectedTypeByCategory,
-                  [currentCategory]: defaultType
+                  [currentCategory]: defaultType,
                 });
                 filters.setType?.(defaultType);
                 filters.setSelectedFilters?.([]);
-                filters.setCity?.('');
-                filters.setTerritory?.('');
-                filters.setFaixaPopulacional?.('');
-                filters.setAglomerado?.('');
-                filters.setGerencia?.('');
+                filters.setCity?.("");
+                filters.setTerritory?.("");
+                filters.setFaixaPopulacional?.("");
+                filters.setAglomerado?.("");
+                filters.setGerencia?.("");
                 filters.setStartYear?.(2007);
                 filters.setEndYear?.(2024);
-                
+                filters.setRowDimension?.("");
+                filters.setColumnDimension?.("");
+
                 // Disparar evento de limpeza para componentes específicos
-                window.dispatchEvent(new CustomEvent('clearFilters'));
+                window.dispatchEvent(new CustomEvent("clearFilters"));
               }}
               sx={{
-                textTransform: 'none',
-                fontSize: '0.75rem',
+                textTransform: "none",
+                fontSize: "0.75rem",
                 py: 0.5,
-                backgroundColor: '#f0f0f0',
-                color: '#000',
-                '&:hover': {
-                  backgroundColor: '#e0e0e0',
-                }
+                backgroundColor: "#f0f0f0",
+                color: "#000",
+                "&:hover": {
+                  backgroundColor: "#e0e0e0",
+                },
               }}
             >
               Limpar
@@ -432,21 +757,27 @@ const EducationCategorySidebar = () => {
 
           {/* Alternar para Dados Financeiros */}
           <div>
-            <h3 className={`text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 ${isOpen ? 'block' : 'hidden'} md:block`}>
+            <h3
+              className={`text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 ${isOpen ? "block" : "hidden"} md:block`}
+            >
               Alternar para
             </h3>
             <button
-              onClick={() => navigate('/dados-financeiros')}
+              onClick={() => navigate("/dados-financeiros")}
               className={`w-full flex items-center px-2 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 text-gray-700 hover:bg-yellow-100 hover:text-yellow-700`}
             >
               <FaDollarSign className="mr-2 text-sm flex-shrink-0" />
-              <span className={`${isOpen ? 'block' : 'hidden'} md:block`}>Dados Financeiros</span>
+              <span className={`${isOpen ? "block" : "hidden"} md:block`}>
+                Dados Financeiros
+              </span>
             </button>
           </div>
 
           {/* Sobre o Projeto */}
           <div className="mb-3">
-            <h3 className={`text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 ${isOpen ? 'block' : 'hidden'} md:block`}>
+            <h3
+              className={`text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 ${isOpen ? "block" : "hidden"} md:block`}
+            >
               sobre o projeto
             </h3>
             <ul className="space-y-1">
@@ -454,26 +785,30 @@ const EducationCategorySidebar = () => {
                 <Link
                   to="/quem-somos"
                   className={`flex items-center px-2 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
-                    location.pathname === '/quem-somos'
-                      ? 'bg-green-100 text-green-700'
-                      : 'text-gray-700 hover:bg-gray-100'
+                    location.pathname === "/quem-somos"
+                      ? "bg-green-100 text-green-700"
+                      : "text-gray-700 hover:bg-gray-100"
                   }`}
                 >
                   <FaInfoCircle className="mr-2 text-sm flex-shrink-0" />
-                  <span className={`${isOpen ? 'block' : 'hidden'} md:block`}>Quem somos</span>
+                  <span className={`${isOpen ? "block" : "hidden"} md:block`}>
+                    Quem somos
+                  </span>
                 </Link>
               </li>
               <li>
                 <Link
                   to="/repositorio"
                   className={`flex items-center px-2 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ${
-                    location.pathname === '/repositorio'
-                      ? 'bg-green-100 text-green-700'
-                      : 'text-gray-700 hover:bg-gray-100'
+                    location.pathname === "/repositorio"
+                      ? "bg-green-100 text-green-700"
+                      : "text-gray-700 hover:bg-gray-100"
                   }`}
                 >
                   <FaInfoCircle className="mr-2 text-sm flex-shrink-0" />
-                  <span className={`${isOpen ? 'block' : 'hidden'} md:block`}>Repositório</span>
+                  <span className={`${isOpen ? "block" : "hidden"} md:block`}>
+                    Repositório
+                  </span>
                 </Link>
               </li>
             </ul>
@@ -487,7 +822,9 @@ const EducationCategorySidebar = () => {
             className="flex items-center text-gray-600 hover:text-gray-900 transition-colors text-xs font-medium"
           >
             <FaArrowLeft className="mr-2 flex-shrink-0" />
-            <span className={`${isOpen ? 'block' : 'hidden'} md:block`}>voltar</span>
+            <span className={`${isOpen ? "block" : "hidden"} md:block`}>
+              voltar
+            </span>
           </button>
         </div>
       </aside>
