@@ -1,11 +1,21 @@
-import React from 'react';
-import { FaArrowLeft, FaBars, FaFilter, FaInfoCircle, FaTimes, FaDollarSign } from 'react-icons/fa';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useSidebar } from '../layouts/EducationLayout';
-import { useEducationFilters } from '../../contexts/EducationFilterContext';
-import { Select } from '../ui';
-import { municipios, Regioes, FaixaPopulacional } from '../../utils/citiesMapping';
-import YearRangeFilter from '../helpers/YearRangeFilter';
+import React from "react";
+import {
+  FaArrowLeft,
+  FaBars,
+  FaInfoCircle,
+  FaTimes,
+  FaDollarSign,
+} from "react-icons/fa";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useSidebar } from "../layouts/EducationLayout";
+import { useEducationFilters } from "../../contexts/EducationFilterContext";
+import { Select } from "../ui";
+import {
+  municipios,
+  Regioes,
+  FaixaPopulacional,
+} from "../../utils/citiesMapping";
+import YearRangeFilter from "../helpers/YearRangeFilter";
 
 const EducationFilterSidebar = () => {
   const location = useLocation();
@@ -14,7 +24,7 @@ const EducationFilterSidebar = () => {
   const filters = useEducationFilters();
 
   const handleVoltar = () => {
-    navigate('/');
+    navigate("/");
   };
 
   const toggleSidebar = () => {
@@ -22,30 +32,41 @@ const EducationFilterSidebar = () => {
   };
 
   const typeOptions = [
-    { value: 'enrollment', label: 'Matrículas' },
-    { value: 'school/count', label: 'Escolas' },
-    { value: 'class', label: 'Turmas' },
-    { value: 'teacher', label: 'Professores' },
-    { value: 'auxiliar', label: 'Pessoal Auxiliar' },
-    { value: 'employees', label: 'Funcionários' }
+    { value: "enrollment", label: "Matrículas" },
+    { value: "school/count", label: "Escolas" },
+    { value: "class", label: "Turmas" },
+    { value: "teacher", label: "Professores" },
+    { value: "auxiliar", label: "Pessoal Auxiliar" },
+    { value: "employees", label: "Funcionários" },
   ];
 
   const filterOptions = [
-    { value: 'etapa', label: 'Etapa de Ensino' },
-    { value: 'localidade', label: 'Localidade' },
-    { value: 'dependencia', label: 'Dependência Administrativa' },
-    { value: 'municipio', label: 'Município' }
+    { value: "etapa", label: "Etapa de Ensino" },
+    { value: "localidade", label: "Localidade" },
+    { value: "dependencia", label: "Dependência Administrativa" },
+    { value: "municipio", label: "Município" },
   ];
 
   const baseFilteredMunicipios = Object.values(municipios).filter((m) => {
-    const territorioLabel = filters.territory ? Regioes[filters.territory] : null;
-    const faixaLabel = filters.faixaPopulacional ? FaixaPopulacional[filters.faixaPopulacional] : null;
+    const territorioLabel = filters.territory
+      ? Regioes[filters.territory]
+      : null;
+    const faixaLabel = filters.faixaPopulacional
+      ? FaixaPopulacional[filters.faixaPopulacional]
+      : null;
 
-    if (territorioLabel && m.territorioDesenvolvimento !== territorioLabel) return false;
+    if (territorioLabel && m.territorioDesenvolvimento !== territorioLabel)
+      return false;
     if (faixaLabel && m.faixaPopulacional !== faixaLabel) return false;
-    if (filters.aglomerado && String(m.aglomerado) !== String(filters.aglomerado)) return false;
+    if (
+      filters.aglomerado &&
+      String(m.aglomerado) !== String(filters.aglomerado)
+    )
+      return false;
     if (filters.gerencia) {
-      const gerencias = String(m.gerencia).split(',').map((g) => g.trim());
+      const gerencias = String(m.gerencia)
+        .split(",")
+        .map((g) => g.trim());
       if (!gerencias.includes(String(filters.gerencia))) return false;
     }
     return true;
@@ -58,23 +79,49 @@ const EducationFilterSidebar = () => {
     .map(([key, { nomeMunicipio }]) => ({ value: key, label: nomeMunicipio }));
 
   const filteredTerritorioOptions = Object.entries(Regioes)
-    .filter(([, label]) => [...new Set(baseFilteredMunicipios.map((m) => m.territorioDesenvolvimento).filter(Boolean))].includes(label))
+    .filter(([, label]) =>
+      [
+        ...new Set(
+          baseFilteredMunicipios
+            .map((m) => m.territorioDesenvolvimento)
+            .filter(Boolean),
+        ),
+      ].includes(label),
+    )
     .map(([id, label]) => ({ value: id, label }));
 
   const filteredFaixaPopulacionalOptions = Object.entries(FaixaPopulacional)
-    .filter(([, label]) => [...new Set(baseFilteredMunicipios.map((m) => m.faixaPopulacional).filter(Boolean))].includes(label))
+    .filter(([, label]) =>
+      [
+        ...new Set(
+          baseFilteredMunicipios
+            .map((m) => m.faixaPopulacional)
+            .filter(Boolean),
+        ),
+      ].includes(label),
+    )
     .map(([id, label]) => ({ value: id, label }));
 
-  const filteredAglomeradoOptions = [...new Set(baseFilteredMunicipios.map((m) => m.aglomerado).filter((a) => a && a !== 'undefined'))]
+  const filteredAglomeradoOptions = [
+    ...new Set(
+      baseFilteredMunicipios
+        .map((m) => m.aglomerado)
+        .filter((a) => a && a !== "undefined"),
+    ),
+  ]
     .sort((a, b) => Number(a) - Number(b))
     .map((a) => ({ value: a, label: `AG ${a}` }));
 
-  const filteredGerenciaOptions = [...new Set(
-    baseFilteredMunicipios
-      .map((m) => m.gerencia)
-      .filter((g) => g && g !== 'undefined')
-      .flatMap((g) => (g.includes(',') ? g.split(',').map((x) => x.trim()) : [g]))
-  )]
+  const filteredGerenciaOptions = [
+    ...new Set(
+      baseFilteredMunicipios
+        .map((m) => m.gerencia)
+        .filter((g) => g && g !== "undefined")
+        .flatMap((g) =>
+          g.includes(",") ? g.split(",").map((x) => x.trim()) : [g],
+        ),
+    ),
+  ]
     .sort((a, b) => Number(a) - Number(b))
     .map((g) => ({ value: g, label: `${g}ª GRE` }));
 
@@ -91,11 +138,11 @@ const EducationFilterSidebar = () => {
       {/* Sidebar */}
       <aside
         className={`${
-          isOpen ? 'translate-x-0' : '-translate-x-full'
+          isOpen ? "translate-x-0" : "-translate-x-full"
         } fixed left-0 top-0 h-screen w-64 overflow-y-auto transition-transform duration-300 ease-in-out z-40 shadow-lg sidebar-scroll`}
         style={{
-          width: isOpen ? '16rem' : '4rem',
-          backgroundColor: '#E8E4E3'
+          width: isOpen ? "16rem" : "4rem",
+          backgroundColor: "#E8E4E3",
         }}
       >
         {/* Header da Sidebar */}
@@ -107,7 +154,9 @@ const EducationFilterSidebar = () => {
                 alt="opepi"
                 className="h-14 md:h-14 lg:h-14 xl:h-14 2xl:h-14 h-8 sm:h-10 md:h-14 w-auto mr-3"
               />
-              <div className={`${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>
+              <div
+                className={`${isOpen ? "block" : "hidden"} md:block lg:block xl:block 2xl:block`}
+              >
                 <p className="text-sm text-gray-600 leading-tight">
                   observatório da política educacional piauiense
                 </p>
@@ -122,14 +171,20 @@ const EducationFilterSidebar = () => {
         <nav className="p-4 md:p-4 lg:p-4 xl:p-4 2xl:p-4 p-2 sm:p-3 md:p-4 space-y-4">
           {/* Tipo de Dados */}
           <div>
-            <label className={`text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block ${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>
+            <label
+              className={`text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block ${isOpen ? "block" : "hidden"} md:block lg:block xl:block 2xl:block`}
+            >
               Tipo
             </label>
             <Select
-              value={typeOptions.find(option => option.value === filters.type)}
+              value={typeOptions.find(
+                (option) => option.value === filters.type,
+              )}
               onChange={(selectedOption) => {
                 filters.setType(selectedOption.value);
                 filters.setSelectedFilters([]);
+                filters.setRowDimension("");
+                filters.setColumnDimension("");
               }}
               options={typeOptions}
               placeholder="Selecione o tipo"
@@ -139,19 +194,35 @@ const EducationFilterSidebar = () => {
 
           {/* Filtros Disponíveis */}
           <div>
-            <label className={`text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block ${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>
+            <label
+              className={`text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block ${isOpen ? "block" : "hidden"} md:block lg:block xl:block 2xl:block`}
+            >
               Filtros
             </label>
             <Select
               value={filters.selectedFilters}
               onChange={(newValue) => {
                 const isHistoricalRange = filters.startYear !== filters.endYear;
+                let finalValue = [];
+
                 if (isHistoricalRange) {
-                  filters.setSelectedFilters(newValue.slice(-1));
+                  finalValue = newValue.slice(-1);
                 } else if (newValue.length <= 2) {
-                  filters.setSelectedFilters(newValue);
+                  finalValue = newValue;
                 } else {
-                  filters.setSelectedFilters(newValue.slice(-2));
+                  finalValue = newValue.slice(-2);
+                }
+
+                filters.setSelectedFilters(finalValue);
+
+                const values = finalValue.map((item) => item.value);
+
+                if (!values.includes(filters.rowDimension)) {
+                  filters.setRowDimension("");
+                }
+
+                if (!values.includes(filters.columnDimension)) {
+                  filters.setColumnDimension("");
                 }
               }}
               options={filterOptions}
@@ -163,7 +234,9 @@ const EducationFilterSidebar = () => {
 
           {/* Período */}
           <div>
-            <label className={`text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block ${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>
+            <label
+              className={`text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block ${isOpen ? "block" : "hidden"} md:block lg:block xl:block 2xl:block`}
+            >
               Período
             </label>
             <YearRangeFilter
@@ -176,16 +249,107 @@ const EducationFilterSidebar = () => {
             />
           </div>
 
+          {/* Estrutura da Tabela */}
+          <div>
+            <label
+              className={`text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 block ${isOpen ? "block" : "hidden"} md:block lg:block xl:block 2xl:block`}
+            >
+              Estrutura da Tabela
+            </label>
+
+            <div className="space-y-2">
+              {/* LINHAS */}
+              <Select
+                value={
+                  filterOptions.find(
+                    (option) => option.value === filters.rowDimension,
+                  ) || null
+                }
+                onChange={(selectedOption) => {
+                  const value = selectedOption ? selectedOption.value : "";
+                  const isHistoricalRange =
+                    filters.startYear !== filters.endYear;
+
+                  let newColumn = filters.columnDimension;
+
+                  if (isHistoricalRange && newColumn) {
+                    newColumn = "";
+                    filters.setColumnDimension("");
+                  }
+
+                  filters.setRowDimension(value);
+
+                  const selected = [value, newColumn]
+                    .filter(Boolean)
+                    .map((v) => filterOptions.find((opt) => opt.value === v))
+                    .filter(Boolean);
+
+                  filters.setSelectedFilters(selected);
+                }}
+                options={filterOptions.filter(
+                  (option) => option.value !== filters.columnDimension,
+                )}
+                placeholder="Linhas"
+                size="xs"
+                isClearable={true}
+              />
+
+              {/* COLUNAS */}
+              <Select
+                value={
+                  filterOptions.find(
+                    (option) => option.value === filters.columnDimension,
+                  ) || null
+                }
+                onChange={(selectedOption) => {
+                  const value = selectedOption ? selectedOption.value : "";
+                  const isHistoricalRange =
+                    filters.startYear !== filters.endYear;
+
+                  let newRow = filters.rowDimension;
+
+                  if (isHistoricalRange && newRow) {
+                    newRow = "";
+                    filters.setRowDimension("");
+                  }
+
+                  filters.setColumnDimension(value);
+
+                  const selected = [newRow, value]
+                    .filter(Boolean)
+                    .map((v) => filterOptions.find((opt) => opt.value === v))
+                    .filter(Boolean);
+
+                  filters.setSelectedFilters(selected);
+                }}
+                options={filterOptions.filter(
+                  (option) => option.value !== filters.rowDimension,
+                )}
+                placeholder="Colunas"
+                size="xs"
+                isClearable={true}
+              />
+            </div>
+          </div>
+
           {/* Localização */}
           <div>
-            <h3 className={`text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 ${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>
+            <h3
+              className={`text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 ${isOpen ? "block" : "hidden"} md:block lg:block xl:block 2xl:block`}
+            >
               Localização
             </h3>
             <div className="space-y-2">
               {/* Município */}
               <Select
-                value={filteredMunicipioOptions.find(option => option.value === filters.city) || null}
-                onChange={(selectedOption) => filters.setCity(selectedOption ? selectedOption.value : '')}
+                value={
+                  filteredMunicipioOptions.find(
+                    (option) => option.value === filters.city,
+                  ) || null
+                }
+                onChange={(selectedOption) =>
+                  filters.setCity(selectedOption ? selectedOption.value : "")
+                }
                 options={filteredMunicipioOptions}
                 placeholder="Município"
                 size="xs"
@@ -194,10 +358,16 @@ const EducationFilterSidebar = () => {
 
               {/* Território */}
               <Select
-                value={filteredTerritorioOptions.find(option => option.value === filters.territory) || null}
+                value={
+                  filteredTerritorioOptions.find(
+                    (option) => option.value === filters.territory,
+                  ) || null
+                }
                 onChange={(selectedOption) => {
-                  filters.setTerritory(selectedOption ? selectedOption.value : '');
-                  filters.setCity('');
+                  filters.setTerritory(
+                    selectedOption ? selectedOption.value : "",
+                  );
+                  filters.setCity("");
                 }}
                 options={filteredTerritorioOptions}
                 placeholder="Território"
@@ -208,10 +378,16 @@ const EducationFilterSidebar = () => {
 
               {/* Faixa Populacional */}
               <Select
-                value={filteredFaixaPopulacionalOptions.find(option => option.value === filters.faixaPopulacional) || null}
+                value={
+                  filteredFaixaPopulacionalOptions.find(
+                    (option) => option.value === filters.faixaPopulacional,
+                  ) || null
+                }
                 onChange={(selectedOption) => {
-                  filters.setFaixaPopulacional(selectedOption ? selectedOption.value : '');
-                  filters.setCity('');
+                  filters.setFaixaPopulacional(
+                    selectedOption ? selectedOption.value : "",
+                  );
+                  filters.setCity("");
                 }}
                 options={filteredFaixaPopulacionalOptions}
                 placeholder="Faixa Populacional"
@@ -222,8 +398,16 @@ const EducationFilterSidebar = () => {
 
               {/* Aglomerado */}
               <Select
-                value={filteredAglomeradoOptions.find(option => option.value === filters.aglomerado) || null}
-                onChange={(selectedOption) => filters.setAglomerado(selectedOption ? selectedOption.value : '')}
+                value={
+                  filteredAglomeradoOptions.find(
+                    (option) => option.value === filters.aglomerado,
+                  ) || null
+                }
+                onChange={(selectedOption) =>
+                  filters.setAglomerado(
+                    selectedOption ? selectedOption.value : "",
+                  )
+                }
                 options={filteredAglomeradoOptions}
                 placeholder="Aglomerado - AG"
                 size="xs"
@@ -233,8 +417,16 @@ const EducationFilterSidebar = () => {
 
               {/* Gerência */}
               <Select
-                value={filteredGerenciaOptions.find(option => option.value === filters.gerencia) || null}
-                onChange={(selectedOption) => filters.setGerencia(selectedOption ? selectedOption.value : '')}
+                value={
+                  filteredGerenciaOptions.find(
+                    (option) => option.value === filters.gerencia,
+                  ) || null
+                }
+                onChange={(selectedOption) =>
+                  filters.setGerencia(
+                    selectedOption ? selectedOption.value : "",
+                  )
+                }
                 options={filteredGerenciaOptions}
                 placeholder="Gerência - GRE"
                 size="xs"
@@ -246,21 +438,29 @@ const EducationFilterSidebar = () => {
 
           {/* Alternar para Dados Financeiros */}
           <div className="mt-6">
-            <h3 className={`text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 ${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>
+            <h3
+              className={`text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 ${isOpen ? "block" : "hidden"} md:block lg:block xl:block 2xl:block`}
+            >
               Alternar para
             </h3>
             <button
-              onClick={() => navigate('/dados-financeiros')}
+              onClick={() => navigate("/dados-financeiros")}
               className={`w-full flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 text-gray-700 hover:bg-yellow-100 hover:text-yellow-700`}
             >
               <FaDollarSign className="mr-3 text-lg flex-shrink-0" />
-              <span className={`${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>Dados Financeiros</span>
+              <span
+                className={`${isOpen ? "block" : "hidden"} md:block lg:block xl:block 2xl:block`}
+              >
+                Dados Financeiros
+              </span>
             </button>
           </div>
 
           {/* Sobre o Projeto */}
           <div>
-            <h3 className={`text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 ${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>
+            <h3
+              className={`text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 ${isOpen ? "block" : "hidden"} md:block lg:block xl:block 2xl:block`}
+            >
               sobre o projeto
             </h3>
             <ul className="space-y-1">
@@ -270,7 +470,11 @@ const EducationFilterSidebar = () => {
                   className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 text-gray-700 hover:bg-gray-100`}
                 >
                   <FaInfoCircle className="mr-3 text-lg flex-shrink-0" />
-                  <span className={`${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>Quem somos</span>
+                  <span
+                    className={`${isOpen ? "block" : "hidden"} md:block lg:block xl:block 2xl:block`}
+                  >
+                    Quem somos
+                  </span>
                 </Link>
               </li>
             </ul>
@@ -284,7 +488,11 @@ const EducationFilterSidebar = () => {
             className="flex items-center text-gray-600 hover:text-gray-900 transition-colors text-sm font-medium"
           >
             <FaArrowLeft className="mr-2 flex-shrink-0" />
-            <span className={`${isOpen ? 'block' : 'hidden'} md:block lg:block xl:block 2xl:block`}>voltar</span>
+            <span
+              className={`${isOpen ? "block" : "hidden"} md:block lg:block xl:block 2xl:block`}
+            >
+              voltar
+            </span>
           </button>
         </div>
       </aside>
