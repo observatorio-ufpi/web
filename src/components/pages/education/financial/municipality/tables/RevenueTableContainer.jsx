@@ -1,8 +1,7 @@
 import Button from "@mui/material/Button";
 import { saveAs } from "file-saver";
 import JSZip from "jszip";
-import React, { useState, useEffect } from "react";
-import * as XLSX from "xlsx";
+import React, { useState, useEffect, useMemo } from "react";
 import { useTheme } from '@mui/material/styles';
 import { useNavigate } from 'react-router-dom';
 import "../../../../../../App.css";
@@ -46,6 +45,8 @@ import Select from "../../../../../ui/Select";
 import { Loading } from "../../../../../ui";
 import { Typography, Box, Menu, MenuItem } from "@mui/material";
 import { ExpandMore, ExpandLess, ArrowDropDown } from '@mui/icons-material';
+import { buildStyledWorkbook } from "../../../../../../utils/excelExportUtils.js";
+import TechnicalSheetButton from "../../../../../common/TechnicalSheetButton.jsx";
 
 // Opções para os selects
 const tableOptions = [
@@ -94,13 +95,65 @@ function RevenueTableContainer() {
   });
   const [hasInitialLoad, setHasInitialLoad] = useState(false);
 
+  const shouldShowAllCitiesSingleYear =
+    filters.anoInicial === filters.anoFinal && !filters.codigoMunicipio;
+  const allCitiesLimit = 10000;
+  const uiGroupType = shouldShowAllCitiesSingleYear ? 'ano' : groupType;
+
+  // Backend pode retornar chaves (anos/municÃ­pios) sem dados; filtramos para nÃ£o renderizar tabelas vazias.
+  const hasAnyRecordDeep = (node) => {
+    if (!node) return false;
+    if (Array.isArray(node)) return node.length > 0;
+    if (typeof node !== 'object') return false;
+    return Object.values(node).some(hasAnyRecordDeep);
+  };
+
+  const displayApiData = useMemo(() => {
+    if (!apiData || typeof apiData !== 'object') return apiData;
+
+    if (uiGroupType === 'ano') {
+      // allTables: { revenueType: { year: yearData } }
+      if (selectedTable === 'allTables') {
+        const out = {};
+        Object.entries(apiData).forEach(([revenueType, yearsObj]) => {
+          if (!yearsObj || typeof yearsObj !== 'object') return;
+          const filteredYears = {};
+          Object.entries(yearsObj).forEach(([year, yearData]) => {
+            if (hasAnyRecordDeep(yearData)) filteredYears[year] = yearData;
+          });
+          if (Object.keys(filteredYears).length > 0) out[revenueType] = filteredYears;
+        });
+        return out;
+      }
+
+      // Normal: { year: yearData }
+      const out = {};
+      Object.entries(apiData).forEach(([year, yearData]) => {
+        if (hasAnyRecordDeep(yearData)) out[year] = yearData;
+      });
+      return out;
+    }
+
+    if (uiGroupType === 'municipio') {
+      const out = {};
+      Object.entries(apiData).forEach(([codigoMunicipio, municipioData]) => {
+        if (hasAnyRecordDeep(municipioData)) out[codigoMunicipio] = municipioData;
+      });
+      return out;
+    }
+
+    return apiData;
+  }, [apiData, uiGroupType, selectedTable]);
+
   const handlePageChange = (event, newPage) => {
+    if (shouldShowAllCitiesSingleYear) return;
     setPage(newPage);
     setLoading(true);
     fetchTableData(newPage, limit);
   };
 
   const handleLimitChange = (event) => {
+    if (shouldShowAllCitiesSingleYear) return;
     const newLimit = parseInt(event.target.value);
     setLimit(newLimit);
     setPage(1);
@@ -109,8 +162,12 @@ function RevenueTableContainer() {
   };
 
   const fetchTableData = (currentPage = page, currentLimit = limit) => {
+    const effectiveGroupType = shouldShowAllCitiesSingleYear ? 'ano' : groupType;
+    const effectivePage = shouldShowAllCitiesSingleYear ? 1 : currentPage;
+    const effectiveLimit = shouldShowAllCitiesSingleYear ? allCitiesLimit : currentLimit;
+
     // Para 'desagregado', enviar 'municipio' para API mas consolidar visualmente
-    const apiGroupType = groupType === 'desagregado' ? 'municipio' : groupType;
+    const apiGroupType = effectiveGroupType === 'desagregado' ? 'municipio' : effectiveGroupType;
 
     fetchData(selectedTable, apiGroupType, {
       codigoMunicipio: selectedMunicipio,
@@ -120,8 +177,8 @@ function RevenueTableContainer() {
       gerenciaRegionalMunicipio: filters.gerenciaRegionalMunicipio,
       anoInicial: filters.anoInicial,
       anoFinal: filters.anoFinal,
-      page: currentPage,
-      limit: currentLimit,
+      page: effectivePage,
+      limit: effectiveLimit,
     })
       .then((response) => {
         // Construir o título com os filtros aplicados
@@ -171,7 +228,10 @@ function RevenueTableContainer() {
         setLoading(false);
         setHasInitialLoad(true);
         // Lidar com paginação quando disponível
-        if (response.pagination) {
+        if (shouldShowAllCitiesSingleYear) {
+          setPage(1);
+          setTotalPages(1);
+        } else if (response.pagination) {
           setPage(response.pagination.page);
           setLimit(response.pagination.limit);
           setTotalPages(response.pagination.totalPages || 1);
@@ -225,13 +285,23 @@ function RevenueTableContainer() {
       anoFinal: filterData.anoFinal,
     };
     
+    const shouldAllCitiesSingleYear =
+      newFilters.anoInicial === newFilters.anoFinal && !newFilters.codigoMunicipio;
+    const effectiveGroupType = shouldAllCitiesSingleYear ? 'ano' : groupType;
+    const effectiveLimit = shouldAllCitiesSingleYear ? allCitiesLimit : limit;
+
     setFilters(newFilters);
     setLoading(true);
     setPage(1);
     setHasInitialLoad(true);
+
+    if (shouldAllCitiesSingleYear && groupType !== 'ano') {
+      // Ajusta o UI para refletir o modo de 1 ano (todas as cidades).
+      setGroupType('ano');
+    }
     
     // Usar os valores dos filtros diretamente em vez de aguardar o estado ser atualizado
-    const apiGroupType = groupType === 'desagregado' ? 'municipio' : groupType;
+    const apiGroupType = effectiveGroupType === 'desagregado' ? 'municipio' : effectiveGroupType;
     console.log('Chamando fetchData com:', { tableTypeToUse, apiGroupType, filters: newFilters });
     fetchData(tableTypeToUse, apiGroupType, {
       codigoMunicipio: filterData.codigoMunicipio,
@@ -242,7 +312,7 @@ function RevenueTableContainer() {
       anoInicial: filterData.anoInicial,
       anoFinal: filterData.anoFinal,
       page: 1,
-      limit: limit,
+      limit: effectiveLimit,
     })
       .then((response) => {
         console.log('Resposta completa do servidor:', JSON.stringify(response, null, 2).substring(0, 2000));
@@ -284,9 +354,13 @@ function RevenueTableContainer() {
         
         setApiData(response.data);
         setLoading(false);
-        setPage(response.pagination?.page || 1);
-        setLimit(response.pagination?.limit || limit);
-        setTotalPages(response.pagination?.totalPages || 1);
+        setPage(1);
+        if (shouldAllCitiesSingleYear) {
+          setTotalPages(1);
+        } else {
+          setLimit(response.pagination?.limit || limit);
+          setTotalPages(response.pagination?.totalPages || 1);
+        }
       })
       .catch((error) => {
         console.error(error);
@@ -535,7 +609,8 @@ function RevenueTableContainer() {
     const fonte = "Fonte: SIOPE/FNDE - Elaboração: OPEPI/UFPI";
     
     // Buscar TODOS os dados da API (sem limitação de paginação)
-    const apiGroupType = groupType === 'desagregado' ? 'municipio' : groupType;
+    const effectiveGroupType = shouldShowAllCitiesSingleYear ? 'ano' : groupType;
+    const apiGroupType = effectiveGroupType === 'desagregado' ? 'municipio' : effectiveGroupType;
     let allApiData;
     
     try {
@@ -552,17 +627,16 @@ function RevenueTableContainer() {
         limit: 10000, // Buscar todos os registros
       });
       allApiData = response.data;
-      setLoading(false);
+      // Mantem loading ativo durante a geração do arquivo (ZIP/Excel).
     } catch (error) {
       console.error('Erro ao buscar dados para exportação:', error);
       setLoading(false);
       return;
     }
 
-    if (groupType === "municipio") {
-      const selectedMunicipioName = "Todos_Municipios";
-
-      Object.keys(allApiData).forEach((municipio) => {
+    if (effectiveGroupType === "municipio") {
+      for (const municipio of Object.keys(allApiData)) {
+        if (!hasAnyRecordDeep(allApiData[municipio])) continue;
         // Usar transformByMunicipio que espera a estrutura { revenues0708: [...], revenues09: [...] }
         const { rows, typeToRowToValue } = transformByMunicipio(
           allApiData[municipio],
@@ -572,11 +646,12 @@ function RevenueTableContainer() {
         const nomeMunicipioLabel = municipios[municipio]?.nomeMunicipio || municipio;
         const titulo = `${name} - ${nomeMunicipioLabel}`;
 
-        const wsData = [
-          [titulo], // Título
-          [], // Linha vazia
-          ["Ano", ...types],
-          ...rows.map((row) => [
+        const workbook = await buildStyledWorkbook({
+          creator: "OPEPI/UFPI",
+          sheetName: "Receitas",
+          title: titulo,
+          headers: ["Ano", ...types],
+          rows: rows.map((row) => [
             row,
             ...types.map((type) =>
               typeToRowToValue[type] &&
@@ -585,38 +660,24 @@ function RevenueTableContainer() {
                 : "-"
             ),
           ]),
-          [], // Linha vazia
-          [fonte], // Fonte
-        ];
-        const ws = XLSX.utils.aoa_to_sheet(wsData);
-        
-        // Mesclar célula do título
-        ws['!merges'] = [
-          { s: { r: 0, c: 0 }, e: { r: 0, c: types.length } }
-        ];
-        
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Receitas");
+          source: fonte,
+        });
 
-        const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+        const excelBuffer = await workbook.xlsx.writeBuffer();
         const nomeArquivoIndividual = gerarNomeArquivo(name, nomeMunicipioLabel);
         zip.file(
           `${nomeArquivoIndividual}.xlsx`,
           excelBuffer
         );
-      });
+      }
 
-      zip.generateAsync({ type: "blob" }).then((content) => {
-        const nomeArquivoZip = gerarNomeArquivo(name, 'Todos_Municipios');
-        saveAs(
-          content,
-          `${nomeArquivoZip}.zip`
-        );
-      });
-    } else if (groupType === "ano") {
-      const selectedYearName = "Todos_Anos";
-
-      Object.keys(allApiData).forEach((year) => {
+      const content = await zip.generateAsync({ type: "blob" });
+      const nomeArquivoZip = gerarNomeArquivo(name, 'Todos_Municipios');
+      saveAs(content, `${nomeArquivoZip}.zip`);
+      setLoading(false);
+    } else if (effectiveGroupType === "ano") {
+      for (const year of Object.keys(allApiData)) {
+        if (!hasAnyRecordDeep(allApiData[year])) continue;
         // Usar transformByAno que retorna municípios como rows
         const { rows, typeToRowToValue } = transformByAno(
           allApiData[year],
@@ -625,11 +686,12 @@ function RevenueTableContainer() {
         const types = Object.keys(map);
         const titulo = `${name} - ${year}`;
 
-        const wsData = [
-          [titulo], // Título
-          [], // Linha vazia
-          ["Município (IBGE)", ...types],
-          ...rows.map((row) => [
+        const workbook = await buildStyledWorkbook({
+          creator: "OPEPI/UFPI",
+          sheetName: "Receitas",
+          title: titulo,
+          headers: ["Município (IBGE)", ...types],
+          rows: rows.map((row) => [
             `${municipios[row]?.nomeMunicipio || row} (${row})`,
             ...types.map((type) =>
               typeToRowToValue[type] &&
@@ -638,29 +700,19 @@ function RevenueTableContainer() {
                 : "-"
             ),
           ]),
-          [], // Linha vazia
-          [fonte], // Fonte
-        ];
-        const ws = XLSX.utils.aoa_to_sheet(wsData);
-        
-        // Mesclar célula do título
-        ws['!merges'] = [
-          { s: { r: 0, c: 0 }, e: { r: 0, c: types.length } }
-        ];
-        
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Receitas");
+          source: fonte,
+        });
 
-        const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+        const excelBuffer = await workbook.xlsx.writeBuffer();
         const nomeArquivoIndividual = gerarNomeArquivo(name, year);
         zip.file(`${nomeArquivoIndividual}.xlsx`, excelBuffer);
-      });
+      }
 
-      zip.generateAsync({ type: "blob" }).then((content) => {
-        const nomeArquivoZip = gerarNomeArquivo(name, 'Todos_Anos');
-        saveAs(content, `${nomeArquivoZip}.zip`);
-      });
-    } else if (groupType === "desagregado") {
+      const content = await zip.generateAsync({ type: "blob" });
+      const nomeArquivoZip = gerarNomeArquivo(name, 'Todos_Anos');
+      saveAs(content, `${nomeArquivoZip}.zip`);
+      setLoading(false);
+    } else if (effectiveGroupType === "desagregado") {
       // Para dados desagregados, criar um único arquivo com todos os dados
       const { rows, typeToRowToValue } = transformByAno(
         allApiData,
@@ -669,35 +721,29 @@ function RevenueTableContainer() {
       const types = Object.keys(map);
       const titulo = `${name} - Desagregado`;
 
-      const wsData = [
-        [titulo], // Título
-        [], // Linha vazia
-        ["Município (IBGE)", ...types],
-        ...rows.map((row) => [
+      const workbook = await buildStyledWorkbook({
+        creator: "OPEPI/UFPI",
+        sheetName: "Receitas",
+        title: titulo,
+        headers: ["Município (IBGE)", ...types],
+        rows: rows.map((row) => [
           `${municipios[row]?.nomeMunicipio || row} (${row})`,
           ...types.map((type) =>
-            typeToRowToValue[type] &&
-            typeToRowToValue[type][row] !== undefined
+            typeToRowToValue[type] && typeToRowToValue[type][row] !== undefined
               ? typeToRowToValue[type][row]
               : "-"
           ),
         ]),
-        [], // Linha vazia
-        [fonte], // Fonte
-      ];
-      const ws = XLSX.utils.aoa_to_sheet(wsData);
-      
-      // Mesclar célula do título
-      ws['!merges'] = [
-        { s: { r: 0, c: 0 }, e: { r: 0, c: types.length } }
-      ];
-      
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Receitas");
+        source: fonte,
+      });
 
-      const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
       const nomeArquivoDesagregado = gerarNomeArquivo(name, 'Desagregado');
-      saveAs(excelBuffer, `${nomeArquivoDesagregado}.xlsx`);
+      saveAs(blob, `${nomeArquivoDesagregado}.xlsx`);
+      setLoading(false);
     }
   };
 
@@ -805,14 +851,14 @@ function RevenueTableContainer() {
 
     const { transformByMunicipio, transformByAno, standardize, map, name } = tableMappings[selectedTable];
     const fonte = "Fonte: SIOPE/FNDE - Elaboração: OPEPI/UFPI";
-    const wb = XLSX.utils.book_new();
     let allData = [];
     
     // Cabeçalho com todas as colunas de tipos
     const types = Object.keys(map);
     
     // Buscar TODOS os dados da API (sem limitação de paginação)
-    const apiGroupType = groupType === 'desagregado' ? 'municipio' : groupType;
+    const effectiveGroupType = shouldShowAllCitiesSingleYear ? 'ano' : groupType;
+    const apiGroupType = effectiveGroupType === 'desagregado' ? 'municipio' : effectiveGroupType;
     let allApiData;
     
     try {
@@ -829,18 +875,19 @@ function RevenueTableContainer() {
         limit: 10000, // Buscar todos os registros
       });
       allApiData = response.data;
-      setLoading(false);
+      // Mantem loading ativo durante a geração do arquivo.
     } catch (error) {
       console.error('Erro ao buscar dados para exportação:', error);
       setLoading(false);
       return;
     }
     
-    if (groupType === "municipio") {
+    if (effectiveGroupType === "municipio") {
       // Consolidar todos os municípios em uma única tabela
       allData.push(["Município", "Ano", ...types]);
       
       Object.keys(allApiData).forEach((municipio) => {
+        if (!hasAnyRecordDeep(allApiData[municipio])) return;
         // Usar transformByMunicipio que espera a estrutura { revenues0708: [...], revenues09: [...] }
         const { rows, typeToRowToValue } = transformByMunicipio(
           allApiData[municipio],
@@ -860,11 +907,12 @@ function RevenueTableContainer() {
           ]);
         });
       });
-    } else if (groupType === "ano") {
+    } else if (effectiveGroupType === "ano") {
       // Consolidar todos os anos em uma única tabela
       allData.push(["Ano", "Município (IBGE)", ...types]);
       
       Object.keys(allApiData).forEach((year) => {
+        if (!hasAnyRecordDeep(allApiData[year])) return;
         // Usar transformByAno que retorna municípios como rows
         const { rows, typeToRowToValue } = transformByAno(
           allApiData[year],
@@ -883,7 +931,7 @@ function RevenueTableContainer() {
           ]);
         });
       });
-    } else if (groupType === "desagregado") {
+    } else if (effectiveGroupType === "desagregado") {
       // Para dados desagregados, mesma estrutura
       const { rows, typeToRowToValue } = transformByAno(allApiData, standardize);
       
@@ -900,27 +948,37 @@ function RevenueTableContainer() {
       });
     }
 
-    // Criar o Excel com título e fonte
     const titulo = `${name} - Consolidado`;
-    const wsData = [
-      [titulo],
-      [],
-      ...allData,
-      [],
-      [fonte],
-    ];
-    
-    const ws = XLSX.utils.aoa_to_sheet(wsData);
-    
-    // Mesclar célula do título
-    const numCols = allData[0]?.length || 1;
-    ws['!merges'] = [
-      { s: { r: 0, c: 0 }, e: { r: 0, c: numCols - 1 } }
-    ];
-    
-    XLSX.utils.book_append_sheet(wb, ws, "Dados_Consolidados");
-    const nomeArquivoConsolidado = gerarNomeArquivo(name, 'Consolidado');
-    XLSX.writeFile(wb, `${nomeArquivoConsolidado}.xlsx`);
+    const consolidatedHeaders = allData[0] || [""];
+    const consolidatedRows = allData.slice(1);
+
+    const numericColumns = consolidatedHeaders
+      .map((_, idx) => idx)
+      .filter((idx) => idx >= (effectiveGroupType === "desagregado" ? 1 : 2));
+
+    const workbook = await buildStyledWorkbook({
+      creator: "OPEPI/UFPI",
+      sheetName: "Dados_Consolidados",
+      title: titulo,
+      headers: consolidatedHeaders,
+      rows: consolidatedRows,
+      source: fonte,
+      numericColumns,
+      columnWidths: consolidatedHeaders.map((h) => {
+        const lower = (h ?? "").toString().toLowerCase();
+        if (lower === "ano") return 12;
+        if (lower.includes("munic")) return 35;
+        return 20;
+      }),
+    });
+
+    const nomeArquivoConsolidado = gerarNomeArquivo(name, "Consolidado");
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+    saveAs(blob, `${nomeArquivoConsolidado}.xlsx`);
+    setLoading(false);
   };
 
   // Handler para download separado (já existente, mas com fechamento do menu)
@@ -965,7 +1023,7 @@ function RevenueTableContainer() {
           </Typography>
           )}
 
-          {!loading && !error && (!apiData || Object.keys(apiData).length === 0) && hasInitialLoad && (
+          {!loading && !error && (!displayApiData || Object.keys(displayApiData).length === 0) && hasInitialLoad && (
             <div style={{ 
               textAlign: 'center', 
               padding: '40px 20px',
@@ -976,7 +1034,7 @@ function RevenueTableContainer() {
             </div>
           )}
 
-          {!loading && !error && apiData && Object.keys(apiData).length > 0 && (
+          {!loading && !error && displayApiData && Object.keys(displayApiData).length > 0 && (
             <>
               {tableTitle && (
                 <Box sx={{ padding: 2 }}>
@@ -989,7 +1047,7 @@ function RevenueTableContainer() {
                 </Box>
               )}
               <div className="table-container">
-                <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", flexWrap: "wrap" }}>
                   <Button
                     variant="contained"
                     color="success"
@@ -999,6 +1057,7 @@ function RevenueTableContainer() {
                   >
                     Baixar Todas as Tabelas
                   </Button>
+                  <TechnicalSheetButton buttonSx={{ marginTop: 2 }} />
                   <Menu
                     anchorEl={downloadMenuAnchor}
                     open={Boolean(downloadMenuAnchor)}
@@ -1012,22 +1071,22 @@ function RevenueTableContainer() {
                     </MenuItem>
                   </Menu>
                 </div>
-              {groupType === "desagregado" ? (
+              {uiGroupType === "desagregado" ? (
                 // Renderização para dados desagregados
                 <>
                   {selectedTable === "allTables"
-                    ? Object.keys(apiData).map((revenueType) =>
-                        Object.keys(apiData[revenueType]).map((key) => (
+                    ? Object.keys(displayApiData).map((revenueType) =>
+                        Object.keys(displayApiData[revenueType]).map((key) => (
                           <div key={key}>
                             {selectedTable === "allTables" && (
                               <RevenueTable
                                 filtrosAplicados={filters}
-                                data={apiData[revenueType][key]}
+                                data={displayApiData[revenueType][key]}
                                 transformDataFunction={transformDataForTableByYear}
                                 standardizeTypeFunction={standardizedTypeAllTables}
                                 tableName="Tabelão"
                                 keyTable={key}
-                                groupType={groupType}
+                                groupType={uiGroupType}
                               anoInicial={filters.anoInicial}
                               anoFinal={filters.anoFinal}
                               nomeMunicipio={filters.nomeMunicipio}
@@ -1039,13 +1098,13 @@ function RevenueTableContainer() {
                     : selectedTable === "ownRevenues" && (
                         <RevenueTable
                           filtrosAplicados={filters}
-                          data={apiData}
+                          data={displayApiData}
                           transformDataFunction={transformDataForTableByYear}
                           standardizeTypeFunction={standardizedTypeOwnRevenues}
                           tableMapping={mapOwnRevenues}
                           tableName="Impostos Próprios"
                           keyTable="desagregado"
-                          groupType={groupType}
+                          groupType={uiGroupType}
                           enableMonetaryCorrection={true}
                         anoInicial={filters.anoInicial}
                         anoFinal={filters.anoFinal}
@@ -1055,13 +1114,13 @@ function RevenueTableContainer() {
                   {selectedTable === "constitutionalTransfersRevenue" && (
                     <RevenueTable
                       filtrosAplicados={filters}
-                      data={apiData}
+                      data={displayApiData}
                       transformDataFunction={transformDataForTableByYear}
                       standardizeTypeFunction={standardizedTypeConstitutionalTransfersRevenue}
                       tableMapping={mapConstitutionalTransfersRevenue}
                       tableName="Receita de transferências constitucionais e legais"
                       keyTable="desagregado"
-                      groupType={groupType}
+                      groupType={uiGroupType}
                       enableMonetaryCorrection={true}
                     anoInicial={filters.anoInicial}
                     anoFinal={filters.anoFinal}
@@ -1071,13 +1130,13 @@ function RevenueTableContainer() {
                   {selectedTable === "municipalTaxesRevenues" && (
                     <RevenueTable
                       filtrosAplicados={filters}
-                      data={apiData}
+                      data={displayApiData}
                       transformDataFunction={transformDataForTableByYear}
                       standardizeTypeFunction={standardizeTypeMunicipalTaxesRevenues}
                       tableMapping={mapMunicipalTaxesRevenues}
                       tableName="Receita Líquida de Impostos do Município"
                       keyTable="desagregado"
-                      groupType={groupType}
+                      groupType={uiGroupType}
                       enableMonetaryCorrection={true}
                     anoInicial={filters.anoInicial}
                     anoFinal={filters.anoFinal}
@@ -1087,13 +1146,13 @@ function RevenueTableContainer() {
                   {selectedTable === "additionalEducationRevenue" && (
                     <RevenueTable
                       filtrosAplicados={filters}
-                      data={apiData}
+                      data={displayApiData}
                       transformDataFunction={transformDataForTableByYear}
                       standardizeTypeFunction={standardizeTypeAdditionalEducationRevenues}
                       tableMapping={mapAdditionalMunicipalEducationRevenue}
                       tableName="Receitas adicionais da educação no Município"
                       keyTable="desagregado"
-                      groupType={groupType}
+                      groupType={uiGroupType}
                       enableMonetaryCorrection={true}
                     anoInicial={filters.anoInicial}
                     anoFinal={filters.anoFinal}
@@ -1103,13 +1162,13 @@ function RevenueTableContainer() {
                   {selectedTable === "municipalFundebFundefComposition" && (
                     <RevenueTable
                       filtrosAplicados={filters}
-                      data={apiData}
+                      data={displayApiData}
                       transformDataFunction={transformDataForTableByYear}
                       standardizeTypeFunction={standardizedTypeMunicipalFundebFundefComposition}
                       tableMapping={mapMunicipalFundebFundefComposition}
                       tableName="Composição do Fundef/Fundeb no município"
                       keyTable="desagregado"
-                      groupType={groupType}
+                      groupType={uiGroupType}
                     anoInicial={filters.anoInicial}
                     anoFinal={filters.anoFinal}
                     nomeMunicipio={filters.nomeMunicipio}
@@ -1118,13 +1177,13 @@ function RevenueTableContainer() {
                   {selectedTable === "complementationFundebFundef" && (
                     <RevenueTable
                       filtrosAplicados={filters}
-                      data={apiData}
+                      data={displayApiData}
                       transformDataFunction={transformDataForTableByYear}
                       standardizeTypeFunction={standardizedTypeComplementationFundebFundef}
                       tableMapping={mapComplementationFundebFundef}
                       tableName="Composição da complementação do Fundef/Fundeb"
                       keyTable="desagregado"
-                      groupType={groupType}
+                      groupType={uiGroupType}
                     anoInicial={filters.anoInicial}
                     anoFinal={filters.anoFinal}
                     nomeMunicipio={filters.nomeMunicipio}
@@ -1133,13 +1192,13 @@ function RevenueTableContainer() {
                   {selectedTable === "constitutionalLimitMde" && (
                     <RevenueTable
                       filtrosAplicados={filters}
-                      data={apiData}
+                      data={displayApiData}
                       transformDataFunction={transformDataForTableByYear}
                       standardizeTypeFunction={standardizedTypeConstitutionalLimitMde}
                       tableMapping={mapConstitutionalLimitMde}
                       tableName="Limite constitucional em MDE no município"
                       keyTable="desagregado"
-                      groupType={groupType}
+                      groupType={uiGroupType}
                     anoInicial={filters.anoInicial}
                     anoFinal={filters.anoFinal}
                     nomeMunicipio={filters.nomeMunicipio}
@@ -1148,13 +1207,13 @@ function RevenueTableContainer() {
                   {selectedTable === "expensesBasicEducationFundeb" && (
                     <RevenueTable
                       filtrosAplicados={filters}
-                      data={apiData}
+                      data={displayApiData}
                       transformDataFunction={transformDataForTableByYear}
                       standardizeTypeFunction={standardizedTypeExpensesBasicEducationFundeb}
                       tableMapping={mapExpensesBasicEducationFundeb}
                       tableName="Despesas com profissionais da educação básica com o Fundef/Fundeb"
                       keyTable="desagregado"
-                      groupType={groupType}
+                      groupType={uiGroupType}
                     anoInicial={filters.anoInicial}
                     anoFinal={filters.anoFinal}
                     nomeMunicipio={filters.nomeMunicipio}
@@ -1163,13 +1222,13 @@ function RevenueTableContainer() {
                   {selectedTable === "areasActivityExpense" && (
                     <RevenueTable
                       filtrosAplicados={filters}
-                      data={apiData}
+                      data={displayApiData}
                       transformDataFunction={transformDataForTableByYear}
                       standardizeTypeFunction={standardizedTypeAreasActivityExpense}
                       tableMapping={mapAreasActivityExpense}
                       tableName="Despesas em MDE por área de atuação"
                       keyTable="desagregado"
-                      groupType={groupType}
+                      groupType={uiGroupType}
                     anoInicial={filters.anoInicial}
                     anoFinal={filters.anoFinal}
                     nomeMunicipio={filters.nomeMunicipio}
@@ -1178,13 +1237,13 @@ function RevenueTableContainer() {
                   {selectedTable === "basicEducationMinimalPotential" && (
                     <RevenueTable
                       filtrosAplicados={filters}
-                      data={apiData}
+                      data={displayApiData}
                       transformDataFunction={transformDataForTableByYear}
                       standardizeTypeFunction={standardizedTypeBasicEducationMinimalPotential}
                       tableMapping={mapBasicEducationMinimalPotential}
                       tableName="Receita Potencial Mínima vinculada à Educação Básica"
                       keyTable="desagregado"
-                      groupType={groupType}
+                      groupType={uiGroupType}
                     anoInicial={filters.anoInicial}
                     anoFinal={filters.anoFinal}
                     nomeMunicipio={filters.nomeMunicipio}
@@ -1193,23 +1252,23 @@ function RevenueTableContainer() {
                   {selectedTable === "complementaryProtocol" && (
                     <RevenueTable
                       filtrosAplicados={filters}
-                      data={apiData}
+                      data={displayApiData}
                       transformDataFunction={transformDataForTableByYear}
                       standardizeTypeFunction={standardizedTypeComplementaryProtocol}
                       tableMapping={mapComplementaryProtocol}
                       tableName="Protocolo Complementar"
                       keyTable="desagregado"
-                      groupType={groupType}
+                      groupType={uiGroupType}
                     anoInicial={filters.anoInicial}
                     anoFinal={filters.anoFinal}
                     nomeMunicipio={filters.nomeMunicipio}
                     />
                   )}
                 </>
-              ) : groupType === "municipio" ? (
+              ) : uiGroupType === "municipio" ? (
                 // Renderização para dados agrupados por MUNICÍPIO (UMA TABELA POR MUNICÍPIO)
                 <>
-                  {getMunicipiosFromData(apiData).map((codigoMunicipio) => (
+                  {getMunicipiosFromData(displayApiData).map((codigoMunicipio) => (
                     <div key={codigoMunicipio} style={{ marginBottom: '2rem' }}>
                       <Box sx={{ padding: '0.5rem 1rem', backgroundColor: '#f5f5f5', borderRadius: 0.5, marginBottom: 0.5, borderLeft: '3px solid #666' }}>
                         <Typography variant="subtitle1" sx={{ fontWeight: 600, color: '#424242' }}>
@@ -1219,13 +1278,13 @@ function RevenueTableContainer() {
                       {selectedTable === "ownRevenues" && (
                         <RevenueTable
                           filtrosAplicados={filters}
-                          data={prepareDataForMunicipio(apiData, codigoMunicipio)}
+                          data={prepareDataForMunicipio(displayApiData, codigoMunicipio)}
                           transformDataFunction={transformDataForTableRevenues}
                           standardizeTypeFunction={standardizedTypeOwnRevenues}
                           tableMapping={mapOwnRevenues}
                           tableName="Impostos Próprios"
                           keyTable={`municipio_${codigoMunicipio}`}
-                          groupType={groupType}
+                          groupType={uiGroupType}
                           enableMonetaryCorrection={true}
                         anoInicial={filters.anoInicial}
                         anoFinal={filters.anoFinal}
@@ -1235,13 +1294,13 @@ function RevenueTableContainer() {
                       {selectedTable === "constitutionalTransfersRevenue" && (
                         <RevenueTable
                           filtrosAplicados={filters}
-                          data={prepareDataForMunicipio(apiData, codigoMunicipio)}
+                          data={prepareDataForMunicipio(displayApiData, codigoMunicipio)}
                           transformDataFunction={transformDataForTableRevenues}
                           standardizeTypeFunction={standardizedTypeConstitutionalTransfersRevenue}
                           tableMapping={mapConstitutionalTransfersRevenue}
                           tableName="Receita de transferências constitucionais e legais"
                           keyTable={`municipio_${codigoMunicipio}`}
-                          groupType={groupType}
+                          groupType={uiGroupType}
                           enableMonetaryCorrection={true}
                         anoInicial={filters.anoInicial}
                         anoFinal={filters.anoFinal}
@@ -1251,13 +1310,13 @@ function RevenueTableContainer() {
                       {selectedTable === "municipalTaxesRevenues" && (
                         <RevenueTable
                           filtrosAplicados={filters}
-                          data={prepareDataForMunicipio(apiData, codigoMunicipio)}
+                          data={prepareDataForMunicipio(displayApiData, codigoMunicipio)}
                           transformDataFunction={transformDataForTableRevenues}
                           standardizeTypeFunction={standardizeTypeMunicipalTaxesRevenues}
                           tableMapping={mapMunicipalTaxesRevenues}
                           tableName="Receita Líquida de Impostos do Município"
                           keyTable={`municipio_${codigoMunicipio}`}
-                          groupType={groupType}
+                          groupType={uiGroupType}
                           enableMonetaryCorrection={true}
                         anoInicial={filters.anoInicial}
                         anoFinal={filters.anoFinal}
@@ -1267,13 +1326,13 @@ function RevenueTableContainer() {
                       {selectedTable === "additionalEducationRevenue" && (
                         <RevenueTable
                           filtrosAplicados={filters}
-                          data={prepareDataForMunicipio(apiData, codigoMunicipio)}
+                          data={prepareDataForMunicipio(displayApiData, codigoMunicipio)}
                           transformDataFunction={transformDataForTableRevenues}
                           standardizeTypeFunction={standardizeTypeAdditionalEducationRevenues}
                           tableMapping={mapAdditionalMunicipalEducationRevenue}
                           tableName="Receitas adicionais da educação no Município"
                           keyTable={`municipio_${codigoMunicipio}`}
-                          groupType={groupType}
+                          groupType={uiGroupType}
                           enableMonetaryCorrection={true}
                         anoInicial={filters.anoInicial}
                         anoFinal={filters.anoFinal}
@@ -1283,13 +1342,13 @@ function RevenueTableContainer() {
                       {selectedTable === "municipalFundebFundefComposition" && (
                         <RevenueTable
                           filtrosAplicados={filters}
-                          data={prepareDataForMunicipio(apiData, codigoMunicipio)}
+                          data={prepareDataForMunicipio(displayApiData, codigoMunicipio)}
                           transformDataFunction={transformDataForTableRevenues}
                           standardizeTypeFunction={standardizedTypeMunicipalFundebFundefComposition}
                           tableMapping={mapMunicipalFundebFundefComposition}
                           tableName="Composição do Fundef/Fundeb no município"
                           keyTable={`municipio_${codigoMunicipio}`}
-                          groupType={groupType}
+                          groupType={uiGroupType}
                         anoInicial={filters.anoInicial}
                         anoFinal={filters.anoFinal}
                         nomeMunicipio={getNomeMunicipio(codigoMunicipio)}
@@ -1298,13 +1357,13 @@ function RevenueTableContainer() {
                       {selectedTable === "complementationFundebFundef" && (
                         <RevenueTable
                           filtrosAplicados={filters}
-                          data={prepareDataForMunicipio(apiData, codigoMunicipio)}
+                          data={prepareDataForMunicipio(displayApiData, codigoMunicipio)}
                           transformDataFunction={transformDataForTableRevenues}
                           standardizeTypeFunction={standardizedTypeComplementationFundebFundef}
                           tableMapping={mapComplementationFundebFundef}
                           tableName="Composição da complementação do Fundef/Fundeb"
                           keyTable={`municipio_${codigoMunicipio}`}
-                          groupType={groupType}
+                          groupType={uiGroupType}
                         anoInicial={filters.anoInicial}
                         anoFinal={filters.anoFinal}
                         nomeMunicipio={getNomeMunicipio(codigoMunicipio)}
@@ -1313,13 +1372,13 @@ function RevenueTableContainer() {
                       {selectedTable === "constitutionalLimitMde" && (
                         <RevenueTable
                           filtrosAplicados={filters}
-                          data={prepareDataForMunicipio(apiData, codigoMunicipio)}
+                          data={prepareDataForMunicipio(displayApiData, codigoMunicipio)}
                           transformDataFunction={transformDataForTableRevenues}
                           standardizeTypeFunction={standardizedTypeConstitutionalLimitMde}
                           tableMapping={mapConstitutionalLimitMde}
                           tableName="Limite constitucional em MDE no município"
                           keyTable={`municipio_${codigoMunicipio}`}
-                          groupType={groupType}
+                          groupType={uiGroupType}
                         anoInicial={filters.anoInicial}
                         anoFinal={filters.anoFinal}
                         nomeMunicipio={getNomeMunicipio(codigoMunicipio)}
@@ -1328,13 +1387,13 @@ function RevenueTableContainer() {
                       {selectedTable === "expensesBasicEducationFundeb" && (
                         <RevenueTable
                           filtrosAplicados={filters}
-                          data={prepareDataForMunicipio(apiData, codigoMunicipio)}
+                          data={prepareDataForMunicipio(displayApiData, codigoMunicipio)}
                           transformDataFunction={transformDataForTableRevenues}
                           standardizeTypeFunction={standardizedTypeExpensesBasicEducationFundeb}
                           tableMapping={mapExpensesBasicEducationFundeb}
                           tableName="Despesas com profissionais da educação básica com o Fundef/Fundeb"
                           keyTable={`municipio_${codigoMunicipio}`}
-                          groupType={groupType}
+                          groupType={uiGroupType}
                         anoInicial={filters.anoInicial}
                         anoFinal={filters.anoFinal}
                         nomeMunicipio={getNomeMunicipio(codigoMunicipio)}
@@ -1343,13 +1402,13 @@ function RevenueTableContainer() {
                       {selectedTable === "areasActivityExpense" && (
                         <RevenueTable
                           filtrosAplicados={filters}
-                          data={prepareDataForMunicipio(apiData, codigoMunicipio)}
+                          data={prepareDataForMunicipio(displayApiData, codigoMunicipio)}
                           transformDataFunction={transformDataForTableRevenues}
                           standardizeTypeFunction={standardizedTypeAreasActivityExpense}
                           tableMapping={mapAreasActivityExpense}
                           tableName="Despesas em MDE por área de atuação"
                           keyTable={`municipio_${codigoMunicipio}`}
-                          groupType={groupType}
+                          groupType={uiGroupType}
                         anoInicial={filters.anoInicial}
                         anoFinal={filters.anoFinal}
                         nomeMunicipio={getNomeMunicipio(codigoMunicipio)}
@@ -1358,13 +1417,13 @@ function RevenueTableContainer() {
                       {selectedTable === "basicEducationMinimalPotential" && (
                         <RevenueTable
                           filtrosAplicados={filters}
-                          data={prepareDataForMunicipio(apiData, codigoMunicipio)}
+                          data={prepareDataForMunicipio(displayApiData, codigoMunicipio)}
                           transformDataFunction={transformDataForTableRevenues}
                           standardizeTypeFunction={standardizedTypeBasicEducationMinimalPotential}
                           tableMapping={mapBasicEducationMinimalPotential}
                           tableName="Receita Potencial Mínima vinculada à Educação Básica"
                           keyTable={`municipio_${codigoMunicipio}`}
-                          groupType={groupType}
+                          groupType={uiGroupType}
                         anoInicial={filters.anoInicial}
                         anoFinal={filters.anoFinal}
                         nomeMunicipio={getNomeMunicipio(codigoMunicipio)}
@@ -1373,13 +1432,13 @@ function RevenueTableContainer() {
                       {selectedTable === "complementaryProtocol" && (
                         <RevenueTable
                           filtrosAplicados={filters}
-                          data={prepareDataForMunicipio(apiData, codigoMunicipio)}
+                          data={prepareDataForMunicipio(displayApiData, codigoMunicipio)}
                           transformDataFunction={transformDataForTableRevenues}
                           standardizeTypeFunction={standardizedTypeComplementaryProtocol}
                           tableMapping={mapComplementaryProtocol}
                           tableName="Protocolo Complementar"
                           keyTable={`municipio_${codigoMunicipio}`}
-                          groupType={groupType}
+                          groupType={uiGroupType}
                         anoInicial={filters.anoInicial}
                         anoFinal={filters.anoFinal}
                         nomeMunicipio={getNomeMunicipio(codigoMunicipio)}
@@ -1388,12 +1447,12 @@ function RevenueTableContainer() {
                       {selectedTable === "allTables" && (
                         <RevenueTable
                           filtrosAplicados={filters}
-                          data={prepareDataForMunicipio(apiData, codigoMunicipio)}
+                          data={prepareDataForMunicipio(displayApiData, codigoMunicipio)}
                           transformDataFunction={transformDataForTableRevenues}
                           standardizeTypeFunction={standardizedTypeAllTables}
                           tableName="Tabelão"
                           keyTable={`municipio_${codigoMunicipio}`}
-                          groupType={groupType}
+                          groupType={uiGroupType}
                         anoInicial={filters.anoInicial}
                         anoFinal={filters.anoFinal}
                         nomeMunicipio={getNomeMunicipio(codigoMunicipio)}
@@ -1406,18 +1465,18 @@ function RevenueTableContainer() {
                 // Renderização para dados agrupados por ANO (múltiplas tabelas, uma por ano)
                 <>
                   {selectedTable === "allTables"
-                    ? Object.keys(apiData).map((revenueType) =>
-                        Object.keys(apiData[revenueType]).map((key) => (
+                    ? Object.keys(displayApiData).map((revenueType) =>
+                        Object.keys(displayApiData[revenueType]).map((key) => (
                           <div key={key}>
                             {selectedTable === "allTables" && (
                               <RevenueTable
                                 filtrosAplicados={filters}
-                                data={apiData[revenueType][key]}
+                                data={displayApiData[revenueType][key]}
                                 transformDataFunction={transformDataForTableByYear}
                                 standardizeTypeFunction={standardizedTypeAllTables}
                                 tableName="Tabelão"
                                 keyTable={key}
-                                groupType={groupType}
+                                groupType={uiGroupType}
                               anoInicial={filters.anoInicial}
                               anoFinal={filters.anoFinal}
                               nomeMunicipio={filters.nomeMunicipio}
@@ -1426,7 +1485,7 @@ function RevenueTableContainer() {
                           </div>
                         ))
                       )
-                    : Object.keys(apiData).map((key) => (
+                    : Object.keys(displayApiData).map((key) => (
                         <div key={key}>
                           <div className="table-header">
                             <h2>
@@ -1438,13 +1497,13 @@ function RevenueTableContainer() {
                             <div style={{ marginTop: "1rem" }}>
                               <RevenueTable
                                 filtrosAplicados={filters}
-                                data={apiData[key]}
+                                data={displayApiData[key]}
                                 transformDataFunction={transformDataForTableByYear}
                                 standardizeTypeFunction={standardizedTypeOwnRevenues}
                                 tableMapping={mapOwnRevenues}
                                 tableName="Impostos Próprios"
                                 keyTable={key}
-                                groupType={groupType}
+                                groupType={uiGroupType}
                                 enableMonetaryCorrection={true}
                               anoInicial={filters.anoInicial}
                               anoFinal={filters.anoFinal}
@@ -1456,13 +1515,13 @@ function RevenueTableContainer() {
                             <div style={{ marginTop: "1rem" }}>
                               <RevenueTable
                                 filtrosAplicados={filters}
-                                data={apiData[key]}
+                                data={displayApiData[key]}
                                 transformDataFunction={transformDataForTableByYear}
                                 standardizeTypeFunction={standardizedTypeConstitutionalTransfersRevenue}
                                 tableMapping={mapConstitutionalTransfersRevenue}
                                 tableName="Receita de transferências constitucionais e legais"
                                 keyTable={key}
-                                groupType={groupType}
+                                groupType={uiGroupType}
                                 enableMonetaryCorrection={true}
                               anoInicial={filters.anoInicial}
                               anoFinal={filters.anoFinal}
@@ -1474,13 +1533,13 @@ function RevenueTableContainer() {
                             <div style={{ marginTop: "1rem" }}>
                               <RevenueTable
                                 filtrosAplicados={filters}
-                                data={apiData[key]}
+                                data={displayApiData[key]}
                                 transformDataFunction={transformDataForTableByYear}
                                 standardizeTypeFunction={standardizeTypeMunicipalTaxesRevenues}
                                 tableMapping={mapMunicipalTaxesRevenues}
                                 tableName="Receita Líquida de Impostos do Município"
                                 keyTable={key}
-                                groupType={groupType}
+                                groupType={uiGroupType}
                                 enableMonetaryCorrection={true}
                               anoInicial={filters.anoInicial}
                               anoFinal={filters.anoFinal}
@@ -1492,13 +1551,13 @@ function RevenueTableContainer() {
                             <div style={{ marginTop: "1rem" }}>
                               <RevenueTable
                                 filtrosAplicados={filters}
-                                data={apiData[key]}
+                                data={displayApiData[key]}
                                 transformDataFunction={transformDataForTableByYear}
                                 standardizeTypeFunction={standardizeTypeAdditionalEducationRevenues}
                                 tableMapping={mapAdditionalMunicipalEducationRevenue}
                                 tableName="Receitas adicionais da educação no Município"
                                 keyTable={key}
-                                groupType={groupType}
+                                groupType={uiGroupType}
                                 enableMonetaryCorrection={true}
                               anoInicial={filters.anoInicial}
                               anoFinal={filters.anoFinal}
@@ -1510,13 +1569,13 @@ function RevenueTableContainer() {
                             <div style={{ marginTop: "1rem" }}>
                               <RevenueTable
                                 filtrosAplicados={filters}
-                                data={apiData[key]}
+                                data={displayApiData[key]}
                                 transformDataFunction={transformDataForTableByYear}
                                 standardizeTypeFunction={standardizedTypeMunicipalFundebFundefComposition}
                                 tableMapping={mapMunicipalFundebFundefComposition}
                                 tableName="Composição do Fundef/Fundeb no município"
                                 keyTable={key}
-                                groupType={groupType}
+                                groupType={uiGroupType}
                               anoInicial={filters.anoInicial}
                               anoFinal={filters.anoFinal}
                               nomeMunicipio={filters.nomeMunicipio}
@@ -1527,13 +1586,13 @@ function RevenueTableContainer() {
                             <div style={{ marginTop: "1rem" }}>
                               <RevenueTable
                                 filtrosAplicados={filters}
-                                data={apiData[key]}
+                                data={displayApiData[key]}
                                 transformDataFunction={transformDataForTableByYear}
                                 standardizeTypeFunction={standardizedTypeComplementationFundebFundef}
                                 tableMapping={mapComplementationFundebFundef}
                                 tableName="Composição da complementação do Fundef/Fundeb"
                                 keyTable={key}
-                                groupType={groupType}
+                                groupType={uiGroupType}
                               anoInicial={filters.anoInicial}
                               anoFinal={filters.anoFinal}
                               nomeMunicipio={filters.nomeMunicipio}
@@ -1544,13 +1603,13 @@ function RevenueTableContainer() {
                             <div style={{ marginTop: "1rem" }}>
                               <RevenueTable
                                 filtrosAplicados={filters}
-                                data={apiData[key]}
+                                data={displayApiData[key]}
                                 transformDataFunction={transformDataForTableByYear}
                                 standardizeTypeFunction={standardizedTypeConstitutionalLimitMde}
                                 tableMapping={mapConstitutionalLimitMde}
                                 tableName="Limite constitucional em MDE no município"
                                 keyTable={key}
-                                groupType={groupType}
+                                groupType={uiGroupType}
                               anoInicial={filters.anoInicial}
                               anoFinal={filters.anoFinal}
                               nomeMunicipio={filters.nomeMunicipio}
@@ -1561,13 +1620,13 @@ function RevenueTableContainer() {
                             <div style={{ marginTop: "1rem" }}>
                               <RevenueTable
                                 filtrosAplicados={filters}
-                                data={apiData[key]}
+                                data={displayApiData[key]}
                                 transformDataFunction={transformDataForTableByYear}
                                 standardizeTypeFunction={standardizedTypeExpensesBasicEducationFundeb}
                                 tableMapping={mapExpensesBasicEducationFundeb}
                                 tableName="Despesas com profissionais da educação básica com o Fundef/Fundeb"
                                 keyTable={key}
-                                groupType={groupType}
+                                groupType={uiGroupType}
                               anoInicial={filters.anoInicial}
                               anoFinal={filters.anoFinal}
                               nomeMunicipio={filters.nomeMunicipio}
@@ -1578,13 +1637,13 @@ function RevenueTableContainer() {
                             <div style={{ marginTop: "1rem" }}>
                               <RevenueTable
                                 filtrosAplicados={filters}
-                                data={apiData[key]}
+                                data={displayApiData[key]}
                                 transformDataFunction={transformDataForTableByYear}
                                 standardizeTypeFunction={standardizedTypeAreasActivityExpense}
                                 tableMapping={mapAreasActivityExpense}
                                 tableName="Despesas em MDE por área de atuação"
                                 keyTable={key}
-                                groupType={groupType}
+                                groupType={uiGroupType}
                               anoInicial={filters.anoInicial}
                               anoFinal={filters.anoFinal}
                               nomeMunicipio={filters.nomeMunicipio}
@@ -1595,13 +1654,13 @@ function RevenueTableContainer() {
                             <div style={{ marginTop: "1rem" }}>
                               <RevenueTable
                                 filtrosAplicados={filters}
-                                data={apiData[key]}
+                                data={displayApiData[key]}
                                 transformDataFunction={transformDataForTableByYear}
                                 standardizeTypeFunction={standardizedTypeBasicEducationMinimalPotential}
                                 tableMapping={mapBasicEducationMinimalPotential}
                                 tableName="Receita Potencial Mínima vinculada à Educação Básica"
                                 keyTable={key}
-                                groupType={groupType}
+                                groupType={uiGroupType}
                               anoInicial={filters.anoInicial}
                               anoFinal={filters.anoFinal}
                               nomeMunicipio={filters.nomeMunicipio}
@@ -1612,13 +1671,13 @@ function RevenueTableContainer() {
                             <div style={{ marginTop: "1rem" }}>
                               <RevenueTable
                                 filtrosAplicados={filters}
-                                data={apiData[key]}
+                                data={displayApiData[key]}
                                 transformDataFunction={transformDataForTableByYear}
                                 standardizeTypeFunction={standardizedTypeComplementaryProtocol}
                                 tableMapping={mapComplementaryProtocol}
                                 tableName="Protocolo Complementar"
                                 keyTable={key}
-                                groupType={groupType}
+                                groupType={uiGroupType}
                               anoInicial={filters.anoInicial}
                               anoFinal={filters.anoFinal}
                               nomeMunicipio={filters.nomeMunicipio}
@@ -1630,23 +1689,16 @@ function RevenueTableContainer() {
                 </>
               )}
 
-              <CustomPagination
-                page={page}
-                totalPages={totalPages}
-                limit={limit}
-                onPageChange={handlePageChange}
-                onLimitChange={handleLimitChange}
-              />
+              {!shouldShowAllCitiesSingleYear && (
+                <CustomPagination
+                  page={page}
+                  totalPages={totalPages}
+                  limit={limit}
+                  onPageChange={handlePageChange}
+                  onLimitChange={handleLimitChange}
+                />
+              )}
 
-              {/* Ficha Técnica */}
-              <Box sx={{ marginTop: 6, padding: 3, backgroundColor: '#f5f5f5', borderRadius: '8px', border: '1px solid #e0e0e0' }}>
-                <Typography variant="h6" sx={{ marginBottom: 2, fontWeight: 'bold', color: '#333' }}>
-                  Ficha Técnica
-                </Typography>
-                <Typography variant="body2" sx={{ color: '#666', lineHeight: 1.6 }}>
-                  Informações sobre a metodologia, fonte de dados, periodicidade e outras informações técnicas estarão disponíveis aqui.
-                </Typography>
-              </Box>
               </div>
             </>
           )}

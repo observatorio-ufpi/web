@@ -6,22 +6,27 @@ import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import { FaFileExcel, FaDownload, FaUndo } from 'react-icons/fa';
 import Button from '@mui/material/Button';
-import { Box } from '@mui/material';
+import { Box, Tooltip as MuiTooltip } from '@mui/material';
 import '../../../../../../style/Buttons.css';
+import { formatPtBrCurrency, formatPtBrNumber, formatPtBrPercent, parseLooseNumber } from '../../../../../../utils/numberFormatUtils.js';
+import { downloadChartPngWithBackground } from '../../../../../../utils/chartExportUtils.js';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, zoomPlugin);
 
 const BarChart = ({ chartData, title }) => {
   const chartRef = React.useRef(null);
+  const isPercent = Boolean(title && title.includes('%'));
+  const hasData = Boolean(chartData?.labels?.length) && Boolean(chartData?.datasets?.length);
+  const formatValue = (v) => {
+    if (v === null || v === undefined || v === '' || v === '-') return '-';
+    if (isPercent) return formatPtBrPercent(v, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return formatPtBrCurrency(v, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
 
   const exportChart = () => {
     if (chartRef.current) {
-      const base64Image = chartRef.current.toBase64Image();
       const fileName = title && title.trim() ? title.replace(/\s+/g, '_') : 'chart';
-      const link = document.createElement('a');
-      link.href = base64Image;
-      link.download = `${fileName}.png`;
-      link.click();
+      downloadChartPngWithBackground(chartRef.current, fileName, '#ffffff');
     }
   };
 
@@ -51,7 +56,7 @@ const BarChart = ({ chartData, title }) => {
     worksheet.addRow([]);
     
     // Cabeçalhos
-    const headerRow = worksheet.addRow(['Município', 'Ano', 'Valor']);
+    const headerRow = worksheet.addRow(['Município', 'Ano', isPercent ? 'Valor (%)' : 'Valor (R$)']);
     headerRow.font = { bold: true };
     headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFCCCCCC' } };
     headerRow.alignment = { horizontal: 'center' };
@@ -60,7 +65,8 @@ const BarChart = ({ chartData, title }) => {
     chartData.labels.forEach((label, index) => {
       const [ano, municipio] = label.split(' - ');
       const value = chartData.datasets[0].data[index];
-      const numValue = typeof value === 'number' ? value : (parseFloat(String(value).replace(/[.\s]/g, '').replace(',', '.')) || value);
+      const parsed = typeof value === 'number' ? value : parseLooseNumber(value);
+      const numValue = parsed === null ? value : parsed;
       worksheet.addRow([municipio, ano, numValue]);
     });
     
@@ -74,7 +80,7 @@ const BarChart = ({ chartData, title }) => {
     worksheet.getColumn(1).width = 30;
     worksheet.getColumn(2).width = 10;
     worksheet.getColumn(3).width = 18;
-    worksheet.getColumn(3).numFmt = '#,##0.00';
+    worksheet.getColumn(3).numFmt = isPercent ? '#,##0.00' : '"R$" #,##0.00';
     worksheet.getColumn(3).alignment = { horizontal: 'right' };
     
     // Salvar arquivo
@@ -112,7 +118,16 @@ const BarChart = ({ chartData, title }) => {
                 displayColors: true,
                 titleFont: { size: 13, weight: 'bold' },
                 bodyFont: { size: 12 },
-                padding: 12
+                padding: 12,
+                callbacks: {
+                  label: function(context) {
+                    const value = context.parsed.y;
+                    const formatted = isPercent
+                      ? formatPtBrPercent(value, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                      : formatPtBrCurrency(value, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                    return `${context.dataset.label}: ${formatted}`;
+                  }
+                }
               },
               zoom: {
                 pan: { enabled: true, mode: 'xy', threshold: 10, modifierKey: 'ctrl' },
@@ -131,13 +146,18 @@ const BarChart = ({ chartData, title }) => {
                 border: { display: true, color: '#ddd' }
               },
               y: {
-                title: { display: true, text: 'Valor', font: { size: 12, weight: 'bold', family: 'Roboto, sans-serif' }, color: '#333' },
+                title: { display: true, text: isPercent ? 'Valor (%)' : 'Valor (R$)', font: { size: 12, weight: 'bold', family: 'Roboto, sans-serif' }, color: '#333' },
                 beginAtZero: true,
                 grid: { display: true, color: 'rgba(0, 0, 0, 0.05)', lineWidth: 0.5 },
                 ticks: {
                   font: { size: 11, family: 'Roboto, sans-serif' },
                   color: '#666',
-                  callback: function(value) { return typeof value === 'number' ? value.toLocaleString('pt-BR') : value; }
+                  callback: function(value) {
+                    if (typeof value !== 'number') return value;
+                    return isPercent
+                      ? `${formatPtBrNumber(value, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}%`
+                      : formatPtBrCurrency(value, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+                  }
                 },
                 border: { display: true, color: '#ddd' }
               },
@@ -157,9 +177,30 @@ const BarChart = ({ chartData, title }) => {
         />
       </Box>
       <Box sx={{ display: 'flex', justifyContent: 'flex-start', gap: 2, marginTop: 3, flexWrap: 'wrap' }}>
-        <Button variant="contained" color="primary" onClick={downloadTableData} startIcon={<FaFileExcel />} className="action-button" size="small">
-          <span className="button-text">Baixar Tabela</span>
-        </Button>
+        <MuiTooltip title="Exportar para Excel">
+          <span>
+            <Button
+              variant="contained"
+              color="success"
+              onClick={downloadTableData}
+              startIcon={<FaFileExcel />}
+              className="action-button"
+              disabled={!hasData}
+              sx={{
+                minWidth: '120px',
+                '@media (max-width: 600px)': {
+                  minWidth: '40px',
+                  padding: '6px !important',
+                  '& .MuiButton-startIcon': { margin: 0 },
+                  '& .button-text': { display: 'none' },
+                  '& svg': { fontSize: '20px' },
+                },
+              }}
+            >
+              <span className="button-text">Excel</span>
+            </Button>
+          </span>
+        </MuiTooltip>
         <Button variant="contained" color="secondary" onClick={exportChart} startIcon={<FaDownload />} className="action-button" size="small">
           <span className="button-text">Baixar Gráfico</span>
         </Button>
@@ -175,7 +216,7 @@ const BarChart = ({ chartData, title }) => {
               <tr style={{ background: '#f5f5f5' }}>
                 <th style={{ border: '1px solid #ddd', padding: '8px' }}>Município</th>
                 <th style={{ border: '1px solid #ddd', padding: '8px' }}>Ano</th>
-                <th style={{ border: '1px solid #ddd', padding: '8px' }}>Valor</th>
+                <th style={{ border: '1px solid #ddd', padding: '8px' }}>{isPercent ? 'Valor (%)' : 'Valor (R$)'}</th>
               </tr>
             </thead>
             <tbody>
@@ -211,7 +252,7 @@ const BarChart = ({ chartData, title }) => {
                     <tr key={idx}>
                       <td style={{ border: '1px solid #ddd', padding: '8px' }}>{municipio}</td>
                       <td style={{ border: '1px solid #ddd', padding: '8px' }}>{ano}</td>
-                      <td style={{ border: '1px solid #ddd', padding: '8px' }}>{typeof valor === 'number' ? valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : valor}</td>
+                      <td style={{ border: '1px solid #ddd', padding: '8px' }}>{formatValue(valor)}</td>
                     </tr>
                   );
                 });

@@ -6,6 +6,7 @@ import DataTable from './DataTable.jsx';
 import { Loading } from '../../../ui';
 import { useEducationFilters } from '../../../../contexts/EducationFilterContext';
 import { municipios, Regioes, FaixaPopulacional } from '../../../../utils/citiesMapping';
+import TechnicalSheetButton from '../../../common/TechnicalSheetButton.jsx';
 
 function FilterComponent() {
   const filters = useEducationFilters();
@@ -329,14 +330,8 @@ function FilterComponent() {
                 fetchAllDataConfig={null}
               />
 
-              {/* Ficha Técnica */}
-              <Box sx={{ marginTop: 6, padding: 3, backgroundColor: '#f5f5f5', borderRadius: '8px', border: '1px solid #e0e0e0' }}>
-                <Typography variant="h6" sx={{ marginBottom: 2, fontWeight: 'bold', color: '#333' }}>
-                  Ficha Técnica
-                </Typography>
-                <Typography variant="body2" sx={{ color: '#666', lineHeight: 1.6 }}>
-                  Informações sobre a metodologia, fonte de dados, periodicidade e outras informações técnicas estarão disponíveis aqui.
-                </Typography>
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end', marginTop: 2 }}>
+                <TechnicalSheetButton />
               </Box>
             </>
           ) : null}

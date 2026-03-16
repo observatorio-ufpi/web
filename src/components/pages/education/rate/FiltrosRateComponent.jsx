@@ -8,6 +8,7 @@ import '../../../../style/TableFilters.css';
 import ApiRateContainer from './ApiRateComponent.jsx';
 import TableRateComponent from './TableRateComponent.jsx';
 import { Loading } from "../../../ui";
+import TechnicalSheetButton from '../../../common/TechnicalSheetButton.jsx';
 
 function FiltrosRateComponent() {
   const theme = useTheme();
@@ -324,14 +325,8 @@ function FiltrosRateComponent() {
                 title={title}
               />
 
-              {/* Ficha Técnica */}
-              <Box sx={{ marginTop: 6, padding: 3, backgroundColor: '#f5f5f5', borderRadius: '8px', border: '1px solid #e0e0e0' }}>
-                <Typography variant="h6" sx={{ marginBottom: 2, fontWeight: 'bold', color: '#333' }}>
-                  Ficha Técnica
-                </Typography>
-                <Typography variant="body2" sx={{ color: '#666', lineHeight: 1.6 }}>
-                  Informações sobre a metodologia, fonte de dados, periodicidade e outras informações técnicas estarão disponíveis aqui.
-                </Typography>
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end', marginTop: 2 }}>
+                <TechnicalSheetButton />
               </Box>
             </>
           ) : null}

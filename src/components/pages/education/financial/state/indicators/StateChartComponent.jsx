@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import StateBarChart from "./StateBarChart";
 import StateLineChart from "./StateLineChart";
-import * as XLSX from "xlsx";
 import { FaFileExcel, FaDownload } from "react-icons/fa";
 import Button from "@mui/material/Button";
 import FormControlLabel from "@mui/material/FormControlLabel";
