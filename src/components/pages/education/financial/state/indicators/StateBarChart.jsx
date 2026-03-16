@@ -6,22 +6,21 @@ import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import { FaFileExcel, FaDownload, FaUndo } from 'react-icons/fa';
 import Button from '@mui/material/Button';
-import { Box } from '@mui/material';
+import { Box, Tooltip as MuiTooltip } from '@mui/material';
 import '../../../../../../style/Buttons.css';
+import { parseLooseNumber } from '../../../../../../utils/numberFormatUtils.js';
+import { downloadChartPngWithBackground } from '../../../../../../utils/chartExportUtils.js';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, zoomPlugin);
 
 const StateBarChart = ({ chartData, title }) => {
   const chartRef = React.useRef(null);
+  const hasData = Boolean(chartData?.labels?.length) && Boolean(chartData?.datasets?.length);
 
   const exportChart = () => {
     if (chartRef.current) {
-      const base64Image = chartRef.current.toBase64Image();
       const fileName = title && title.trim() ? title.replace(/\s+/g, '_') : 'chart';
-      const link = document.createElement('a');
-      link.href = base64Image;
-      link.download = `${fileName}.png`;
-      link.click();
+      downloadChartPngWithBackground(chartRef.current, fileName, '#ffffff');
     }
   };
 
@@ -65,7 +64,8 @@ const StateBarChart = ({ chartData, title }) => {
       const dataRow = [label];
       chartData.datasets.forEach(dataset => {
         const value = dataset.data[index];
-        dataRow.push(typeof value === 'number' ? value : (parseFloat(String(value).replace(/[.\s]/g, '').replace(',', '.')) || value));
+        const parsed = typeof value === 'number' ? value : parseLooseNumber(value);
+        dataRow.push(parsed === null ? value : parsed);
       });
       worksheet.addRow(dataRow);
     });
@@ -80,7 +80,7 @@ const StateBarChart = ({ chartData, title }) => {
     worksheet.getColumn(1).width = 12;
     for (let i = 2; i <= numCols; i++) {
       worksheet.getColumn(i).width = 18;
-      worksheet.getColumn(i).numFmt = '#,##0.00';
+      worksheet.getColumn(i).numFmt = '"R$" #,##0.00';
       worksheet.getColumn(i).alignment = { horizontal: 'right' };
     }
     
@@ -261,16 +261,31 @@ const StateBarChart = ({ chartData, title }) => {
         marginTop: 3,
         flexWrap: 'wrap'
       }}>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={downloadTableData}
-          startIcon={<FaFileExcel />}
-          className="action-button"
-          size="small"
-        >
-          <span className="button-text">Baixar Tabela</span>
-        </Button>
+        <MuiTooltip title="Exportar para Excel">
+          <span>
+            <Button
+              variant="contained"
+              color="success"
+              onClick={downloadTableData}
+              startIcon={<FaFileExcel />}
+              className="action-button"
+              size="small"
+              disabled={!hasData}
+              sx={{
+                minWidth: '120px',
+                '@media (max-width: 600px)': {
+                  minWidth: '40px',
+                  padding: '6px !important',
+                  '& .MuiButton-startIcon': { margin: 0 },
+                  '& .button-text': { display: 'none' },
+                  '& svg': { fontSize: '20px' },
+                },
+              }}
+            >
+              <span className="button-text">Excel</span>
+            </Button>
+          </span>
+        </MuiTooltip>
         <Button
           variant="contained"
           color="secondary"

@@ -20,6 +20,7 @@ import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import { fetchIPCAData, calculateMonetaryCorrection, getMaxIPCADate } from '../../../../../utils/bacenApi.jsx';
 import '../../../../../style/Buttons.css';
+import TechnicalSheetButton from '../../../../common/TechnicalSheetButton.jsx';
 
 const theme = createTheme({
   palette: {
@@ -521,7 +522,7 @@ const StateRevenueTable = ({ csvData, tableName, startYear, endYear, enableMonet
             </Table>
           </TableContainer>
         </Paper>
-        <div style={{ display: 'flex', gap: '10px', marginBottom: '10px', marginTop: '10px' }}>
+        <div style={{ display: 'flex', gap: '10px', marginBottom: '10px', marginTop: '10px', flexWrap: 'wrap' }}>
           <Button
             variant="contained"
             color="success"
@@ -540,6 +541,7 @@ const StateRevenueTable = ({ csvData, tableName, startYear, endYear, enableMonet
           >
             <span className="button-text">PDF</span>
           </Button>
+          <TechnicalSheetButton />
         </div>
         
         {/* Fonte dos dados */}

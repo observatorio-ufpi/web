@@ -13,6 +13,7 @@ import { Loading } from "../../../../../ui";
 import { Typography, Button, Box } from "@mui/material";
 import { loadIndicatorData, stateIndicatorOptions } from "../../../../../../services/stateDataService";
 import YearRangeFilter from "../../../../../helpers/YearRangeFilter.jsx";
+import TechnicalSheetButton from "../../../../../common/TechnicalSheetButton.jsx";
 
 
 
@@ -113,6 +114,9 @@ function StateIndicatorsContainer() {
 
         {/* Área de dados - sempre visível */}
         <div className="data-section">
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 2 }}>
+            <TechnicalSheetButton />
+          </Box>
           {loading && <Loading />}
 
           {!loading && error && (
@@ -225,15 +229,6 @@ function StateIndicatorsContainer() {
                 <StateRPEBCharts data={apiData} />
               )}
 
-              {/* Ficha Técnica */}
-              <Box sx={{ marginTop: 6, padding: 3, backgroundColor: '#f5f5f5', borderRadius: '8px', border: '1px solid #e0e0e0' }}>
-                <Typography variant="h6" sx={{ marginBottom: 2, fontWeight: 'bold', color: '#333' }}>
-                  Ficha Técnica
-                </Typography>
-                <Typography variant="body2" sx={{ color: '#666', lineHeight: 1.6 }}>
-                  Informações sobre a metodologia, fonte de dados, periodicidade e outras informações técnicas estarão disponíveis aqui.
-                </Typography>
-              </Box>
             </>
           )}
         </div>

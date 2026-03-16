@@ -37,6 +37,7 @@ import { Loading } from "../../../../../ui";
 import { Typography, Button, Box } from "@mui/material";
 import { ExpandMore, ExpandLess } from '@mui/icons-material';
 import { municipios } from "../../../../../../utils/municipios.mapping";
+import TechnicalSheetButton from "../../../../../common/TechnicalSheetButton.jsx";
 
 // Componente de "Em Construção"
 const UnderConstruction = ({ indicatorName }) => (
@@ -285,6 +286,10 @@ function ChartContainer() {
     anoInicial: 2007,
     anoFinal: 2024,
   });
+
+  const shouldShowAllCitiesSingleYear =
+    filters.anoInicial === filters.anoFinal && !selectedMunicipio;
+  const allCitiesLimit = 10000;
 
   // Verificar se o subindicador está implementado
   const isSubIndicatorImplemented = (subIndicator) => {
@@ -925,7 +930,10 @@ function ChartContainer() {
       anoInicial: filters.anoInicial,
       anoFinal: filters.anoFinal,
       page: 1,
-      limit: limit,
+      limit:
+        filters.anoInicial === filters.anoFinal && !filters.codigoMunicipio
+          ? allCitiesLimit
+          : limit,
     }, indicatorToUse);
   };
 
@@ -951,6 +959,7 @@ function ChartContainer() {
   }, []);
 
   const handlePageChange = (event, newPage) => {
+    if (shouldShowAllCitiesSingleYear) return;
     setPage(newPage);
     setLoading(true);
     fetchTableData({
@@ -967,6 +976,7 @@ function ChartContainer() {
   };
 
   const handleLimitChange = (event) => {
+    if (shouldShowAllCitiesSingleYear) return;
     const newLimit = parseInt(event.target.value);
     setLimit(newLimit);
     setPage(1);
@@ -991,6 +1001,9 @@ function ChartContainer() {
 
         {/* Área de dados - sempre visível */}
         <div className="data-section">
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 2 }}>
+            <TechnicalSheetButton />
+          </Box>
           {loading && <Loading />}
 
           {/* Se não está implementado, mostrar "Em Construção" mesmo que tenha erro */}
@@ -1234,23 +1247,15 @@ function ChartContainer() {
                 </>
               )}
 
-              <CustomPagination
-                page={page}
-                totalPages={totalPages}
-                limit={limit}
-                onPageChange={handlePageChange}
-                onLimitChange={handleLimitChange}
-              />
-
-              {/* Ficha Técnica */}
-              <Box sx={{ marginTop: 6, padding: 3, backgroundColor: '#f5f5f5', borderRadius: '8px', border: '1px solid #e0e0e0' }}>
-                <Typography variant="h6" sx={{ marginBottom: 2, fontWeight: 'bold', color: '#333' }}>
-                  Ficha Técnica
-                </Typography>
-                <Typography variant="body2" sx={{ color: '#666', lineHeight: 1.6 }}>
-                  Informações sobre a metodologia, fonte de dados, periodicidade e outras informações técnicas estarão disponíveis aqui.
-                </Typography>
-              </Box>
+              {!shouldShowAllCitiesSingleYear && (
+                <CustomPagination
+                  page={page}
+                  totalPages={totalPages}
+                  limit={limit}
+                  onPageChange={handlePageChange}
+                  onLimitChange={handleLimitChange}
+                />
+              )}
             </>
           )}
         </div>
