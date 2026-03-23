@@ -17,6 +17,47 @@ const BarChart = ({ chartData, title }) => {
   const chartRef = React.useRef(null);
   const isPercent = Boolean(title && title.includes('%'));
   const hasData = Boolean(chartData?.labels?.length) && Boolean(chartData?.datasets?.length);
+
+  const parsedRows = React.useMemo(() => {
+    const rows = [];
+    const years = new Set();
+
+    (chartData?.labels || []).forEach((label, idx) => {
+      let municipio = '';
+      let ano = '';
+
+      if (typeof label === 'string') {
+        if (label.includes(' - ')) {
+          const parts = label.split(' - ');
+          ano = parts[0];
+          municipio = parts.slice(1).join(' - ');
+        } else {
+          const match = label.match(/\d{4}/);
+          if (match) {
+            ano = match[0];
+            municipio = label.replace(match[0], '').trim();
+          } else {
+            municipio = label;
+          }
+        }
+      }
+
+      if (ano) years.add(String(ano));
+
+      rows.push({
+        municipio,
+        ano,
+        valor: chartData?.datasets?.[0]?.data?.[idx],
+      });
+    });
+
+    const uniqueYears = Array.from(years);
+    const singleYear = uniqueYears.length === 1 ? uniqueYears[0] : null;
+
+    return { rows, singleYear };
+  }, [chartData]);
+
+  const hideYearColumn = Boolean(parsedRows.singleYear);
   const formatValue = (v) => {
     if (v === null || v === undefined || v === '' || v === '-') return '-';
     if (isPercent) return formatPtBrPercent(v, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -48,7 +89,8 @@ const BarChart = ({ chartData, title }) => {
     
     // Adicionar título
     worksheet.addRow([title]);
-    worksheet.mergeCells(1, 1, 1, 3);
+    const numCols = hideYearColumn ? 2 : 3;
+    worksheet.mergeCells(1, 1, 1, numCols);
     worksheet.getCell('A1').font = { bold: true, size: 14 };
     worksheet.getCell('A1').alignment = { horizontal: 'center' };
     
@@ -75,13 +117,21 @@ const BarChart = ({ chartData, title }) => {
     
     // Fonte
     worksheet.addRow([fonte]);
+
+    if (hideYearColumn) {
+      // Quando a pesquisa Ã© para um Ãºnico ano, remover a coluna "Ano".
+      worksheet.spliceColumns(2, 1);
+    }
     
     // Configurar largura das colunas
     worksheet.getColumn(1).width = 30;
-    worksheet.getColumn(2).width = 10;
-    worksheet.getColumn(3).width = 18;
-    worksheet.getColumn(3).numFmt = isPercent ? '#,##0.00' : '"R$" #,##0.00';
-    worksheet.getColumn(3).alignment = { horizontal: 'right' };
+    if (!hideYearColumn) {
+      worksheet.getColumn(2).width = 10;
+    }
+    const valueCol = hideYearColumn ? 2 : 3;
+    worksheet.getColumn(valueCol).width = 18;
+    worksheet.getColumn(valueCol).numFmt = isPercent ? '#,##0.00' : '"R$" #,##0.00';
+    worksheet.getColumn(valueCol).alignment = { horizontal: 'right' };
     
     // Salvar arquivo
     const buffer = await workbook.xlsx.writeBuffer();
@@ -215,7 +265,7 @@ const BarChart = ({ chartData, title }) => {
             <thead>
               <tr style={{ background: '#f5f5f5' }}>
                 <th style={{ border: '1px solid #ddd', padding: '8px' }}>Município</th>
-                <th style={{ border: '1px solid #ddd', padding: '8px' }}>Ano</th>
+                {!hideYearColumn && <th style={{ border: '1px solid #ddd', padding: '8px' }}>Ano</th>}
                 <th style={{ border: '1px solid #ddd', padding: '8px' }}>{isPercent ? 'Valor (%)' : 'Valor (R$)'}</th>
               </tr>
             </thead>
@@ -227,7 +277,7 @@ const BarChart = ({ chartData, title }) => {
                 if (allNull) {
                   return (
                     <tr>
-                      <td colSpan={3} style={{ textAlign: 'center', color: '#d9534f', padding: '16px', fontWeight: 'bold' }}>
+                      <td colSpan={hideYearColumn ? 2 : 3} style={{ textAlign: 'center', color: '#d9534f', padding: '16px', fontWeight: 'bold' }}>
                         Nenhum dado disponível para o município selecionado.
                       </td>
                     </tr>
@@ -251,7 +301,7 @@ const BarChart = ({ chartData, title }) => {
                   return (
                     <tr key={idx}>
                       <td style={{ border: '1px solid #ddd', padding: '8px' }}>{municipio}</td>
-                      <td style={{ border: '1px solid #ddd', padding: '8px' }}>{ano}</td>
+                      {!hideYearColumn && <td style={{ border: '1px solid #ddd', padding: '8px' }}>{ano}</td>}
                       <td style={{ border: '1px solid #ddd', padding: '8px' }}>{formatValue(valor)}</td>
                     </tr>
                   );

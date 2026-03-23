@@ -381,6 +381,20 @@ const StateRevenueTable = ({ csvData, tableName, startYear, endYear, enableMonet
       ];
     });
 
+    // Evita erro quando nÃ£o hÃ¡ linhas (doc.lastAutoTable pode nÃ£o existir).
+    if (!dataForTable || dataForTable.length === 0) {
+      doc.setFontSize(14);
+      doc.setFont(undefined, 'bold');
+      doc.text(tituloCompleto, doc.internal.pageSize.width / 2, 15, { align: 'center' });
+      doc.setFontSize(11);
+      doc.setFont(undefined, 'normal');
+      doc.text("Nenhum dado encontrado para os filtros selecionados.", 14, 30);
+      doc.setFontSize(9);
+      doc.text(fonte, 14, 45);
+      doc.save(`${tableName}_${startYear}-${endYear}.pdf`);
+      return;
+    }
+
     // Criar estilos de coluna para alinhar números à direita (todas exceto a primeira coluna)
     const columnStyles = {};
     for (let i = 1; i < headers.length; i++) {
@@ -422,7 +436,7 @@ const StateRevenueTable = ({ csvData, tableName, startYear, endYear, enableMonet
     });
     
     // Adicionar fonte no final
-    const finalY = doc.lastAutoTable.finalY || 25;
+    const finalY = doc.lastAutoTable?.finalY ?? 25;
     doc.setFontSize(9);
     doc.setFont(undefined, 'normal');
     doc.text(fonte, 14, finalY + 10);
