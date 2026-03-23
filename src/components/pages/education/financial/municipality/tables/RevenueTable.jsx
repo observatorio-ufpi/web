@@ -314,14 +314,14 @@ const RevenueTable = ({
       worksheet.addRow([]);
       
       // Cabeçalhos
-      const headerRow = worksheet.addRow(["Município (IBGE)", ...types]);
+      const headerRow = worksheet.addRow(["Município", ...types]);
       headerRow.font = { bold: true };
       headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFCCCCCC' } };
       headerRow.alignment = { horizontal: 'center' };
       
       // Dados
       rows.forEach((row) => {
-        const dataRow = [`${municipios[row]?.nomeMunicipio || row} (${row})`];
+        const dataRow = [`${municipios[row]?.nomeMunicipio || row}`];
         types.forEach((type) => {
           if (finalDisplayData[type] && finalDisplayData[type][row] !== undefined) {
             const value = finalDisplayData[type][row];
@@ -394,14 +394,14 @@ const RevenueTable = ({
 
     const doc = new jsPDF();
     const headers = [
-      groupType === "ano" || groupType === "desagregado" ? "Município (IBGE)" : "Ano",
+      groupType === "ano" || groupType === "desagregado" ? "Município" : "Ano",
       ...types,
     ];
 
     const dataForTable = rows.map((row) => {
       return [
         groupType === "ano" || groupType === "desagregado"
-          ? `${municipios[row]?.nomeMunicipio || row} (${row})`
+          ? `${municipios[row]?.nomeMunicipio || row}`
           : `${row}`,
         ...types.map((type) => {
           if (
@@ -415,6 +415,20 @@ const RevenueTable = ({
         }),
       ];
     });
+
+    // Evita erro quando nÃ£o hÃ¡ linhas (doc.lastAutoTable pode nÃ£o existir).
+    if (!dataForTable || dataForTable.length === 0) {
+      doc.setFontSize(14);
+      doc.setFont(undefined, 'bold');
+      doc.text(tituloCompleto, 14, 15);
+      doc.setFontSize(11);
+      doc.setFont(undefined, 'normal');
+      doc.text("Nenhum dado encontrado para os filtros selecionados.", 14, 30);
+      doc.setFontSize(9);
+      doc.text(fonte, 14, 45);
+      doc.save(`${nomeArquivoBase}.pdf`);
+      return;
+    }
 
     // Adicionar título
     doc.setFontSize(14);
@@ -457,7 +471,7 @@ const RevenueTable = ({
     });
 
     // Adicionar fonte no rodapé
-    const finalY = doc.lastAutoTable.finalY || 25;
+    const finalY = doc.lastAutoTable?.finalY ?? 25;
     doc.setFontSize(9);
     doc.setFont(undefined, 'normal');
     doc.text(fonte, 14, finalY + 10);
@@ -574,7 +588,7 @@ const RevenueTable = ({
               <StyledTableHead>
                 <TableRow>
                   <BoldTableCell>
-                    {groupType === "ano" || groupType === "desagregado" ? "Município (IBGE)" : "Ano"}
+                    {groupType === "ano" || groupType === "desagregado" ? "Município" : "Ano"}
                   </BoldTableCell>
                   {types.map((type) => (
                     <BoldTableCell key={type} align="center">
@@ -591,7 +605,7 @@ const RevenueTable = ({
                   >
                     <BoldTableCell component="th" scope="row">
                       {groupType === "ano" || groupType === "desagregado"
-                        ? `${municipios[row]?.nomeMunicipio || row} (${row})`
+                        ? `${municipios[row]?.nomeMunicipio || row}`
                         : `${row}`}
                     </BoldTableCell>
                     {types.map((type) => (

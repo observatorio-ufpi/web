@@ -25,9 +25,9 @@ const EducationSidebar = () => {
       {/* Botão para abrir/fechar a sidebar */}
       <button
         onClick={toggleSidebar}
-        className="fixed top-4 left-4 z-50 p-2 bg-gray-800 text-white rounded-lg shadow-lg hover:bg-gray-700 transition-colors"
+        className={`fixed top-4 left-4 z-50 p-2 bg-gray-800 text-white rounded-lg shadow-lg hover:bg-gray-700 transition-colors ${isOpen ? 'hidden' : ''}`}
       >
-        {isOpen ? <FaTimes /> : <FaBars />}
+        <FaBars />
       </button>
 
       {/* Sidebar */}
@@ -41,8 +41,15 @@ const EducationSidebar = () => {
         }}
       >
         {/* Header da Sidebar */}
-        <div className="p-6 md:p-6 lg:p-6 xl:p-6 2xl:p-6 p-3 sm:p-4 md:p-6 border-b border-gray-200">
-          <div className="flex items-center mt-8 mb-4">
+        <div className="relative p-6 md:p-6 lg:p-6 xl:p-6 2xl:p-6 p-3 sm:p-4 md:p-6 pt-12 border-b border-gray-200">
+          <button
+            onClick={toggleSidebar}
+            className="absolute top-3 right-3 z-50 p-2 bg-gray-800 text-white rounded-lg shadow-lg hover:bg-gray-700 transition-colors"
+            aria-label="Fechar sidebar"
+          >
+            <FaTimes />
+          </button>
+          <div className="flex items-center mt-0 mb-4">
             <Link to="/" className="flex items-center">
               <img
                 src="/images/logos/logo-opepi-v2.png"

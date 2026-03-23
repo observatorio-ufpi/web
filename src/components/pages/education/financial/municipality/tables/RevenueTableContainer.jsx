@@ -690,9 +690,9 @@ function RevenueTableContainer() {
           creator: "OPEPI/UFPI",
           sheetName: "Receitas",
           title: titulo,
-          headers: ["Município (IBGE)", ...types],
+          headers: ["Município", ...types],
           rows: rows.map((row) => [
-            `${municipios[row]?.nomeMunicipio || row} (${row})`,
+            `${municipios[row]?.nomeMunicipio || row}`,
             ...types.map((type) =>
               typeToRowToValue[type] &&
               typeToRowToValue[type][row] !== undefined
@@ -725,9 +725,9 @@ function RevenueTableContainer() {
         creator: "OPEPI/UFPI",
         sheetName: "Receitas",
         title: titulo,
-        headers: ["Município (IBGE)", ...types],
+        headers: ["Município", ...types],
         rows: rows.map((row) => [
-          `${municipios[row]?.nomeMunicipio || row} (${row})`,
+          `${municipios[row]?.nomeMunicipio || row}`,
           ...types.map((type) =>
             typeToRowToValue[type] && typeToRowToValue[type][row] !== undefined
               ? typeToRowToValue[type][row]
@@ -909,7 +909,7 @@ function RevenueTableContainer() {
       });
     } else if (effectiveGroupType === "ano") {
       // Consolidar todos os anos em uma única tabela
-      allData.push(["Ano", "Município (IBGE)", ...types]);
+      allData.push(["Ano", "Município", ...types]);
       
       Object.keys(allApiData).forEach((year) => {
         if (!hasAnyRecordDeep(allApiData[year])) return;
@@ -922,7 +922,7 @@ function RevenueTableContainer() {
         rows.forEach((row) => {
           allData.push([
             year,
-            `${municipios[row]?.nomeMunicipio || row} (${row})`,
+            `${municipios[row]?.nomeMunicipio || row}`,
             ...types.map((type) =>
               typeToRowToValue[type] && typeToRowToValue[type][row] !== undefined
                 ? typeToRowToValue[type][row]
@@ -935,10 +935,10 @@ function RevenueTableContainer() {
       // Para dados desagregados, mesma estrutura
       const { rows, typeToRowToValue } = transformByAno(allApiData, standardize);
       
-      allData.push(["Município (IBGE)", ...types]);
+      allData.push(["Município", ...types]);
       rows.forEach((row) => {
         allData.push([
-          `${municipios[row]?.nomeMunicipio || row} (${row})`,
+          `${municipios[row]?.nomeMunicipio || row}`,
           ...types.map((type) =>
             typeToRowToValue[type] && typeToRowToValue[type][row] !== undefined
               ? typeToRowToValue[type][row]
