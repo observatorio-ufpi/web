@@ -1,3 +1,5 @@
+import { applyLocalDataOverrides } from './localApiOverrides';
+
 // apiService.js
 const endpoints = {
   ownRevenues: import.meta.env.VITE_API_PUBLIC_URL + "/researches/mot-revenue",
@@ -150,7 +152,8 @@ export const fetchData = async (table, groupType, filters) => {
       throw new Error('Network response was not ok');
     }
 
-    return await response.json();
+    const data = await response.json();
+    return applyLocalDataOverrides(table, groupType, filters, data);
   } catch (error) {
     console.error('Error fetching data:', error);
     throw error;
