@@ -6,8 +6,7 @@ import { useStateData } from '../../../../../hooks/useStateData.jsx';
 import { useTheme } from '@mui/material/styles';
 import { Typography, Box } from '@mui/material';
 import { Select } from '../../../../ui';
-import '../../../../../style/RevenueTableContainer.css';
-import { Loading } from "../../../../ui";
+import { getStateTableMapping } from '../../../../../utils/tablesMapping.jsx';
 
 const StateRevenueTableContainer = () => {
   const theme = useTheme();
@@ -134,6 +133,7 @@ const StateRevenueTableContainer = () => {
                 startYear={startYear}
                 endYear={endYear}
                 enableMonetaryCorrection={true}
+                tableMapping={getStateTableMapping(selectedTable)}
               />
             </div>
 

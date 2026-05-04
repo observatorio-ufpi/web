@@ -10,7 +10,7 @@ import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import { ThemeProvider, createTheme, styled, useTheme } from "@mui/material/styles";
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import { municipios, Regioes, FaixaPopulacional } from "../../../../../../utils/municipios.mapping";
@@ -19,8 +19,9 @@ import Switch from "@mui/material/Switch";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import { Box, Typography, CircularProgress } from "@mui/material";
+import { Box, Typography, CircularProgress, Tooltip, IconButton } from "@mui/material";
 import ptBR from "date-fns/locale/pt-BR";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import {
   fetchIPCAData,
   calculateMonetaryCorrection,
@@ -79,6 +80,22 @@ const RevenueTable = ({
   const [targetDate, setTargetDate] = useState(new Date());
   const [correctedData, setCorrectedData] = useState(null);
   const [maxDate, setMaxDate] = useState(null);
+  const didLogMappingRef = useRef(false);
+
+  useEffect(() => {
+    if (didLogMappingRef.current) return;
+    didLogMappingRef.current = true;
+
+    if (!tableMapping || typeof tableMapping !== "object") return;
+
+    const keys = Object.keys(tableMapping);
+    if (keys.length === 0) return;
+
+    const header = `[OPEPI] Mapeamento de cÃ¡lculo da tabela: ${tableName || "SemNome"} | ${keyTable || "SemKey"}`;
+    console.log(header);
+    console.log(JSON.stringify(tableMapping, null, 2));
+    console.log("[OPEPI] Fim do mapeamento");
+  }, [tableMapping, tableName, keyTable]);
 
   // Usar useMemo para estabilizar os dados processados
   const { rows, typeToRowToValue, types } = useMemo(() => {
@@ -592,7 +609,28 @@ const RevenueTable = ({
                   </BoldTableCell>
                   {types.map((type) => (
                     <BoldTableCell key={type} align="center">
-                      {type}
+                      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.5 }}>
+                        <span>{type}</span>
+                        {Array.isArray(tableMapping?.[type]) && tableMapping[type].length > 0 && (
+                          <Tooltip
+                            placement="top"
+                            title={
+                              <Box sx={{ maxWidth: 360, p: 0.5 }}>
+                                <Typography sx={{ fontSize: 12, fontWeight: 700, mb: 0.5 }}>
+                                  Usado no cÃ¡lculo desta coluna:
+                                </Typography>
+                                <Typography sx={{ fontSize: 12 }}>
+                                  {tableMapping[type].join(", ")}
+                                </Typography>
+                              </Box>
+                            }
+                          >
+                            <IconButton size="small" sx={{ color: "#333" }} aria-label={`Info ${type}`}>
+                              <InfoOutlinedIcon fontSize="inherit" />
+                            </IconButton>
+                          </Tooltip>
+                        )}
+                      </Box>
                     </BoldTableCell>
                   ))}
                 </TableRow>
