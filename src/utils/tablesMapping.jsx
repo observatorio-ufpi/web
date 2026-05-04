@@ -242,3 +242,121 @@ export const standardizedTypeAreasActivityExpense = (type) => standardizeType(ty
 export const standardizedTypeBasicEducationMinimalPotential = (type) => standardizeType(type, mapBasicEducationMinimalPotential)
 export const standardizedTypeComplementaryProtocol = (type) => standardizeType(type, mapComplementaryProtocol)
 export const standardizedTypeAllTables = (type) => standardizeType(type, mapAllTables)
+
+// Mapeamentos para tabelas estaduais
+export const mapStateTable1 = {
+  "ICMS": ["ICMS"],
+  "IPVA": ["IPVA"],
+  "ITCD": ["ITCD"],
+  "Total de Receitas de Impostos Próprios": ["TOTAL_IMPOSTOS_PROPRIOS"]
+};
+
+export const mapStateTable2 = {
+  "ICMS": ["ICMS_LIQUIDO"],
+  "IPVA": ["IPVA_LIQUIDO"],
+  "ITCD": ["ITCD_LIQUIDO"],
+  "Total de Receitas Líquidas de Impostos Próprios": ["TOTAL_IMPOSTOS_PROPRIOS_LIQUIDOS"]
+};
+
+export const mapStateTable3 = {
+  "Cota-parte ICMS": ["COTA_PARTE_ICMS"],
+  "Cota-parte IPVA": ["COTA_PARTE_IPVA"],
+  "Cota-parte ITR": ["COTA_PARTE_ITR"],
+  "Cota-parte IPI-Exportação": ["COTA_PARTE_IPI_EXPORTACAO"],
+  "Cota-parte IOF-Ouro": ["COTA_PARTE_IOF_OURO"],
+  "ICMS Desoneração LC 87/96": ["ICMS_DESONERACAO"],
+  "Total de Transferências Constitucionais": ["TOTAL_TRANSFERENCIAS_CONSTITUCIONAIS"]
+};
+
+export const mapStateTable4 = {
+  "Cota-parte ICMS": ["COTA_PARTE_ICMS_LIQUIDO"],
+  "Cota-parte IPVA": ["COTA_PARTE_IPVA_LIQUIDO"],
+  "Cota-parte ITR": ["COTA_PARTE_ITR_LIQUIDO"],
+  "Cota-parte IPI-Exportação": ["COTA_PARTE_IPI_EXPORTACAO_LIQUIDO"],
+  "Cota-parte IOF-Ouro": ["COTA_PARTE_IOF_OURO_LIQUIDO"],
+  "ICMS Desoneração LC 87/96": ["ICMS_DESONERACAO_LIQUIDO"],
+  "Total de Transferências Constitucionais Líquidas": ["TOTAL_TRANSFERENCIAS_CONSTITUCIONAIS_LIQUIDAS"]
+};
+
+export const mapStateTable5 = {
+  "Receita Líquida de Impostos Próprios": ["TOTAL_IMPOSTOS_PROPRIOS_LIQUIDOS"],
+  "Receita Líquida de Transferências Constitucionais": ["TOTAL_TRANSFERENCIAS_CONSTITUCIONAIS_LIQUIDAS"],
+  "Total de Receitas Líquidas de Impostos e Transferências": ["TOTAL_IMPOSTOS_E_TRANSFERENCIAS_LIQUIDAS"]
+};
+
+export const mapStateTable6 = {
+  "Salário-Educação": ["SALARIO_EDUCACAO"],
+  "PDDE": ["PDDE"],
+  "PNAE": ["PNAE"],
+  "PNATE": ["PNATE"],
+  "Convênios": ["CONVENIOS"],
+  "Operações de Crédito": ["OPERACOES_CREDITO"],
+  "Royalties": ["ROYALTIES"],
+  "Outras Receitas": ["OUTRAS_RECEITAS"],
+  "Total de Receitas Adicionais": ["TOTAL_RECEITAS_ADICIONAIS"]
+};
+
+export const mapStateTable7 = {
+  "Contribuição para Formação do Fundeb": ["CONTRIBUICAO_FUNDEB"],
+  "Receita da Redistribuição Interna do Fundeb": ["REDISTRIBUICAO_INTERNA_FUNDEB"],
+  "Resultado Líquido do Fundeb": ["RESULTADO_LIQUIDO_FUNDEB"],
+  "Complementação da União": ["COMPLEMENTACAO_UNIAO"],
+  "Aplicação Financeira do Fundeb": ["APLICACAO_FINANCEIRA_FUNDEB"],
+  "Total do Fundeb": ["TOTAL_FUNDEB"]
+};
+
+export const mapStateTable8 = {
+  "VAAF": ["VAAF"],
+  "VAAT": ["VAAT"],
+  "VAAR": ["VAAR"],
+  "Total da Complementação do Fundeb": ["TOTAL_COMPLEMENTACAO_FUNDEB"]
+};
+
+export const mapStateTable9 = {
+  "Valor Exigido em MDE": ["VALOR_EXIGIDO_MDE"],
+  "Valor Aplicado em MDE": ["VALOR_APLICADO_MDE"],
+  "Percentual Aplicado em MDE": ["PERCENTUAL_APLICADO_MDE"]
+};
+
+export const mapStateTable10 = {
+  "Despesas com Profissionais da Educação Básica": ["DESPESAS_PROFISSIONAIS_EDUCACAO"],
+  "Percentual Aplicado com Profissionais": ["PERCENTUAL_PROFISSIONAIS"]
+};
+
+export const mapStateTable11 = {
+  "Educação Infantil": ["EDUCACAO_INFANTIL"],
+  "Ensino Fundamental": ["ENSINO_FUNDAMENTAL"],
+  "Ensino Médio": ["ENSINO_MEDIO"],
+  "Educação Especial": ["EDUCACAO_ESPECIAL"],
+  "Educação de Jovens e Adultos": ["EDUCACAO_JOVENS_ADULTOS"],
+  "Ensino Superior": ["ENSINO_SUPERIOR"],
+  "Total de Despesas em MDE": ["TOTAL_MDE"]
+};
+
+export const mapStateTable12 = {
+  "Receita Potencial Mínima (RPEB)": ["RPEB"]
+};
+
+export const mapStateTable13 = {
+  "Protocolo Complementar": ["PROTOCOLO_COMPLEMENTAR"]
+};
+
+// Função para obter o mapeamento baseado na tabela
+export const getStateTableMapping = (tableKey) => {
+  const mappings = {
+    tabela1: mapStateTable1,
+    tabela2: mapStateTable2,
+    tabela3: mapStateTable3,
+    tabela4: mapStateTable4,
+    tabela5: mapStateTable5,
+    tabela6: mapStateTable6,
+    tabela7: mapStateTable7,
+    tabela8: mapStateTable8,
+    tabela9: mapStateTable9,
+    tabela10: mapStateTable10,
+    tabela11: mapStateTable11,
+    tabela12: mapStateTable12,
+    tabela13: mapStateTable13
+  };
+  return mappings[tableKey] || {};
+};
