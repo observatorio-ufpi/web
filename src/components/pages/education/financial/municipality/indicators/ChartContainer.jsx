@@ -24,7 +24,6 @@ import {
   processRpebData,
   processDespesaTotalMdeData,
 } from "../../../../../../utils/processDataCharts";
-import { processFundebParticipationMde } from "../../../../../../utils/processIndicatorsData.jsx";
 import ChartComponent from "./ChartComponent";
 import CustomPagination from "../../../../../helpers/CustomPagination";
 import EducationExpenseCompositionCharts from "./EducationExpenseCompositionCharts";
@@ -139,8 +138,6 @@ const implementedSubIndicators = [
   'razaoTransferenciasImpostos',
   'participacaoFundeb',
   'rpeb',
-  'composicaoRpeb',
-  'participacaoFundebRpeb',
   'aplicacaoMde',
   'aplicacaoFundebProfissionais',
   'aplicacaoVaatInfantil',
@@ -331,10 +328,10 @@ function ChartContainer() {
       'receitasPorMatricula': null, // Em desenvolvimento
       // Capacidade de Financiamento
       'rpeb': 'composicao_rpeb_financiamento',
-      'composicaoRpeb': 'rpebComposition',
+      'composicaoRpeb': null,
       'rpebAlunoAno': null,
       'rpebAlunoMes': null,
-      'participacaoFundebRpeb': 'rpebComposition',
+      'participacaoFundebRpeb': null,
       // Recursos do Fundeb
       'participacaoFundebMde': 'rpebComposition',
       'resultadoLiquidoFundeb': 'rpebComposition',
@@ -1119,18 +1116,6 @@ function ChartContainer() {
                       processDataFunction={processRpebData}
                       title={chartTitle + " - Receita Potencial Mínima Vinculada à Educação Básica (RPEb) [R$]"}
                       data={apiData}
-                    />
-                  )}
-                  {selectedSubIndicator === "composicaoRpeb" && (
-                    <RpebCompositionCharts data={apiData} />
-                  )}
-                  {selectedSubIndicator === "participacaoFundebRpeb" && (
-                    <ChartComponent
-                      key={selectedSubIndicator + JSON.stringify(apiData)}
-                      indicatorType="fundeb_participation_mde"
-                      processDataFunction={processFundebParticipationMde}
-                      title={chartTitle + " - ParticipaÃ§Ã£o do Fundeb na RPEb [%]"}
-                      data={apiData?.fundebParticipationMde}
                     />
                   )}
                 </>

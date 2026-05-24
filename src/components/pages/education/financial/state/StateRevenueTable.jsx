@@ -11,8 +11,7 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import { ThemeProvider, createTheme, styled, useTheme } from '@mui/material/styles';
-import { Box, FormControlLabel, Switch, TextField, Typography, Tooltip, IconButton } from '@mui/material';
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import { Box, FormControlLabel, Switch, TextField, Typography } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
@@ -54,7 +53,7 @@ const CenteredTableCell = styled(TableCell)(({ theme }) => ({
   verticalAlign: 'middle',
 }));
 
-const StateRevenueTable = ({ csvData, tableName, startYear, endYear, enableMonetaryCorrection = false, tableMapping = {} }) => {
+const StateRevenueTable = ({ csvData, tableName, startYear, endYear, enableMonetaryCorrection = false }) => {
   const globalTheme = useTheme();
   const [data, setData] = useState({
     types: [],
@@ -508,28 +507,7 @@ const StateRevenueTable = ({ csvData, tableName, startYear, endYear, enableMonet
                   <BoldTableCell>Ano</BoldTableCell>
                   {data.types.map((type) => (
                     <BoldTableCell key={type} align="right">
-                      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0.5 }}>
-                        <span>{type}</span>
-                        {Array.isArray(tableMapping?.[type]) && tableMapping[type].length > 0 && (
-                          <Tooltip
-                            placement="top"
-                            title={
-                              <Box sx={{ maxWidth: 360, p: 0.5 }}>
-                                <Typography sx={{ fontSize: 12, fontWeight: 700, mb: 0.5 }}>
-                                  Usado no cálculo desta coluna:
-                                </Typography>
-                                <Typography sx={{ fontSize: 12 }}>
-                                  {tableMapping[type].join(", ")}
-                                </Typography>
-                              </Box>
-                            }
-                          >
-                            <IconButton size="small" sx={{ color: "#333" }} aria-label={`Info ${type}`}>
-                              <InfoOutlinedIcon fontSize="inherit" />
-                            </IconButton>
-                          </Tooltip>
-                        )}
-                      </Box>
+                      {type}
                     </BoldTableCell>
                   ))}
                 </TableRow>
