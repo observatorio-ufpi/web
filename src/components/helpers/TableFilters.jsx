@@ -22,6 +22,7 @@ const tableTypeOptions = [
   { value: 'constitutionalLimitMde', label: 'Limite constitucional em MDE no Município' },
   { value: 'expensesBasicEducationFundeb', label: 'Despesas com profissionais da Educação básica do Fundeb' },
   { value: 'basicEducationMinimalPotential', label: 'Receita Potencial Mínima vinculada à Educação Básica (RPEB)' },
+  { value: 'complementaryProtocol', label: 'Protocolo Complementar' },
 ];
 
 // Opções de tipos de tabela para dados estaduais
