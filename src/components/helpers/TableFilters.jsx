@@ -21,6 +21,7 @@ const tableTypeOptions = [
   { value: 'complementationFundebFundef', label: 'Composição da complementação do Fundeb' },
   { value: 'constitutionalLimitMde', label: 'Limite constitucional em MDE no Município' },
   { value: 'expensesBasicEducationFundeb', label: 'Despesas com profissionais da Educação básica do Fundeb' },
+  { value: 'areasActivityExpense', label: 'Despesas em MDE por área de atuação' },
   { value: 'basicEducationMinimalPotential', label: 'Receita Potencial Mínima vinculada à Educação Básica (RPEB)' },
   { value: 'complementaryProtocol', label: 'Protocolo Complementar' },
 ];
