@@ -149,11 +149,28 @@ const EducationV2Sidebar = ({ isOpen, setIsOpen }) => {
   }, [dim1, recortes2D, rangeIndicador]);
 
   const aplicarRecorte = (recorte) => {
+    const recorteAnterior = filters.recorte;
     filters.setRecorte(recorte);
     filters.setEra('');
-    if (recorte) {
+    if (!recorte) return;
+
+    // Primeiro recorte da sessão: usa o alcance completo.
+    // Trocas seguintes (dimensão / cruzamento) preservam o intervalo do
+    // usuário, só recortando para caber no novo alcance.
+    if (!recorteAnterior) {
       filters.setStartYear(recorte.anoMin);
       filters.setEndYear(recorte.anoMax);
+      return;
+    }
+
+    const start = Math.max(filters.startYear, recorte.anoMin);
+    const end = Math.min(filters.endYear, recorte.anoMax);
+    if (start > end) {
+      filters.setStartYear(recorte.anoMin);
+      filters.setEndYear(recorte.anoMax);
+    } else {
+      filters.setStartYear(start);
+      filters.setEndYear(end);
     }
   };
 

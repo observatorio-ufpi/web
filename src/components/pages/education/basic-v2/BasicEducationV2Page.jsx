@@ -52,7 +52,6 @@ const BasicEducationV2Page = () => {
           recorte: filters.recorte.recorte,
           anoInicio: filters.startYear,
           anoFim: filters.endYear,
-          limite: 200000,
         };
 
         if (filters.city) {
