@@ -82,6 +82,42 @@ const EducationSelection = () => {
           </Card>
         </div>
 
+        {/* Card - Educação Básica v2 (nova base educacao_v2, em validação) */}
+        <div 
+          style={{
+            flex: '1 1 300px',
+            maxWidth: '350px',
+            minWidth: '250px'
+          }}
+        >
+          <Card variant="elevated" className="h-full">
+            <Card.Content padding="large" className="flex flex-col items-center text-center justify-between">
+              <FaGraduationCap 
+                style={{ 
+                  color: theme.palette.primary.main,
+                  fontSize: '4rem',
+                  marginBottom: '1.5rem'
+                }}
+              />
+              <Typography variant="h6" component="h2" gutterBottom>
+                Educação Básica v2
+              </Typography>
+              <Typography variant="body2" color="textSecondary">
+                Nova base do Censo Escolar (2007-2024), com cruzamentos de dimensões
+              </Typography>
+              <Button 
+                component={Link} 
+                to="/dados-educacionais/basica-v2" 
+                variant="primary"
+                size="medium"
+                className="mt-4"
+              >
+                Acessar
+              </Button>
+            </Card.Content>
+          </Card>
+        </div>
+
         {/* Card 2 - Censo Escolar */}
         <div 
           style={{

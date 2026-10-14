@@ -22,6 +22,8 @@ import CondicoesOfertaPage from "./components/pages/education/basic/CondicoesOfe
 import HigherEducationPage from "./components/pages/education/higher/HigherEducationPage.jsx";
 import RateIndicatorsPage from "./components/pages/education/rate/RateIndicatorsPage.jsx";
 import EducationLayout from "./components/layouts/EducationLayout.jsx";
+import EducationV2Layout from "./components/layouts/EducationV2Layout.jsx";
+import BasicEducationV2Page from "./components/pages/education/basic-v2/BasicEducationV2Page.jsx";
 import FinancialLayout from "./components/layouts/FinancialLayout.jsx";
 import AppLayout from "./components/layouts/AppLayout.jsx";
 import ScrollToTop from "./components/common/ScrollToTop.jsx";
@@ -86,6 +88,11 @@ function App() {
             <Route path="dados-educacionais/condicoes-de-oferta" element={<CondicoesOfertaPage />} />
             <Route path="dados-educacionais/superior" element={<HigherEducationPage />} />
             <Route path="dados-educacionais/taxas" element={<RateIndicatorsPage />} />
+          </Route>
+
+          {/* Educação Básica v2 (schema educacao_v2) - rota paralela de teste */}
+          <Route path="/" element={<EducationV2Layout />}>
+            <Route path="dados-educacionais/basica-v2" element={<BasicEducationV2Page />} />
           </Route>
 
           {/* Layout da Financeiro (com Sidebar de Categorias) - Rotas aninhadas */}
