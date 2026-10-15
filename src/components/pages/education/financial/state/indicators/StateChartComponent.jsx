@@ -16,6 +16,8 @@ import {
   getCurrentDate,
   getMaxIPCADate,
 } from "../../../../../../utils/bacenApi";
+import { MonetaryCorrectionLabel } from '../../../../../common/MonetaryCorrectionHelp';
+import { cores } from '../../../../../../theme/tokens';
 
 const StateChartComponent = ({
   indicatorType,
@@ -36,32 +38,8 @@ const StateChartComponent = ({
   const [targetDate, setTargetDate] = useState(new Date());
   const [maxDate, setMaxDate] = useState(null);
 
-  const colorPalette = [
-    "#FF6384",
-    "#36A2EB",
-    "#FFCE56",
-    "#4BC0C0",
-    "#9966FF",
-    "#FF9F40",
-    "#FFCD56",
-    "#4D5360",
-    "#00A878",
-    "#FF6B6B",
-    "#B9E769",
-    "#FFA1B5",
-    "#9C27B0",
-    "#607D8B",
-    "#8BC34A",
-    "#795548",
-    "#FFC107",
-    "#3F51B5",
-    "#673AB7",
-    "#009688",
-    "#CDDC39",
-    "#FFC0CB",
-    "#2196F3",
-    "#F44336",
-  ];
+  // Paleta da identidade visual (theme/tokens.js)
+  const colorPalette = cores.seriesEstendida;
 
   // Buscar data máxima disponível do IPCA
   useEffect(() => {
@@ -190,7 +168,7 @@ const StateChartComponent = ({
                   }}
                 />
               }
-              label="Correção Monetária"
+              label={<MonetaryCorrectionLabel />}
               sx={{ marginRight: 0 }}
             />
             {useMonetaryCorrection && (

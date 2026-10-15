@@ -1,4 +1,4 @@
-import React from "react";
+import React, { lazy, Suspense } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -8,28 +8,36 @@ import {
 import { ThemeProvider } from '@mui/material/styles';
 import { CssBaseline } from '@mui/material';
 import Home from "./components/navigation/Home.jsx";
-import QuemSomos from "./components/navigation/QuemSomos.jsx";
-import MunicipalFinancialPage from "./components/pages/education/financial/MunicipalFinancialPage.jsx";
-import StateFinancialPage from "./components/pages/education/financial/StateFinancialPage.jsx";
-import MunicipalIndicatorsPage from "./components/pages/education/financial/MunicipalIndicatorsPage.jsx";
-import StateIndicatorsPage from "./components/pages/education/financial/StateIndicatorsPage.jsx";
-import FinancialDataSelection from "./components/navigation/FinancialDataSelection.jsx";
-import EducationSelection from "./components/navigation/EducationSelection.jsx";
 import Navbar from "./components/common/Navbar.jsx";
 import Footer from "./components/common/Footer.jsx";
-import BasicEducationPage from "./components/pages/education/basic/BasicEducationPage.jsx";
-import CondicoesOfertaPage from "./components/pages/education/basic/CondicoesOfertaPage.jsx";
-import HigherEducationPage from "./components/pages/education/higher/HigherEducationPage.jsx";
-import RateIndicatorsPage from "./components/pages/education/rate/RateIndicatorsPage.jsx";
 import EducationLayout from "./components/layouts/EducationLayout.jsx";
 import EducationV2Layout from "./components/layouts/EducationV2Layout.jsx";
-import BasicEducationV2Page from "./components/pages/education/basic-v2/BasicEducationV2Page.jsx";
 import FinancialLayout from "./components/layouts/FinancialLayout.jsx";
 import AppLayout from "./components/layouts/AppLayout.jsx";
 import ScrollToTop from "./components/common/ScrollToTop.jsx";
+import TituloDaPagina from "./components/common/TituloDaPagina.jsx";
 import theme from "./theme/muiTheme.jsx";
 import "./App.css";
+import { Loading } from "./components/ui";
 import { Typography } from '@mui/material';
+
+// Páginas carregadas sob demanda (lazy) — ver <Suspense> no App
+const QuemSomos = lazy(() => import("./components/navigation/QuemSomos.jsx"));
+const MunicipalFinancialPage = lazy(() => import("./components/pages/education/financial/MunicipalFinancialPage.jsx"));
+const StateFinancialPage = lazy(() => import("./components/pages/education/financial/StateFinancialPage.jsx"));
+const MunicipalIndicatorsPage = lazy(() => import("./components/pages/education/financial/MunicipalIndicatorsPage.jsx"));
+const StateIndicatorsPage = lazy(() => import("./components/pages/education/financial/StateIndicatorsPage.jsx"));
+const FinancialDataSelection = lazy(() => import("./components/navigation/FinancialDataSelection.jsx"));
+const EducationSelection = lazy(() => import("./components/navigation/EducationSelection.jsx"));
+const BasicEducationPage = lazy(() => import("./components/pages/education/basic/BasicEducationPage.jsx"));
+const CondicoesOfertaPage = lazy(() => import("./components/pages/education/basic/CondicoesOfertaPage.jsx"));
+const HigherEducationPage = lazy(() => import("./components/pages/education/higher/HigherEducationPage.jsx"));
+const RateIndicatorsPage = lazy(() => import("./components/pages/education/rate/RateIndicatorsPage.jsx"));
+const BasicEducationV2Page = lazy(() => import("./components/pages/education/basic-v2/BasicEducationV2Page.jsx"));
+const PaginaNaoEncontrada = lazy(() => import("./components/navigation/PaginaNaoEncontrada.jsx"));
+const Glossario = lazy(() => import("./components/navigation/Glossario.jsx"));
+const MunicipalityProfilePage = lazy(() => import("./components/pages/education/financial/municipality/profile/MunicipalityProfilePage.jsx"));
+const ComparisonPage = lazy(() => import("./components/pages/education/financial/municipality/comparison/ComparisonPage.jsx"));
 
 // Componente que renderiza o layout baseado na rota
 const AppWithLayout = () => {
@@ -75,6 +83,10 @@ function App() {
       <CssBaseline />
       <Router>
         <ScrollToTop />
+        <TituloDaPagina />
+        {/* Páginas carregadas sob demanda (lazy): cada uma baixa o próprio código
+            só quando é aberta — antes o site inteiro vinha num arquivo único de ~3,8 MB */}
+        <Suspense fallback={<Loading />}>
         <Routes>
           {/* Layout da Homepage (com Navbar e Footer) */}
           <Route path="/" element={<AppWithLayout />} />
@@ -101,12 +113,49 @@ function App() {
             <Route path="estado" element={<StateFinancialPage />} />
             <Route path="indicadores" element={<MunicipalIndicatorsPage />} />
             <Route path="indicadores-estaduais" element={<StateIndicatorsPage />} />
+            <Route path="comparar" element={<ComparisonPage />} />
           </Route>
 
           {/* Layout antigo mantido para compatibilidade */}
           <Route path="/" element={<AppLayout />}>
           </Route>
+
+          <Route
+            path="/glossario"
+            element={
+              <>
+                <Navbar />
+                <Glossario />
+                <Footer />
+              </>
+            }
+          />
+
+          {/* Perfil do município: principais números de todas as tabelas financeiras */}
+          <Route
+            path="/municipio/:codigo"
+            element={
+              <>
+                <Navbar />
+                <MunicipalityProfilePage />
+                <Footer />
+              </>
+            }
+          />
+
+          {/* Endereço desconhecido: antes a tela ficava em branco */}
+          <Route
+            path="*"
+            element={
+              <>
+                <Navbar />
+                <PaginaNaoEncontrada />
+                <Footer />
+              </>
+            }
+          />
         </Routes>
+        </Suspense>
       </Router>
     </ThemeProvider>
   );

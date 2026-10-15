@@ -1,6 +1,6 @@
 import React from 'react';
-import { Bar } from 'react-chartjs-2';
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
+import { Bar, Line } from 'react-chartjs-2';
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, LineElement, PointElement, Title, Tooltip, Legend } from 'chart.js';
 import zoomPlugin from 'chartjs-plugin-zoom';
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
@@ -10,8 +10,23 @@ import { Box, Tooltip as MuiTooltip } from '@mui/material';
 import '../../../../../../style/Buttons.css';
 import { formatPtBrCurrency, formatPtBrNumber, formatPtBrPercent, parseLooseNumber } from '../../../../../../utils/numberFormatUtils.js';
 import { downloadChartPngWithBackground } from '../../../../../../utils/chartExportUtils.js';
+import { cores } from '../../../../../../theme/tokens';
+import { FONTE_EXPORTACAO, EXCEL_CABECALHO_FUNDO, EXCEL_CABECALHO_TEXTO } from '../../../../../../utils/exportStyle';
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, zoomPlugin);
+const estiloCabecalho = {
+  backgroundColor: cores.areia,
+  color: cores.textoSobreAreia,
+  fontSize: '12px',
+  fontWeight: 600,
+  letterSpacing: '0.03em',
+  textTransform: 'uppercase',
+  textAlign: 'left',
+  padding: '10px 16px',
+  borderBottom: `1px solid ${cores.linha}`,
+};
+const estiloCelula = { padding: '11px 16px', borderBottom: `1px solid ${cores.linha}` };
+
+ChartJS.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement, Title, Tooltip, Legend, zoomPlugin);
 
 const BarChart = ({ chartData, title }) => {
   const chartRef = React.useRef(null);
@@ -58,6 +73,55 @@ const BarChart = ({ chartData, title }) => {
   }, [chartData]);
 
   const hideYearColumn = Boolean(parsedRows.singleYear);
+
+  // Forma do gráfico conforme os dados (antes: sempre uma barra por "ano - município",
+  // todas da mesma cor, com dezenas de rótulos ilegíveis no eixo):
+  //  - vários municípios e vários anos (até 12 municípios) → uma linha por município ao longo dos anos
+  //  - um município só → barras com o ano no eixo
+  //  - um ano só → barras com o nome do município no eixo
+  const { tipoGrafico, dadosGrafico } = React.useMemo(() => {
+    const rows = parsedRows.rows;
+    const municipiosUnicos = [...new Set(rows.map((r) => r.municipio).filter(Boolean))];
+    const anosUnicos = [...new Set(rows.map((r) => r.ano).filter(Boolean))].sort();
+    const numeroOuNulo = (v) => {
+      const n = typeof v === "number" ? v : parseLooseNumber(v);
+      return Number.isFinite(n) ? n : null;
+    };
+    if (anosUnicos.length > 1 && municipiosUnicos.length >= 2 && municipiosUnicos.length <= 12) {
+      const valor = (m, a) => {
+        const r = rows.find((x) => x.municipio === m && x.ano === a);
+        return r ? numeroOuNulo(r.valor) : null;
+      };
+      return {
+        tipoGrafico: 'linha',
+        dadosGrafico: {
+          labels: anosUnicos,
+          datasets: municipiosUnicos.map((m, i) => {
+            const cor = cores.seriesEstendida[i % cores.seriesEstendida.length];
+            return {
+              label: m,
+              data: anosUnicos.map((a) => valor(m, a)),
+              borderColor: cor,
+              backgroundColor: cor,
+              borderWidth: 2.5,
+              pointRadius: 3,
+              pointHoverRadius: 5,
+              tension: 0.2,
+              spanGaps: true,
+            };
+          }),
+        },
+      };
+    }
+    if (municipiosUnicos.length === 1 && anosUnicos.length > 1 && chartData?.datasets?.length) {
+      return { tipoGrafico: 'barra', dadosGrafico: { ...chartData, labels: rows.map((r) => r.ano || r.municipio) } };
+    }
+    if (anosUnicos.length === 1 && chartData?.datasets?.length) {
+      return { tipoGrafico: 'barra', dadosGrafico: { ...chartData, labels: rows.map((r) => r.municipio || r.ano) } };
+    }
+    return { tipoGrafico: 'barra', dadosGrafico: chartData };
+  }, [parsedRows, chartData]);
+  const ComponenteGrafico = tipoGrafico === 'linha' ? Line : Bar;
   const formatValue = (v) => {
     if (v === null || v === undefined || v === '' || v === '-') return '-';
     if (isPercent) return formatPtBrPercent(v, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -78,7 +142,7 @@ const BarChart = ({ chartData, title }) => {
   };
 
   const downloadTableData = async () => {
-    const fonte = "Fonte: SIOPE/FNDE - Elaboração: OPEPI/UFPI";
+    const fonte = FONTE_EXPORTACAO;
 
     // Criar workbook com ExcelJS
     const workbook = new ExcelJS.Workbook();
@@ -99,8 +163,8 @@ const BarChart = ({ chartData, title }) => {
     
     // Cabeçalhos
     const headerRow = worksheet.addRow(['Município', 'Ano', isPercent ? 'Valor (%)' : 'Valor (R$)']);
-    headerRow.font = { bold: true };
-    headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFCCCCCC' } };
+    headerRow.font = { bold: true, color: { argb: EXCEL_CABECALHO_TEXTO } };
+    headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: EXCEL_CABECALHO_FUNDO } };
     headerRow.alignment = { horizontal: 'center' };
     
     // Dados
@@ -142,27 +206,27 @@ const BarChart = ({ chartData, title }) => {
   return (
     <Box sx={{ width: '100%', padding: 2 }}>
       <Box sx={{ height: 500 }}>
-        <Bar
+        <ComponenteGrafico
           ref={chartRef}
-          data={chartData}
+          data={dadosGrafico}
           options={{
             responsive: true,
             maintainAspectRatio: false,
             interaction: { intersect: false, mode: 'index' },
             plugins: {
-              legend: { display: false },
+              legend: { display: tipoGrafico === 'linha', position: 'bottom', labels: { usePointStyle: true, font: { family: 'Public Sans, system-ui, sans-serif', size: 12 }, color: '#2A2019' } },
               title: {
                 display: true,
                 text: title,
-                font: { size: 20, weight: 'bold', family: 'Roboto, sans-serif' },
-                color: '#333',
+                font: { size: 20, weight: 'bold', family: 'Public Sans, system-ui, sans-serif' },
+                color: '#2A2019',
                 padding: { top: 10, bottom: 20 }
               },
               tooltip: {
                 backgroundColor: 'rgba(255, 255, 255, 0.95)',
                 titleColor: '#333',
                 bodyColor: '#333',
-                borderColor: '#4CAF50',
+                borderColor: '#D9C9BC',
                 borderWidth: 2,
                 cornerRadius: 8,
                 displayColors: true,
@@ -192,16 +256,16 @@ const BarChart = ({ chartData, title }) => {
             scales: {
               x: {
                 grid: { display: true, color: 'rgba(0, 0, 0, 0.05)', lineWidth: 0.5 },
-                ticks: { font: { size: 11, family: 'Roboto, sans-serif' }, color: '#666', maxRotation: 45, minRotation: 0 },
-                border: { display: true, color: '#ddd' }
+                ticks: { font: { size: 11, family: 'Public Sans, system-ui, sans-serif' }, color: '#7A6A5E', maxRotation: 45, minRotation: 0 },
+                border: { display: true, color: '#E7DED6' }
               },
               y: {
-                title: { display: true, text: isPercent ? 'Valor (%)' : 'Valor (R$)', font: { size: 12, weight: 'bold', family: 'Roboto, sans-serif' }, color: '#333' },
+                title: { display: true, text: isPercent ? 'Valor (%)' : 'Valor (R$)', font: { size: 12, weight: 'bold', family: 'Public Sans, system-ui, sans-serif' }, color: '#2A2019' },
                 beginAtZero: true,
                 grid: { display: true, color: 'rgba(0, 0, 0, 0.05)', lineWidth: 0.5 },
                 ticks: {
-                  font: { size: 11, family: 'Roboto, sans-serif' },
-                  color: '#666',
+                  font: { size: 11, family: 'Public Sans, system-ui, sans-serif' },
+                  color: '#7A6A5E',
                   callback: function(value) {
                     if (typeof value !== 'number') return value;
                     return isPercent
@@ -209,18 +273,18 @@ const BarChart = ({ chartData, title }) => {
                       : formatPtBrCurrency(value, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
                   }
                 },
-                border: { display: true, color: '#ddd' }
+                border: { display: true, color: '#E7DED6' }
               },
             },
             elements: {
               bar: {
                 borderRadius: 8,
                 borderSkipped: false,
-                backgroundColor: 'rgba(156, 39, 176, 0.8)',
-                borderColor: 'rgba(156, 39, 176, 1)',
+                backgroundColor: 'rgba(142, 74, 46, 0.85)',
+                borderColor: '#733A23',
                 borderWidth: 2,
-                hoverBackgroundColor: 'rgba(156, 39, 176, 1)',
-                hoverBorderColor: 'rgba(156, 39, 176, 1)',
+                hoverBackgroundColor: '#733A23',
+                hoverBorderColor: '#733A23',
               }
             }
           }}
@@ -231,7 +295,7 @@ const BarChart = ({ chartData, title }) => {
           <span>
             <Button
               variant="contained"
-              color="success"
+              color="primary"
               onClick={downloadTableData}
               startIcon={<FaFileExcel />}
               className="action-button"
@@ -251,22 +315,23 @@ const BarChart = ({ chartData, title }) => {
             </Button>
           </span>
         </MuiTooltip>
-        <Button variant="contained" color="secondary" onClick={exportChart} startIcon={<FaDownload />} className="action-button" size="small">
+        <Button variant="outlined" color="primary" onClick={exportChart} startIcon={<FaDownload />} className="action-button" size="small">
           <span className="button-text">Baixar Gráfico</span>
         </Button>
-        <Button variant="outlined" color="info" onClick={resetZoom} startIcon={<FaUndo />} size="small" sx={{ borderColor: '#9C27B0', color: '#9C27B0', '&:hover': { borderColor: '#7B1FA2', backgroundColor: 'rgba(156, 39, 176, 0.04)' } }}>
+        <Button variant="text" color="primary" onClick={resetZoom} startIcon={<FaUndo />} size="small">
           Resetar Zoom
         </Button>
       </Box>
       {/* Tabela de dados */}
       {chartData.labels && chartData.labels.length > 0 && (
-        <Box sx={{ marginTop: 4 }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
+        <Box sx={{ marginTop: 4, border: `1px solid ${cores.linha}`, borderRadius: '14px', overflow: 'hidden', backgroundColor: cores.superficie }}>
+          {/* Mesmo visual das tabelas de dados (cabeçalho areia, linhas alternadas) */}
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px', color: cores.tinta }}>
             <thead>
-              <tr style={{ background: '#f5f5f5' }}>
-                <th style={{ border: '1px solid #ddd', padding: '8px' }}>Município</th>
-                {!hideYearColumn && <th style={{ border: '1px solid #ddd', padding: '8px' }}>Ano</th>}
-                <th style={{ border: '1px solid #ddd', padding: '8px' }}>{isPercent ? 'Valor (%)' : 'Valor (R$)'}</th>
+              <tr>
+                <th style={estiloCabecalho}>Município</th>
+                {!hideYearColumn && <th style={estiloCabecalho}>Ano</th>}
+                <th style={{ ...estiloCabecalho, textAlign: 'right' }}>{isPercent ? 'Valor (%)' : 'Valor (R$)'}</th>
               </tr>
             </thead>
             <tbody>
@@ -277,7 +342,7 @@ const BarChart = ({ chartData, title }) => {
                 if (allNull) {
                   return (
                     <tr>
-                      <td colSpan={hideYearColumn ? 2 : 3} style={{ textAlign: 'center', color: '#d9534f', padding: '16px', fontWeight: 'bold' }}>
+                      <td colSpan={hideYearColumn ? 2 : 3} style={{ textAlign: 'center', color: cores.textoSuave, padding: '24px', fontStyle: 'italic' }}>
                         Nenhum dado disponível para o município selecionado.
                       </td>
                     </tr>
@@ -299,10 +364,10 @@ const BarChart = ({ chartData, title }) => {
                   }
                   const valor = chartData.datasets[0].data[idx];
                   return (
-                    <tr key={idx}>
-                      <td style={{ border: '1px solid #ddd', padding: '8px' }}>{municipio}</td>
-                      {!hideYearColumn && <td style={{ border: '1px solid #ddd', padding: '8px' }}>{ano}</td>}
-                      <td style={{ border: '1px solid #ddd', padding: '8px' }}>{formatValue(valor)}</td>
+                    <tr key={idx} style={{ backgroundColor: idx % 2 === 1 ? cores.zebra : cores.superficie }}>
+                      <td style={{ ...estiloCelula, fontWeight: 600 }}>{municipio}</td>
+                      {!hideYearColumn && <td style={estiloCelula}>{ano}</td>}
+                      <td style={{ ...estiloCelula, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{formatValue(valor)}</td>
                     </tr>
                   );
                 });

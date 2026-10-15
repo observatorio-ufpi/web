@@ -21,6 +21,7 @@ import CustomPagination from '../../../helpers/CustomPagination'; // ← ADICION
 import { Select } from '../../../ui';
 
 import { columnNameMap } from '../../../../utils/columnNameMap';
+import EmptyState from '../../../common/EmptyState';
 
 const BoldTableCell = styled(TableCell)(() => ({
   fontWeight: 'bold',
@@ -172,7 +173,7 @@ function CensoEscolarDataTable({ data, title }) {
   if (!data || !data.result || data.result.length === 0) {
     return (
       <Box sx={{ padding: 2, textAlign: 'center' }}>
-        <Typography variant="h6">Nenhum dado disponível para exibição.</Typography>
+        <EmptyState titulo="Nenhum dado encontrado" texto="Tente outro período ou outros filtros." />
       </Box>
     );
   }

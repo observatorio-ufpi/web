@@ -1,10 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { loadCSVFile } from '../services/csvService.jsx';
 
 export const useStateData = (selectedTable, startYear, endYear, autoLoad = false) => {
   const [csvData, setCsvData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  // Tabela do pedido mais recente: respostas de pedidos anteriores são descartadas
+  const ultimaTabelaPedida = useRef(null);
 
   useEffect(() => {
     // Limpar dados apenas quando a tabela mudar
@@ -16,31 +18,34 @@ export const useStateData = (selectedTable, startYear, endYear, autoLoad = false
     }
   }, [selectedTable, autoLoad]); // Removido startYear e endYear das dependências
 
-  const loadTableData = async () => {
+  // `tabela` explícita: quem chama costuma fazer setSelectedTable(nova) e refetch()
+  // no mesmo clique — sem o parâmetro, o refetch ainda via a tabela ANTERIOR
+  // (estado do React só atualiza no próximo render) e carregava o CSV errado
+  // com o título da tabela nova.
+  const loadTableData = async (tabela = selectedTable) => {
+    ultimaTabelaPedida.current = tabela;
     try {
       setLoading(true);
       setError(null);
-      
-      console.log(`Carregando dados para a tabela: ${selectedTable}, anos: ${startYear}-${endYear}`);
-      
+
       // Adicionar delay de 1 segundo para melhor UX
       const [data] = await Promise.all([
-        loadCSVFile(selectedTable),
+        loadCSVFile(tabela),
         new Promise(resolve => setTimeout(resolve, 1000))
       ]);
-      
-      console.log(`Dados carregados com sucesso: ${data ? 'sim' : 'não'}`);
+
+      if (ultimaTabelaPedida.current !== tabela) return; // chegou atrasado
       setCsvData(data);
     } catch (error) {
       console.error('Erro ao carregar dados da tabela:', error);
       setError(`Erro ao carregar dados da tabela: ${error.message}`);
     } finally {
-      setLoading(false);
+      if (ultimaTabelaPedida.current === tabela) setLoading(false);
     }
   };
 
-  const refetch = () => {
-    loadTableData();
+  const refetch = (tabela) => {
+    loadTableData(tabela);
   };
 
   return {

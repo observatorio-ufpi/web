@@ -10,6 +10,7 @@ import { Box, Tooltip as MuiTooltip } from '@mui/material';
 import '../../../../../../style/Buttons.css';
 import { parseLooseNumber } from '../../../../../../utils/numberFormatUtils.js';
 import { downloadChartPngWithBackground } from '../../../../../../utils/chartExportUtils.js';
+import { FONTE_EXPORTACAO, EXCEL_CABECALHO_FUNDO, EXCEL_CABECALHO_TEXTO } from '../../../../../../utils/exportStyle';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, zoomPlugin);
 
@@ -31,7 +32,7 @@ const StateLineChart = ({ chartData, title, yAxisLabel = 'Valor (%)' }) => {
   };
 
   const downloadTableData = async () => {
-    const fonte = "Fonte: SIOPE/FNDE - Elaboração: OPEPI/UFPI";
+    const fonte = FONTE_EXPORTACAO;
     const isPercent = yAxisLabel.includes('%');
 
     // Criar workbook com ExcelJS
@@ -56,8 +57,8 @@ const StateLineChart = ({ chartData, title, yAxisLabel = 'Valor (%)' }) => {
     
     // Cabeçalhos
     const headerRow = worksheet.addRow(headers);
-    headerRow.font = { bold: true };
-    headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFCCCCCC' } };
+    headerRow.font = { bold: true, color: { argb: EXCEL_CABECALHO_TEXTO } };
+    headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: EXCEL_CABECALHO_FUNDO } };
     headerRow.alignment = { horizontal: 'center' };
     
     // Dados
@@ -116,7 +117,7 @@ const StateLineChart = ({ chartData, title, yAxisLabel = 'Valor (%)' }) => {
                 padding: 20,
                 font: {
                   size: 12,
-                  family: 'Roboto, sans-serif'
+                  family: 'Public Sans, system-ui, sans-serif'
                 }
               }
             },
@@ -126,9 +127,9 @@ const StateLineChart = ({ chartData, title, yAxisLabel = 'Valor (%)' }) => {
               font: {
                 size: 16,
                 weight: 'bold',
-                family: 'Roboto, sans-serif'
+                family: 'Public Sans, system-ui, sans-serif'
               },
-              color: '#333',
+              color: '#2A2019',
               padding: {
                 top: 10,
                 bottom: 20
@@ -138,7 +139,7 @@ const StateLineChart = ({ chartData, title, yAxisLabel = 'Valor (%)' }) => {
               backgroundColor: 'rgba(255, 255, 255, 0.95)',
               titleColor: '#333',
               bodyColor: '#333',
-              borderColor: '#4CAF50',
+              borderColor: '#D9C9BC',
               borderWidth: 2,
               cornerRadius: 8,
               displayColors: true,
@@ -198,15 +199,15 @@ const StateLineChart = ({ chartData, title, yAxisLabel = 'Valor (%)' }) => {
               ticks: {
                 font: {
                   size: 11,
-                  family: 'Roboto, sans-serif'
+                  family: 'Public Sans, system-ui, sans-serif'
                 },
-                color: '#666',
+                color: '#7A6A5E',
                 maxRotation: 45,
                 minRotation: 0
               },
               border: {
                 display: true,
-                color: '#ddd'
+                color: '#E7DED6'
               }
             },
             y: {
@@ -216,9 +217,9 @@ const StateLineChart = ({ chartData, title, yAxisLabel = 'Valor (%)' }) => {
                 font: {
                   size: 12,
                   weight: 'bold',
-                  family: 'Roboto, sans-serif'
+                  family: 'Public Sans, system-ui, sans-serif'
                 },
-                color: '#333'
+                color: '#2A2019'
               },
               beginAtZero: true,
               grid: {
@@ -229,9 +230,9 @@ const StateLineChart = ({ chartData, title, yAxisLabel = 'Valor (%)' }) => {
               ticks: {
                 font: {
                   size: 11,
-                  family: 'Roboto, sans-serif'
+                  family: 'Public Sans, system-ui, sans-serif'
                 },
-                color: '#666',
+                color: '#7A6A5E',
                 callback: function(value) {
                   if (yAxisLabel.includes('%')) {
                     return `${value}%`;
@@ -249,7 +250,7 @@ const StateLineChart = ({ chartData, title, yAxisLabel = 'Valor (%)' }) => {
               },
               border: {
                 display: true,
-                color: '#ddd'
+                color: '#E7DED6'
               }
             },
           },
@@ -276,7 +277,7 @@ const StateLineChart = ({ chartData, title, yAxisLabel = 'Valor (%)' }) => {
           <span>
             <Button
               variant="contained"
-              color="success"
+              color="primary"
               onClick={downloadTableData}
               startIcon={<FaFileExcel />}
               className="action-button"
@@ -298,8 +299,8 @@ const StateLineChart = ({ chartData, title, yAxisLabel = 'Valor (%)' }) => {
           </span>
         </MuiTooltip>
         <Button
-          variant="contained"
-          color="secondary"
+          variant="outlined"
+          color="primary"
           onClick={exportChart}
           startIcon={<FaDownload />}
           className="action-button"
@@ -308,19 +309,11 @@ const StateLineChart = ({ chartData, title, yAxisLabel = 'Valor (%)' }) => {
           <span className="button-text">Baixar Gráfico</span>
         </Button>
         <Button
-          variant="outlined"
-          color="info"
+          variant="text"
+          color="primary"
           onClick={resetZoom}
           startIcon={<FaUndo />}
           size="small"
-          sx={{ 
-            borderColor: '#9C27B0',
-            color: '#9C27B0',
-            '&:hover': {
-              borderColor: '#7B1FA2',
-              backgroundColor: 'rgba(156, 39, 176, 0.04)'
-            }
-          }}
         >
           Resetar Zoom
         </Button>

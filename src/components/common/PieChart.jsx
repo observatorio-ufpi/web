@@ -17,7 +17,7 @@ const PieChart = ({
   showLegend = true,
   showTotal = true,
   formatValue = (value) => value?.toLocaleString('pt-BR') || value,
-  colors = ['#4CAF50', '#FFC107', '#F44336', '#E91E63', '#FF9800', '#9C27B0', '#2196F3', '#00BCD4']
+  colors = ['#8E4A2E', '#D98E1E', '#2F6B7A', '#5E8C4A', '#7A4E6E', '#D4A28A', '#6FA8B8', '#A6C08E'] // séries da identidade (theme/tokens.js)
 }) => {
   if (!data || data.length === 0) {
     return (

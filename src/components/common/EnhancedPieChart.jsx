@@ -15,10 +15,10 @@ const EnhancedPieChart = ({
   nameKey = 'name',
   height = 500,
   formatValue = (value) => value?.toLocaleString('pt-BR') || value,
-  colors = [
-    '#e74c3c', '#3498db', '#2ecc71', '#f39c12', '#9b59b6',
-    '#1abc9c', '#e67e22', '#34495e', '#f1c40f', '#e91e63',
-    '#00bcd4', '#4caf50', '#ff9800', '#795548', '#607d8b'
+  colors = [ // séries da identidade (theme/tokens.js — seriesEstendida)
+    '#8E4A2E', '#D98E1E', '#2F6B7A', '#5E8C4A', '#7A4E6E',
+    '#D4A28A', '#6FA8B8', '#A6C08E', '#B88AAC', '#E8C07A',
+    '#5C2E1C', '#1F4A55', '#3B5A2E', '#4F2F46', '#8C6A14'
   ]
 }) => {
   // Estados para interatividade

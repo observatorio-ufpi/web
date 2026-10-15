@@ -3,17 +3,24 @@ import { FaArrowLeft, FaBars, FaInfoCircle, FaTimes, FaGraduationCap } from 'rea
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useSidebar } from '../layouts/FinancialLayout';
 import FilterComponent from '../helpers/TableFilters';
+import { lerFiltrosMunicipaisDaUrl } from '../../utils/financialUrlFilters';
 
 const FinancialCategorySidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { isOpen, setIsOpen } = useSidebar();
-  
+
+  // Se a página abriu por um link com filtros (/municipios?tabela=...), a sidebar
+  // já mostra esses filtros preenchidos — quem aplica a consulta é o RevenueTableContainer.
+  const [filtrosDaUrl] = useState(() =>
+    location.pathname === '/municipios' ? lerFiltrosMunicipaisDaUrl(location.search) : null
+  );
+
   // Estados para os filtros
-  const [selectedMunicipio, setSelectedMunicipio] = useState(null);
-  const [anoInicial, setAnoInicial] = useState(2007);
-  const [anoFinal, setAnoFinal] = useState(2024);
-  const [selectedTableType, setSelectedTableType] = useState('ownRevenues');
+  const [selectedMunicipio, setSelectedMunicipio] = useState(filtrosDaUrl?.codigoMunicipio || null);
+  const [anoInicial, setAnoInicial] = useState(filtrosDaUrl?.anoInicial || 2007);
+  const [anoFinal, setAnoFinal] = useState(filtrosDaUrl?.anoFinal || 2024);
+  const [selectedTableType, setSelectedTableType] = useState(filtrosDaUrl?.tableType || 'ownRevenues');
   const [selectedStateTableType, setSelectedStateTableType] = useState('tabela1');
   const [selectedStateIndicatorType, setSelectedStateIndicatorType] = useState('revenueComposition');
   const [selectedMunicipalIndicatorType, setSelectedMunicipalIndicatorType] = useState('financasPublicas');
@@ -33,6 +40,7 @@ const FinancialCategorySidebar = () => {
     if (location.pathname === '/estado') return 'estado';
     if (location.pathname === '/indicadores') return 'indicadores';
     if (location.pathname === '/indicadores-estaduais') return 'indicadores-estaduais';
+    if (location.pathname === '/comparar') return 'comparar';
     return 'municipios';
   };
 
@@ -65,10 +73,11 @@ const FinancialCategorySidebar = () => {
   };
 
   const categories = [
-    { id: 'municipios', label: 'Dados Municipais', path: '/municipios' },
-    { id: 'estado', label: 'Dados Estaduais', path: '/estado' },
-    { id: 'indicadores', label: 'Indicadores - Município', path: '/indicadores' },
-    { id: 'indicadores-estaduais', label: 'Indicadores - Estado', path: '/indicadores-estaduais' }
+    { id: 'municipios', label: 'Municípios', path: '/municipios' },
+    { id: 'estado', label: 'Estado', path: '/estado' },
+    { id: 'indicadores', label: 'Indicadores municipais', path: '/indicadores' },
+    { id: 'indicadores-estaduais', label: 'Indicadores estaduais', path: '/indicadores-estaduais' },
+    { id: 'comparar', label: 'Comparar municípios', path: '/comparar' }
   ];
 
   return (
@@ -76,27 +85,31 @@ const FinancialCategorySidebar = () => {
       {/* Botão para abrir/fechar a sidebar */}
       <button
         onClick={toggleSidebar}
-        className={`fixed top-4 left-4 z-50 p-2 bg-gray-800 text-white rounded-lg shadow-lg hover:bg-gray-700 transition-colors ${isOpen ? 'hidden' : ''}`}
+        aria-label="Abrir menu de filtros"
+        aria-expanded={isOpen}
+        className={`fixed top-4 left-4 z-50 p-2 bg-ink text-white rounded-lg shadow-lg hover:bg-brand-dark transition-colors ${isOpen ? 'hidden' : ''}`}
       >
         <FaBars />
       </button>
 
       {/* Sidebar */}
       <aside
+        aria-label="Menu de filtros"
         className={`${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         } fixed left-0 top-0 h-screen overflow-y-auto transition-transform duration-300 ease-in-out z-40 shadow-lg sidebar-scroll`}
         style={{
           width: isOpen ? '20rem' : '4rem',
-          backgroundColor: '#E8E4E3'
+          backgroundColor: '#FFFFFF',
+          borderRight: '1px solid #E7DED6'
         }}
       >
         {/* Header da Sidebar */}
-        <div className="relative p-3 pt-12 border-b border-gray-200">
+        <div className="relative p-3 pt-12 border-b border-line">
           <button
             onClick={toggleSidebar}
-            className="absolute top-3 right-3 z-50 p-2 bg-gray-800 text-white rounded-lg shadow-lg hover:bg-gray-700 transition-colors"
-            aria-label="Fechar sidebar"
+            className="absolute top-3 right-3 z-50 p-2 bg-ink text-white rounded-lg shadow-lg hover:bg-brand-dark transition-colors"
+            aria-label="Fechar menu de filtros"
           >
             <FaTimes />
           </button>
@@ -116,30 +129,47 @@ const FinancialCategorySidebar = () => {
           </div>
         </div>
 
-        <hr className="border-gray-300" />
-
         {/* Navegação */}
         <nav className="p-3">
-          {/* Categoria Selecionada */}
-          <div className="mb-3">
-            <h3 className={`text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 ${isOpen ? 'block' : 'hidden'} md:block`}>
-              Categoria
-            </h3>
-            <div className={`${isOpen ? 'block' : 'hidden'} md:block`}>
-              <p className="text-xs font-medium text-gray-800 mb-2">
-                {categories.find(c => c.id === currentCategory)?.label}
-              </p>
+          {/* Categorias como abas (antes ficavam num select no topo da página) */}
+          <nav aria-label="Categorias de dados financeiros" className="mb-4">
+            <div className="grid grid-cols-2 gap-1 rounded-xl bg-[#F6F3F2] p-1">
+              {categories.map((categoria) => {
+                const ativa = categoria.id === currentCategory;
+                return (
+                  <Link
+                    key={categoria.id}
+                    to={categoria.path}
+                    aria-current={ativa ? 'page' : undefined}
+                    className={`rounded-lg px-2 py-2 text-center text-xs leading-tight transition-colors duration-150 ${
+                      categoria.id === 'comparar' ? 'col-span-2 ' : ''
+                    }${
+                      ativa
+                        ? 'bg-white font-semibold text-ink shadow-sm'
+                        : 'font-medium text-muted hover:bg-white/60 hover:text-ink'
+                    }`}
+                  >
+                    {categoria.label}
+                  </Link>
+                );
+              })}
             </div>
-          </div>
-          {/* Filtros */}
+          </nav>
+
+          {/* Filtros (na comparação, os controles ficam na própria página) */}
+          {currentCategory === 'comparar' ? (
+            <p className="mb-3 rounded-lg bg-[#F6F3F2] p-3 text-xs leading-relaxed text-texto">
+              Escolha o tipo de dado, o ano e os municípios no topo da página.
+            </p>
+          ) : (
           <div className="mb-3">
             <FilterComponent
               onFilterChange={handleFilterChange}
               selectedMunicipio={selectedMunicipio}
-              territorioDeDesenvolvimentoMunicipio={null}
-              faixaPopulacionalMunicipio={null}
-              aglomeradoMunicipio=""
-              gerenciaRegionalMunicipio=""
+              territorioDeDesenvolvimentoMunicipio={filtrosDaUrl?.territorioDeDesenvolvimentoMunicipio || null}
+              faixaPopulacionalMunicipio={filtrosDaUrl?.faixaPopulacionalMunicipio || null}
+              aglomeradoMunicipio={filtrosDaUrl?.aglomeradoMunicipio || ""}
+              gerenciaRegionalMunicipio={filtrosDaUrl?.gerenciaRegionalMunicipio || ""}
               anoInicial={anoInicial}
               anoFinal={anoFinal}
               filtersExpanded={currentCategory === 'municipios' || currentCategory === 'indicadores'}
@@ -155,6 +185,7 @@ const FinancialCategorySidebar = () => {
               showMunicipioFilters={currentCategory === 'municipios' || currentCategory === 'indicadores'}
             />
           </div>
+          )}
 
           {/* Alternar para Dados Educacionais */}
           <div className="mb-3">

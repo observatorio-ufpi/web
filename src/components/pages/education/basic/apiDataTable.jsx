@@ -7,34 +7,27 @@ import TablePagination from "@mui/material/TablePagination";
 import TableRow from "@mui/material/TableRow";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import { ThemeProvider, createTheme, styled } from "@mui/material/styles";
+import { ThemeProvider, styled } from "@mui/material/styles";
 import React from "react";
 import EnhancedBarChart from "../../../common/EnhancedBarChart";
 import EnhancedPieChart from "../../../common/EnhancedPieChart";
 import TableExport from "../../../common/TableExport";
 import HistoricalChart from "../HistoricalChart";
+import temaTabela from '../../../../theme/tabelaTheme';
+import EmptyState from '../../../common/EmptyState';
 
 // ==========================================
 // TEMA E ESTILOS
 // ==========================================
-const theme = createTheme({
-  palette: {
-    background: {
-      default: "#ffffff",
-      tableHeader: "#cccccc",
-    },
-  },
-  typography: {
-    fontSize: 14,
-  },
-});
+// Tema compartilhado das tabelas educacionais (identidade visual) — theme/tabelaTheme.js
+const theme = temaTabela;
 
 const StyledTableHead = styled(TableHead)(({ theme }) => ({
   backgroundColor: theme.palette.background.tableHeader,
 }));
 
 const BoldTableCell = styled(TableCell)(({ theme }) => ({
-  fontWeight: "bold",
+  fontWeight: 600,
   minWidth: "8rem",
   textAlign: "center",
   verticalAlign: "middle",
@@ -1175,19 +1168,7 @@ const ApiDataTable = ({
   if (hasNoData(data, tableDataArray, municipioDataArray)) {
     return (
       <ThemeProvider theme={theme}>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            minHeight: "200px",
-            fontSize: "18px",
-            fontWeight: "bold",
-            color: "#6c757d",
-          }}
-        >
-          Nenhum dado disponível para os filtros selecionados
-        </div>
+        <EmptyState titulo="Nenhum dado encontrado" texto="Tente outro período ou outros filtros." />
       </ThemeProvider>
     );
   }
@@ -2559,11 +2540,11 @@ const ApiDataTable = ({
               marginTop: "1rem",
               marginBottom: "1rem",
               padding: "1rem",
-              backgroundColor: "#f5f5f5",
-              border: "1px solid #ddd",
-              borderRadius: "4px",
-              fontSize: "0.9rem",
-              color: "#333",
+              backgroundColor: "#FBF4EF",
+              border: "1px solid #E7DED6",
+              borderRadius: "10px",
+              fontSize: "0.875rem",
+              color: "#4A3B30",
               lineHeight: "1.4",
             }}
           >

@@ -11,6 +11,7 @@ import {
 } from '../../utils/citiesMapping';
 import { useEducationV2Filters } from '../../contexts/EducationV2FilterContext';
 import { getCatalogo, getIndicadores } from '../../services/educacaoV2Service';
+import { MOTIVO_MUNICIPIO_SELECIONADO } from '../ui/Select';
 
 /**
  * Sidebar de filtros da página basica-v2.
@@ -492,6 +493,7 @@ const EducationV2Sidebar = ({ isOpen, setIsOpen }) => {
                 size="xs"
                 isClearable
                 disabled={otherLocalityDisabled}
+                disabledReason={MOTIVO_MUNICIPIO_SELECIONADO}
               />
               <Select
                 value={
@@ -508,6 +510,7 @@ const EducationV2Sidebar = ({ isOpen, setIsOpen }) => {
                 size="xs"
                 isClearable
                 disabled={otherLocalityDisabled}
+                disabledReason={MOTIVO_MUNICIPIO_SELECIONADO}
               />
               <div className="grid grid-cols-2 gap-3">
                 <Select
@@ -524,6 +527,7 @@ const EducationV2Sidebar = ({ isOpen, setIsOpen }) => {
                   size="xxs"
                   isClearable
                   disabled={otherLocalityDisabled}
+                  disabledReason={MOTIVO_MUNICIPIO_SELECIONADO}
                 />
                 <Select
                   value={
@@ -538,6 +542,7 @@ const EducationV2Sidebar = ({ isOpen, setIsOpen }) => {
                   size="xxs"
                   isClearable
                   disabled={otherLocalityDisabled}
+                  disabledReason={MOTIVO_MUNICIPIO_SELECIONADO}
                 />
               </div>
             </div>

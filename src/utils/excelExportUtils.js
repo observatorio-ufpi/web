@@ -1,5 +1,6 @@
 import ExcelJS from 'exceljs';
 import { parseLooseNumber } from './numberFormatUtils.js';
+import { FONTE_EXPORTACAO, EXCEL_CABECALHO_FUNDO, EXCEL_CABECALHO_TEXTO } from './exportStyle';
 
 function coerceLooseNumberOrOriginal(value) {
   const n = parseLooseNumber(value);
@@ -29,7 +30,7 @@ export async function buildStyledWorkbook({
   title,
   headers,
   rows,
-  source = 'Fonte: SIOPE/FNDE - Elaboração: OPEPI/UFPI',
+  source = FONTE_EXPORTACAO,
   numericColumns = null, // array of 0-based indices. If null, defaults to all except first.
   columnWidths = null, // array of widths (same length as headers)
 }) {
@@ -55,8 +56,8 @@ export async function buildStyledWorkbook({
 
   const safeHeaders = (headers && headers.length > 0) ? headers : [''];
   const headerRow = worksheet.addRow(safeHeaders);
-  headerRow.font = { bold: true };
-  headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFCCCCCC' } };
+  headerRow.font = { bold: true, color: { argb: EXCEL_CABECALHO_TEXTO } };
+  headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: EXCEL_CABECALHO_FUNDO } };
   headerRow.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
   currentRow += 1;
 

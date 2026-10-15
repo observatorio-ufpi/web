@@ -1,19 +1,37 @@
-// Mapeamento de tabelas do estado para arquivos CSV
-export const stateTableFiles = {
-  tabela1: "/src/files/estado_tabela_1.csv",
-  tabela2: "/src/files/estado_tabela_2.csv",
-  tabela3: "/src/files/estado_tabela_3.csv",
-  tabela4: "/src/files/estado_tabela_4.csv",
-  tabela5: "/src/files/estado_tabela_5.csv",
-  tabela6: "/src/files/estado_tabela_6.csv",
-  tabela7: "/src/files/estado_tabela_7.csv",
-  tabela8: "/src/files/estado_tabela_8.csv",
-  tabela9: "/src/files/estado_tabela_9.csv",
-  tabela10: "/src/files/estado_tabela_10.csv",
-  tabela11: "/src/files/estado_tabela_11.csv",
-  tabela12: "/src/files/estado_tabela_12.csv",
-  tabela13: "/src/files/estado_tabela_13.csv"
+// CSVs do estado empacotados pelo Vite no build (viram arquivos com hash em /assets).
+// Antes eram buscados por fetch("/src/files/..."), caminho que só existe no
+// servidor de desenvolvimento: em produção o servidor devolvia o index.html
+// (status 200) no lugar do CSV e a tabela do Estado aparecia vazia, sem erro.
+const arquivosCsvEstado = import.meta.glob('../files/estado_tabela_*.csv', {
+  query: '?url',
+  import: 'default',
+  eager: true,
+});
+
+export const urlCsvEstado = (numeroTabela) =>
+  arquivosCsvEstado[`../files/estado_tabela_${numeroTabela}.csv`];
+
+// Busca o texto de um CSV do estado; falha de forma explícita se vier outra coisa
+export const buscarCsvEstado = async (numeroTabela) => {
+  const url = urlCsvEstado(numeroTabela);
+  if (!url) {
+    throw new Error(`Arquivo CSV não encontrado para a tabela ${numeroTabela}`);
+  }
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Erro ao carregar o arquivo CSV: ${response.status} ${response.statusText}`);
+  }
+  const texto = await response.text();
+  if (/^\s*<!doctype html|^\s*<html/i.test(texto)) {
+    throw new Error(`O servidor devolveu uma página HTML no lugar do CSV da tabela ${numeroTabela}`);
+  }
+  return texto;
 };
+
+// Mapeamento de tabelas do estado (chave usada na tela -> número do arquivo)
+export const stateTableFiles = Object.fromEntries(
+  Array.from({ length: 13 }, (_, i) => [`tabela${i + 1}`, urlCsvEstado(i + 1)])
+);
 
 // Mapeamento de nomes de tabelas
 export const stateTableNames = {
@@ -34,26 +52,9 @@ export const stateTableNames = {
 
 // Função para carregar o conteúdo do CSV
 export const loadCSVFile = async (tableKey) => {
+  const numero = String(tableKey).replace('tabela', '');
   try {
-    // Obter o caminho do arquivo CSV correspondente
-    const csvPath = stateTableFiles[tableKey];
-    
-    // Verificar se o arquivo existe
-    if (!csvPath) {
-      throw new Error(`Arquivo CSV não encontrado para a tabela: ${tableKey}`);
-    }
-    
-    // Fazer uma requisição para obter o conteúdo do arquivo
-    const response = await fetch(csvPath);
-    if (!response.ok) {
-      throw new Error(`Erro ao carregar o arquivo CSV: ${response.statusText}`);
-    }
-    
-    // Obter o texto do arquivo
-    const text = await response.text();
-    console.log(`CSV carregado para ${tableKey}, tamanho: ${text.length} caracteres`);
-    
-    return text;
+    return await buscarCsvEstado(numero);
   } catch (error) {
     console.error(`Erro ao carregar o arquivo CSV: ${error.message}`);
     throw error;

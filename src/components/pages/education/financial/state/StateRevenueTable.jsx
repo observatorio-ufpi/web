@@ -10,7 +10,7 @@ import TableCell from '@mui/material/TableCell';
 import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
-import { ThemeProvider, createTheme, styled, useTheme } from '@mui/material/styles';
+import { styled, useTheme } from '@mui/material/styles';
 import { Box, FormControlLabel, Switch, TextField, Typography } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -21,39 +21,48 @@ import { saveAs } from 'file-saver';
 import { fetchIPCAData, calculateMonetaryCorrection, getMaxIPCADate } from '../../../../../utils/bacenApi.jsx';
 import '../../../../../style/Buttons.css';
 import TechnicalSheetButton from '../../../../common/TechnicalSheetButton.jsx';
+import { MonetaryCorrectionLabel, notaCorrecaoMonetaria, sufixoArquivoCorrecao } from '../../../../common/MonetaryCorrectionHelp';
+import DataSourceNote from '../../../../common/DataSourceNote';
+import SummaryCards from '../municipality/tables/SummaryCards';
+import { cores } from '../../../../../theme/tokens';
+import { FONTE_EXPORTACAO, EXCEL_CABECALHO_FUNDO, EXCEL_CABECALHO_TEXTO, PDF_CABECALHO_FUNDO, PDF_LINHA_ALTERNADA } from '../../../../../utils/exportStyle';
+import { ConteudoFicha } from '../../../../common/fichasTecnicas';
+import ColunaComExplicacao from '../../../../common/ColunaComExplicacao';
 
-const theme = createTheme({
-  palette: {
-    background: {
-      default: '#f0f0f0',
-      tableHeader: '#cccccc',
-    },
-  },
-  typography: {
-    fontSize: 14,
-  },
+// Mesmo visual da tabela municipal (RevenueTable): cabeçalho areia compacto,
+// números alinhados pelas casas decimais, coluna de total destacada
+const isColunaTotal = (type) => /total/i.test(type);
+const larguraColuna = (type) => `${Math.min(15, Math.max(8, type.length * 0.42))}rem`;
+
+const StyledTableHead = styled(TableHead)({});
+
+const BoldTableCell = styled(TableCell)({
+  backgroundColor: cores.areia,
+  color: cores.textoSobreAreia,
+  fontSize: '12px',
+  fontWeight: 600,
+  letterSpacing: '0.03em',
+  textTransform: 'uppercase',
+  lineHeight: 1.35,
+  padding: '10px 16px',
+  textAlign: 'right',
+  verticalAlign: 'bottom',
+  minWidth: '8rem',
+  borderBottom: `1px solid ${cores.linha}`,
+  '@media (max-width: 600px)': { minWidth: '6rem' },
 });
 
-const StyledTableHead = styled(TableHead)(({ theme }) => ({
-  backgroundColor: theme.palette.background.tableHeader,
-}));
-
-const BoldTableCell = styled(TableCell)(({ theme }) => ({
-  fontWeight: 'bold',
-  minWidth: '8rem',
-  textAlign: 'center',
+const CenteredTableCell = styled(TableCell)({
+  textAlign: 'right',
   verticalAlign: 'middle',
-  '@media (max-width: 600px)': {
-    minWidth: '6rem',
-  },
-}));
+  fontSize: '14px',
+  color: cores.tinta,
+  fontVariantNumeric: 'tabular-nums',
+  padding: '12px 16px',
+  borderBottom: `1px solid ${cores.linha}`,
+});
 
-const CenteredTableCell = styled(TableCell)(({ theme }) => ({
-  textAlign: 'right', // Alinha o texto à direita
-  verticalAlign: 'middle',
-}));
-
-const StateRevenueTable = ({ csvData, tableName, startYear, endYear, enableMonetaryCorrection = false }) => {
+const StateRevenueTable = ({ csvData, tableName, startYear, endYear, enableMonetaryCorrection = false, resumo = null }) => {
   const globalTheme = useTheme();
   const [data, setData] = useState({
     types: [],
@@ -130,9 +139,12 @@ const StateRevenueTable = ({ csvData, tableName, startYear, endYear, enableMonet
         
         Object.keys(data.valuesByTypeAndYear).forEach(type => {
           corrected[type] = {};
+          // Colunas de percentual (ex.: "% aplicado em MDE") não são dinheiro:
+          // corrigir pela inflação distorcia o valor quando o botão era ligado
+          const ehPercentual = type.includes('%');
           Object.keys(data.valuesByTypeAndYear[type]).forEach(year => {
             const originalValue = data.valuesByTypeAndYear[type][year];
-            if (typeof originalValue === 'number' && originalValue > 0) {
+            if (!ehPercentual && typeof originalValue === 'number' && originalValue > 0) {
               const originalDate = `31/12/${year}`;
               corrected[type][year] = calculateMonetaryCorrection(
                 originalValue,
@@ -184,7 +196,6 @@ const StateRevenueTable = ({ csvData, tableName, startYear, endYear, enableMonet
       return;
     }
     
-    console.log('Primeiras linhas do CSV:', lines.slice(0, 3));
     
     // Função para analisar uma linha CSV respeitando aspas
     const parseCSVLine = (line) => {
@@ -214,12 +225,10 @@ const StateRevenueTable = ({ csvData, tableName, startYear, endYear, enableMonet
     
     // Analisar a primeira linha para obter os tipos de receita (cabeçalhos das colunas)
     const headerParts = parseCSVLine(lines[0]);
-    console.log('headerParts', headerParts);
     
     // O primeiro item é "Ano", os demais são os tipos de receita
     const types = headerParts.slice(1); // Remover "Ano" e pegar os tipos
     
-    console.log('Tipos extraídos:', types);
     
     // Processar linhas de dados para obter os anos e valores
     const years = [];
@@ -267,9 +276,6 @@ const StateRevenueTable = ({ csvData, tableName, startYear, endYear, enableMonet
       }
     }
     
-    console.log('Anos processados:', years);
-    console.log('Tipos processados:', types);
-    console.log('Valores por tipo e ano:', valuesByTypeAndYear);
     
     setData({ types, years, valuesByTypeAndYear });
   };
@@ -278,6 +284,10 @@ const StateRevenueTable = ({ csvData, tableName, startYear, endYear, enableMonet
   const finalDisplayData = useMemo(() => {
     return correctedData || data.valuesByTypeAndYear;
   }, [correctedData, data.valuesByTypeAndYear]);
+
+  const correcaoAtiva = useMonetaryCorrection && !!correctedData;
+  const notaValores = correcaoAtiva ? notaCorrecaoMonetaria(targetDate) : null;
+  const nomeArquivoBase = `${tableName}_${startYear}-${endYear}${correcaoAtiva ? `_${sufixoArquivoCorrecao(targetDate)}` : ''}`;
 
   const handleMonetaryCorrectionToggle = (event) => {
     setUseMonetaryCorrection(event.target.checked);
@@ -296,7 +306,7 @@ const StateRevenueTable = ({ csvData, tableName, startYear, endYear, enableMonet
     const worksheet = workbook.addWorksheet('Dados do Estado');
     
     const tituloCompleto = `${tableName} - Estado do Piauí (${startYear}-${endYear})`;
-    const fonte = "Fonte: SIOPE/FNDE - Elaboração: OPEPI/UFPI";
+    const fonte = FONTE_EXPORTACAO;
     const numCols = data.types.length + 1;
     
     // Adicionar título
@@ -305,13 +315,14 @@ const StateRevenueTable = ({ csvData, tableName, startYear, endYear, enableMonet
     worksheet.getCell('A1').font = { bold: true, size: 14 };
     worksheet.getCell('A1').alignment = { horizontal: 'center' };
     
-    // Linha vazia
-    worksheet.addRow([]);
-    
+    // Aviso de correção monetária (ou linha vazia)
+    worksheet.addRow(notaValores ? [notaValores] : []);
+    if (notaValores) worksheet.getCell('A2').font = { italic: true, color: { argb: 'FFB45309' } };
+
     // Cabeçalhos
     const headerRow = worksheet.addRow(['Ano', ...data.types]);
-    headerRow.font = { bold: true };
-    headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFCCCCCC' } };
+    headerRow.font = { bold: true, color: { argb: EXCEL_CABECALHO_TEXTO } };
+    headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: EXCEL_CABECALHO_FUNDO } };
     headerRow.alignment = { horizontal: 'center' };
     
     // Dados
@@ -346,7 +357,7 @@ const StateRevenueTable = ({ csvData, tableName, startYear, endYear, enableMonet
     }
     
     // Salvar arquivo
-    const fileName = `${tableName}_${startYear}-${endYear}.xlsx`;
+    const fileName = `${nomeArquivoBase}.xlsx`;
     const buffer = await workbook.xlsx.writeBuffer();
     const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
     saveAs(blob, fileName);
@@ -360,7 +371,7 @@ const StateRevenueTable = ({ csvData, tableName, startYear, endYear, enableMonet
     ];
     
     const tituloCompleto = `${tableName} - Estado do Piauí (${startYear}-${endYear})`;
-    const fonte = "Fonte: SIOPE/FNDE - Elaboração: OPEPI/UFPI";
+    const fonte = FONTE_EXPORTACAO;
 
     const dataForTable = data.years.map((year) => {
       return [
@@ -386,12 +397,17 @@ const StateRevenueTable = ({ csvData, tableName, startYear, endYear, enableMonet
       doc.setFontSize(14);
       doc.setFont(undefined, 'bold');
       doc.text(tituloCompleto, doc.internal.pageSize.width / 2, 15, { align: 'center' });
+      if (notaValores) {
+        doc.setFontSize(9);
+        doc.setFont(undefined, 'italic');
+        doc.text(notaValores, doc.internal.pageSize.width / 2, 21, { align: 'center' });
+      }
       doc.setFontSize(11);
       doc.setFont(undefined, 'normal');
       doc.text("Nenhum dado encontrado para os filtros selecionados.", 14, 30);
       doc.setFontSize(9);
       doc.text(fonte, 14, 45);
-      doc.save(`${tableName}_${startYear}-${endYear}.pdf`);
+      doc.save(`${nomeArquivoBase}.pdf`);
       return;
     }
 
@@ -405,6 +421,11 @@ const StateRevenueTable = ({ csvData, tableName, startYear, endYear, enableMonet
     doc.setFontSize(14);
     doc.setFont(undefined, 'bold');
     doc.text(tituloCompleto, doc.internal.pageSize.width / 2, 15, { align: 'center' });
+    if (notaValores) {
+      doc.setFontSize(9);
+      doc.setFont(undefined, 'italic');
+      doc.text(notaValores, doc.internal.pageSize.width / 2, 21, { align: 'center' });
+    }
 
     doc.autoTable({
       head: [headers],
@@ -416,13 +437,13 @@ const StateRevenueTable = ({ csvData, tableName, startYear, endYear, enableMonet
         halign: 'left',
       },
       headStyles: {
-        fillColor: [66, 66, 66],
+        fillColor: PDF_CABECALHO_FUNDO,
         textColor: 255,
         fontStyle: "bold",
         halign: 'center',
       },
       alternateRowStyles: {
-        fillColor: [245, 245, 245],
+        fillColor: PDF_LINHA_ALTERNADA,
       },
       columnStyles: columnStyles,
       theme: "grid",
@@ -442,12 +463,22 @@ const StateRevenueTable = ({ csvData, tableName, startYear, endYear, enableMonet
     doc.text(fonte, 14, finalY + 10);
 
     // Salvar PDF
-    doc.save(`${tableName}_${startYear}-${endYear}.pdf`);
+    doc.save(`${nomeArquivoBase}.pdf`);
   };
 
   return (
-    <ThemeProvider theme={theme}>
+    <>
       <div>
+        <SummaryCards
+          resumo={resumo}
+          rows={data.years}
+          types={data.types}
+          dados={finalDisplayData}
+          modo="anos"
+          nomeLinha={(ano) => ano}
+          correcaoAtiva={correcaoAtiva}
+        />
+
         {/* Controles de correção monetária */}
         {enableMonetaryCorrection && (
           <Box sx={{
@@ -474,7 +505,7 @@ const StateRevenueTable = ({ csvData, tableName, startYear, endYear, enableMonet
                     }}
                   />
                 }
-                label="Correção Monetária"
+                label={<MonetaryCorrectionLabel />}
                 sx={{ marginRight: 0 }}
               />
               {useMonetaryCorrection && (
@@ -499,25 +530,48 @@ const StateRevenueTable = ({ csvData, tableName, startYear, endYear, enableMonet
           </Box>
         )}
 
-        <Paper sx={{ backgroundColor: theme.palette.background.default }}>
-          <TableContainer component={Paper} sx={{ maxWidth: '100%', overflowX: 'auto' }}>
+        {correcaoAtiva && !loading && (
+          <Typography
+            variant="caption"
+            sx={{ display: 'block', color: '#b45309', fontStyle: 'italic', marginBottom: '6px' }}
+          >
+            {notaValores} — não são os valores nominais declarados no RREO.
+          </Typography>
+        )}
+
+        <Paper elevation={0} sx={{ border: `1px solid ${cores.linha}`, borderRadius: '14px', overflow: 'hidden' }}>
+          <TableContainer sx={{ maxWidth: '100%', overflowX: 'auto' }}>
             <Table sx={{ minWidth: 650 }} aria-label="state revenue table">
               <StyledTableHead>
                 <TableRow>
-                  <BoldTableCell>Ano</BoldTableCell>
+                  <BoldTableCell sx={{ textAlign: 'left' }}>Ano</BoldTableCell>
                   {data.types.map((type) => (
-                    <BoldTableCell key={type} align="right">
-                      {type}
+                    <BoldTableCell
+                      key={type}
+                      align="right"
+                      sx={{
+                        minWidth: larguraColuna(type),
+                        ...(isColunaTotal(type) ? { backgroundColor: cores.areiaEscura, color: cores.tinta, fontWeight: 700 } : {}),
+                      }}
+                    >
+                      <ColunaComExplicacao nome={type} />
                     </BoldTableCell>
                   ))}
                 </TableRow>
               </StyledTableHead>
               <TableBody>
                 {data.years.map((year, index) => (
-                  <TableRow key={index} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
-                    <BoldTableCell component="th" scope="row">
+                  <TableRow
+                    key={index}
+                    sx={{
+                      backgroundColor: index % 2 === 1 ? cores.zebra : cores.superficie,
+                      '&:hover': { backgroundColor: '#F8EFE9' },
+                      '&:last-child td, &:last-child th': { borderBottom: 0 },
+                    }}
+                  >
+                    <CenteredTableCell component="th" scope="row" sx={{ textAlign: 'left', fontWeight: 600 }}>
                       {year}
-                    </BoldTableCell>
+                    </CenteredTableCell>
                     {data.types.map((type, idx) => {
                       const value = finalDisplayData[type] && finalDisplayData[type][year] !== undefined 
                         ? finalDisplayData[type][year] 
@@ -525,7 +579,7 @@ const StateRevenueTable = ({ csvData, tableName, startYear, endYear, enableMonet
                       return (
                         <CenteredTableCell key={idx} align="right">
                           {typeof value === 'number' 
-                            ? value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                            ? `${value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}${type.includes('%') ? '%' : ''}`
                             : value || '-'}
                         </CenteredTableCell>
                       );
@@ -542,38 +596,34 @@ const StateRevenueTable = ({ csvData, tableName, startYear, endYear, enableMonet
             color="success"
             onClick={downloadExcel}
             startIcon={<FaFileExcel />}
+            aria-label="Baixar tabela em Excel"
             className="action-button"
           >
             <span className="button-text">Excel</span>
           </Button>
           <Button
             variant="contained"
-            color="error"
             onClick={downloadPDF}
             startIcon={<FaFilePdf />}
+            aria-label="Baixar tabela em PDF"
+            sx={{
+              backgroundColor: globalTheme.palette.primary.main,
+              color: globalTheme.palette.primary.contrastText,
+              '&:hover': { backgroundColor: globalTheme.palette.primary.dark },
+            }}
             className="action-button"
           >
             <span className="button-text">PDF</span>
           </Button>
-          <TechnicalSheetButton />
+          <TechnicalSheetButton dialogTitle={`Ficha técnica — ${tableName}`}>
+              <ConteudoFicha chave="estado" />
+            </TechnicalSheetButton>
         </div>
         
-        {/* Fonte dos dados */}
-        <Typography 
-          variant="caption" 
-          sx={{ 
-            display: 'block',
-            textAlign: 'right',
-            color: '#666',
-            fontSize: '12px',
-            fontStyle: 'italic',
-            marginTop: '8px'
-          }}
-        >
-          Fonte: RREO/SIOPE - FNDE
-        </Typography>
+        {/* Fonte dos dados, com link pro documento original */}
+        <DataSourceNote nivel="estadual" />
       </div>
-    </ThemeProvider>
+    </>
   );
 };
 

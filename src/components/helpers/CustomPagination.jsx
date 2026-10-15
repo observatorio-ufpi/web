@@ -1,5 +1,6 @@
 import { Pagination, Box, Typography, Select, MenuItem, FormControl } from '@mui/material';
 import React from 'react';
+import { cores } from '../../theme/tokens';
 
 const CustomPagination = ({ page, totalPages, limit, onPageChange, onLimitChange }) => {
   return (
@@ -22,13 +23,13 @@ const CustomPagination = ({ page, totalPages, limit, onPageChange, onLimitChange
     }}>
       <Typography sx={{
         fontSize: '12px',
-        color: '#666',
+        color: cores.textoSuave,
         whiteSpace: 'nowrap',
         '@media (max-width: 768px)': {
-          fontSize: '10px',
+          fontSize: '12px',
         },
         '@media (max-width: 480px)': {
-          fontSize: '9px',
+          fontSize: '12px',
         },
       }}>
         Itens por página:
@@ -40,24 +41,24 @@ const CustomPagination = ({ page, totalPages, limit, onPageChange, onLimitChange
           onChange={onLimitChange}
           sx={{
             padding: '4px 8px',
-            border: '1px solid #e0e0e0',
+            border: `1px solid ${cores.linhaForte}`,
             borderRadius: '8px',
             background: 'white',
             fontSize: '12px',
-            color: '#666',
+            color: cores.textoSuave,
             cursor: 'pointer',
             transition: 'all 0.2s ease',
             minWidth: '50px',
             '&:hover': {
-              borderColor: '#2196f3',
+              borderColor: cores.marca,
             },
             '@media (max-width: 768px)': {
               padding: '4px 6px',
-              fontSize: '10px',
+              fontSize: '12px',
             },
             '@media (max-width: 480px)': {
               padding: '3px 4px',
-              fontSize: '9px',
+              fontSize: '12px',
               minWidth: '40px',
             },
           }}
@@ -75,14 +76,14 @@ const CustomPagination = ({ page, totalPages, limit, onPageChange, onLimitChange
         <>
           <Typography sx={{
             fontSize: '12px',
-            color: '#666',
+            color: cores.textoSuave,
             whiteSpace: 'nowrap',
             margin: '0 0.5rem',
             '@media (max-width: 768px)': {
-              fontSize: '10px',
+              fontSize: '12px',
             },
             '@media (max-width: 480px)': {
-              fontSize: '9px',
+              fontSize: '12px',
             },
           }}>
             Página {page} de {totalPages}
@@ -97,17 +98,17 @@ const CustomPagination = ({ page, totalPages, limit, onPageChange, onLimitChange
             size="large"
             sx={{
               '& .MuiPaginationItem-root': {
-                color: '#666',
-                borderColor: '#e0e0e0',
+                color: cores.textoSuave,
+                borderColor: cores.linhaForte,
                 '&:hover': {
-                  backgroundColor: 'rgba(139, 92, 246, 0.1)',
-                  borderColor: '#8b5cf6'
+                  backgroundColor: cores.areia,
+                  borderColor: cores.marca
                 },
                 '&.Mui-selected': {
-                  backgroundColor: '#8b5cf6',
+                  backgroundColor: cores.marca,
                   color: 'white',
                   '&:hover': {
-                    backgroundColor: '#7c3aed'
+                    backgroundColor: cores.marcaEscura
                   }
                 }
               },
@@ -119,14 +120,14 @@ const CustomPagination = ({ page, totalPages, limit, onPageChange, onLimitChange
                   padding: 0,
                   minWidth: '24px',
                   height: '24px',
-                  fontSize: '10px',
+                  fontSize: '12px',
                 },
               },
               '@media (max-width: 480px)': {
                 '& .MuiPagination-ul button': {
                   minWidth: '22px',
                   height: '22px',
-                  fontSize: '9px',
+                  fontSize: '12px',
                 },
               },
             }}

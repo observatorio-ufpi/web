@@ -1,5 +1,4 @@
 ﻿import { Typography, Box } from "@mui/material";
-import { useTheme } from "@mui/material/styles";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import "../../../../style/RevenueTableContainer.css";
 import "../../../../style/TableFilters.css";
@@ -19,6 +18,11 @@ import { ArrowDropDown } from "@mui/icons-material";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import JSZip from "jszip";
+import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
+import { ListItemText } from "@mui/material";
+import { cores } from "../../../../theme/tokens";
+import EmptyState from '../../../common/EmptyState';
+import { ConteudoFicha } from '../../../common/fichasTecnicas';
 
 function ParentComponent() {
   const apiRef = useRef();
@@ -754,32 +758,15 @@ function ParentComponent() {
     filters.endYear,
   ]);
 
-  const theme = useTheme();
 
   return (
     <div className="app-container">
       {isLoading && <Loading />}
       {error && (
-        <div className="error-message">
-          <p>{error}</p>
-        </div>
+        <EmptyState erro titulo="Não foi possível carregar os dados" texto="Tente novamente em alguns instantes." />
       )}
-      <hr className="divider" />
       {!isLoading && !error && !data && (
-        <Typography
-          variant="body1"
-          sx={{
-            textAlign: "center",
-            fontSize: "18px",
-            fontWeight: "bold",
-            margin: "20px auto",
-            maxWidth: "400px",
-            color: theme.palette.primary.main,
-          }}
-        >
-          Selecione os filtros desejados na barra lateral para montar uma
-          consulta.
-        </Typography>
+        <EmptyState titulo="Monte sua consulta" texto={'Escolha os filtros na lateral e clique em "Mostrar".'} />
       )}
       {/* Título já é renderizado dentro do ApiDataTable */}
       <ApiContainer
@@ -800,13 +787,21 @@ function ParentComponent() {
       {!isLoading && !error && data && title ? (
         <>
           <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
+            {/* Mesmo botão "Exportar todas" da área financeira (era verde) */}
             <Button
-              variant="contained"
-              color="success"
+              variant="outlined"
               onClick={handleDownloadMenuOpen}
+              startIcon={<FileDownloadOutlinedIcon />}
               endIcon={<ArrowDropDown />}
+              aria-haspopup="menu"
+              sx={{
+                color: cores.tinta,
+                borderColor: cores.linhaForte,
+                backgroundColor: cores.superficie,
+                "&:hover": { borderColor: cores.marca, backgroundColor: cores.areia },
+              }}
             >
-              Baixar Todas as Tabelas
+              Exportar todas
             </Button>
 
             <Menu
@@ -815,10 +810,10 @@ function ParentComponent() {
               onClose={handleDownloadMenuClose}
             >
               <MenuItem onClick={handleDownloadSeparated}>
-                Tabelas Separadas (ZIP)
+                <ListItemText primary="Uma planilha por tabela (ZIP)" secondary="um arquivo para cada tabela da consulta" />
               </MenuItem>
               <MenuItem onClick={handleDownloadConsolidated}>
-                Tabela Única Consolidada (Excel)
+                <ListItemText primary="Tudo em uma planilha (Excel)" secondary="todas as tabelas juntas" />
               </MenuItem>
             </Menu>
           </Box>
@@ -873,21 +868,18 @@ function ParentComponent() {
             sx={{
               marginTop: 6,
               padding: 3,
-              backgroundColor: "#f5f5f5",
-              borderRadius: "8px",
-              border: "1px solid #e0e0e0",
+              backgroundColor: cores.superficie,
+              borderRadius: "14px",
+              border: `1px solid ${cores.linha}`,
             }}
           >
             <Typography
               variant="h6"
-              sx={{ marginBottom: 2, fontWeight: "bold", color: "#333" }}
+              sx={{ marginBottom: 2, fontWeight: 600, fontSize: "18px", color: cores.tinta }}
             >
               Ficha Técnica
             </Typography>
-            <Typography variant="body2" sx={{ color: "#666", lineHeight: 1.6 }}>
-              Informações sobre a metodologia, fonte de dados, periodicidade e
-              outras informações técnicas estarão disponíveis aqui.
-            </Typography>
+            <ConteudoFicha chave="basica" />
           </Box>
         </>
       ) : null}

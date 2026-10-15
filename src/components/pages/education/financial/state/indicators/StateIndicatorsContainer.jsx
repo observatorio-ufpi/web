@@ -14,6 +14,19 @@ import { Typography, Button, Box } from "@mui/material";
 import { loadIndicatorData, stateIndicatorOptions } from "../../../../../../services/stateDataService";
 import YearRangeFilter from "../../../../../helpers/YearRangeFilter.jsx";
 import TechnicalSheetButton from "../../../../../common/TechnicalSheetButton.jsx";
+import EmptyState from '../../../../../common/EmptyState';
+import PageHeader, { periodoEtiqueta } from '../../../../../common/PageHeader';
+import { ConteudoFicha } from '../../../../../common/fichasTecnicas';
+
+// Nomes exibidos no cabeçalho (mesmos da lista de filtros da sidebar)
+const NOMES_INDICADORES_ESTADO = {
+  revenueComposition: 'Composição das receitas',
+  fundeb: 'Fundeb',
+  mde: 'Manutenção e Desenvolvimento do Ensino (MDE)',
+  educationExpense: 'Despesas com educação',
+  additionalRevenue: 'Receitas adicionais',
+  rpeb: 'Composição da Receita Potencial de Educação (RPEB)',
+};
 
 
 
@@ -110,25 +123,13 @@ function StateIndicatorsContainer() {
   return (
     <div>
       <div className="app-container">
-        <hr className="divider" />
 
         {/* Área de dados - sempre visível */}
         <div className="data-section">
-          <Box sx={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 2 }}>
-            <TechnicalSheetButton />
-          </Box>
           {loading && <Loading />}
 
           {!loading && error && (
-            <div style={{ 
-              textAlign: 'center', 
-              padding: '40px 20px',
-              color: '#d9534f',
-              fontSize: '18px'
-            }}>
-              <p>Falha ao carregar os dados. Por favor, tente novamente mais tarde.</p>
-              <p>Erro: {error}</p>
-            </div>
+            <EmptyState erro titulo="Não foi possível carregar os dados" texto="Tente novamente em alguns instantes." />
           )}
 
           {!loading && !error && !apiData && !hasInitialLoad && (
@@ -186,24 +187,22 @@ function StateIndicatorsContainer() {
           )}
 
           {!loading && !error && (!apiData || Object.keys(apiData).length === 0) && hasInitialLoad && (
-            <div style={{ 
-              textAlign: 'center', 
-              padding: '40px 20px',
-              color: '#d9534f',
-              fontSize: '18px'
-            }}>
-              <p>Nenhum dado encontrado para o indicador selecionado.</p>
-            </div>
+            <EmptyState titulo="Nenhum dado encontrado" texto="Tente outro período ou outro filtro." />
           )}
 
           {!loading && !error && apiData && Object.keys(apiData).length > 0 && (
             <>
               {chartTitle && (
-                <Box sx={{ padding: 2 }}>
-                  <Typography variant="h6" sx={{ marginBottom: 2, textAlign: 'center' }}>
-                    {chartTitle}
-                  </Typography>
-                </Box>
+                <PageHeader
+                  caminho="Dados financeiros  ›  Indicadores do Estado"
+                  titulo={NOMES_INDICADORES_ESTADO[selectedIndicator] || 'Indicadores do Estado'}
+                  etiquetas={['Piauí', periodoEtiqueta(startYear, endYear)]}
+                  acoes={
+                    <TechnicalSheetButton className="" dialogTitle={"Ficha técnica — Indicadores do Estado"}>
+              <ConteudoFicha chave="indicadoresEstaduais" />
+            </TechnicalSheetButton>
+                  }
+                />
               )}
               {selectedIndicator === "revenueComposition" && (
                 <StateRevenueCompositionCharts data={apiData} />

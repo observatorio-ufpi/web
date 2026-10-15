@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { FaSearch, FaChevronDown, FaGraduationCap, FaDollarSign, FaMapMarkedAlt, FaFileAlt } from 'react-icons/fa';
 import { Select } from '../ui';
 import { Card } from '../ui';
@@ -289,12 +289,6 @@ const Home = () => {
   const displayError = selectedMunicipality === '22' ? error : municipalityError;
   const selectedMunicipalityName = municipalitiesList.find(m => m.code === selectedMunicipality)?.name || 'Piauí';
   
-  // Log de debug para verificar os dados
-  console.log('Home - displayData:', displayData);
-  console.log('Home - Taxa de analfabetismo:', displayData?.illiteracyRate);
-  console.log('Home - Taxa de conclusão do ensino médio:', displayData?.schoolingRate);
-  console.log('Home - Taxa de conclusão do ensino superior:', displayData?.higherEducationCompletionRate);
-  console.log('Home - Dados financeiros:', displayData?.financialData);
 
   const legendData = [
     { name: 'Planície Litorânea', color: '#D4E8F4' },
@@ -339,54 +333,47 @@ const Home = () => {
           </p>
           
           <div className="feature-cards-container">
-            {/* Dados Financeiros */}
-            <div 
-              className="feature-card p-8 rounded-xl shadow-lg border-2 border-yellow-300 cursor-pointer hover:shadow-xl transition-all duration-300 hover:scale-105 text-center" 
-              style={{ backgroundColor: 'var(--background-color)' }}
-              onClick={() => navigate('/dados-financeiros')}
-            >
-              <div className="bg-yellow-100 w-16 h-10 rounded-full flex items-center justify-center mx-auto mb-6">
-                <FaDollarSign className="text-yellow-600 text-2xl" />
-              </div>
-              <h3 className="text-xl font-bold mb-4 text-gray-800">Dados financeiros</h3>
-              <p className="text-gray-600 leading-relaxed">
-                Dados sobre o financiamento da educação, com visualizações gráficas e análises.
-              </p>
-            </div>
-
-            {/* Dados Educacionais */}
-            <Card 
-              variant="elevated" 
-              className="feature-card border-2 border-orange-300 cursor-pointer hover:shadow-lg transition-all duration-300" 
-              backgroundColor="var(--background-color)"
-              onClick={() => navigate('/dados-educacionais')}
-            >
-              <Card.Content padding="default" className="text-center">
-                <div className="bg-orange-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <FaGraduationCap className="text-orange-500 text-2xl" />
+            {/* Os três cards com a mesma estrutura (antes o do meio usava <Card> e tinha
+                outro espaçamento, ícone de outro tamanho e sem o mesmo hover) */}
+            {[
+              {
+                titulo: 'Dados financeiros',
+                texto: 'Dados sobre o financiamento da educação, com visualizações gráficas e análises.',
+                Icone: FaDollarSign,
+                cores: { borda: 'border-line', fundoIcone: 'bg-areia', icone: 'text-brand' },
+                onClick: () => navigate('/dados-financeiros'),
+              },
+              {
+                titulo: 'Dados educacionais',
+                texto: 'Dados e indicadores sobre educação básica e superior, com visualizações gráficas e análises.',
+                Icone: FaGraduationCap,
+                cores: { borda: 'border-line', fundoIcone: 'bg-areia', icone: 'text-brand' },
+                onClick: () => navigate('/dados-educacionais'),
+              },
+              {
+                titulo: 'Repositório/Acervo',
+                texto: 'Conjunto de documentos contendo a base legal, normativa e da produção científica que orienta a política educacional no Piauí e em seus 224 municípios.',
+                Icone: FaFileAlt,
+                cores: { borda: 'border-line', fundoIcone: 'bg-areia', icone: 'text-brand' },
+                onClick: () => { window.location.href = 'https://repositorio.opepi.pi.gov.br'; },
+              },
+            ].map(({ titulo, texto, Icone, cores, onClick }) => (
+              <div
+                key={titulo}
+                role="link"
+                tabIndex={0}
+                className={`feature-card p-8 rounded-xl shadow-lg border-2 ${cores.borda} cursor-pointer hover:shadow-xl transition-all duration-300 hover:-translate-y-1 text-center`}
+                style={{ backgroundColor: 'var(--background-color)' }}
+                onClick={onClick}
+                onKeyDown={(e) => { if (e.key === 'Enter') onClick(); }}
+              >
+                <div className={`${cores.fundoIcone} w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6`}>
+                  <Icone className={`${cores.icone} text-2xl`} />
                 </div>
-                <h3 className="text-xl font-bold mb-4 text-gray-800">Dados educacionais</h3>
-                <p className="text-gray-600 leading-relaxed">
-                  Dados e indicadores sobre educação básica e superior, com visualizações gráficas e análises.
-                </p>
-                
-              </Card.Content>
-            </Card>
-
-            {/* Repositório */}
-            <div 
-              className="feature-card p-8 rounded-xl shadow-lg border-2 border-yellow-200 cursor-pointer hover:shadow-xl transition-all duration-300 hover:scale-105 text-center" 
-              style={{ backgroundColor: 'var(--background-color)' }}
-              onClick={() => window.location.href = 'https://repositorio.opepi.pi.gov.br'}
-            >
-              <div className="bg-gray-100 w-16 h-10 rounded-full flex items-center justify-center mx-auto mb-6">
-                <FaFileAlt className="text-gray-600 text-2xl" />
+                <h3 className="text-xl font-bold mb-4 text-gray-800">{titulo}</h3>
+                <p className="text-gray-600 leading-relaxed">{texto}</p>
               </div>
-              <h3 className="text-xl font-bold mb-4 text-gray-800">Repositório/Acervo</h3>
-              <p className="text-gray-600 leading-relaxed">
-                Conjunto de documentos contendo a base legal, normativa e da produção científica que orienta a política educacional no Piauí e em seus 224 municípios.
-              </p>
-            </div>
+            ))}
           </div>
         </div>
       </section>
@@ -414,6 +401,14 @@ const Home = () => {
                     fullWidth
                   />
                 </div>
+                {selectedMunicipality !== '22' && (
+                  <Link
+                    to={`/municipio/${String(selectedMunicipality).slice(0, 6)}`}
+                    className="mt-3 flex items-center justify-center gap-2 rounded-lg bg-brand px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-dark"
+                  >
+                    Ver perfil financeiro completo de {selectedMunicipalityName} →
+                  </Link>
+                )}
               </Card.Content>
             </Card>
           </div>
@@ -647,7 +642,7 @@ const Home = () => {
                     <>
                       <div className="mb-4 space-y-2">
                         {/* Título do card */}
-                        <h3 className="text-base font-bold text-orange-600 uppercase tracking-wide">
+                        <h3 className="text-base font-bold text-brand uppercase tracking-wide">
                           Educação Básica
                         </h3>
 
@@ -658,7 +653,7 @@ const Home = () => {
                         <div className="space-y-1">
                           <div className="flex justify-between items-center px-2">
                             <span className="text-sm text-gray-600">Matrículas:</span>
-                            <span className="text-lg font-bold text-orange-500">
+                            <span className="text-lg font-bold text-brand">
                               {displayData?.education?.enrollments
                                 ? formatNumber(displayData.education.enrollments)
                                 : 'N/A'}
@@ -666,7 +661,7 @@ const Home = () => {
                           </div>
                           <div className="flex justify-between items-center px-2">
                             <span className="text-sm text-gray-600">Escolas:</span>
-                            <span className="text-lg font-bold text-orange-500">
+                            <span className="text-lg font-bold text-brand">
                               {displayData?.education?.schools
                                 ? formatNumber(displayData.education.schools)
                                 : 'N/A'}
@@ -674,7 +669,7 @@ const Home = () => {
                           </div>
                           <div className="flex justify-between items-center px-2">
                             <span className="text-sm text-gray-600">Ano:</span>
-                            <span className="text-lg font-bold text-orange-500">2023</span>
+                            <span className="text-lg font-bold text-brand">2023</span>
                           </div>
                         </div>
                       </div>
@@ -682,7 +677,7 @@ const Home = () => {
                   )}
                   <button 
                     onClick={() => handleCategorySelect('educacional')}
-                    className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-semibold transition-all duration-300 hover:-translate-y-1 flex items-center gap-2 w-full justify-center text-sm"
+                    className="bg-brand hover:bg-brand-dark text-white px-4 py-2 rounded-lg font-semibold transition-all duration-300 hover:-translate-y-1 flex items-center gap-2 w-full justify-center text-sm"
                   >
                     <FaGraduationCap />
                     dados educacionais
@@ -708,7 +703,7 @@ const Home = () => {
                     <>
                       <div className="mb-4 space-y-2">
                         {/* Título do card */}
-                        <h3 className="text-base font-bold text-orange-600 uppercase tracking-wide">
+                        <h3 className="text-base font-bold text-brand uppercase tracking-wide">
                           Educação Superior
                         </h3>
 
@@ -719,7 +714,7 @@ const Home = () => {
                         <div className="space-y-1">
                           <div className="flex justify-between items-center px-2">
                             <span className="text-sm text-gray-600">Matrículas:</span>
-                            <span className="text-lg font-bold text-orange-500">
+                            <span className="text-lg font-bold text-brand">
                               {displayData?.higherEducation?.enrollments
                                 ? formatNumber(displayData.higherEducation.enrollments)
                                 : 'N/A'}
@@ -727,7 +722,7 @@ const Home = () => {
                           </div>
                           <div className="flex justify-between items-center px-2">
                             <span className="text-sm text-gray-600">Instituições:</span>
-                            <span className="text-lg font-bold text-orange-500">
+                            <span className="text-lg font-bold text-brand">
                               {displayData?.higherEducation?.institutions
                                 ? formatNumber(displayData.higherEducation.institutions)
                                 : 'N/A'}
@@ -735,7 +730,7 @@ const Home = () => {
                           </div>
                           <div className="flex justify-between items-center px-2">
                             <span className="text-sm text-gray-600">Ano:</span>
-                            <span className="text-lg font-bold text-orange-500">2023</span>
+                            <span className="text-lg font-bold text-brand">2023</span>
                           </div>
                         </div>
 
@@ -746,7 +741,7 @@ const Home = () => {
                   )}
                   <button 
                     onClick={() => handleCategorySelect('educacional')}
-                    className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-semibold transition-all duration-300 hover:-translate-y-1 flex items-center gap-2 w-full justify-center text-sm"
+                    className="bg-brand hover:bg-brand-dark text-white px-4 py-2 rounded-lg font-semibold transition-all duration-300 hover:-translate-y-1 flex items-center gap-2 w-full justify-center text-sm"
                   >
                     <FaGraduationCap />
                     dados educacionais

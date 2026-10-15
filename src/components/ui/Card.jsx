@@ -14,8 +14,8 @@ const Card = ({
   const variants = {
     default: 'bg-white border border-gray-200',
     elevated: 'bg-white shadow-md',
-    outlined: 'bg-white border-2 border-purple-200',
-    filled: 'bg-purple-50 border border-purple-200'
+    outlined: 'bg-white border border-line',
+    filled: 'bg-areia/40 border border-line'
   };
 
   const hoverClasses = hover ? 'hover:shadow-lg hover:-translate-y-1' : '';

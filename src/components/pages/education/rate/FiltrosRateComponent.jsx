@@ -1,6 +1,5 @@
 import { Button, Typography, Box } from '@mui/material';
 import React, { useEffect, useMemo, useState } from 'react';
-import { useTheme } from '@mui/material/styles';
 import { Select } from '../../../ui';
 import YearRangeFilter from '../../../helpers/YearRangeFilter';
 import '../../../../style/RevenueTableContainer.css';
@@ -9,9 +8,10 @@ import ApiRateContainer from './ApiRateComponent.jsx';
 import TableRateComponent from './TableRateComponent.jsx';
 import { Loading } from "../../../ui";
 import TechnicalSheetButton from '../../../common/TechnicalSheetButton.jsx';
+import EmptyState from '../../../common/EmptyState';
+import { ConteudoFicha } from '../../../common/fichasTecnicas';
 
 function FiltrosRateComponent() {
-  const theme = useTheme();
   const yearLimits = useMemo(() => ({
     pop_out_school: { min: 2019, max: 2023 },
     adjusted_liquid_frequency: { min: 2019, max: 2023 },
@@ -263,31 +263,16 @@ function FiltrosRateComponent() {
     <div className="app-container">
       <div className="flex flex-col gap-4 p-0 m-0">
         
-          <hr className="divider" />
 
           {isLoading && (
             <Loading />
           )}
           {error && (
-            <div className="error-message">
-              <p>{error}</p>
-            </div>
+            <EmptyState erro titulo="Não foi possível carregar os dados" texto="Tente novamente em alguns instantes." />
           )}
 
           {!isLoading && !error && !data && (
-            <Typography 
-              variant="body1" 
-              sx={{ 
-                textAlign: 'center',
-                fontSize: '18px',
-                fontWeight: 'bold',
-                margin: '20px auto',
-                maxWidth: '400px',
-                color: theme.palette.primary.main
-              }}
-            >
-              Selecione os filtros desejados na lateral e clique em "Filtrar" para montar uma consulta.
-            </Typography>
+            <EmptyState titulo="Monte sua consulta" texto={'Escolha os filtros na lateral e clique em "Mostrar".'} />
           )}
 
           {!isLoading && !error && data && title ? (
@@ -326,7 +311,9 @@ function FiltrosRateComponent() {
               />
 
               <Box sx={{ display: 'flex', justifyContent: 'flex-end', marginTop: 2 }}>
-                <TechnicalSheetButton />
+                <TechnicalSheetButton dialogTitle={"Ficha técnica — Indicadores educacionais"}>
+              <ConteudoFicha chave="taxas" />
+            </TechnicalSheetButton>
               </Box>
             </>
           ) : null}

@@ -45,6 +45,7 @@ const YearRangeFilter = ({
           options={yearOptions}
           placeholder="Inicial"
           size="xxs"
+          fullWidth
         />
       </div>
       
@@ -59,6 +60,7 @@ const YearRangeFilter = ({
           options={endYearOptions}
           placeholder="Final"
           size="xxs"
+          fullWidth
         />
       </div>
     </div>

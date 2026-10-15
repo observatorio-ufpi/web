@@ -1,13 +1,10 @@
 // Serviço para gerenciar dados dos CSVs do estado do Piauí
+import { buscarCsvEstado } from './csvService.jsx';
 
 // Função para carregar dados de um CSV específico
 export const loadStateCSVData = async (tableNumber) => {
   try {
-    const response = await fetch(`/src/files/estado_tabela_${tableNumber}.csv`);
-    if (!response.ok) {
-      throw new Error(`Erro ao carregar tabela ${tableNumber}: ${response.statusText}`);
-    }
-    const csvText = await response.text();
+    const csvText = await buscarCsvEstado(tableNumber);
     const parsedData = parseCSV(csvText);
     return parsedData;
   } catch (error) {

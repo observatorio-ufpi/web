@@ -8,6 +8,10 @@ import { Typography, Box } from '@mui/material';
 import { Select } from '../../../../ui';
 import '../../../../../style/RevenueTableContainer.css';
 import { Loading } from "../../../../ui";
+import EmptyState from '../../../../common/EmptyState';
+import { RESUMO_ESTADO } from './stateSummaryConfig';
+import PageHeader, { periodoEtiqueta } from '../../../../common/PageHeader';
+import ComoCitarButton from '../../../../common/ComoCitarButton';
 
 const StateRevenueTableContainer = () => {
   const theme = useTheme();
@@ -41,7 +45,7 @@ const StateRevenueTableContainer = () => {
     const yearDisplay = startYear === endYear ? startYear : `${startYear}-${endYear}`;
     const tableName = stateTableNames[selectedTable];
     setTableTitle(`${tableName} (${yearDisplay})`);
-    refetch();
+    refetch(selectedTable);
   };
 
   // Escutar eventos de filtro aplicados
@@ -65,7 +69,7 @@ const StateRevenueTableContainer = () => {
         ? stateTableNames[event.detail.stateTableType] 
         : stateTableNames[selectedTable];
       setTableTitle(`${tableName} (${yearDisplay})`);
-      refetch();
+      refetch(event.detail.stateTableType || selectedTable);
     };
 
     window.addEventListener('applyFinancialFilters', handleApplyFilters);
@@ -74,58 +78,32 @@ const StateRevenueTableContainer = () => {
 
   return (
     <div className='app-container'>
-      <hr className="divider" />
 
       {/* Área de dados - sempre visível */}
       <div className="data-section">
         {loading && <Loading />}
 
         {!loading && error && (
-          <div style={{ 
-            textAlign: 'center', 
-            padding: '40px 20px',
-            color: '#d9534f',
-            fontSize: '18px'
-          }}>
-            <p>Falha ao carregar os dados. Por favor, tente novamente mais tarde.</p>
-          </div>
+          <EmptyState erro titulo="Não foi possível carregar os dados" texto="Tente novamente em alguns instantes." />
         )}
 
         {!loading && !error && !csvData && !hasInitialLoad && (
-          <Typography 
-            variant="body1" 
-            sx={{ 
-              textAlign: 'center',
-              fontSize: '18px',
-              fontWeight: 'bold',
-              margin: '20px auto',
-              maxWidth: '400px',
-              color: theme.palette.primary.main
-            }}
-          >
-            Selecione os filtros desejados na lateral e clique em "Filtrar" para montar uma consulta.
-          </Typography>
+          <EmptyState titulo="Monte sua consulta" texto={'Escolha os filtros na lateral e clique em "Mostrar".'} />
         )}
 
         {!loading && !error && !csvData && hasInitialLoad && (
-          <div style={{ 
-            textAlign: 'center', 
-            padding: '40px 20px',
-            color: '#d9534f',
-            fontSize: '18px'
-          }}>
-            <p>Nenhum dado encontrado com os filtros selecionados.</p>
-          </div>
+          <EmptyState titulo="Nenhum dado encontrado" texto="Tente outro período ou outro filtro." />
         )}
 
         {!loading && !error && csvData && (
           <>
             {tableTitle && (
-              <Box sx={{ padding: 2 }}>
-                <Typography variant="h5" sx={{ marginBottom: 2, textAlign: 'center', fontWeight: 'bold', fontSize: '1.5rem' }}>
-                  {tableTitle}
-                </Typography>
-              </Box>
+              <PageHeader
+                caminho="Dados financeiros  ›  Estado"
+                titulo={stateTableNames[selectedTable]}
+                etiquetas={['Piauí', periodoEtiqueta(startYear, endYear)]}
+                acoes={<ComoCitarButton titulo={`${stateTableNames[selectedTable]}: ${periodoEtiqueta(startYear, endYear)}`} />}
+              />
             )}
             <div className='table-container'>
               <StateRevenueTable 
@@ -134,6 +112,7 @@ const StateRevenueTableContainer = () => {
                 startYear={startYear}
                 endYear={endYear}
                 enableMonetaryCorrection={true}
+                resumo={RESUMO_ESTADO[selectedTable]}
               />
             </div>
 

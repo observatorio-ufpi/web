@@ -2,8 +2,7 @@ import Button from "@mui/material/Button";
 import { saveAs } from "file-saver";
 import JSZip from "jszip";
 import React, { useState, useEffect, useMemo } from "react";
-import { useTheme } from '@mui/material/styles';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import "../../../../../../App.css";
 import { fetchData } from "../../../../../../services/apiService.jsx";
 import "../../../../../../style/RevenueTableContainer.css";
@@ -11,67 +10,36 @@ import {
   transformDataForTableByYear,
   transformDataForTableRevenues,
 } from "../../../../../../utils/dataTransformingUtils.jsx";
+import { tableOptions, groupTypeOptions, TABLE_MAPPINGS } from "./tableConfig.js";
 import { municipios, Regioes, FaixaPopulacional } from "../../../../../../utils/municipios.mapping.jsx";
-import {
-  mapAdditionalMunicipalEducationRevenue,
-  mapAllTables,
-  mapAreasActivityExpense,
-  mapBasicEducationMinimalPotential,
-  mapComplementaryProtocol,
-  mapComplementationFundebFundef,
-  mapConstitutionalLimitMde,
-  mapConstitutionalTransfersRevenue,
-  mapExpensesBasicEducationFundeb,
-  mapMunicipalFundebFundefComposition,
-  mapMunicipalTaxesRevenues,
-  mapOwnRevenues,
-  standardizeTypeAdditionalEducationRevenues,
-  standardizeTypeMunicipalTaxesRevenues,
-  standardizedTypeAllTables,
-  standardizedTypeAreasActivityExpense,
-  standardizedTypeBasicEducationMinimalPotential,
-  standardizedTypeComplementaryProtocol,
-  standardizedTypeComplementationFundebFundef,
-  standardizedTypeConstitutionalLimitMde,
-  standardizedTypeConstitutionalTransfersRevenue,
-  standardizedTypeExpensesBasicEducationFundeb,
-  standardizedTypeMunicipalFundebFundefComposition,
-  standardizedTypeOwnRevenues,
-} from "../../../../../../utils/tablesMapping.jsx";
 import CustomPagination from "../../../../../helpers/CustomPagination.jsx";
 import FilterComponent from "../../../../../helpers/TableFilters.jsx";
-import RevenueTable from "./RevenueTable.jsx";
+import RevenueTable, { SEM_DADO_TOOLTIP } from "./RevenueTable.jsx";
+import DataSourceNote from "../../../../../common/DataSourceNote.jsx";
+import EmptyState from "../../../../../common/EmptyState.jsx";
+import PageHeader from "../../../../../common/PageHeader.jsx";
+import { useTituloDinamico } from "../../../../../common/TituloDaPagina.jsx";
 import Select from "../../../../../ui/Select";
 import { Loading } from "../../../../../ui";
-import { Typography, Box, Menu, MenuItem } from "@mui/material";
+import { Typography, Box, Menu, MenuItem, ListItemText } from "@mui/material";
+import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
+import LinkIcon from "@mui/icons-material/Link";
+import CheckIcon from "@mui/icons-material/Check";
+import CompareArrowsIcon from "@mui/icons-material/CompareArrows";
+import LocationCityIcon from "@mui/icons-material/LocationCity";
+import { cores } from "../../../../../../theme/tokens";
 import { ExpandMore, ExpandLess, ArrowDropDown } from '@mui/icons-material';
 import { buildStyledWorkbook } from "../../../../../../utils/excelExportUtils.js";
 import TechnicalSheetButton from "../../../../../common/TechnicalSheetButton.jsx";
+import { lerFiltrosMunicipaisDaUrl, filtrosMunicipaisParaUrl } from "../../../../../../utils/financialUrlFilters.js";
+import { FONTE_EXPORTACAO } from '../../../../../../utils/exportStyle';
+import { ConteudoFicha } from '../../../../../common/fichasTecnicas';
+import ComoCitarButton from "../../../../../common/ComoCitarButton.jsx";
 
 // Opções para os selects
-const tableOptions = [
-  { value: 'ownRevenues', label: 'Receita de impostos próprios' },
-  { value: 'constitutionalTransfersRevenue', label: 'Receita de transferências constitucionais e legais' },
-  { value: 'municipalTaxesRevenues', label: 'Receita Líquida de Impostos do Município' },
-  { value: 'additionalEducationRevenue', label: 'Receitas adicionais da educação no Município' },
-  { value: 'municipalFundebFundefComposition', label: 'Composição do Fundeb no Município' },
-  { value: 'complementationFundebFundef', label: 'Composição da complementação do Fundeb' },
-  { value: 'constitutionalLimitMde', label: 'Limite constitucional em MDE no Município' },
-  { value: 'expensesBasicEducationFundeb', label: 'Despesas com profissionais da Educação básica do Fundeb' },
-  { value: 'areasActivityExpense', label: 'Despesas em MDE por área de atuação' },
-  { value: 'basicEducationMinimalPotential', label: 'Receita Potencial Mínima vinculada à Educação Básica (RPEB)'},
-  { value: 'complementaryProtocol', label: 'Protocolo Complementar' },
-];
-
-const groupTypeOptions = [
-  { value: 'desagregado', label: 'Desagregado (sem agrupamento)' },
-  { value: 'municipio', label: 'Município' },
-  { value: 'ano', label: 'Ano' },
-];
-
 function RevenueTableContainer() {
-  const theme = useTheme();
   const navigate = useNavigate();
+  const location = useLocation();
   
   const [apiData, setApiData] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -82,7 +50,6 @@ function RevenueTableContainer() {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(50);
   const [totalPages, setTotalPages] = useState(1);
-  const [tableTitle, setTableTitle] = useState("");
   const [filters, setFilters] = useState({
     nomeMunicipio: '',
     codigoMunicipio: '',
@@ -94,6 +61,35 @@ function RevenueTableContainer() {
     anoFinal: 2024,
   });
   const [hasInitialLoad, setHasInitialLoad] = useState(false);
+  const [linkCopiado, setLinkCopiado] = useState(false);
+  // Todos os municípios no último ano da consulta de 1 município — alimenta a
+  // comparação dos cards ("12º maior de 224 · mediana do Piauí")
+  const [referenciaEstadual, setReferenciaEstadual] = useState(null);
+
+  useEffect(() => {
+    setReferenciaEstadual(null);
+    const config = TABLE_MAPPINGS[selectedTable];
+    const municipiosNaTela = apiData && typeof apiData === 'object' ? Object.keys(apiData).filter((k) => /^\d{6,7}$/.test(k)) : [];
+    if (!config?.resumo || groupType !== 'municipio' || municipiosNaTela.length !== 1) return;
+    const codigo = municipiosNaTela[0];
+    const anos = Object.values(apiData[codigo] || {})
+      .flatMap((registros) => (Array.isArray(registros) ? registros.map((r) => Number(r.ano)) : []))
+      .filter(Boolean);
+    if (!anos.length) return;
+    const ano = Math.max(...anos);
+    let cancelado = false;
+    fetchData(selectedTable, 'ano', { anoInicial: ano, anoFinal: ano, page: 1, limit: 10000 })
+      .then((resp) => {
+        const dadosAno = resp?.data?.[ano] || resp?.data?.[String(ano)];
+        if (cancelado || !dadosAno) return;
+        const { typeToRowToValue } = config.transformByAno(dadosAno, config.standardize);
+        setReferenciaEstadual({ ano, codigo, valores: typeToRowToValue });
+      })
+      .catch(() => {}); // comparação é opcional: sem ela os cards continuam funcionando
+    return () => {
+      cancelado = true;
+    };
+  }, [apiData, selectedTable, groupType]);
 
   const shouldShowAllCitiesSingleYear =
     filters.anoInicial === filters.anoFinal && !filters.codigoMunicipio;
@@ -181,49 +177,7 @@ function RevenueTableContainer() {
       limit: effectiveLimit,
     })
       .then((response) => {
-        // Construir o título com os filtros aplicados
-        let locationName = 'Piauí';
-        let ibgeCode = '';
-        if (filters.nomeMunicipio && filters.codigoMunicipio) {
-          locationName = filters.nomeMunicipio;
-          ibgeCode = ` (IBGE: ${filters.codigoMunicipio})`;
-        } else if (filters.nomeMunicipio) {
-          locationName = filters.nomeMunicipio;
-        }
-        const yearDisplay = filters.anoInicial === filters.anoFinal ? filters.anoInicial : `${filters.anoInicial}-${filters.anoFinal}`;
         
-        let titleParts = [`Dados Municipais - ${locationName}${ibgeCode} (${yearDisplay})`];
-        
-        // Adicionar filtros aplicados ao título
-        let filterInfo = [];
-        if (filters.territorioDeDesenvolvimentoMunicipio) {
-          const territorioLabel = Regioes[filters.territorioDeDesenvolvimentoMunicipio] || filters.territorioDeDesenvolvimentoMunicipio;
-          filterInfo.push(territorioLabel);
-        }
-        if (filters.faixaPopulacionalMunicipio) {
-          const faixaLabel = FaixaPopulacional[filters.faixaPopulacionalMunicipio] || filters.faixaPopulacionalMunicipio;
-          filterInfo.push(faixaLabel);
-        }
-        if (filters.aglomeradoMunicipio) {
-          filterInfo.push(`Aglomerado ${filters.aglomeradoMunicipio}`);
-        }
-        if (filters.gerenciaRegionalMunicipio) {
-          filterInfo.push(`${filters.gerenciaRegionalMunicipio}ª GRE`);
-        }
-        
-        if (filterInfo.length > 0) {
-          titleParts.push(`Filtros: ${filterInfo.join(', ')}`);
-        }
-        
-        setTableTitle(titleParts.join(' | '));
-        
-        console.log('Dados recebidos para groupType:', groupType, 'API groupType:', apiGroupType);
-        console.log('Estrutura apiData:', JSON.stringify(response.data, null, 2).substring(0, 500));
-        console.log('Chaves do apiData:', Object.keys(response.data));
-        if (response.data && Object.keys(response.data).length > 0) {
-          const firstKey = Object.keys(response.data)[0];
-          console.log('Primeiro valor:', response.data[firstKey]);
-        }
         setApiData(response.data);
         setLoading(false);
         setHasInitialLoad(true);
@@ -292,6 +246,12 @@ function RevenueTableContainer() {
 
     setFilters(newFilters);
     setLoading(true);
+
+    // Grava a consulta na URL (sem criar entrada no histórico) — F5 mantém e dá pra compartilhar o link
+    navigate(
+      { search: filtrosMunicipaisParaUrl({ ...newFilters, tableType: tableTypeToUse }).toString() },
+      { replace: true }
+    );
     setPage(1);
     setHasInitialLoad(true);
 
@@ -302,7 +262,6 @@ function RevenueTableContainer() {
     
     // Usar os valores dos filtros diretamente em vez de aguardar o estado ser atualizado
     const apiGroupType = effectiveGroupType === 'desagregado' ? 'municipio' : effectiveGroupType;
-    console.log('Chamando fetchData com:', { tableTypeToUse, apiGroupType, filters: newFilters });
     fetchData(tableTypeToUse, apiGroupType, {
       codigoMunicipio: filterData.codigoMunicipio,
       territorioDeDesenvolvimentoMunicipio: filterData.territorioDeDesenvolvimentoMunicipio,
@@ -315,42 +274,6 @@ function RevenueTableContainer() {
       limit: effectiveLimit,
     })
       .then((response) => {
-        console.log('Resposta completa do servidor:', JSON.stringify(response, null, 2).substring(0, 2000));
-        
-        // Construir o título com os filtros aplicados
-        const nomeMunicipio = newFilters.nomeMunicipio;
-        let locationName = nomeMunicipio || 'Piauí';
-        let ibgeCode = newFilters.codigoMunicipio ? ` (IBGE: ${newFilters.codigoMunicipio})` : '';
-        const yearDisplay = newFilters.anoInicial === newFilters.anoFinal ? newFilters.anoInicial : `${newFilters.anoInicial}-${newFilters.anoFinal}`;
-        
-        // Obter o nome da tabela selecionada (usar tableTypeToUse capturado)
-        const tableLabel = tableOptions.find(t => t.value === tableTypeToUse)?.label || tableTypeToUse;
-        
-        // Construir partes do título
-        let titleParts = [`${tableLabel} - ${locationName}${ibgeCode} (${yearDisplay})`];
-        
-        // Adicionar filtros aplicados ao título
-        let filterInfo = [];
-        if (newFilters.territorioDeDesenvolvimentoMunicipio) {
-          const territorioLabel = Regioes[newFilters.territorioDeDesenvolvimentoMunicipio] || newFilters.territorioDeDesenvolvimentoMunicipio;
-          filterInfo.push(`Território: ${territorioLabel}`);
-        }
-        if (newFilters.faixaPopulacionalMunicipio) {
-          const faixaLabel = FaixaPopulacional[newFilters.faixaPopulacionalMunicipio] || newFilters.faixaPopulacionalMunicipio;
-          filterInfo.push(`Faixa: ${faixaLabel}`);
-        }
-        if (newFilters.aglomeradoMunicipio) {
-          filterInfo.push(`Aglomerado: ${newFilters.aglomeradoMunicipio}`);
-        }
-        if (newFilters.gerenciaRegionalMunicipio) {
-          filterInfo.push(`GRE: ${newFilters.gerenciaRegionalMunicipio}ª`);
-        }
-        
-        if (filterInfo.length > 0) {
-          titleParts.push(filterInfo.join(' | '));
-        }
-        
-        setTableTitle(titleParts.join(' - '));
         
         setApiData(response.data);
         setLoading(false);
@@ -386,6 +309,11 @@ function RevenueTableContainer() {
     };
 
     window.addEventListener('applyFinancialFilters', handleApplyFilters);
+
+    // Abriu por um link com filtros na URL: já mostra a consulta direto
+    const filtrosDaUrl = lerFiltrosMunicipaisDaUrl(location.search);
+    if (filtrosDaUrl) handleFilterChange(filtrosDaUrl);
+
     return () => window.removeEventListener('applyFinancialFilters', handleApplyFilters);
   }, []);
 
@@ -517,96 +445,9 @@ function RevenueTableContainer() {
   };
 
   const downloadAllTables = async () => {
-    const tableMappings = {
-      ownRevenues: {
-        transformByMunicipio: transformDataForTableRevenues,
-        transformByAno: transformDataForTableByYear,
-        standardize: standardizedTypeOwnRevenues,
-        map: mapOwnRevenues,
-        name: "Impostos_Proprios",
-      },
-      constitutionalTransfersRevenue: {
-        transformByMunicipio: transformDataForTableRevenues,
-        transformByAno: transformDataForTableByYear,
-        standardize: standardizedTypeConstitutionalTransfersRevenue,
-        map: mapConstitutionalTransfersRevenue,
-        name: "Receita_Transferencias_Constitucionais_Legais",
-      },
-      municipalTaxesRevenues: {
-        transformByMunicipio: transformDataForTableRevenues,
-        transformByAno: transformDataForTableByYear,
-        standardize: standardizeTypeMunicipalTaxesRevenues,
-        map: mapMunicipalTaxesRevenues,
-        name: "Receita_Liquida_Impostos_Municipio",
-      },
-      additionalEducationRevenue: {
-        transformByMunicipio: transformDataForTableRevenues,
-        transformByAno: transformDataForTableByYear,
-        standardize: standardizeTypeAdditionalEducationRevenues,
-        map: mapAdditionalMunicipalEducationRevenue,
-        name: "Receitas_Adicionais_Educacao_Municipio",
-      },
-      municipalFundebFundefComposition: {
-        transformByMunicipio: transformDataForTableRevenues,
-        transformByAno: transformDataForTableByYear,
-        standardize: standardizedTypeMunicipalFundebFundefComposition,
-        map: mapMunicipalFundebFundefComposition,
-        name: "Composicao_Fundef_Fundeb_Municipio",
-      },
-      complementationFundebFundef: {
-        transformByMunicipio: transformDataForTableRevenues,
-        transformByAno: transformDataForTableByYear,
-        standardize: standardizedTypeComplementationFundebFundef,
-        map: mapComplementationFundebFundef,
-        name: "Composicao_Complementacao_Fundef_Fundeb",
-      },
-      areasActivityExpense: {
-        transformByMunicipio: transformDataForTableRevenues,
-        transformByAno: transformDataForTableByYear,
-        standardize: standardizedTypeAreasActivityExpense,
-        map: mapAreasActivityExpense,
-        name: "Despesas_MDE_Area_Atuacao",
-      },
-      basicEducationMinimalPotential: {
-        transformByMunicipio: transformDataForTableRevenues,
-        transformByAno: transformDataForTableByYear,
-        standardize: standardizedTypeBasicEducationMinimalPotential,
-        map: mapBasicEducationMinimalPotential,
-        name: "Receita_Potencial_Minima_Educacao_Basica",
-      },
-      constitutionalLimitMde: {
-        transformByMunicipio: transformDataForTableRevenues,
-        transformByAno: transformDataForTableByYear,
-        standardize: standardizedTypeConstitutionalLimitMde,
-        map: mapConstitutionalLimitMde,
-        name: "Limite_Constitucional_MDE_Municipio",
-      },
-      expensesBasicEducationFundeb: {
-        transformByMunicipio: transformDataForTableRevenues,
-        transformByAno: transformDataForTableByYear,
-        standardize: standardizedTypeExpensesBasicEducationFundeb,
-        map: mapExpensesBasicEducationFundeb,
-        name: "Despesas_Profissionais_Educacao_Basica_Fundef_Fundeb",
-      },
-      complementaryProtocol: {
-        transformByMunicipio: transformDataForTableRevenues,
-        transformByAno: transformDataForTableByYear,
-        standardize: standardizedTypeComplementaryProtocol,
-        map: mapComplementaryProtocol,
-        name: "Protocolo_Complementar",
-      },
-      allTables: {
-        transformByMunicipio: transformDataForTableRevenues,
-        transformByAno: transformDataForTableByYear,
-        standardize: standardizedTypeAllTables,
-        map: mapAllTables,
-        name: "Tabelao_RREO",
-      },
-    };
-
-    const { transformByMunicipio, transformByAno, standardize, map, name } = tableMappings[selectedTable];
+    const { transformByMunicipio, transformByAno, standardize, map, name } = TABLE_MAPPINGS[selectedTable];
     const zip = new JSZip();
-    const fonte = "Fonte: SIOPE/FNDE - Elaboração: OPEPI/UFPI";
+    const fonte = FONTE_EXPORTACAO;
     
     // Buscar TODOS os dados da API (sem limitação de paginação)
     const effectiveGroupType = shouldShowAllCitiesSingleYear ? 'ano' : groupType;
@@ -761,96 +602,9 @@ function RevenueTableContainer() {
   // Função para baixar todas as tabelas em um único arquivo consolidado
   const downloadAllTablesConsolidated = async () => {
     handleDownloadMenuClose();
-    
-    const tableMappings = {
-      ownRevenues: {
-        transformByMunicipio: transformDataForTableRevenues,
-        transformByAno: transformDataForTableByYear,
-        standardize: standardizedTypeOwnRevenues,
-        map: mapOwnRevenues,
-        name: "Impostos_Proprios",
-      },
-      constitutionalTransfersRevenue: {
-        transformByMunicipio: transformDataForTableRevenues,
-        transformByAno: transformDataForTableByYear,
-        standardize: standardizedTypeConstitutionalTransfersRevenue,
-        map: mapConstitutionalTransfersRevenue,
-        name: "Receita_Transferencias_Constitucionais_Legais",
-      },
-      municipalTaxesRevenues: {
-        transformByMunicipio: transformDataForTableRevenues,
-        transformByAno: transformDataForTableByYear,
-        standardize: standardizeTypeMunicipalTaxesRevenues,
-        map: mapMunicipalTaxesRevenues,
-        name: "Receita_Liquida_Impostos_Municipio",
-      },
-      additionalEducationRevenue: {
-        transformByMunicipio: transformDataForTableRevenues,
-        transformByAno: transformDataForTableByYear,
-        standardize: standardizeTypeAdditionalEducationRevenues,
-        map: mapAdditionalMunicipalEducationRevenue,
-        name: "Receitas_Adicionais_Educacao_Municipio",
-      },
-      municipalFundebFundefComposition: {
-        transformByMunicipio: transformDataForTableRevenues,
-        transformByAno: transformDataForTableByYear,
-        standardize: standardizedTypeMunicipalFundebFundefComposition,
-        map: mapMunicipalFundebFundefComposition,
-        name: "Composicao_Fundef_Fundeb_Municipio",
-      },
-      complementationFundebFundef: {
-        transformByMunicipio: transformDataForTableRevenues,
-        transformByAno: transformDataForTableByYear,
-        standardize: standardizedTypeComplementationFundebFundef,
-        map: mapComplementationFundebFundef,
-        name: "Composicao_Complementacao_Fundef_Fundeb",
-      },
-      areasActivityExpense: {
-        transformByMunicipio: transformDataForTableRevenues,
-        transformByAno: transformDataForTableByYear,
-        standardize: standardizedTypeAreasActivityExpense,
-        map: mapAreasActivityExpense,
-        name: "Despesas_MDE_Area_Atuacao",
-      },
-      basicEducationMinimalPotential: {
-        transformByMunicipio: transformDataForTableRevenues,
-        transformByAno: transformDataForTableByYear,
-        standardize: standardizedTypeBasicEducationMinimalPotential,
-        map: mapBasicEducationMinimalPotential,
-        name: "Receita_Potencial_Minima_Educacao_Basica",
-      },
-      constitutionalLimitMde: {
-        transformByMunicipio: transformDataForTableRevenues,
-        transformByAno: transformDataForTableByYear,
-        standardize: standardizedTypeConstitutionalLimitMde,
-        map: mapConstitutionalLimitMde,
-        name: "Limite_Constitucional_MDE_Municipio",
-      },
-      expensesBasicEducationFundeb: {
-        transformByMunicipio: transformDataForTableRevenues,
-        transformByAno: transformDataForTableByYear,
-        standardize: standardizedTypeExpensesBasicEducationFundeb,
-        map: mapExpensesBasicEducationFundeb,
-        name: "Despesas_Profissionais_Educacao_Basica_Fundef_Fundeb",
-      },
-      complementaryProtocol: {
-        transformByMunicipio: transformDataForTableRevenues,
-        transformByAno: transformDataForTableByYear,
-        standardize: standardizedTypeComplementaryProtocol,
-        map: mapComplementaryProtocol,
-        name: "Protocolo_Complementar",
-      },
-      allTables: {
-        transformByMunicipio: transformDataForTableRevenues,
-        transformByAno: transformDataForTableByYear,
-        standardize: standardizedTypeAllTables,
-        map: mapAllTables,
-        name: "Tabelao_RREO",
-      },
-    };
 
-    const { transformByMunicipio, transformByAno, standardize, map, name } = tableMappings[selectedTable];
-    const fonte = "Fonte: SIOPE/FNDE - Elaboração: OPEPI/UFPI";
+    const { transformByMunicipio, transformByAno, standardize, map, name } = TABLE_MAPPINGS[selectedTable];
+    const fonte = FONTE_EXPORTACAO;
     let allData = [];
     
     // Cabeçalho com todas as colunas de tipos
@@ -987,709 +741,275 @@ function RevenueTableContainer() {
     await downloadAllTables();
   };
 
+  // Uma única definição de <RevenueTable> para todos os modos de agrupamento.
+  // O que muda por tabela (nome, mapeamento, correção monetária) vem do TABLE_MAPPINGS —
+  // antes eram ~33 cópias quase iguais do mesmo JSX, fácil de uma divergir das outras.
+  const renderTabela = ({ data, transformDataFunction, keyTable, nomeMunicipio }) => {
+    const config = TABLE_MAPPINGS[selectedTable];
+    if (!config) return null;
+    return (
+      <RevenueTable
+        key={selectedTable}
+        filtrosAplicados={filters}
+        data={data}
+        transformDataFunction={transformDataFunction}
+        standardizeTypeFunction={config.standardize}
+        tableMapping={config.map}
+        tableName={config.displayName}
+        keyTable={keyTable}
+        groupType={uiGroupType}
+        enableMonetaryCorrection={!!config.monetaryCorrection}
+        anoInicial={filters.anoInicial}
+        anoFinal={filters.anoFinal}
+        nomeMunicipio={nomeMunicipio}
+        mostrarRodape={!rodapeUnico}
+        referenciaEstadual={uiGroupType === 'municipio' ? referenciaEstadual : null}
+        resumo={mostrarResumo ? config.resumo : null}
+      />
+    );
+  };
+
+  // Tabelão: a API devolve { tipoDeReceita: { chave: dados } }, uma tabela por chave
+  const renderTabelao = () =>
+    Object.keys(displayApiData).map((revenueType) =>
+      Object.keys(displayApiData[revenueType]).map((key) => (
+        <div key={key}>
+          {renderTabela({
+            data: displayApiData[revenueType][key],
+            transformDataFunction: transformDataForTableByYear,
+            keyTable: key,
+            nomeMunicipio: filters.nomeMunicipio,
+          })}
+        </div>
+      ))
+    );
+
+  // Etiquetas do cabeçalho: o que está sendo mostrado, em pedaços curtos
+  const etiquetas = [];
+  if (filters.nomeMunicipio) {
+    etiquetas.push(
+      filters.codigoMunicipio
+        ? { texto: filters.nomeMunicipio, link: `/municipio/${filters.codigoMunicipio}`, titulo: `Ver o perfil completo de ${filters.nomeMunicipio}` }
+        : filters.nomeMunicipio
+    );
+  }
+  if (filters.codigoMunicipio) etiquetas.push(`IBGE ${filters.codigoMunicipio}`);
+  if (filters.territorioDeDesenvolvimentoMunicipio) {
+    etiquetas.push(Regioes[filters.territorioDeDesenvolvimentoMunicipio] || filters.territorioDeDesenvolvimentoMunicipio);
+  }
+  if (filters.faixaPopulacionalMunicipio) {
+    etiquetas.push(FaixaPopulacional[filters.faixaPopulacionalMunicipio] || filters.faixaPopulacionalMunicipio);
+  }
+  if (filters.aglomeradoMunicipio) etiquetas.push(`Aglomerado ${filters.aglomeradoMunicipio}`);
+  if (filters.gerenciaRegionalMunicipio) etiquetas.push(`${filters.gerenciaRegionalMunicipio}ª GRE`);
+  if (etiquetas.length === 0) etiquetas.push('Todos os municípios');
+  etiquetas.push(
+    filters.anoInicial === filters.anoFinal ? `${filters.anoInicial}` : `${filters.anoInicial}–${filters.anoFinal}`
+  );
+
+  const tituloTabela = tableOptions.find((t) => t.value === selectedTable)?.label || '';
+  // Título da aba com a consulta atual (ex.: "Receita de impostos próprios · Nazaré do Piauí | OPEPI")
+  useTituloDinamico(
+    displayApiData && Object.keys(displayApiData).length > 0
+      ? [tituloTabela, filters.nomeMunicipio].filter(Boolean).join(' · ')
+      : null
+  );
+  const variosMunicipios = getMunicipiosFromData(displayApiData).length > 1;
+  // "Exportar todas" só faz sentido com mais de uma tabela na tela ou mais de uma página;
+  // com uma tabela só, o "Exportar" dela já resolve (evita dois botões iguais lado a lado)
+  const quantidadeTabelas =
+    uiGroupType === 'municipio'
+      ? getMunicipiosFromData(displayApiData).length
+      : uiGroupType === 'ano'
+        ? Object.keys(displayApiData || {}).length
+        : 1;
+  const mostrarExportarTodas = quantidadeTabelas > 1 || totalPages > 1;
+  const rodapeUnico = quantidadeTabelas > 1;
+  // Cards de resumo: com um município (tabela por ano) ou na visão por ano (todos os
+  // municípios). Com vários municípios em sequência ficaria repetitivo demais.
+  const mostrarResumo = uiGroupType === 'ano' || (uiGroupType === 'municipio' && quantidadeTabelas === 1);
+
+  const copiarLink = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setLinkCopiado(true);
+      setTimeout(() => setLinkCopiado(false), 2500);
+    } catch (e) {
+      console.error('Não foi possível copiar o link:', e);
+    }
+  };
+
+
   return (
     <div>
       <div className="app-container">
-        <hr className="divider" />
-
         {/* Área de dados - sempre visível */}
         <div className="data-section">
           {loading && <Loading />}
 
           {!loading && error && (
-            <div style={{ 
-              textAlign: 'center', 
-              padding: '40px 20px',
-              color: '#d9534f',
-              fontSize: '18px'
-            }}>
-              <p>Falha ao carregar os dados. Por favor, tente novamente mais tarde.</p>
-            </div>
+            <EmptyState erro titulo="Não foi possível carregar os dados" texto="Tente novamente em alguns instantes." />
           )}
 
           {!loading && !error && !apiData && !hasInitialLoad && (
-            <Typography 
-            variant="body1" 
-            sx={{ 
-              textAlign: 'center',
-              fontSize: '18px',
-              fontWeight: 'bold',
-              margin: '20px auto',
-              maxWidth: '400px',
-              color: theme.palette.primary.main
-            }}
-          >
-            Selecione os filtros desejados na lateral e clique em "Filtrar" para montar uma consulta.
-          </Typography>
+            <EmptyState titulo="Monte sua consulta" texto={'Escolha o tipo de dado, o município e o período na lateral e clique em "Mostrar".'} />
           )}
 
           {!loading && !error && (!displayApiData || Object.keys(displayApiData).length === 0) && hasInitialLoad && (
-            <div style={{ 
-              textAlign: 'center', 
-              padding: '40px 20px',
-              color: '#d9534f',
-              fontSize: '18px'
-            }}>
-              <p>Nenhum dado encontrado com os filtros selecionados.</p>
-            </div>
+            <EmptyState titulo="Nenhum dado encontrado" texto="Tente outro período ou outro município." />
           )}
 
           {!loading && !error && displayApiData && Object.keys(displayApiData).length > 0 && (
             <>
-              {tableTitle && (
-                <Box sx={{ padding: 2 }}>
-                  <Typography 
-                    variant="h5" 
-                    sx={{ marginBottom: 2, textAlign: 'center', fontWeight: 'bold', fontSize: '1.5rem' }}
-                  >
-                    {tableTitle}
-                  </Typography>
-                </Box>
-              )}
-              <div className="table-container">
-                <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", flexWrap: "wrap" }}>
+              {/* Cabeçalho: título curto + etiquetas, ações à direita (components/common/PageHeader) */}
+              <PageHeader
+                caminho="Dados financeiros  ›  Municípios"
+                titulo={tituloTabela}
+                etiquetas={etiquetas}
+                acoes={
+                  <>
                   <Button
-                    variant="contained"
-                    color="success"
-                    onClick={handleDownloadMenuOpen}
-                    endIcon={<ArrowDropDown />}
-                    sx={{ marginTop: 2 }}
+                    variant="text"
+                    onClick={copiarLink}
+                    startIcon={linkCopiado ? <CheckIcon /> : <LinkIcon />}
+                    aria-live="polite"
                   >
-                    Baixar Todas as Tabelas
+                    {linkCopiado ? 'Link copiado' : 'Copiar link'}
                   </Button>
-                  <TechnicalSheetButton buttonSx={{ marginTop: 2 }} />
+                  {filters.codigoMunicipio && (
+                    <Button
+                      variant="text"
+                      startIcon={<LocationCityIcon />}
+                      onClick={() => navigate(`/municipio/${filters.codigoMunicipio}`)}
+                      title={`Todos os números de ${filters.nomeMunicipio} numa página só`}
+                    >
+                      Perfil do município
+                    </Button>
+                  )}
+                  {filters.codigoMunicipio && TABLE_MAPPINGS[selectedTable]?.resumo && (
+                    <Button
+                      variant="text"
+                      startIcon={<CompareArrowsIcon />}
+                      onClick={() =>
+                        navigate(`/comparar?tabela=${selectedTable}&ano=${filters.anoFinal}&municipios=${filters.codigoMunicipio}`)
+                      }
+                    >
+                      Comparar
+                    </Button>
+                  )}
+                  <ComoCitarButton
+                    titulo={`${tituloTabela} — ${filters.nomeMunicipio || 'municípios do Piauí'}, ${filters.anoInicial === filters.anoFinal ? filters.anoInicial : `${filters.anoInicial}–${filters.anoFinal}`}`}
+                  />
+                  <TechnicalSheetButton className="" dialogTitle={`Ficha técnica — ${tituloTabela}`}>
+              <ConteudoFicha chave={selectedTable} />
+            </TechnicalSheetButton>
+                  {mostrarExportarTodas && (
+                  <Button
+                    variant="outlined"
+                    onClick={handleDownloadMenuOpen}
+                    startIcon={<FileDownloadOutlinedIcon />}
+                    endIcon={<ArrowDropDown />}
+                    aria-haspopup="menu"
+                    sx={{
+                      color: cores.tinta,
+                      borderColor: cores.linhaForte,
+                      backgroundColor: cores.superficie,
+                      '&:hover': { borderColor: cores.marca, backgroundColor: cores.areia },
+                    }}
+                  >
+                    Exportar todas
+                  </Button>
+                  )}
                   <Menu
                     anchorEl={downloadMenuAnchor}
                     open={Boolean(downloadMenuAnchor)}
                     onClose={handleDownloadMenuClose}
+                    anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                    transformOrigin={{ vertical: 'top', horizontal: 'right' }}
                   >
                     <MenuItem onClick={handleDownloadSeparate}>
-                      Tabelas Separadas (ZIP)
+                      <ListItemText
+                        primary="Uma planilha por tabela (ZIP)"
+                        secondary="todas as páginas, um arquivo para cada município ou ano"
+                      />
                     </MenuItem>
                     <MenuItem onClick={downloadAllTablesConsolidated}>
-                      Tabela Única Consolidada (Excel)
+                      <ListItemText
+                        primary="Tudo em uma planilha (Excel)"
+                        secondary="todas as páginas juntas, uma linha por registro"
+                      />
                     </MenuItem>
                   </Menu>
-                </div>
+                  </>
+                }
+              />
+
+              <div className="table-container">
               {uiGroupType === "desagregado" ? (
                 // Renderização para dados desagregados
-                <>
-                  {selectedTable === "allTables"
-                    ? Object.keys(displayApiData).map((revenueType) =>
-                        Object.keys(displayApiData[revenueType]).map((key) => (
-                          <div key={key}>
-                            {selectedTable === "allTables" && (
-                              <RevenueTable
-                                filtrosAplicados={filters}
-                                data={displayApiData[revenueType][key]}
-                                transformDataFunction={transformDataForTableByYear}
-                                standardizeTypeFunction={standardizedTypeAllTables}
-                                tableName="Tabelão"
-                                keyTable={key}
-                                groupType={uiGroupType}
-                              anoInicial={filters.anoInicial}
-                              anoFinal={filters.anoFinal}
-                              nomeMunicipio={filters.nomeMunicipio}
-                              />
-                            )}
-                          </div>
-                        ))
-                      )
-                    : selectedTable === "ownRevenues" && (
-                        <RevenueTable
-                          filtrosAplicados={filters}
-                          data={displayApiData}
-                          transformDataFunction={transformDataForTableByYear}
-                          standardizeTypeFunction={standardizedTypeOwnRevenues}
-                          tableMapping={mapOwnRevenues}
-                          tableName="Impostos Próprios"
-                          keyTable="desagregado"
-                          groupType={uiGroupType}
-                          enableMonetaryCorrection={true}
-                        anoInicial={filters.anoInicial}
-                        anoFinal={filters.anoFinal}
-                        nomeMunicipio={filters.nomeMunicipio}
-                        />
-                      )}
-                  {selectedTable === "constitutionalTransfersRevenue" && (
-                    <RevenueTable
-                      filtrosAplicados={filters}
-                      data={displayApiData}
-                      transformDataFunction={transformDataForTableByYear}
-                      standardizeTypeFunction={standardizedTypeConstitutionalTransfersRevenue}
-                      tableMapping={mapConstitutionalTransfersRevenue}
-                      tableName="Receita de transferências constitucionais e legais"
-                      keyTable="desagregado"
-                      groupType={uiGroupType}
-                      enableMonetaryCorrection={true}
-                    anoInicial={filters.anoInicial}
-                    anoFinal={filters.anoFinal}
-                    nomeMunicipio={filters.nomeMunicipio}
-                    />
-                  )}
-                  {selectedTable === "municipalTaxesRevenues" && (
-                    <RevenueTable
-                      filtrosAplicados={filters}
-                      data={displayApiData}
-                      transformDataFunction={transformDataForTableByYear}
-                      standardizeTypeFunction={standardizeTypeMunicipalTaxesRevenues}
-                      tableMapping={mapMunicipalTaxesRevenues}
-                      tableName="Receita Líquida de Impostos do Município"
-                      keyTable="desagregado"
-                      groupType={uiGroupType}
-                      enableMonetaryCorrection={true}
-                    anoInicial={filters.anoInicial}
-                    anoFinal={filters.anoFinal}
-                    nomeMunicipio={filters.nomeMunicipio}
-                    />
-                  )}
-                  {selectedTable === "additionalEducationRevenue" && (
-                    <RevenueTable
-                      filtrosAplicados={filters}
-                      data={displayApiData}
-                      transformDataFunction={transformDataForTableByYear}
-                      standardizeTypeFunction={standardizeTypeAdditionalEducationRevenues}
-                      tableMapping={mapAdditionalMunicipalEducationRevenue}
-                      tableName="Receitas adicionais da educação no Município"
-                      keyTable="desagregado"
-                      groupType={uiGroupType}
-                      enableMonetaryCorrection={true}
-                    anoInicial={filters.anoInicial}
-                    anoFinal={filters.anoFinal}
-                    nomeMunicipio={filters.nomeMunicipio}
-                    />
-                  )}
-                  {selectedTable === "municipalFundebFundefComposition" && (
-                    <RevenueTable
-                      filtrosAplicados={filters}
-                      data={displayApiData}
-                      transformDataFunction={transformDataForTableByYear}
-                      standardizeTypeFunction={standardizedTypeMunicipalFundebFundefComposition}
-                      tableMapping={mapMunicipalFundebFundefComposition}
-                      tableName="Composição do Fundef/Fundeb no município"
-                      keyTable="desagregado"
-                      groupType={uiGroupType}
-                    anoInicial={filters.anoInicial}
-                    anoFinal={filters.anoFinal}
-                    nomeMunicipio={filters.nomeMunicipio}
-                    />
-                  )}
-                  {selectedTable === "complementationFundebFundef" && (
-                    <RevenueTable
-                      filtrosAplicados={filters}
-                      data={displayApiData}
-                      transformDataFunction={transformDataForTableByYear}
-                      standardizeTypeFunction={standardizedTypeComplementationFundebFundef}
-                      tableMapping={mapComplementationFundebFundef}
-                      tableName="Composição da complementação do Fundef/Fundeb"
-                      keyTable="desagregado"
-                      groupType={uiGroupType}
-                    anoInicial={filters.anoInicial}
-                    anoFinal={filters.anoFinal}
-                    nomeMunicipio={filters.nomeMunicipio}
-                    />
-                  )}
-                  {selectedTable === "constitutionalLimitMde" && (
-                    <RevenueTable
-                      filtrosAplicados={filters}
-                      data={displayApiData}
-                      transformDataFunction={transformDataForTableByYear}
-                      standardizeTypeFunction={standardizedTypeConstitutionalLimitMde}
-                      tableMapping={mapConstitutionalLimitMde}
-                      tableName="Limite constitucional em MDE no município"
-                      keyTable="desagregado"
-                      groupType={uiGroupType}
-                    anoInicial={filters.anoInicial}
-                    anoFinal={filters.anoFinal}
-                    nomeMunicipio={filters.nomeMunicipio}
-                    />
-                  )}
-                  {selectedTable === "expensesBasicEducationFundeb" && (
-                    <RevenueTable
-                      filtrosAplicados={filters}
-                      data={displayApiData}
-                      transformDataFunction={transformDataForTableByYear}
-                      standardizeTypeFunction={standardizedTypeExpensesBasicEducationFundeb}
-                      tableMapping={mapExpensesBasicEducationFundeb}
-                      tableName="Despesas com profissionais da educação básica com o Fundef/Fundeb"
-                      keyTable="desagregado"
-                      groupType={uiGroupType}
-                    anoInicial={filters.anoInicial}
-                    anoFinal={filters.anoFinal}
-                    nomeMunicipio={filters.nomeMunicipio}
-                    />
-                  )}
-                  {selectedTable === "areasActivityExpense" && (
-                    <RevenueTable
-                      filtrosAplicados={filters}
-                      data={displayApiData}
-                      transformDataFunction={transformDataForTableByYear}
-                      standardizeTypeFunction={standardizedTypeAreasActivityExpense}
-                      tableMapping={mapAreasActivityExpense}
-                      tableName="Despesas em MDE por área de atuação"
-                      keyTable="desagregado"
-                      groupType={uiGroupType}
-                    anoInicial={filters.anoInicial}
-                    anoFinal={filters.anoFinal}
-                    nomeMunicipio={filters.nomeMunicipio}
-                    />
-                  )}
-                  {selectedTable === "basicEducationMinimalPotential" && (
-                    <RevenueTable
-                      filtrosAplicados={filters}
-                      data={displayApiData}
-                      transformDataFunction={transformDataForTableByYear}
-                      standardizeTypeFunction={standardizedTypeBasicEducationMinimalPotential}
-                      tableMapping={mapBasicEducationMinimalPotential}
-                      tableName="Receita Potencial Mínima vinculada à Educação Básica"
-                      keyTable="desagregado"
-                      groupType={uiGroupType}
-                    anoInicial={filters.anoInicial}
-                    anoFinal={filters.anoFinal}
-                    nomeMunicipio={filters.nomeMunicipio}
-                    />
-                  )}
-                  {selectedTable === "complementaryProtocol" && (
-                    <RevenueTable
-                      filtrosAplicados={filters}
-                      data={displayApiData}
-                      transformDataFunction={transformDataForTableByYear}
-                      standardizeTypeFunction={standardizedTypeComplementaryProtocol}
-                      tableMapping={mapComplementaryProtocol}
-                      tableName="Protocolo Complementar"
-                      keyTable="desagregado"
-                      groupType={uiGroupType}
-                    anoInicial={filters.anoInicial}
-                    anoFinal={filters.anoFinal}
-                    nomeMunicipio={filters.nomeMunicipio}
-                    />
-                  )}
-                </>
+                selectedTable === "allTables"
+                  ? renderTabelao()
+                  : renderTabela({
+                      data: displayApiData,
+                      transformDataFunction: transformDataForTableByYear,
+                      keyTable: "desagregado",
+                      nomeMunicipio: filters.nomeMunicipio,
+                    })
               ) : uiGroupType === "municipio" ? (
                 // Renderização para dados agrupados por MUNICÍPIO (UMA TABELA POR MUNICÍPIO)
-                <>
-                  {getMunicipiosFromData(displayApiData).map((codigoMunicipio) => (
-                    <div key={codigoMunicipio} style={{ marginBottom: '2rem' }}>
-                      <Box sx={{ padding: '0.5rem 1rem', backgroundColor: '#f5f5f5', borderRadius: 0.5, marginBottom: 0.5, borderLeft: '3px solid #666' }}>
-                        <Typography variant="subtitle1" sx={{ fontWeight: 600, color: '#424242' }}>
-                          {getNomeMunicipio(codigoMunicipio)} <span style={{ color: '#757575', fontWeight: 400 }}>|</span> <span style={{ color: '#616161', fontWeight: 400, fontSize: '0.9em' }}>IBGE {codigoMunicipio}</span>
-                        </Typography>
-                      </Box>
-                      {selectedTable === "ownRevenues" && (
-                        <RevenueTable
-                          filtrosAplicados={filters}
-                          data={prepareDataForMunicipio(displayApiData, codigoMunicipio)}
-                          transformDataFunction={transformDataForTableRevenues}
-                          standardizeTypeFunction={standardizedTypeOwnRevenues}
-                          tableMapping={mapOwnRevenues}
-                          tableName="Impostos Próprios"
-                          keyTable={`municipio_${codigoMunicipio}`}
-                          groupType={uiGroupType}
-                          enableMonetaryCorrection={true}
-                        anoInicial={filters.anoInicial}
-                        anoFinal={filters.anoFinal}
-                        nomeMunicipio={getNomeMunicipio(codigoMunicipio)}
-                        />
-                      )}
-                      {selectedTable === "constitutionalTransfersRevenue" && (
-                        <RevenueTable
-                          filtrosAplicados={filters}
-                          data={prepareDataForMunicipio(displayApiData, codigoMunicipio)}
-                          transformDataFunction={transformDataForTableRevenues}
-                          standardizeTypeFunction={standardizedTypeConstitutionalTransfersRevenue}
-                          tableMapping={mapConstitutionalTransfersRevenue}
-                          tableName="Receita de transferências constitucionais e legais"
-                          keyTable={`municipio_${codigoMunicipio}`}
-                          groupType={uiGroupType}
-                          enableMonetaryCorrection={true}
-                        anoInicial={filters.anoInicial}
-                        anoFinal={filters.anoFinal}
-                        nomeMunicipio={getNomeMunicipio(codigoMunicipio)}
-                        />
-                      )}
-                      {selectedTable === "municipalTaxesRevenues" && (
-                        <RevenueTable
-                          filtrosAplicados={filters}
-                          data={prepareDataForMunicipio(displayApiData, codigoMunicipio)}
-                          transformDataFunction={transformDataForTableRevenues}
-                          standardizeTypeFunction={standardizeTypeMunicipalTaxesRevenues}
-                          tableMapping={mapMunicipalTaxesRevenues}
-                          tableName="Receita Líquida de Impostos do Município"
-                          keyTable={`municipio_${codigoMunicipio}`}
-                          groupType={uiGroupType}
-                          enableMonetaryCorrection={true}
-                        anoInicial={filters.anoInicial}
-                        anoFinal={filters.anoFinal}
-                        nomeMunicipio={getNomeMunicipio(codigoMunicipio)}
-                        />
-                      )}
-                      {selectedTable === "additionalEducationRevenue" && (
-                        <RevenueTable
-                          filtrosAplicados={filters}
-                          data={prepareDataForMunicipio(displayApiData, codigoMunicipio)}
-                          transformDataFunction={transformDataForTableRevenues}
-                          standardizeTypeFunction={standardizeTypeAdditionalEducationRevenues}
-                          tableMapping={mapAdditionalMunicipalEducationRevenue}
-                          tableName="Receitas adicionais da educação no Município"
-                          keyTable={`municipio_${codigoMunicipio}`}
-                          groupType={uiGroupType}
-                          enableMonetaryCorrection={true}
-                        anoInicial={filters.anoInicial}
-                        anoFinal={filters.anoFinal}
-                        nomeMunicipio={getNomeMunicipio(codigoMunicipio)}
-                        />
-                      )}
-                      {selectedTable === "municipalFundebFundefComposition" && (
-                        <RevenueTable
-                          filtrosAplicados={filters}
-                          data={prepareDataForMunicipio(displayApiData, codigoMunicipio)}
-                          transformDataFunction={transformDataForTableRevenues}
-                          standardizeTypeFunction={standardizedTypeMunicipalFundebFundefComposition}
-                          tableMapping={mapMunicipalFundebFundefComposition}
-                          tableName="Composição do Fundef/Fundeb no município"
-                          keyTable={`municipio_${codigoMunicipio}`}
-                          groupType={uiGroupType}
-                        anoInicial={filters.anoInicial}
-                        anoFinal={filters.anoFinal}
-                        nomeMunicipio={getNomeMunicipio(codigoMunicipio)}
-                        />
-                      )}
-                      {selectedTable === "complementationFundebFundef" && (
-                        <RevenueTable
-                          filtrosAplicados={filters}
-                          data={prepareDataForMunicipio(displayApiData, codigoMunicipio)}
-                          transformDataFunction={transformDataForTableRevenues}
-                          standardizeTypeFunction={standardizedTypeComplementationFundebFundef}
-                          tableMapping={mapComplementationFundebFundef}
-                          tableName="Composição da complementação do Fundef/Fundeb"
-                          keyTable={`municipio_${codigoMunicipio}`}
-                          groupType={uiGroupType}
-                        anoInicial={filters.anoInicial}
-                        anoFinal={filters.anoFinal}
-                        nomeMunicipio={getNomeMunicipio(codigoMunicipio)}
-                        />
-                      )}
-                      {selectedTable === "constitutionalLimitMde" && (
-                        <RevenueTable
-                          filtrosAplicados={filters}
-                          data={prepareDataForMunicipio(displayApiData, codigoMunicipio)}
-                          transformDataFunction={transformDataForTableRevenues}
-                          standardizeTypeFunction={standardizedTypeConstitutionalLimitMde}
-                          tableMapping={mapConstitutionalLimitMde}
-                          tableName="Limite constitucional em MDE no município"
-                          keyTable={`municipio_${codigoMunicipio}`}
-                          groupType={uiGroupType}
-                        anoInicial={filters.anoInicial}
-                        anoFinal={filters.anoFinal}
-                        nomeMunicipio={getNomeMunicipio(codigoMunicipio)}
-                        />
-                      )}
-                      {selectedTable === "expensesBasicEducationFundeb" && (
-                        <RevenueTable
-                          filtrosAplicados={filters}
-                          data={prepareDataForMunicipio(displayApiData, codigoMunicipio)}
-                          transformDataFunction={transformDataForTableRevenues}
-                          standardizeTypeFunction={standardizedTypeExpensesBasicEducationFundeb}
-                          tableMapping={mapExpensesBasicEducationFundeb}
-                          tableName="Despesas com profissionais da educação básica com o Fundef/Fundeb"
-                          keyTable={`municipio_${codigoMunicipio}`}
-                          groupType={uiGroupType}
-                        anoInicial={filters.anoInicial}
-                        anoFinal={filters.anoFinal}
-                        nomeMunicipio={getNomeMunicipio(codigoMunicipio)}
-                        />
-                      )}
-                      {selectedTable === "areasActivityExpense" && (
-                        <RevenueTable
-                          filtrosAplicados={filters}
-                          data={prepareDataForMunicipio(displayApiData, codigoMunicipio)}
-                          transformDataFunction={transformDataForTableRevenues}
-                          standardizeTypeFunction={standardizedTypeAreasActivityExpense}
-                          tableMapping={mapAreasActivityExpense}
-                          tableName="Despesas em MDE por área de atuação"
-                          keyTable={`municipio_${codigoMunicipio}`}
-                          groupType={uiGroupType}
-                        anoInicial={filters.anoInicial}
-                        anoFinal={filters.anoFinal}
-                        nomeMunicipio={getNomeMunicipio(codigoMunicipio)}
-                        />
-                      )}
-                      {selectedTable === "basicEducationMinimalPotential" && (
-                        <RevenueTable
-                          filtrosAplicados={filters}
-                          data={prepareDataForMunicipio(displayApiData, codigoMunicipio)}
-                          transformDataFunction={transformDataForTableRevenues}
-                          standardizeTypeFunction={standardizedTypeBasicEducationMinimalPotential}
-                          tableMapping={mapBasicEducationMinimalPotential}
-                          tableName="Receita Potencial Mínima vinculada à Educação Básica"
-                          keyTable={`municipio_${codigoMunicipio}`}
-                          groupType={uiGroupType}
-                        anoInicial={filters.anoInicial}
-                        anoFinal={filters.anoFinal}
-                        nomeMunicipio={getNomeMunicipio(codigoMunicipio)}
-                        />
-                      )}
-                      {selectedTable === "complementaryProtocol" && (
-                        <RevenueTable
-                          filtrosAplicados={filters}
-                          data={prepareDataForMunicipio(displayApiData, codigoMunicipio)}
-                          transformDataFunction={transformDataForTableRevenues}
-                          standardizeTypeFunction={standardizedTypeComplementaryProtocol}
-                          tableMapping={mapComplementaryProtocol}
-                          tableName="Protocolo Complementar"
-                          keyTable={`municipio_${codigoMunicipio}`}
-                          groupType={uiGroupType}
-                        anoInicial={filters.anoInicial}
-                        anoFinal={filters.anoFinal}
-                        nomeMunicipio={getNomeMunicipio(codigoMunicipio)}
-                        />
-                      )}
-                      {selectedTable === "allTables" && (
-                        <RevenueTable
-                          filtrosAplicados={filters}
-                          data={prepareDataForMunicipio(displayApiData, codigoMunicipio)}
-                          transformDataFunction={transformDataForTableRevenues}
-                          standardizeTypeFunction={standardizedTypeAllTables}
-                          tableName="Tabelão"
-                          keyTable={`municipio_${codigoMunicipio}`}
-                          groupType={uiGroupType}
-                        anoInicial={filters.anoInicial}
-                        anoFinal={filters.anoFinal}
-                        nomeMunicipio={getNomeMunicipio(codigoMunicipio)}
-                        />
-                      )}
-                    </div>
-                  ))}
-                </>
-              ) : (
+                getMunicipiosFromData(displayApiData).map((codigoMunicipio) => (
+                  <div key={codigoMunicipio} style={{ marginBottom: '2rem' }}>
+                    {variosMunicipios && (
+                      <Typography component="h2" sx={{ fontSize: '20px', fontWeight: 600, color: cores.tinta, marginBottom: '12px' }}>
+                        {getNomeMunicipio(codigoMunicipio)}{' '}
+                        <span style={{ fontSize: '14px', fontWeight: 400, color: cores.textoSuave }}>IBGE {codigoMunicipio}</span>{' '}
+                        <Link
+                          to={`/municipio/${codigoMunicipio}`}
+                          style={{ fontSize: '14px', fontWeight: 600, color: cores.marca, textDecoration: 'none', marginLeft: '8px' }}
+                        >
+                          Ver perfil →
+                        </Link>
+                      </Typography>
+                    )}
+                    {renderTabela({
+                      data: prepareDataForMunicipio(displayApiData, codigoMunicipio),
+                      transformDataFunction: transformDataForTableRevenues,
+                      keyTable: `municipio_${codigoMunicipio}`,
+                      nomeMunicipio: getNomeMunicipio(codigoMunicipio),
+                    })}
+                  </div>
+                ))
+              ) : selectedTable === "allTables" ? (
                 // Renderização para dados agrupados por ANO (múltiplas tabelas, uma por ano)
-                <>
-                  {selectedTable === "allTables"
-                    ? Object.keys(displayApiData).map((revenueType) =>
-                        Object.keys(displayApiData[revenueType]).map((key) => (
-                          <div key={key}>
-                            {selectedTable === "allTables" && (
-                              <RevenueTable
-                                filtrosAplicados={filters}
-                                data={displayApiData[revenueType][key]}
-                                transformDataFunction={transformDataForTableByYear}
-                                standardizeTypeFunction={standardizedTypeAllTables}
-                                tableName="Tabelão"
-                                keyTable={key}
-                                groupType={uiGroupType}
-                              anoInicial={filters.anoInicial}
-                              anoFinal={filters.anoFinal}
-                              nomeMunicipio={filters.nomeMunicipio}
-                              />
-                            )}
-                          </div>
-                        ))
-                      )
-                    : Object.keys(displayApiData).map((key) => (
-                        <div key={key}>
-                          <div className="table-header">
-                            <h2>
-                              <span className="table-header-label">Ano: </span>
-                              {key}
-                            </h2>
-                          </div>
-                          {selectedTable === "ownRevenues" && (
-                            <div style={{ marginTop: "1rem" }}>
-                              <RevenueTable
-                                filtrosAplicados={filters}
-                                data={displayApiData[key]}
-                                transformDataFunction={transformDataForTableByYear}
-                                standardizeTypeFunction={standardizedTypeOwnRevenues}
-                                tableMapping={mapOwnRevenues}
-                                tableName="Impostos Próprios"
-                                keyTable={key}
-                                groupType={uiGroupType}
-                                enableMonetaryCorrection={true}
-                              anoInicial={filters.anoInicial}
-                              anoFinal={filters.anoFinal}
-                              nomeMunicipio={filters.nomeMunicipio}
-                              />
-                            </div>
-                          )}
-                          {selectedTable === "constitutionalTransfersRevenue" && (
-                            <div style={{ marginTop: "1rem" }}>
-                              <RevenueTable
-                                filtrosAplicados={filters}
-                                data={displayApiData[key]}
-                                transformDataFunction={transformDataForTableByYear}
-                                standardizeTypeFunction={standardizedTypeConstitutionalTransfersRevenue}
-                                tableMapping={mapConstitutionalTransfersRevenue}
-                                tableName="Receita de transferências constitucionais e legais"
-                                keyTable={key}
-                                groupType={uiGroupType}
-                                enableMonetaryCorrection={true}
-                              anoInicial={filters.anoInicial}
-                              anoFinal={filters.anoFinal}
-                              nomeMunicipio={filters.nomeMunicipio}
-                              />
-                            </div>
-                          )}
-                          {selectedTable === "municipalTaxesRevenues" && (
-                            <div style={{ marginTop: "1rem" }}>
-                              <RevenueTable
-                                filtrosAplicados={filters}
-                                data={displayApiData[key]}
-                                transformDataFunction={transformDataForTableByYear}
-                                standardizeTypeFunction={standardizeTypeMunicipalTaxesRevenues}
-                                tableMapping={mapMunicipalTaxesRevenues}
-                                tableName="Receita Líquida de Impostos do Município"
-                                keyTable={key}
-                                groupType={uiGroupType}
-                                enableMonetaryCorrection={true}
-                              anoInicial={filters.anoInicial}
-                              anoFinal={filters.anoFinal}
-                              nomeMunicipio={filters.nomeMunicipio}
-                              />
-                            </div>
-                          )}
-                          {selectedTable === "additionalEducationRevenue" && (
-                            <div style={{ marginTop: "1rem" }}>
-                              <RevenueTable
-                                filtrosAplicados={filters}
-                                data={displayApiData[key]}
-                                transformDataFunction={transformDataForTableByYear}
-                                standardizeTypeFunction={standardizeTypeAdditionalEducationRevenues}
-                                tableMapping={mapAdditionalMunicipalEducationRevenue}
-                                tableName="Receitas adicionais da educação no Município"
-                                keyTable={key}
-                                groupType={uiGroupType}
-                                enableMonetaryCorrection={true}
-                              anoInicial={filters.anoInicial}
-                              anoFinal={filters.anoFinal}
-                              nomeMunicipio={filters.nomeMunicipio}
-                              />
-                            </div>
-                          )}
-                          {selectedTable === "municipalFundebFundefComposition" && (
-                            <div style={{ marginTop: "1rem" }}>
-                              <RevenueTable
-                                filtrosAplicados={filters}
-                                data={displayApiData[key]}
-                                transformDataFunction={transformDataForTableByYear}
-                                standardizeTypeFunction={standardizedTypeMunicipalFundebFundefComposition}
-                                tableMapping={mapMunicipalFundebFundefComposition}
-                                tableName="Composição do Fundef/Fundeb no município"
-                                keyTable={key}
-                                groupType={uiGroupType}
-                              anoInicial={filters.anoInicial}
-                              anoFinal={filters.anoFinal}
-                              nomeMunicipio={filters.nomeMunicipio}
-                              />
-                            </div>
-                          )}
-                          {selectedTable === "complementationFundebFundef" && (
-                            <div style={{ marginTop: "1rem" }}>
-                              <RevenueTable
-                                filtrosAplicados={filters}
-                                data={displayApiData[key]}
-                                transformDataFunction={transformDataForTableByYear}
-                                standardizeTypeFunction={standardizedTypeComplementationFundebFundef}
-                                tableMapping={mapComplementationFundebFundef}
-                                tableName="Composição da complementação do Fundef/Fundeb"
-                                keyTable={key}
-                                groupType={uiGroupType}
-                              anoInicial={filters.anoInicial}
-                              anoFinal={filters.anoFinal}
-                              nomeMunicipio={filters.nomeMunicipio}
-                              />
-                            </div>
-                          )}
-                          {selectedTable === "constitutionalLimitMde" && (
-                            <div style={{ marginTop: "1rem" }}>
-                              <RevenueTable
-                                filtrosAplicados={filters}
-                                data={displayApiData[key]}
-                                transformDataFunction={transformDataForTableByYear}
-                                standardizeTypeFunction={standardizedTypeConstitutionalLimitMde}
-                                tableMapping={mapConstitutionalLimitMde}
-                                tableName="Limite constitucional em MDE no município"
-                                keyTable={key}
-                                groupType={uiGroupType}
-                              anoInicial={filters.anoInicial}
-                              anoFinal={filters.anoFinal}
-                              nomeMunicipio={filters.nomeMunicipio}
-                              />
-                            </div>
-                          )}
-                          {selectedTable === "expensesBasicEducationFundeb" && (
-                            <div style={{ marginTop: "1rem" }}>
-                              <RevenueTable
-                                filtrosAplicados={filters}
-                                data={displayApiData[key]}
-                                transformDataFunction={transformDataForTableByYear}
-                                standardizeTypeFunction={standardizedTypeExpensesBasicEducationFundeb}
-                                tableMapping={mapExpensesBasicEducationFundeb}
-                                tableName="Despesas com profissionais da educação básica com o Fundef/Fundeb"
-                                keyTable={key}
-                                groupType={uiGroupType}
-                              anoInicial={filters.anoInicial}
-                              anoFinal={filters.anoFinal}
-                              nomeMunicipio={filters.nomeMunicipio}
-                              />
-                            </div>
-                          )}
-                          {selectedTable === "areasActivityExpense" && (
-                            <div style={{ marginTop: "1rem" }}>
-                              <RevenueTable
-                                filtrosAplicados={filters}
-                                data={displayApiData[key]}
-                                transformDataFunction={transformDataForTableByYear}
-                                standardizeTypeFunction={standardizedTypeAreasActivityExpense}
-                                tableMapping={mapAreasActivityExpense}
-                                tableName="Despesas em MDE por área de atuação"
-                                keyTable={key}
-                                groupType={uiGroupType}
-                              anoInicial={filters.anoInicial}
-                              anoFinal={filters.anoFinal}
-                              nomeMunicipio={filters.nomeMunicipio}
-                              />
-                            </div>
-                          )}
-                          {selectedTable === "basicEducationMinimalPotential" && (
-                            <div style={{ marginTop: "1rem" }}>
-                              <RevenueTable
-                                filtrosAplicados={filters}
-                                data={displayApiData[key]}
-                                transformDataFunction={transformDataForTableByYear}
-                                standardizeTypeFunction={standardizedTypeBasicEducationMinimalPotential}
-                                tableMapping={mapBasicEducationMinimalPotential}
-                                tableName="Receita Potencial Mínima vinculada à Educação Básica"
-                                keyTable={key}
-                                groupType={uiGroupType}
-                              anoInicial={filters.anoInicial}
-                              anoFinal={filters.anoFinal}
-                              nomeMunicipio={filters.nomeMunicipio}
-                              />
-                            </div>
-                          )}
-                          {selectedTable === "complementaryProtocol" && (
-                            <div style={{ marginTop: "1rem" }}>
-                              <RevenueTable
-                                filtrosAplicados={filters}
-                                data={displayApiData[key]}
-                                transformDataFunction={transformDataForTableByYear}
-                                standardizeTypeFunction={standardizedTypeComplementaryProtocol}
-                                tableMapping={mapComplementaryProtocol}
-                                tableName="Protocolo Complementar"
-                                keyTable={key}
-                                groupType={uiGroupType}
-                              anoInicial={filters.anoInicial}
-                              anoFinal={filters.anoFinal}
-                              nomeMunicipio={filters.nomeMunicipio}
-                              />
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                </>
+                renderTabelao()
+              ) : (
+                Object.keys(displayApiData).map((key) => (
+                  <div key={key} style={{ marginBottom: '2rem' }}>
+                    <Typography component="h2" sx={{ fontSize: '20px', fontWeight: 600, color: cores.tinta, marginBottom: '12px' }}>
+                      {key}
+                    </Typography>
+                    <div>
+                      {renderTabela({
+                        data: displayApiData[key],
+                        transformDataFunction: transformDataForTableByYear,
+                        keyTable: key,
+                        nomeMunicipio: filters.nomeMunicipio,
+                      })}
+                    </div>
+                  </div>
+                ))
               )}
 
-              {!shouldShowAllCitiesSingleYear && (
+              {rodapeUnico && (
+                <Box sx={{ marginTop: '8px' }}>
+                  <Typography sx={{ fontSize: '13px', lineHeight: 1.45, color: cores.textoSuave }}>
+                    <strong>“–”</strong> nas tabelas significa: {SEM_DADO_TOOLTIP}
+                  </Typography>
+                  <DataSourceNote nivel="municipal" />
+                </Box>
+              )}
+
+              {!shouldShowAllCitiesSingleYear && (totalPages > 1 || limit < 50) && (
                 <CustomPagination
                   page={page}
                   totalPages={totalPages}

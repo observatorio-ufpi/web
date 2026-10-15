@@ -16,6 +16,7 @@ import {
   FaixaPopulacional,
 } from "../../utils/citiesMapping";
 import YearRangeFilter from "../helpers/YearRangeFilter";
+import { MOTIVO_MUNICIPIO_SELECIONADO } from '../ui/Select';
 
 const EducationFilterSidebar = () => {
   const location = useLocation();
@@ -381,6 +382,7 @@ const EducationFilterSidebar = () => {
                 size="xs"
                 isClearable={true}
                 disabled={otherLocalityDisabled}
+                disabledReason={MOTIVO_MUNICIPIO_SELECIONADO}
               />
 
               {/* Faixa Populacional */}
@@ -401,6 +403,7 @@ const EducationFilterSidebar = () => {
                 size="xs"
                 isClearable={true}
                 disabled={otherLocalityDisabled}
+                disabledReason={MOTIVO_MUNICIPIO_SELECIONADO}
               />
 
               {/* Aglomerado */}
@@ -420,6 +423,7 @@ const EducationFilterSidebar = () => {
                 size="xs"
                 isClearable={true}
                 disabled={otherLocalityDisabled}
+                disabledReason={MOTIVO_MUNICIPIO_SELECIONADO}
               />
 
               {/* Gerência */}
@@ -439,6 +443,7 @@ const EducationFilterSidebar = () => {
                 size="xs"
                 isClearable={true}
                 disabled={otherLocalityDisabled}
+                disabledReason={MOTIVO_MUNICIPIO_SELECIONADO}
               />
             </div>
           </div>

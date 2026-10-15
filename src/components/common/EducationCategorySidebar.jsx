@@ -17,6 +17,7 @@ import {
 } from "../../utils/citiesMapping";
 import YearRangeFilter from "../helpers/YearRangeFilter";
 import { useEducationFilters } from "../../contexts/EducationFilterContext";
+import { MOTIVO_MUNICIPIO_SELECIONADO, formatarOpcaoComDescricao } from '../ui/Select';
 
 const EducationCategorySidebar = () => {
   const location = useLocation();
@@ -73,32 +74,32 @@ const EducationCategorySidebar = () => {
   // Mapear filtros por categoria
   const filtersByCategory = {
     basica: [
-      { value: "enrollment", label: "Matrículas" },
-      { value: "school/count", label: "Escolas" },
-      { value: "class", label: "Turmas" },
-      { value: "teacher", label: "Professores" },
-      { value: "auxiliar", label: "Pessoal Auxiliar" },
-      { value: "employees", label: "Funcionários" },
+      { value: "enrollment", label: "Matrículas", descricao: "Número de alunos matriculados na educação básica." },
+      { value: "school/count", label: "Escolas", descricao: "Quantidade de escolas em funcionamento." },
+      { value: "class", label: "Turmas", descricao: "Quantidade de turmas." },
+      { value: "teacher", label: "Professores", descricao: "Número de professores da educação básica." },
+      { value: "auxiliar", label: "Pessoal Auxiliar", descricao: "Profissionais auxiliares que atuam nas turmas, além dos professores." },
+      { value: "employees", label: "Funcionários", descricao: "Demais profissionais das escolas (administração, limpeza, merenda etc.)." },
     ],
     superior: [
-      { value: "university/count", label: "Número de instituições" },
-      { value: "university_enrollment", label: "Matrículas" },
-      { value: "university_teacher", label: "Docentes" },
-      { value: "course_count", label: "Cursos" },
+      { value: "university/count", label: "Número de instituições", descricao: "Quantidade de instituições de ensino superior." },
+      { value: "university_enrollment", label: "Matrículas", descricao: "Número de alunos matriculados em cursos de graduação." },
+      { value: "university_teacher", label: "Docentes", descricao: "Número de professores do ensino superior." },
+      { value: "course_count", label: "Cursos", descricao: "Quantidade de cursos de graduação oferecidos." },
     ],
     taxas: [
-      { value: "pop_out_school", label: "Alunos fora da escola" },
-      { value: "adjusted_liquid_frequency", label: "Frequência líquida" },
-      { value: "iliteracy_rate", label: "Taxa de analfabetismo" },
+      { value: "pop_out_school", label: "Alunos fora da escola", descricao: "Crianças e jovens em idade escolar que não frequentam a escola." },
+      { value: "adjusted_liquid_frequency", label: "Frequência líquida", descricao: "Percentual da população que frequenta a etapa de ensino adequada à sua idade." },
+      { value: "iliteracy_rate", label: "Taxa de analfabetismo", descricao: "Percentual de pessoas com 15 anos ou mais que não sabem ler e escrever." },
       {
         value: "superior_education_conclusion_tax",
-        label: "Taxa de conclusão (superior)",
+        label: "Taxa de conclusão (superior)", descricao: "Percentual da população que concluiu o ensino superior."
       },
       {
         value: "basic_education_conclusion",
-        label: "Taxa de conclusão (básico)",
+        label: "Taxa de conclusão (básico)", descricao: "Percentual da população que concluiu a educação básica."
       },
-      { value: "instruction_level", label: "Nível de instrução" },
+      { value: "instruction_level", label: "Nível de instrução", descricao: "Distribuição da população pelo maior nível de escolaridade alcançado." },
     ],
     condicoes: [],
   };
@@ -293,27 +294,31 @@ const EducationCategorySidebar = () => {
       {/* Botão para abrir/fechar a sidebar */}
       <button
         onClick={toggleSidebar}
-        className={`fixed top-4 left-4 z-50 p-2 bg-gray-800 text-white rounded-lg shadow-lg hover:bg-gray-700 transition-colors ${isOpen ? 'hidden' : ''}`}
+        aria-label="Abrir menu de filtros"
+        aria-expanded={isOpen}
+        className={`fixed top-4 left-4 z-50 p-2 bg-ink text-white rounded-lg shadow-lg hover:bg-brand-dark transition-colors ${isOpen ? 'hidden' : ''}`}
       >
         <FaBars />
       </button>
 
       {/* Sidebar */}
       <aside
+        aria-label="Menu de filtros"
         className={`${
           isOpen ? "translate-x-0" : "-translate-x-full"
         } fixed left-0 top-0 h-screen overflow-y-auto transition-transform duration-300 ease-in-out z-40 shadow-lg sidebar-scroll`}
         style={{
           width: isOpen ? "20rem" : "4rem",
-          backgroundColor: "#E8E4E3",
+          backgroundColor: "#FFFFFF",
+          borderRight: "1px solid #E7DED6",
         }}
       >
         {/* Header da Sidebar */}
-        <div className="relative p-3 pt-12 border-b border-gray-200">
+        <div className="relative p-3 pt-12 border-b border-line">
           <button
             onClick={toggleSidebar}
-            className="absolute top-3 right-3 z-50 p-2 bg-gray-800 text-white rounded-lg shadow-lg hover:bg-gray-700 transition-colors"
-            aria-label="Fechar sidebar"
+            className="absolute top-3 right-3 z-50 p-2 bg-ink text-white rounded-lg shadow-lg hover:bg-brand-dark transition-colors"
+            aria-label="Fechar menu de filtros"
           >
             <FaTimes />
           </button>
@@ -333,23 +338,31 @@ const EducationCategorySidebar = () => {
           </div>
         </div>
 
-        <hr className="border-gray-300" />
 
         {/* Navegação */}
         <nav className="p-3 space-y-3">
-          {/* Categoria Atual */}
-          <div>
-            <h3
-              className={`text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 ${isOpen ? "block" : "hidden"} md:block`}
-            >
-              Categoria
-            </h3>
-            <div className={`${isOpen ? "block" : "hidden"} md:block`}>
-              <p className="text-xs font-medium text-gray-800">
-                {categories.find((c) => c.id === currentCategory)?.label}
-              </p>
+          {/* Categorias como abas (antes: só o nome aqui e um select no topo da página) */}
+          <nav aria-label="Categorias de dados educacionais">
+            <div className="grid grid-cols-2 gap-1 rounded-xl bg-[#F6F3F2] p-1">
+              {categories.map((categoria) => {
+                const ativa = categoria.id === currentCategory;
+                return (
+                  <Link
+                    key={categoria.id}
+                    to={categoria.path}
+                    aria-current={ativa ? "page" : undefined}
+                    className={`rounded-lg px-2 py-2 text-center text-xs leading-tight transition-colors duration-150 ${
+                      ativa
+                        ? "bg-white font-semibold text-ink shadow-sm"
+                        : "font-medium text-muted hover:bg-white/60 hover:text-ink"
+                    }`}
+                  >
+                    {categoria.label}
+                  </Link>
+                );
+              })}
             </div>
-          </div>
+          </nav>
 
           {/* Tipo de Dado */}
           {currentCategory !== "condicoes" && (
@@ -377,6 +390,7 @@ const EducationCategorySidebar = () => {
                   filters.setColumnDimension?.("");
                 }}
                 options={filtersByCategory[currentCategory] || []}
+                formatOptionLabel={formatarOpcaoComDescricao}
                 placeholder="Selecione o tipo"
                 size="xs"
               />
@@ -427,11 +441,12 @@ const EducationCategorySidebar = () => {
                   }
                 }}
                 options={[
-                  { value: "etapa", label: "Etapa de Ensino" },
-                  { value: "localidade", label: "Localidade" },
-                  { value: "dependencia", label: "Dependência Administrativa" },
-                  { value: "municipio", label: "Município" },
+                  { value: "etapa", label: "Etapa de Ensino", descricao: "Separa os números por etapa: creche, pré-escola, fundamental, médio..." },
+                  { value: "localidade", label: "Localidade", descricao: "Separa entre zona urbana e rural." },
+                  { value: "dependencia", label: "Dependência Administrativa", descricao: "Separa por rede: federal, estadual, municipal ou privada." },
+                  { value: "municipio", label: "Município", descricao: "Mostra um resultado para cada município." },
                 ]}
+                formatOptionLabel={formatarOpcaoComDescricao}
                 isMulti
                 placeholder="Selecione filtros"
                 size="xs"
@@ -444,22 +459,23 @@ const EducationCategorySidebar = () => {
                   filters.setSelectedFilters?.(newValue);
                 }}
                 options={[
-                  { value: "modalidade", label: "Modalidade" },
+                  { value: "modalidade", label: "Modalidade", descricao: "Separa entre ensino presencial e a distância." },
                   {
                     value: "categoriaAdministrativa",
-                    label: "Categoria Administrativa",
+                    label: "Categoria Administrativa", descricao: "Separa entre instituições públicas e privadas."
                   },
-                  { value: "faixaEtariaSuperior", label: "Faixa Etária" },
+                  { value: "faixaEtariaSuperior", label: "Faixa Etária", descricao: "Separa os alunos por faixa de idade." },
                   {
                     value: "organizacaoAcademica",
-                    label: "Organização Acadêmica",
+                    label: "Organização Acadêmica", descricao: "Separa por tipo de instituição: universidade, centro universitário, faculdade, instituto federal."
                   },
                   {
                     value: "instituicaoEnsino",
-                    label: "Instituição de Ensino",
+                    label: "Instituição de Ensino", descricao: "Mostra um resultado para cada instituição."
                   },
-                  { value: "municipio", label: "Município" },
+                  { value: "municipio", label: "Município", descricao: "Mostra um resultado para cada município." },
                 ]}
+                formatOptionLabel={formatarOpcaoComDescricao}
                 isMulti
                 placeholder="Selecione filtros"
                 size="xs"
@@ -474,19 +490,20 @@ const EducationCategorySidebar = () => {
                 options={[
                   {
                     value: "local_funcionamento",
-                    label: "Local de Funcionamento",
+                    label: "Local de Funcionamento", descricao: "Onde a escola funciona: prédio próprio, cedido ou outro espaço."
                   },
                   {
                     value: "infraestrutura_basica",
-                    label: "Infraestrutura Básica",
+                    label: "Infraestrutura Básica", descricao: "Água, energia, esgoto, coleta de lixo e banheiros."
                   },
                   {
                     value: "espacos_pedagogicos",
-                    label: "Espaços Pedagógicos",
+                    label: "Espaços Pedagógicos", descricao: "Biblioteca, laboratórios, quadra, sala de leitura etc."
                   },
-                  { value: "equipamentos", label: "Equipamentos" },
-                  { value: "materiais", label: "Materiais" },
+                  { value: "equipamentos", label: "Equipamentos", descricao: "Computadores, internet, projetores e outros equipamentos." },
+                  { value: "materiais", label: "Materiais", descricao: "Materiais pedagógicos disponíveis na escola." },
                 ]}
+                formatOptionLabel={formatarOpcaoComDescricao}
                 isMulti
                 placeholder="Selecione aspectos"
                 size="xs"
@@ -619,6 +636,7 @@ const EducationCategorySidebar = () => {
                   size="xs"
                   isClearable={true}
                   disabled={otherLocalityDisabled}
+                  disabledReason={MOTIVO_MUNICIPIO_SELECIONADO}
                 />
 
                 {/* Faixa Populacional */}
@@ -639,6 +657,7 @@ const EducationCategorySidebar = () => {
                   size="xs"
                   isClearable={true}
                   disabled={otherLocalityDisabled}
+                  disabledReason={MOTIVO_MUNICIPIO_SELECIONADO}
                 />
 
                 {/* Aglomerado e Gerência em linha */}
@@ -660,9 +679,11 @@ const EducationCategorySidebar = () => {
                       }
                       options={filteredAglomeradoOptions}
                       placeholder="AG"
+                      fullWidth
                       size="xxs"
                       isClearable={true}
                       disabled={otherLocalityDisabled}
+                      disabledReason={MOTIVO_MUNICIPIO_SELECIONADO}
                     />
                   </div>
 
@@ -683,9 +704,11 @@ const EducationCategorySidebar = () => {
                       }
                       options={filteredGerenciaOptions}
                       placeholder="GRE"
+                      fullWidth
                       size="xxs"
                       isClearable={true}
                       disabled={otherLocalityDisabled}
+                      disabledReason={MOTIVO_MUNICIPIO_SELECIONADO}
                     />
                   </div>
                 </div>
@@ -694,7 +717,11 @@ const EducationCategorySidebar = () => {
           )}
 
           {/* Botões de Ação */}
-          <div className="flex gap-2 pt-2 border-t border-gray-200">
+          {/* Botões fixos no rodapé da sidebar (mesmo padrão da área financeira) */}
+          <div
+            className="flex gap-2 pt-3 pb-3 border-t border-line sticky bottom-0 z-10"
+            style={{ backgroundColor: "#FFFFFF" }}
+          >
             <Button
               variant="contained"
               fullWidth
@@ -711,17 +738,12 @@ const EducationCategorySidebar = () => {
                   }),
                 );
               }}
-              sx={{
-                textTransform: "none",
-                fontSize: "0.75rem",
-                py: 0.5,
-              }}
+              sx={{ fontSize: "0.875rem" }}
             >
               Mostrar
             </Button>
             <Button
-              variant="outlined"
-              fullWidth
+              variant="text"
               size="small"
               onClick={() => {
                 // Limpar todos os filtros
@@ -747,16 +769,7 @@ const EducationCategorySidebar = () => {
                 // Disparar evento de limpeza para componentes específicos
                 window.dispatchEvent(new CustomEvent("clearFilters"));
               }}
-              sx={{
-                textTransform: "none",
-                fontSize: "0.75rem",
-                py: 0.5,
-                backgroundColor: "#f0f0f0",
-                color: "#000",
-                "&:hover": {
-                  backgroundColor: "#e0e0e0",
-                },
-              }}
+              sx={{ fontSize: "0.8125rem", px: 2, flex: "0 0 auto" }}
             >
               Limpar
             </Button>
@@ -771,7 +784,7 @@ const EducationCategorySidebar = () => {
             </h3>
             <button
               onClick={() => navigate("/dados-financeiros")}
-              className={`w-full flex items-center px-2 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 text-gray-700 hover:bg-yellow-100 hover:text-yellow-700`}
+              className={`w-full flex items-center px-2 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 text-gray-700 hover:bg-areia hover:text-brand`}
             >
               <FaDollarSign className="mr-2 text-sm flex-shrink-0" />
               <span className={`${isOpen ? "block" : "hidden"} md:block`}>

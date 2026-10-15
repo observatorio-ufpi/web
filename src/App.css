@@ -102,8 +102,8 @@
 }
 
 .loading-spinner {
-  border: 8px solid #f3f3f3; /* Cor do fundo do spinner */
-  border-top: 8px solid #6750A4; /* Cor MD3 Primary */
+  border: 8px solid #F3E6DE; /* areia (tokens) */
+  border-top: 8px solid #8E4A2E; /* cor da marca (tokens) */
   border-radius: 50%;
   width: 50px; /* Ajuste o tamanho do spinner conforme necessário */
   height: 50px;

@@ -1,5 +1,4 @@
 import { Button, Typography, Box } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
 import React, { useMemo, useState, useRef, useEffect } from 'react';
 import '../../../../style/RevenueTableContainer.css';
 import '../../../../style/TableFilters.css';
@@ -9,9 +8,10 @@ import ApiContainer from './ApiComponent.jsx';
 import CensoEscolarDataTable from './CensoEscolarDataTable.jsx';
 import CensoEscolarFilterComponent from './CensoEscolarFilterComponent.jsx';
 import TechnicalSheetButton from '../../../common/TechnicalSheetButton.jsx';
+import EmptyState from '../../../common/EmptyState';
+import { ConteudoFicha } from '../../../common/fichasTecnicas';
 
 function CensoEscolarComponent() {
-  const theme = useTheme();
   const apiRef = useRef();
 
   const [city, setCity] = useState('');
@@ -245,35 +245,22 @@ function CensoEscolarComponent() {
       {isLoading && <Loading />}
 
       {error && (
-        <div className="error-message">
-          <p>{error}</p>
-        </div>
+        <EmptyState erro titulo="Não foi possível carregar os dados" texto="Tente novamente em alguns instantes." />
       )}
 
-      <hr className="divider" />
 
       <div className="data-section">
         {!isLoading && !error && !data && (
-          <Typography
-            variant="body1"
-            sx={{
-              textAlign: 'center',
-              fontSize: '18px',
-              fontWeight: 'bold',
-              margin: '20px auto',
-              maxWidth: '400px',
-              color: theme.palette.primary.main,
-            }}
-          >
-            Selecione os filtros desejados e clique em "Mostrar Resultados" para montar uma consulta.
-          </Typography>
+          <EmptyState titulo="Monte sua consulta" texto={'Escolha os filtros na lateral e clique em "Mostrar".'} />
         )}
 
         {!isLoading && !error && data && <CensoEscolarDataTable data={data} title={title} />}
 
         {!isLoading && !error && data && (
           <Box sx={{ display: 'flex', justifyContent: 'flex-end', marginTop: 2 }}>
-            <TechnicalSheetButton />
+            <TechnicalSheetButton dialogTitle={"Ficha técnica — Condições de oferta"}>
+              <ConteudoFicha chave="condicoes" />
+            </TechnicalSheetButton>
           </Box>
         )}
 

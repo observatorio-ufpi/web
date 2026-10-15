@@ -49,13 +49,16 @@ const FinancialLayout = () => {
     <FinancialFilterProvider>
       <SidebarContext.Provider value={sidebarValue}>
         <div className="min-h-screen" style={{ backgroundColor: 'var(--background-color)' }}>
+          <a href="#conteudo" className="pular-para-conteudo">Pular para o conteúdo</a>
           {/* Sidebar fixa */}
           <FinancialCategorySidebar />
           
           {/* Conteúdo principal */}
           <div className={`transition-all duration-300 ${window.innerWidth >= 768 ? '' : 'w-full'}`} style={{ marginLeft: window.innerWidth >= 768 ? (isOpen ? '20rem' : '0rem') : '0rem' }}>
             {/* Área de conteúdo */}
-            <main className="min-h-screen p-3 sm:p-4 md:p-6">
+            {/* Com a sidebar fechada, o botão ☰ (fixed, top-4/left-4) fica por cima do
+                conteúdo — o pt-16 reserva espaço pra ele não cobrir o topo da página */}
+            <main id="conteudo" tabIndex={-1} className={`min-h-screen p-3 sm:p-4 md:p-6 outline-none ${isOpen ? '' : 'pt-16 sm:pt-16 md:pt-16'}`}>
               <Outlet />
             </main>
             

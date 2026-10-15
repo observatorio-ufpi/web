@@ -11,7 +11,7 @@ import {
 } from '@mui/material';
 
 const defaultBody = (
-  <Typography variant="body2" sx={{ color: '#444', lineHeight: 1.7 }}>
+  <Typography variant="body2" sx={{ color: 'text.primary', lineHeight: 1.7 }}>
     Informações sobre a metodologia, fonte de dados, periodicidade e outras informações técnicas estarão disponíveis aqui.
   </Typography>
 );
@@ -34,9 +34,10 @@ export default function TechnicalSheetButton({
       <Tooltip title={tooltip}>
         <span>
           <Button
-            variant="outlined"
-            color="info"
+            variant="text"
+            color="primary"
             onClick={() => setOpen(true)}
+            aria-label={buttonLabel}
             startIcon={<InfoOutlined />}
             disabled={disabled}
             size={size}

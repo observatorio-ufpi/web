@@ -38,45 +38,16 @@ import { Typography, Button, Box } from "@mui/material";
 import { ExpandMore, ExpandLess } from '@mui/icons-material';
 import { municipios } from "../../../../../../utils/municipios.mapping";
 import TechnicalSheetButton from "../../../../../common/TechnicalSheetButton.jsx";
+import EmptyState from '../../../../../common/EmptyState';
+import { ConteudoFicha } from '../../../../../common/fichasTecnicas';
 
 // Componente de "Em Construção"
+// Indicador ainda não implementado — mesmo formato dos outros avisos (EmptyState)
 const UnderConstruction = ({ indicatorName }) => (
-  <Box sx={{ 
-    textAlign: 'center', 
-    padding: '80px 40px', 
-    backgroundColor: '#fff8e1', 
-    borderRadius: '16px', 
-    border: '3px dashed #ffb300', 
-    margin: '30px auto',
-    maxWidth: '600px',
-    boxShadow: '0 4px 20px rgba(255, 179, 0, 0.15)'
-  }}>
-    <Box sx={{ fontSize: '64px', marginBottom: '20px' }}>
-      🚧
-    </Box>
-    <Typography variant="h4" sx={{ 
-      color: '#ff8f00', 
-      fontWeight: 'bold', 
-      marginBottom: '16px',
-      fontSize: '28px'
-    }}>
-      Em Construção
-    </Typography>
-    <Typography variant="body1" sx={{ 
-      color: '#6d4c00', 
-      fontSize: '16px',
-      lineHeight: 1.6,
-      marginBottom: '8px'
-    }}>
-      {indicatorName ? `O indicador "${indicatorName}"` : 'Este indicador'} está sendo desenvolvido
-    </Typography>
-    <Typography variant="body2" sx={{ 
-      color: '#8d6e00', 
-      fontSize: '14px'
-    }}>
-      Estará disponível em breve!
-    </Typography>
-  </Box>
+  <EmptyState
+    titulo="Indicador em preparação"
+    texto={`${indicatorName ? `O indicador "${indicatorName}"` : 'Este indicador'} ainda está sendo desenvolvido e estará disponível em breve.`}
+  />
 );
 
 // 5 Indicadores principais
@@ -997,12 +968,13 @@ function ChartContainer() {
   return (
     <div>
       <div className="app-container">
-        <hr className="divider" />
 
         {/* Área de dados - sempre visível */}
         <div className="data-section">
           <Box sx={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 2 }}>
-            <TechnicalSheetButton />
+            <TechnicalSheetButton dialogTitle={"Ficha técnica — Indicadores dos municípios"}>
+              <ConteudoFicha chave="indicadoresMunicipais" />
+            </TechnicalSheetButton>
           </Box>
           {loading && <Loading />}
 
@@ -1013,41 +985,15 @@ function ChartContainer() {
 
           {/* Mostrar erro apenas se o indicador está implementado */}
           {!loading && error && isSubIndicatorImplemented(selectedSubIndicator) && (
-            <div style={{ 
-              textAlign: 'center', 
-              padding: '40px 20px',
-              color: '#d9534f',
-              fontSize: '18px'
-            }}>
-              <p>Falha ao carregar os dados. Por favor, tente novamente mais tarde.</p>
-            </div>
+            <EmptyState erro titulo="Não foi possível carregar os dados" texto="Tente novamente em alguns instantes." />
           )}
 
           {!loading && !error && !apiData && !hasInitialLoad && isSubIndicatorImplemented(selectedSubIndicator) && (
-            <Typography 
-              variant="body1" 
-              sx={{ 
-                textAlign: 'center',
-                fontSize: '18px',
-                fontWeight: 'bold',
-                margin: '20px auto',
-                maxWidth: '400px',
-                color: theme.palette.primary.main
-              }}
-            >
-              Selecione os filtros desejados na lateral e clique em "Filtrar" para montar uma consulta.
-            </Typography>
+            <EmptyState titulo="Monte sua consulta" texto={'Escolha os filtros na lateral e clique em "Mostrar".'} />
           )}
 
           {!loading && !error && (!apiData || Object.keys(apiData).length === 0) && hasInitialLoad && (
-            <div style={{ 
-              textAlign: 'center', 
-              padding: '40px 20px',
-              color: '#d9534f',
-              fontSize: '18px'
-            }}>
-              <p>Nenhum dado encontrado com os filtros selecionados.</p>
-            </div>
+            <EmptyState titulo="Nenhum dado encontrado" texto="Tente outro período ou outro filtro." />
           )}
 
           {!loading && !error && apiData && Object.keys(apiData).length > 0 && (

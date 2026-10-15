@@ -26,9 +26,10 @@
 }
 
 .headline-large {
-  font-family: 'Arial', sans-serif;
-  font-style: italic;
-  font-weight: 600;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--color-ink);
 }
 
 /* Ajustes específicos para cards */
@@ -40,7 +41,9 @@
 }
 
 .feature-card {
-  flex: 0 1 auto;
+  /* Largura fixa igual pros três (antes variava com o texto); a altura
+     se iguala porque o container flex estica os itens da mesma linha */
+  flex: 0 1 320px;
   min-width: 280px;
   max-width: 320px;
 }

@@ -6,6 +6,7 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import React from 'react';
 import { FaFileExcel, FaFilePdf } from 'react-icons/fa';
+import { EXCEL_CABECALHO_FUNDO, PDF_CABECALHO_FUNDO } from '../../utils/exportStyle';
 
 /**
  * Componente para exportar tabelas para PDF e Excel
@@ -170,7 +171,7 @@ const TableExport = ({
         startY: tableTitle ? 60 : 40,
         margin: { top: 60, right: 40, bottom: 40, left: 40 },
         styles: { overflow: 'linebreak', cellWidth: 'auto', fontSize: 10, halign: 'left', valign: 'middle' },
-        headStyles: { fillColor: [204, 204, 204], textColor: [0, 0, 0], fontStyle: 'bold', halign: 'center' },
+        headStyles: { fillColor: PDF_CABECALHO_FUNDO, textColor: 255, fontStyle: 'bold', halign: 'center' },
         bodyStyles: { valign: 'middle' },
         columnStyles: columnStyles
       });
@@ -253,7 +254,7 @@ const TableExport = ({
       headerRowObj.fill = {
         type: 'pattern',
         pattern: 'solid',
-        fgColor: { argb: 'FFCCCCCC' }
+        fgColor: { argb: EXCEL_CABECALHO_FUNDO }
       };
       headerRowObj.alignment = { horizontal: 'center', vertical: 'middle' };
 

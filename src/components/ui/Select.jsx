@@ -1,5 +1,27 @@
 import React from 'react';
 import Select from 'react-select';
+import { Tooltip } from '@mui/material';
+import { cores } from '../../theme/tokens';
+
+// Motivo padrão dos filtros de localidade (Território, Faixa, Aglomerado, GRE)
+// desabilitados quando já há um município escolhido — usado nas sidebars
+// financeira e educacionais
+// Opção com explicação em linguagem simples numa segunda linha (campo `descricao`).
+// Só no menu aberto — com a opção já escolhida, o campo mostra só o nome.
+// Uso: <Select options={[{ value, label, descricao }]} formatOptionLabel={formatarOpcaoComDescricao} />
+export const formatarOpcaoComDescricao = ({ label, descricao }, { context }) => (
+  <div>
+    <div>{label}</div>
+    {context === 'menu' && descricao && (
+      <div style={{ fontSize: '0.85em', opacity: 0.7, lineHeight: 1.3, marginTop: 2 }}>
+        {descricao}
+      </div>
+    )}
+  </div>
+);
+
+export const MOTIVO_MUNICIPIO_SELECIONADO =
+  'Desabilitado porque um município específico já foi selecionado acima';
 
 const CustomSelect = ({ 
   options = [],
@@ -10,6 +32,8 @@ const CustomSelect = ({
   size = 'medium',
   fullWidth = false,
   disabled = false,
+  // Texto explicando por que o campo está desabilitado (aparece ao passar o mouse/tocar)
+  disabledReason = null,
   className = '',
   ...props 
 }) => {
@@ -27,21 +51,21 @@ const CustomSelect = ({
   const customStyles = {
     control: (provided, state) => ({
       ...provided,
-      border: state.isFocused ? '2px solid #8b5cf6' : '2px solid #e5e7eb',
+      border: state.isFocused ? `2px solid ${cores.marca}` : `2px solid ${cores.linha}`,
       borderRadius: '8px',
-      boxShadow: state.isFocused ? '0 0 0 1px #8b5cf6' : 'none',
+      boxShadow: state.isFocused ? `0 0 0 1px ${cores.marca}` : 'none',
       minHeight: size === 'xxs' ? '24px' : size === 'xs' ? '28px' : size === 'small' ? '36px' : size === 'large' ? '48px' : '40px',
       '&:hover': {
-        border: '2px solid #8b5cf6'
+        border: `2px solid ${cores.marca}`
       }
     }),
     option: (provided, state) => ({
       ...provided,
-      backgroundColor: state.isSelected ? '#8b5cf6' : state.isFocused ? '#f3f4f6' : 'white',
-      color: state.isSelected ? 'white' : '#374151',
+      backgroundColor: state.isSelected ? cores.marca : state.isFocused ? cores.areia : 'white',
+      color: state.isSelected ? 'white' : cores.tinta,
       fontSize: sizes[size],
       '&:hover': {
-        backgroundColor: state.isSelected ? '#8b5cf6' : '#f3f4f6'
+        backgroundColor: state.isSelected ? cores.marca : cores.areia
       }
     }),
     menu: (provided) => ({
@@ -56,12 +80,12 @@ const CustomSelect = ({
     }),
     singleValue: (provided) => ({
       ...provided,
-      color: '#374151',
+      color: cores.tinta,
       fontSize: sizes[size]
     }),
     placeholder: (provided) => ({
       ...provided,
-      color: '#9ca3af',
+      color: cores.textoSuave,
       fontSize: sizes[size]
     }),
     input: (provided) => ({
@@ -78,6 +102,22 @@ const CustomSelect = ({
     })
   };
   
+  const campo = (
+    <Select
+      options={options}
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder}
+      isDisabled={disabled}
+      className={baseClasses}
+      classNamePrefix="react-select"
+      styles={customStyles}
+      menuPortalTarget={document.body}
+      menuPosition="fixed"
+      {...props}
+    />
+  );
+
   return (
     <div className={`${fullWidth ? 'w-full' : 'min-w-[200px]'} ${className}`}>
       {label && (
@@ -85,19 +125,14 @@ const CustomSelect = ({
           {label}
         </label>
       )}
-      <Select
-        options={options}
-        value={value}
-        onChange={onChange}
-        placeholder={placeholder}
-        isDisabled={disabled}
-        className={baseClasses}
-        classNamePrefix="react-select"
-        styles={customStyles}
-        menuPortalTarget={document.body}
-        menuPosition="fixed"
-        {...props}
-      />
+      {disabled && disabledReason ? (
+        // O <span> recebe o mouse/toque — elemento desabilitado não dispara eventos
+        <Tooltip title={disabledReason} arrow enterTouchDelay={0}>
+          <span style={{ display: 'block', cursor: 'not-allowed' }}>{campo}</span>
+        </Tooltip>
+      ) : (
+        campo
+      )}
     </div>
   );
 };

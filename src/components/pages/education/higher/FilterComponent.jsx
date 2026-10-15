@@ -1,16 +1,16 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Typography, Box } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
 import ApiHigherContainer from './ApiHigherComponent.jsx';
 import DataTable from './DataTable.jsx';
 import { Loading } from '../../../ui';
 import { useEducationFilters } from '../../../../contexts/EducationFilterContext';
 import { municipios, Regioes, FaixaPopulacional } from '../../../../utils/citiesMapping';
 import TechnicalSheetButton from '../../../common/TechnicalSheetButton.jsx';
+import EmptyState from '../../../common/EmptyState';
+import { ConteudoFicha } from '../../../common/fichasTecnicas';
 
 function FilterComponent() {
   const filters = useEducationFilters();
-  const theme = useTheme();
 
   const validHigherEducationTypes = ['university/count', 'university_enrollment', 'university_teacher', 'course_count'];
   
@@ -68,7 +68,7 @@ function FilterComponent() {
   };
 
   const titleMapping = {
-    "university/count": "Número de intituições de ensino superior",
+    "university/count": "Número de instituições de ensino superior",
     "university_enrollment": "Número de matrículas",
     "university_teacher": "Número de docentes",
     "course_count": "Número de cursos"
@@ -254,31 +254,16 @@ function FilterComponent() {
   return (
     <div className="app-container">
       <div className="flex flex-col gap-4 p-0 m-0">
-          <hr className="divider" />
 
           {isLoading && (
             <Loading />
           )}
           {error && (
-            <div className="error-message">
-              <p>{error}</p>
-                </div>
+            <EmptyState erro titulo="Não foi possível carregar os dados" texto="Tente novamente em alguns instantes." />
               )}
 
           {!isLoading && !error && !data && (
-            <Typography
-              variant="body1"
-              sx={{
-                textAlign: 'center',
-                fontSize: '18px',
-                fontWeight: 'bold',
-                margin: '20px auto',
-                maxWidth: '400px',
-                color: theme.palette.primary.main
-              }}
-            >
-              Selecione os filtros desejados na lateral e clique em "Filtrar" para montar uma consulta.
-            </Typography>
+            <EmptyState titulo="Monte sua consulta" texto={'Escolha os filtros na lateral e clique em "Mostrar".'} />
           )}
 
           {!isLoading && !error && data && title ? (
@@ -331,7 +316,9 @@ function FilterComponent() {
               />
 
               <Box sx={{ display: 'flex', justifyContent: 'flex-end', marginTop: 2 }}>
-                <TechnicalSheetButton />
+                <TechnicalSheetButton dialogTitle={"Ficha técnica — Educação superior"}>
+              <ConteudoFicha chave="superior" />
+            </TechnicalSheetButton>
               </Box>
             </>
           ) : null}

@@ -4,6 +4,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { Select } from '../ui';
 import YearRangeFilter from './YearRangeFilter';
 import { FaixaPopulacional, municipios, Regioes } from '../../utils/municipios.mapping';
+import { MOTIVO_MUNICIPIO_SELECIONADO, formatarOpcaoComDescricao } from '../ui/Select';
 
 const findMunicipioCodigo = (nomeMunicipio) => {
   return Object.keys(municipios).find(
@@ -12,96 +13,101 @@ const findMunicipioCodigo = (nomeMunicipio) => {
 };
 
 // Opções de tipos de tabela para dados municipais
+// `descricao` é um resumo em linguagem simples, mostrado embaixo de cada
+// opção no menu — os rótulos técnicos ficam, mas quem não é da área
+// não precisa adivinhar o que cada um significa.
 const tableTypeOptions = [
-  { value: 'ownRevenues', label: 'Receita de impostos próprios' },
-  { value: 'constitutionalTransfersRevenue', label: 'Receita de transferências constitucionais e legais' },
-  { value: 'municipalTaxesRevenues', label: 'Receita Líquida de Impostos do Município' },
-  { value: 'additionalEducationRevenue', label: 'Receitas adicionais da educação no Município' },
-  { value: 'municipalFundebFundefComposition', label: 'Composição do Fundeb no Município' },
-  { value: 'complementationFundebFundef', label: 'Composição da complementação do Fundeb' },
-  { value: 'constitutionalLimitMde', label: 'Limite constitucional em MDE no Município' },
-  { value: 'expensesBasicEducationFundeb', label: 'Despesas com profissionais da Educação básica do Fundeb' },
-  { value: 'areasActivityExpense', label: 'Despesas em MDE por área de atuação' },
-  { value: 'basicEducationMinimalPotential', label: 'Receita Potencial Mínima vinculada à Educação Básica (RPEB)' },
-  { value: 'complementaryProtocol', label: 'Protocolo Complementar' },
+  { value: 'ownRevenues', label: 'Receita de impostos próprios', descricao: 'Quanto o município arrecadou com seus próprios impostos (IPTU, ISS, ITBI, IRRF).' },
+  { value: 'constitutionalTransfersRevenue', label: 'Receita de transferências constitucionais e legais', descricao: 'Repasses que o município recebe do estado e da União (FPM, ICMS, IPVA, ITR).' },
+  { value: 'municipalTaxesRevenues', label: 'Receita Líquida de Impostos do Município', descricao: 'Soma dos impostos próprios com os repasses, já descontado o que vai para o Fundeb.' },
+  { value: 'additionalEducationRevenue', label: 'Receitas adicionais da educação no Município', descricao: 'Outros recursos específicos para educação, como salário-educação e transferências do FNDE (PDDE, PNAE, PNATE).' },
+  { value: 'municipalFundebFundefComposition', label: 'Composição do Fundeb no Município', descricao: 'Como o Fundeb é formado e quanto volta para o município.' },
+  { value: 'complementationFundebFundef', label: 'Composição da complementação do Fundeb', descricao: 'Quanto a União complementa o Fundeb deste município (VAAF, VAAT, VAAR).' },
+  { value: 'constitutionalLimitMde', label: 'Limite constitucional em MDE no Município', descricao: 'Se o município está aplicando o mínimo de 25% exigido em Manutenção e Desenvolvimento do Ensino.' },
+  { value: 'expensesBasicEducationFundeb', label: 'Despesas com profissionais da Educação básica do Fundeb', descricao: 'Quanto do Fundeb foi gasto com professores e outros profissionais da educação básica.' },
+  { value: 'areasActivityExpense', label: 'Despesas em MDE por área de atuação', descricao: 'Gasto em educação dividido por etapa de ensino (creche, pré-escola, fundamental etc.).' },
+  { value: 'basicEducationMinimalPotential', label: 'Receita Potencial Mínima vinculada à Educação Básica (RPEB)', descricao: 'Estimativa do mínimo de recursos disponíveis para a educação básica: impostos, Fundeb, salário-educação e programas do FNDE.' },
+  { value: 'complementaryProtocol', label: 'Protocolo Complementar', descricao: 'Indicadores extras de aplicação mínima em MDE e do VAAT na educação infantil.' },
 ];
+
 
 // Opções de tipos de tabela para dados estaduais
 const stateTableTypeOptions = [
-  { value: 'tabela1', label: 'Receita bruta de impostos próprios do Piauí' },
-  { value: 'tabela2', label: 'Receita líquida de impostos próprios do Piauí' },
-  { value: 'tabela3', label: 'Receita bruta de transferências constitucionais' },
-  { value: 'tabela4', label: 'Receita líquida de transferências constitucionais' },
-  { value: 'tabela5', label: 'Receita líquida resultante de impostos e transferências' },
-  { value: 'tabela6', label: 'Receitas adicionais para financiamento do ensino' },
-  { value: 'tabela7', label: 'Composição do Fundeb no Piauí' },
-  { value: 'tabela8', label: 'Composição da complementação do Fundeb' },
-  { value: 'tabela9', label: 'Limite constitucional em MDE no Piauí' },
-  { value: 'tabela10', label: 'Despesas com profissionais da educação básica (Fundeb)' },
-  { value: 'tabela11', label: 'Despesas em MDE por área de atuação' },
-  { value: 'tabela12', label: 'Receita Potencial Mínima vinculada à Educação Básica (RPEB)' },
-  { value: 'tabela13', label: 'Protocolo Complementar' },
+  { value: 'tabela1', label: 'Receita bruta de impostos próprios do Piauí', descricao: 'Quanto o Estado arrecadou com seus próprios impostos (ICMS, IPVA, ITCD, IRRF), antes de repassar a parte dos municípios.' },
+  { value: 'tabela2', label: 'Receita líquida de impostos próprios do Piauí', descricao: 'Impostos próprios do Estado depois de descontar a parte repassada aos municípios (25% do ICMS e 50% do IPVA).' },
+  { value: 'tabela3', label: 'Receita bruta de transferências constitucionais', descricao: 'Repasses que o Estado recebe da União (FPE, IPI-Exportação, IOF-Ouro e compensações), antes das deduções.' },
+  { value: 'tabela4', label: 'Receita líquida de transferências constitucionais', descricao: 'Repasses da União ao Estado depois de descontar a parte que vai para os municípios.' },
+  { value: 'tabela5', label: 'Receita líquida resultante de impostos e transferências', descricao: 'Soma das receitas líquidas de impostos e de transferências: a base usada para calcular o mínimo de 25% em MDE.' },
+  { value: 'tabela6', label: 'Receitas adicionais para financiamento do ensino', descricao: 'Recursos para a educação além dos impostos: salário-educação, programas do FNDE (PDDE, PNAE, PNATE), convênios, royalties.' },
+  { value: 'tabela7', label: 'Composição do Fundeb no Piauí', descricao: 'Quanto o Estado envia ao Fundeb, quanto recebe de volta e o saldo dessa redistribuição.' },
+  { value: 'tabela8', label: 'Composição da complementação do Fundeb', descricao: 'Quanto a União complementa o Fundeb no Estado, por modalidade (VAAF, VAAT, VAAR).' },
+  { value: 'tabela9', label: 'Limite constitucional em MDE no Piauí', descricao: 'Se o Estado aplica o mínimo de 25% da receita de impostos em Manutenção e Desenvolvimento do Ensino.' },
+  { value: 'tabela10', label: 'Despesas com profissionais da educação básica (Fundeb)', descricao: 'Quanto do Fundeb foi gasto com professores e demais profissionais da educação básica.' },
+  { value: 'tabela11', label: 'Despesas em MDE por área de atuação', descricao: 'Gasto em educação dividido por etapa e área (ensino fundamental, médio, transporte escolar etc.).' },
+  { value: 'tabela12', label: 'Receita Potencial Mínima vinculada à Educação Básica (RPEB)', descricao: 'Estimativa do mínimo de recursos disponíveis para a educação básica: impostos, Fundeb, salário-educação e programas do FNDE.' },
+  { value: 'tabela13', label: 'Protocolo Complementar', descricao: 'Aplicação do VAAT, despesas com pessoal ativo e inativo, despesas de capital e recursos de MDE fora do Fundeb.' },
 ];
 
 // Opções de tipos de indicadores estaduais
 const stateIndicatorTypeOptions = [
-  { value: 'revenueComposition', label: 'Composição das Receitas' },
-  { value: 'fundeb', label: 'Fundeb' },
-  { value: 'mde', label: 'Manutenção e Desenvolvimento do Ensino (MDE)' },
-  { value: 'educationExpense', label: 'Despesas com Educação' },
-  { value: 'additionalRevenue', label: 'Receitas Adicionais' },
-  { value: 'rpeb', label: 'Composição da Receita Potencial de Educação (RPEB)' },
+  { value: 'revenueComposition', label: 'Composição das Receitas', descricao: 'Peso de cada imposto e transferência na receita do Estado, ano a ano.' },
+  { value: 'fundeb', label: 'Fundeb', descricao: 'Evolução dos recursos do Fundeb no Estado e da complementação da União.' },
+  { value: 'mde', label: 'Manutenção e Desenvolvimento do Ensino (MDE)', descricao: 'Evolução do percentual aplicado em MDE frente ao mínimo de 25%.' },
+  { value: 'educationExpense', label: 'Despesas com Educação', descricao: 'Evolução das despesas do Estado com educação.' },
+  { value: 'additionalRevenue', label: 'Receitas Adicionais', descricao: 'Evolução das receitas adicionais da educação (salário-educação, FNDE, convênios).' },
+  { value: 'rpeb', label: 'Composição da Receita Potencial de Educação (RPEB)', descricao: 'Como se compõe a Receita Potencial Mínima vinculada à Educação Básica.' },
 ];
 
 // Opções de tipos de indicadores municipais (5 categorias principais)
 const municipalIndicatorTypeOptions = [
-  { value: 'financasPublicas', label: '1 - Indicadores de Finanças Públicas' },
-  { value: 'capacidadeFinanciamento', label: '2 - Capacidade de Financiamento' },
-  { value: 'recursosFundeb', label: '3 - Indicadores dos Recursos do Fundeb' },
-  { value: 'controleAplicacao', label: '4 - Controle da Aplicação dos Recursos' },
-  { value: 'investimentoEducacao', label: '5 - Investimento em Educação' },
+  { value: 'financasPublicas', label: '1 - Indicadores de Finanças Públicas', descricao: 'De onde vem o dinheiro do município: impostos próprios, transferências e Fundeb.' },
+  { value: 'capacidadeFinanciamento', label: '2 - Capacidade de Financiamento', descricao: 'Quanto o município tem disponível para a educação básica, no total e por aluno.' },
+  { value: 'recursosFundeb', label: '3 - Indicadores dos Recursos do Fundeb', descricao: 'Peso do Fundeb nas despesas de educação e se o município ganha ou perde na redistribuição.' },
+  { value: 'controleAplicacao', label: '4 - Controle da Aplicação dos Recursos', descricao: 'Se o município cumpre os mínimos legais de aplicação (MDE, Fundeb, VAAT).' },
+  { value: 'investimentoEducacao', label: '5 - Investimento em Educação', descricao: 'Quanto e como o município gasta com educação: total, por aluno, pessoal e investimentos.' },
 ];
 
 // Subindicadores para cada indicador principal
 const municipalSubIndicatorOptions = {
   financasPublicas: [
-    { value: 'composicaoReceitas', label: '1.1 - Composição das Receitas Impostos e Transferências [%]' },
-    { value: 'participacaoImpostosProprios', label: '1.2 - Participação da receita de impostos próprios [%]' },
-    { value: 'participacaoTransferencias', label: '1.3 - Participação das transferências [%]' },
-    { value: 'razaoImpostosTransferencias', label: '1.4 - Razão entre impostos próprios e transferências' },
-    { value: 'razaoTransferenciasImpostos', label: '1.5 - Razão entre transferências e impostos próprios' },
-    { value: 'participacaoFundeb', label: '1.6 - Participação do FUNDEB [%]' },
-    { value: 'receitasPorMatricula', label: '1.7 - Receitas por Matrícula na Educação Básica [R$]' },
+    { value: 'composicaoReceitas', label: '1.1 - Composição das Receitas Impostos e Transferências [%]', descricao: 'Peso de cada imposto e transferência no total de receitas.' },
+    { value: 'participacaoImpostosProprios', label: '1.2 - Participação da receita de impostos próprios [%]', descricao: 'Quanto da receita vem dos impostos arrecadados pelo próprio município.' },
+    { value: 'participacaoTransferencias', label: '1.3 - Participação das transferências [%]', descricao: 'Quanto da receita vem de repasses do estado e da União.' },
+    { value: 'razaoImpostosTransferencias', label: '1.4 - Razão entre impostos próprios e transferências', descricao: 'Quantos reais de impostos próprios para cada real de transferências.' },
+    { value: 'razaoTransferenciasImpostos', label: '1.5 - Razão entre transferências e impostos próprios', descricao: 'Quantos reais de transferências para cada real de impostos próprios.' },
+    { value: 'participacaoFundeb', label: '1.6 - Participação do FUNDEB [%]', descricao: 'Peso do Fundeb nas receitas do município.' },
+    { value: 'receitasPorMatricula', label: '1.7 - Receitas por Matrícula na Educação Básica [R$]', descricao: 'Receitas divididas pelo número de matrículas da educação básica.' },
   ],
   capacidadeFinanciamento: [
-    { value: 'rpeb', label: '2.1 - Receita Potencial Mínima Vinculada à Educação Básica (RPEb) [R$]' },
-    { value: 'composicaoRpeb', label: '2.2 - Composição da RPEB [%]' },
-    { value: 'rpebAlunoAno', label: '2.3 - RPEb-aluno (ano) [R$]' },
-    { value: 'rpebAlunoMes', label: '2.4 - RPEb-aluno (mês) [R$]' },
-    { value: 'participacaoFundebRpeb', label: '2.5 - Participação do Fundeb na RPEb [%]' },
+    { value: 'rpeb', label: '2.1 - Receita Potencial Mínima Vinculada à Educação Básica (RPEb) [R$]', descricao: 'Total estimado de recursos mínimos disponíveis para a educação básica.' },
+    { value: 'composicaoRpeb', label: '2.2 - Composição da RPEB [%]', descricao: 'Peso de cada fonte (impostos, Fundeb, salário-educação...) na RPEb.' },
+    { value: 'rpebAlunoAno', label: '2.3 - RPEb-aluno (ano) [R$]', descricao: 'RPEb dividida pelo número de alunos, por ano.' },
+    { value: 'rpebAlunoMes', label: '2.4 - RPEb-aluno (mês) [R$]', descricao: 'RPEb por aluno, por mês.' },
+    { value: 'participacaoFundebRpeb', label: '2.5 - Participação do Fundeb na RPEb [%]', descricao: 'Quanto da RPEb vem do Fundeb.' },
   ],
   recursosFundeb: [
-    { value: 'participacaoFundebMde', label: '3.1 - Participação do Fundeb na despesa em MDE [%]' },
-    { value: 'resultadoLiquidoFundeb', label: '3.2 - Resultado Líquido do Fundeb [%]' },
-    { value: 'participacaoComplementacaoUniao', label: '3.3 - Participação da complementação da União no FUNDEB [%]' },
+    { value: 'participacaoFundebMde', label: '3.1 - Participação do Fundeb na despesa em MDE [%]', descricao: 'Quanto da despesa em MDE é paga com recursos do Fundeb.' },
+    { value: 'resultadoLiquidoFundeb', label: '3.2 - Resultado Líquido do Fundeb [%]', descricao: 'Se o município recebe do Fundeb mais (ou menos) do que contribui.' },
+    { value: 'participacaoComplementacaoUniao', label: '3.3 - Participação da complementação da União no FUNDEB [%]', descricao: 'Peso da complementação da União no Fundeb do município.' },
   ],
   controleAplicacao: [
-    { value: 'aplicacaoMde', label: '4.1 - Aplicação em MDE (>=25%) [%]' },
-    { value: 'aplicacaoFundebProfissionais', label: '4.2 - Aplicação do Fundeb nos profissionais (>=70%) [%]' },
-    { value: 'aplicacaoVaatInfantil', label: '4.3 - Aplicação do VAAT na Educação Infantil (>=50%) [%]' },
-    { value: 'aplicacaoVaatCapital', label: '4.4 - Aplicação do VAAT em Despesa de Capital (>=15%) [%]' },
-    { value: 'despesaEducacaoPib', label: '4.5 - Despesa total com educação em relação ao PIB [%]' },
+    { value: 'aplicacaoMde', label: '4.1 - Aplicação em MDE (>=25%) [%]', descricao: 'Parte da receita de impostos aplicada em MDE; o mínimo é 25%.' },
+    { value: 'aplicacaoFundebProfissionais', label: '4.2 - Aplicação do Fundeb nos profissionais (>=70%) [%]', descricao: 'Parte do Fundeb gasta com profissionais da educação; o mínimo é 70%.' },
+    { value: 'aplicacaoVaatInfantil', label: '4.3 - Aplicação do VAAT na Educação Infantil (>=50%) [%]', descricao: 'Parte do VAAT aplicada na educação infantil; o mínimo é 50%.' },
+    { value: 'aplicacaoVaatCapital', label: '4.4 - Aplicação do VAAT em Despesa de Capital (>=15%) [%]', descricao: 'Parte do VAAT aplicada em despesas de capital (obras, equipamentos); o mínimo é 15%.' },
+    { value: 'despesaEducacaoPib', label: '4.5 - Despesa total com educação em relação ao PIB [%]', descricao: 'Despesa total com educação comparada ao tamanho da economia do município (PIB).' },
   ],
   investimentoEducacao: [
-    { value: 'despesaTotalEducacao', label: '5.1 - Despesa total com Educação [R$]' },
-    { value: 'gastoAlunoAno', label: '5.2.1 - Gasto-Aluno (ano) [R$]' },
-    { value: 'gastoAlunoMes', label: '5.2.2 - Gasto-Aluno (mês) [R$]' },
-    { value: 'despesaPessoalAtivo', label: '5.3 - Despesa com pessoal ativo [%]' },
-    { value: 'despesaPessoalInativo', label: '5.4 - Despesa com pessoal inativo [%]' },
-    { value: 'despesaCapital', label: '5.5 - Despesa de Capital [%]' },
-    { value: 'transferenciasPrivadas', label: '5.6 - Transferências às instituições privadas [%]' },
+    { value: 'despesaTotalEducacao', label: '5.1 - Despesa total com Educação [R$]', descricao: 'Quanto o município gastou com educação no total.' },
+    { value: 'gastoAlunoAno', label: '5.2.1 - Gasto-Aluno (ano) [R$]', descricao: 'Gasto com educação dividido pelo número de alunos, por ano.' },
+    { value: 'gastoAlunoMes', label: '5.2.2 - Gasto-Aluno (mês) [R$]', descricao: 'Gasto com educação por aluno, por mês.' },
+    { value: 'despesaPessoalAtivo', label: '5.3 - Despesa com pessoal ativo [%]', descricao: 'Peso da folha do pessoal ativo nas despesas com educação.' },
+    { value: 'despesaPessoalInativo', label: '5.4 - Despesa com pessoal inativo [%]', descricao: 'Peso de aposentados e pensionistas nas despesas com educação.' },
+    { value: 'despesaCapital', label: '5.5 - Despesa de Capital [%]', descricao: 'Peso dos investimentos (obras, equipamentos) nas despesas com educação.' },
+    { value: 'transferenciasPrivadas', label: '5.6 - Transferências às instituições privadas [%]', descricao: 'Parte das despesas repassada a instituições privadas conveniadas (comunitárias, filantrópicas).' },
   ],
 };
+
 
 const FilterComponent = ({
   onFilterChange,
@@ -133,8 +139,9 @@ const FilterComponent = ({
     faixaPopulacionalMunicipio: faixaPopulacionalMunicipio || '',
     aglomeradoMunicipio: aglomeradoMunicipio || '',
     gerenciaRegionalMunicipio: gerenciaRegionalMunicipio || '',
-    anoInicial: 2007, // Ano inicial padrão
-    anoFinal: 2024, // Ano final padrão
+    // Vem das props quando a sidebar abre a partir de um link com filtros na URL
+    anoInicial: anoInicial || 2007,
+    anoFinal: anoFinal || 2024,
   });
 
   // Converter os valores recebidos para o formato do react-select
@@ -355,8 +362,8 @@ const FilterComponent = ({
   return (
     <div className="flex flex-col gap-2 p-0 m-0 w-full">
       {/* Header de Filtros */}
-      <div className="flex items-center justify-between bg-gray-100 rounded-lg p-2 mb-1">
-        <h3 className="text-xs font-semibold text-gray-700">Filtros</h3>
+      <div className="flex items-center justify-between mb-1">
+        <h3 className="text-xs font-semibold uppercase tracking-wider text-muted">Consulta</h3>
       </div>
 
       {/* Filtros recolhíveis */}
@@ -369,6 +376,7 @@ const FilterComponent = ({
               value={tableTypeState}
               onChange={setTableTypeState}
               options={tableTypeOptions}
+              formatOptionLabel={formatarOpcaoComDescricao}
               placeholder="Selecione o tipo..."
               size="xs"
             />
@@ -383,6 +391,7 @@ const FilterComponent = ({
               value={stateTableTypeState}
               onChange={setStateTableTypeState}
               options={stateTableTypeOptions}
+              formatOptionLabel={formatarOpcaoComDescricao}
               placeholder="Selecione o tipo..."
               size="xs"
             />
@@ -397,6 +406,7 @@ const FilterComponent = ({
               value={stateIndicatorTypeState}
               onChange={setStateIndicatorTypeState}
               options={stateIndicatorTypeOptions}
+              formatOptionLabel={formatarOpcaoComDescricao}
               placeholder="Selecione o indicador..."
               size="xs"
             />
@@ -416,6 +426,7 @@ const FilterComponent = ({
                 setMunicipalSubIndicatorState(subOptions[0] || null);
               }}
               options={municipalIndicatorTypeOptions}
+              formatOptionLabel={formatarOpcaoComDescricao}
               placeholder="Selecione o indicador..."
               size="xs"
             />
@@ -430,6 +441,7 @@ const FilterComponent = ({
               value={municipalSubIndicatorState}
               onChange={setMunicipalSubIndicatorState}
               options={municipalSubIndicatorOptions[municipalIndicatorTypeState.value] || []}
+              formatOptionLabel={formatarOpcaoComDescricao}
               placeholder="Selecione o subindicador..."
               size="xs"
             />
@@ -454,33 +466,35 @@ const FilterComponent = ({
 
             {/* Collapser para filtros de localização */}
             <Collapse in={filtersExpanded} timeout="auto" unmountOnExit>
-              <div className="flex flex-col gap-2 w-full border-t pt-2">
+              <div className="flex flex-col gap-2 w-full border-t border-line pt-3">
                 {/* Território */}
                 <div className="w-full">
                   <label className="block text-xs font-medium text-gray-600 mb-0.5">Território</label>
                   <Select
-                    value={territorioState}
-                    onChange={setTerritorioDeDesenvolvimentoMunicipio}
-                    options={filteredTerritorioOptions}
-                    placeholder="Selecione..."
-                    size="xs"
-                    isClearable
-                    disabled={otherLocalityDisabled}
-                  />
+                        value={territorioState}
+                        onChange={setTerritorioDeDesenvolvimentoMunicipio}
+                        options={filteredTerritorioOptions}
+                        placeholder="Selecione..."
+                        size="xs"
+                        isClearable
+                        disabled={otherLocalityDisabled}
+                        disabledReason={MOTIVO_MUNICIPIO_SELECIONADO}
+                      />
                 </div>
 
                 {/* Faixa Populacional */}
                 <div className="w-full">
                   <label className="block text-xs font-medium text-gray-600 mb-0.5">Faixa Populacional</label>
                   <Select
-                    value={faixaState}
-                    onChange={setFaixaPopulacionalMunicipio}
-                    options={filteredFaixaPopulacionalOptions}
-                    placeholder="Selecione..."
-                    size="xs"
-                    isClearable
-                    disabled={otherLocalityDisabled}
-                  />
+                        value={faixaState}
+                        onChange={setFaixaPopulacionalMunicipio}
+                        options={filteredFaixaPopulacionalOptions}
+                        placeholder="Selecione..."
+                        size="xs"
+                        isClearable
+                        disabled={otherLocalityDisabled}
+                        disabledReason={MOTIVO_MUNICIPIO_SELECIONADO}
+                      />
                 </div>
 
                 {/* Aglomerado e Gerência em linha */}
@@ -488,28 +502,32 @@ const FilterComponent = ({
                   <div>
                     <label className="block text-xs font-medium text-gray-600 mb-0.5">Aglomerado</label>
                     <Select
-                      value={aglomeradoState}
-                      onChange={setAglomeradoMunicipio}
-                      options={filteredAglomeradoOptions}
-                      placeholder="AG"
-                      size="xxs"
-                      isClearable
-                      disabled={otherLocalityDisabled}
-                    />
+                          value={aglomeradoState}
+                          onChange={setAglomeradoMunicipio}
+                          options={filteredAglomeradoOptions}
+                          placeholder="AG"
+                          fullWidth
+                          size="xxs"
+                          isClearable
+                          disabled={otherLocalityDisabled}
+                          disabledReason={MOTIVO_MUNICIPIO_SELECIONADO}
+                        />
                   </div>
 
                   <div>
                     <label className="block text-xs font-medium text-gray-600 mb-0.5">Gerência</label>
                     <Select
-                      value={gerenciaState}
-                      onChange={setGerenciaRegionalMunicipio}
-                      options={filteredGerenciaOptions}
-                      placeholder="GRE"
-                      size="xxs"
-                      isSearchable={false}
-                      isClearable
-                      disabled={otherLocalityDisabled}
-                    />
+                          value={gerenciaState}
+                          onChange={setGerenciaRegionalMunicipio}
+                          options={filteredGerenciaOptions}
+                          placeholder="GRE"
+                          fullWidth
+                          size="xxs"
+                          isSearchable={false}
+                          isClearable
+                          disabled={otherLocalityDisabled}
+                          disabledReason={MOTIVO_MUNICIPIO_SELECIONADO}
+                        />
                   </div>
                 </div>
               </div>
@@ -518,7 +536,7 @@ const FilterComponent = ({
         )}
 
         {/* Período */}
-        <div className="w-full border-t pt-2">
+        <div className="w-full border-t border-line pt-3">
           <label className="block text-xs font-medium text-gray-600 mb-1">Período</label>
           <YearRangeFilter
             startYear={filters.anoInicial}
@@ -530,36 +548,26 @@ const FilterComponent = ({
           />
         </div>
 
-        {/* Botões */}
-        <div className="flex gap-2 w-full pt-2 border-t">
+        {/* Botões — fixos no rodapé da sidebar enquanto os filtros estão na tela,
+            pra não precisar rolar até o fim (principalmente no celular) */}
+        <div
+          className="flex gap-2 w-full pt-3 pb-3 border-t border-line sticky bottom-0 z-10"
+          style={{ backgroundColor: '#FFFFFF' }}
+        >
           <Button
             variant="contained"
             onClick={handleSearch}
             fullWidth
             size="small"
-            sx={{
-              textTransform: 'none',
-              fontSize: '0.75rem',
-              py: 0.5
-            }}
+            sx={{ fontSize: '0.875rem' }}
           >
             Mostrar
           </Button>
           <Button
-            variant="outlined"
+            variant="text"
             onClick={handleClearFilters}
-            fullWidth
             size="small"
-            sx={{
-              textTransform: 'none',
-              fontSize: '0.75rem',
-              py: 0.5,
-              backgroundColor: '#f0f0f0',
-              color: '#000',
-              '&:hover': {
-                backgroundColor: '#e0e0e0',
-              }
-            }}
+            sx={{ fontSize: '0.8125rem', px: 2 }}
           >
             Limpar
           </Button>

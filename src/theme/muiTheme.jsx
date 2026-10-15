@@ -1,79 +1,80 @@
 import { createTheme } from '@mui/material/styles';
 
-// Paleta Nordestina Pastel Suave com Laranja e Amarelo
+import { cores, fonte } from './tokens';
+
+// Paleta da identidade visual (valores em ./tokens.js). Mantém as chaves
+// antigas (container, onContainer...) porque partes do site leem esses nomes.
 const nordestePastel = {
-  // Cores primárias - Marrom Pastel Muito Suave
   primary: {
-    main: '#D4B8A6', // Marrom pastel muito suave
-    light: '#F0E8E0',
-    dark: '#8B7355',
-    container: '#F0E8E0',
-    onContainer: '#5C4838',
+    main: cores.marca,
+    light: cores.areia,
+    dark: cores.marcaEscura,
+    contrastText: '#FFFFFF',
+    container: cores.areia,
+    onContainer: cores.textoSobreAreia,
     onPrimary: '#FFFFFF',
-    onPrimaryContainer: '#5C4838',
+    onPrimaryContainer: cores.textoSobreAreia,
   },
 
-  // Cores secundárias - LARANJA PASTEL DESTACADO
   secondary: {
-    main: '#F4B896', // Laranja pastel bem suave
-    light: '#F9E0D0',
-    dark: '#B8774F',
-    container: '#F9E0D0',
-    onContainer: '#6B4430',
-    onSecondary: '#FFFFFF',
-    onSecondaryContainer: '#6B4430',
+    main: cores.series[1],
+    light: '#F9E7C8',
+    dark: '#A86A0F',
+    contrastText: cores.tinta,
+    container: '#F9E7C8',
+    onContainer: '#5A3A06',
+    onSecondary: cores.tinta,
+    onSecondaryContainer: '#5A3A06',
   },
 
-  // Cores terciárias - AMARELO PASTEL DESTACADO
   tertiary: {
-    main: '#F4D898', // Amarelo pastel bem suave
-    light: '#F9EDD0',
-    dark: '#B8964F',
-    container: '#F9EDD0',
-    onContainer: '#6B5830',
+    main: cores.series[2],
+    light: '#DCEBEE',
+    dark: '#1F4A55',
+    container: '#DCEBEE',
+    onContainer: '#163840',
     onTertiary: '#FFFFFF',
-    onTertiaryContainer: '#6B5830',
+    onTertiaryContainer: '#163840',
   },
 
-  // Cores de erro
   error: {
-    main: '#E8B8B8', // Vermelho pastel
+    main: cores.naoAtende,
     light: '#F5DDDD',
-    dark: '#A87070',
+    dark: '#7F2B1F',
     container: '#F5DDDD',
-    onContainer: '#6B4848',
+    onContainer: '#6B2418',
     onError: '#FFFFFF',
-    onErrorContainer: '#6B4848',
+    onErrorContainer: '#6B2418',
   },
 
-  // Cores de superfície
+  success: { main: cores.atende, contrastText: '#FFFFFF' },
+  warning: { main: cores.atencao, contrastText: '#FFFFFF' },
+
   surface: {
-    main: '#FFFAF5', // Creme extremamente suave
-    variant: '#F0E8E0',
-    onSurface: '#5C4838',
-    onSurfaceVariant: '#8B7355',
-    outline: '#A89880',
-    outlineVariant: '#E0D4C8',
+    main: cores.superficie,
+    variant: cores.areia,
+    onSurface: cores.tinta,
+    onSurfaceVariant: cores.textoSuave,
+    outline: cores.linhaForte,
+    outlineVariant: cores.linha,
   },
 
-  // Cores de fundo
   background: {
-    default: '#FFFAF5',
-    paper: '#FFFFFF',
+    default: cores.fundo,
+    paper: cores.superficie,
   },
 
-  // Cores neutras muito pastel
   grey: {
-    50: '#FFFAF5',
-    100: '#FBF6F0',
-    200: '#F0E8E0',
-    300: '#E0D4C8',
-    400: '#D4C2A8',
-    500: '#A89880',
-    600: '#8B7355',
-    700: '#6B5340',
-    800: '#5C4838',
-    900: '#3D2D20',
+    50: '#FCFAF8',
+    100: '#F6F3F2',
+    200: cores.linha,
+    300: cores.linhaForte,
+    400: '#B8A797',
+    500: cores.textoSuave,
+    600: '#625448',
+    700: cores.texto,
+    800: '#3A2D24',
+    900: cores.tinta,
   },
 };
 
@@ -85,6 +86,8 @@ const theme = createTheme({
     secondary: nordestePastel.secondary,
     tertiary: nordestePastel.tertiary,
     error: nordestePastel.error,
+    success: nordestePastel.success,
+    warning: nordestePastel.warning,
     surface: nordestePastel.surface,
     background: nordestePastel.background,
     grey: nordestePastel.grey,
@@ -132,7 +135,7 @@ const theme = createTheme({
 
   // Tipografia MD3
   typography: {
-    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+    fontFamily: fonte,
     fontSize: 14,
     fontWeightLight: 300,
     fontWeightRegular: 400,
@@ -228,20 +231,18 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           textTransform: 'none',
-          borderRadius: 20, // MD3 button shape
-          padding: '10px 24px',
+          borderRadius: 10,
+          padding: '10px 20px',
           minHeight: 40,
-          fontWeight: 500,
+          fontWeight: 600,
           boxShadow: 'none',
-          '&:hover': {
-            boxShadow: '0px 1px 3px 1px rgba(0, 0, 0, 0.15), 0px 1px 2px 0px rgba(0, 0, 0, 0.30)',
-          },
-          '&:active': {
-            boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.30), 0px 1px 3px 1px rgba(0, 0, 0, 0.15)',
-          },
+          transition: 'background-color 150ms ease, border-color 150ms ease, color 150ms ease',
+          '&:hover': { boxShadow: 'none' },
+          '&:active': { boxShadow: 'none' },
+          '&:focus-visible': { outline: `2px solid ${cores.marca}`, outlineOffset: 2 },
         },
         contained: {
-          boxShadow: '0px 1px 3px 1px rgba(0, 0, 0, 0.15), 0px 1px 2px 0px rgba(0, 0, 0, 0.30)',
+          boxShadow: 'none',
         },
         outlined: {
           borderWidth: 1,
