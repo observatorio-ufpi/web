@@ -21,6 +21,7 @@ import "./App.css";
 import { Loading } from "./components/ui";
 import { Typography } from '@mui/material';
 import BuscaGlobal from "./components/common/BuscaGlobal.jsx";
+import LimiteDeErroPagina from "./components/common/LimiteDeErroPagina.jsx";
 
 // Páginas carregadas sob demanda (lazy) — ver <Suspense> no App
 const QuemSomos = lazy(() => import("./components/navigation/QuemSomos.jsx"));
@@ -91,6 +92,7 @@ function App() {
         <BuscaGlobal />
         {/* Páginas carregadas sob demanda (lazy): cada uma baixa o próprio código
             só quando é aberta — antes o site inteiro vinha num arquivo único de ~3,8 MB */}
+        <LimiteDeErroPagina>
         <Suspense fallback={<Loading />}>
         <Routes>
           {/* Layout da Homepage (com Navbar e Footer) */}
@@ -194,6 +196,7 @@ function App() {
           />
         </Routes>
         </Suspense>
+        </LimiteDeErroPagina>
       </Router>
     </ThemeProvider>
   );

@@ -1,5 +1,9 @@
 // Serviço para buscar dados do IBGE
-const IBGE_BASE_URL = '/ibge/api/v1';
+// Direto na API do IBGE (ela libera CORS para qualquer site). Antes era '/ibge/api/v1',
+// um atalho que só existe no servidor de desenvolvimento (vite.config.js): em produção
+// o Apache devolvia a página do site no lugar do JSON e a home quebrava ao buscar
+// dados demográficos e a lista de municípios.
+const IBGE_BASE_URL = 'https://servicodados.ibge.gov.br/api/v1';
 const SIDRA_BASE_URL = 'https://apisidra.ibge.gov.br/values';
 
 export const ibgeService = {

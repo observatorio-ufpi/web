@@ -14,7 +14,14 @@ export const fetchIPCAData = async (startDate, endDate) => {
     if (!response.ok) {
       throw new Error("Failed to fetch IPCA data");
     }
-    return await response.json();
+    const dados = await response.json();
+    // A API do Banco Central às vezes responde 200 com um erro dentro
+    // ({"erro":{"statusCode":500,...}}) em vez da lista. Sem esta checagem, o
+    // cálculo da correção quebrava e a página dos perfis ficava em branco.
+    if (!Array.isArray(dados)) {
+      throw new Error("Resposta inválida do Banco Central (IPCA)");
+    }
+    return dados;
   } catch (error) {
     console.error("Error fetching IPCA data:", error);
     throw error;
@@ -75,8 +82,9 @@ export const getMaxIPCADate = async () => {
       throw new Error("Failed to fetch latest IPCA data");
     }
     const data = await response.json();
-    
-    if (data && data.length > 0) {
+
+    // Mesmo cuidado de fetchIPCAData: às vezes vem {"erro":...} com status 200
+    if (Array.isArray(data) && data.length > 0) {
       // Get the latest date from the data
       const latestDate = data[data.length - 1].data;
       const [day, month, year] = latestDate.split("/");

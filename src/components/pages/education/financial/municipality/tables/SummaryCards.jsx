@@ -25,7 +25,10 @@ let promessaIpca = null;
 const carregarIpca = () => {
   if (!promessaIpca) {
     const hoje = new Date().toLocaleDateString("pt-BR");
-    promessaIpca = fetchIPCAData("01/01/2006", hoje).catch(() => {
+    promessaIpca = fetchIPCAData("01/01/2006", hoje).then((d) => {
+      if (!Array.isArray(d)) throw new Error("IPCA inválido");
+      return d;
+    }).catch(() => {
       promessaIpca = null; // permite tentar de novo numa próxima vez
       return null;
     });
@@ -221,8 +224,13 @@ const montarCard = (cfg, ctx) => {
           )}
           {(() => {
             // Variação real: o valor do ano anterior atualizado pelo IPCA até o fim do último ano
-            if (correcaoAtiva || !ctx.ipca || !va || variacao === null) return null;
-            const fator = calculateMonetaryCorrection(1, `31/12/${anterior}`, `31/12/${ultimo}`, ctx.ipca);
+            if (correcaoAtiva || !Array.isArray(ctx.ipca) || !ctx.ipca.length || !va || variacao === null) return null;
+            let fator;
+            try {
+              fator = calculateMonetaryCorrection(1, `31/12/${anterior}`, `31/12/${ultimo}`, ctx.ipca);
+            } catch {
+              return null; // IPCA indisponível: o card mostra só a variação nominal
+            }
             const real = ((v - va * fator) / Math.abs(va * fator)) * 100;
             if (!Number.isFinite(real)) return null;
             return (
@@ -447,7 +455,7 @@ const montarCard = (cfg, ctx) => {
   return null;
 };
 
-const SummaryCards = ({ resumo, rows, types, dados, modo, nomeLinha, correcaoAtiva, anoReferencia, referencia = null }) => {
+const CardsDeResumo = ({ resumo, rows, types, dados, modo, nomeLinha, correcaoAtiva, anoReferencia, referencia = null }) => {
   // IPCA só é necessário quando há card de total por ano e a correção da tabela está desligada
   const precisaIpca = modo === "anos" && !correcaoAtiva && (resumo || []).some((c) => c.card === "total");
   const ipca = useIpca(precisaIpca);
@@ -481,5 +489,30 @@ const SummaryCards = ({ resumo, rows, types, dados, modo, nomeLinha, correcaoAti
     </Box>
   );
 };
+
+// Proteção: se algum card der erro (ex.: dado inesperado de uma API externa),
+// só os cards somem — a tabela e o resto da página continuam. Antes, um erro aqui
+// deixava a página inteira em branco (perfil do município com o IPCA fora do ar).
+class LimiteDeErroDosCards extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { erro: false };
+  }
+  static getDerivedStateFromError() {
+    return { erro: true };
+  }
+  componentDidCatch(erro) {
+    console.error("Cards de resumo não puderam ser exibidos:", erro);
+  }
+  render() {
+    return this.state.erro ? null : this.props.children;
+  }
+}
+
+const SummaryCards = (props) => (
+  <LimiteDeErroDosCards>
+    <CardsDeResumo {...props} />
+  </LimiteDeErroDosCards>
+);
 
 export default SummaryCards;

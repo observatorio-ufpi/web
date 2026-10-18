@@ -10,13 +10,13 @@
   "background_color": "#F3E6DE",
   "icons": [
     { "src": "/favicon.ico", "sizes": "48x48", "type": "image/x-icon" },
-    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    { "src": "/icones-app/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icones-app/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icones-app/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ],
   "shortcuts": [
-    { "name": "Ranking dos municípios", "short_name": "Ranking", "url": "/ranking", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
-    { "name": "Dados financeiros dos municípios", "short_name": "Municípios", "url": "/municipios", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
-    { "name": "Dados educacionais", "short_name": "Educação", "url": "/dados-educacionais", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] }
+    { "name": "Ranking dos municípios", "short_name": "Ranking", "url": "/ranking", "icons": [{ "src": "/icones-app/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Dados financeiros dos municípios", "short_name": "Municípios", "url": "/municipios", "icons": [{ "src": "/icones-app/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Dados educacionais", "short_name": "Educação", "url": "/dados-educacionais", "icons": [{ "src": "/icones-app/icon-192.png", "sizes": "192x192" }] }
   ]
 }
