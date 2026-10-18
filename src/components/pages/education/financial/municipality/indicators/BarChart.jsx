@@ -2,7 +2,6 @@ import React from 'react';
 import { Bar, Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, LineElement, PointElement, Title, Tooltip, Legend } from 'chart.js';
 import zoomPlugin from 'chartjs-plugin-zoom';
-import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import { FaFileExcel, FaDownload, FaUndo } from 'react-icons/fa';
 import Button from '@mui/material/Button';
@@ -12,6 +11,7 @@ import { formatPtBrCurrency, formatPtBrNumber, formatPtBrPercent, parseLooseNumb
 import { downloadChartPngWithBackground } from '../../../../../../utils/chartExportUtils.js';
 import { cores } from '../../../../../../theme/tokens';
 import { FONTE_EXPORTACAO, EXCEL_CABECALHO_FUNDO, EXCEL_CABECALHO_TEXTO } from '../../../../../../utils/exportStyle';
+import { carregarExcelJS } from '../../../../../../utils/bibliotecasExportacao';
 
 const estiloCabecalho = {
   backgroundColor: cores.areia,
@@ -145,6 +145,7 @@ const BarChart = ({ chartData, title }) => {
     const fonte = FONTE_EXPORTACAO;
 
     // Criar workbook com ExcelJS
+    const ExcelJS = await carregarExcelJS();
     const workbook = new ExcelJS.Workbook();
     workbook.creator = 'OPEPI/UFPI';
     workbook.created = new Date();

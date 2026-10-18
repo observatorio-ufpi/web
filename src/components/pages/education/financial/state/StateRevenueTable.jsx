@@ -1,7 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { FaFilePdf, FaFileExcel } from 'react-icons/fa';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
 import Button from '@mui/material/Button';
 import Paper from '@mui/material/Paper';
 import Table from '@mui/material/Table';
@@ -16,7 +14,6 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { ptBR } from 'date-fns/locale';
-import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import { fetchIPCAData, calculateMonetaryCorrection, getMaxIPCADate } from '../../../../../utils/bacenApi.jsx';
 import '../../../../../style/Buttons.css';
@@ -28,6 +25,10 @@ import { cores } from '../../../../../theme/tokens';
 import { FONTE_EXPORTACAO, EXCEL_CABECALHO_FUNDO, EXCEL_CABECALHO_TEXTO, PDF_CABECALHO_FUNDO, PDF_LINHA_ALTERNADA } from '../../../../../utils/exportStyle';
 import { ConteudoFicha } from '../../../../common/fichasTecnicas';
 import ColunaComExplicacao from '../../../../common/ColunaComExplicacao';
+import MenuExportar from '../../../../common/MenuExportar';
+import CartoesTabela, { AlternarVisao, useVisaoCelular } from '../../../../common/CartoesTabela.jsx';
+import { carregarLogo, topoConteudoPdf, finalizarPdfComLogo } from "../../../../../utils/logoExportacao.js";
+import { carregarExcelJS, carregarJsPDF } from '../../../../../utils/bibliotecasExportacao';
 
 // Mesmo visual da tabela municipal (RevenueTable): cabeçalho areia compacto,
 // números alinhados pelas casas decimais, coluna de total destacada
@@ -74,6 +75,8 @@ const StateRevenueTable = ({ csvData, tableName, startYear, endYear, enableMonet
   const [targetDate, setTargetDate] = useState(new Date());
   const [correctedData, setCorrectedData] = useState(null);
   const [maxDate, setMaxDate] = useState(null);
+  // No celular: cartões por ano em vez da tabela larga
+  const visao = useVisaoCelular();
 
   useEffect(() => {
     if (csvData) {
@@ -299,6 +302,7 @@ const StateRevenueTable = ({ csvData, tableName, startYear, endYear, enableMonet
 
   const downloadExcel = async () => {
     // Criar workbook com ExcelJS
+    const ExcelJS = await carregarExcelJS();
     const workbook = new ExcelJS.Workbook();
     workbook.creator = 'OPEPI/UFPI';
     workbook.created = new Date();
@@ -363,8 +367,12 @@ const StateRevenueTable = ({ csvData, tableName, startYear, endYear, enableMonet
     saveAs(blob, fileName);
   };
 
-  const downloadPDF = () => {
+  const downloadPDF = async () => {
+    const jsPDF = await carregarJsPDF();
     const doc = new jsPDF();
+    // Cabeçalho com a logo em todas as páginas: o conteúdo começa abaixo dele
+    const logo = await carregarLogo();
+    const topo = topoConteudoPdf(doc);
     const headers = [
       "Ano",
       ...data.types,
@@ -396,17 +404,18 @@ const StateRevenueTable = ({ csvData, tableName, startYear, endYear, enableMonet
     if (!dataForTable || dataForTable.length === 0) {
       doc.setFontSize(14);
       doc.setFont(undefined, 'bold');
-      doc.text(tituloCompleto, doc.internal.pageSize.width / 2, 15, { align: 'center' });
+      doc.text(tituloCompleto, doc.internal.pageSize.width / 2, topo + 5, { align: 'center' });
       if (notaValores) {
         doc.setFontSize(9);
         doc.setFont(undefined, 'italic');
-        doc.text(notaValores, doc.internal.pageSize.width / 2, 21, { align: 'center' });
+        doc.text(notaValores, doc.internal.pageSize.width / 2, topo + 11, { align: 'center' });
       }
       doc.setFontSize(11);
       doc.setFont(undefined, 'normal');
-      doc.text("Nenhum dado encontrado para os filtros selecionados.", 14, 30);
+      doc.text("Nenhum dado encontrado para os filtros selecionados.", 14, topo + 20);
       doc.setFontSize(9);
-      doc.text(fonte, 14, 45);
+      doc.text(fonte, 14, topo + 35);
+      finalizarPdfComLogo(doc, logo);
       doc.save(`${nomeArquivoBase}.pdf`);
       return;
     }
@@ -420,17 +429,18 @@ const StateRevenueTable = ({ csvData, tableName, startYear, endYear, enableMonet
     // Adicionar título
     doc.setFontSize(14);
     doc.setFont(undefined, 'bold');
-    doc.text(tituloCompleto, doc.internal.pageSize.width / 2, 15, { align: 'center' });
+    doc.text(tituloCompleto, doc.internal.pageSize.width / 2, topo + 5, { align: 'center' });
     if (notaValores) {
       doc.setFontSize(9);
       doc.setFont(undefined, 'italic');
-      doc.text(notaValores, doc.internal.pageSize.width / 2, 21, { align: 'center' });
+      doc.text(notaValores, doc.internal.pageSize.width / 2, topo + 11, { align: 'center' });
     }
 
     doc.autoTable({
       head: [headers],
       body: dataForTable,
-      startY: 25,
+      startY: topo + 15,
+      margin: { top: topo },
       styles: {
         fontSize: 8,
         cellPadding: 2,
@@ -457,12 +467,13 @@ const StateRevenueTable = ({ csvData, tableName, startYear, endYear, enableMonet
     });
     
     // Adicionar fonte no final
-    const finalY = doc.lastAutoTable?.finalY ?? 25;
+    const finalY = doc.lastAutoTable?.finalY ?? topo + 15;
     doc.setFontSize(9);
     doc.setFont(undefined, 'normal');
     doc.text(fonte, 14, finalY + 10);
 
     // Salvar PDF
+    finalizarPdfComLogo(doc, logo);
     doc.save(`${nomeArquivoBase}.pdf`);
   };
 
@@ -539,6 +550,23 @@ const StateRevenueTable = ({ csvData, tableName, startYear, endYear, enableMonet
           </Typography>
         )}
 
+        <AlternarVisao {...visao} />
+        {visao.cartoes ? (
+          <CartoesTabela
+            rows={data.years}
+            types={data.types}
+            rotuloLinha={(year) => year}
+            valor={(type, year) => {
+              const value = finalDisplayData[type] && finalDisplayData[type][year] !== undefined
+                ? finalDisplayData[type][year]
+                : data.valuesByTypeAndYear[type][year];
+              return typeof value === 'number'
+                ? `${value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}${type.includes('%') ? '%' : ''}`
+                : value || null;
+            }}
+            destaque={isColunaTotal}
+          />
+        ) : (
         <Paper elevation={0} sx={{ border: `1px solid ${cores.linha}`, borderRadius: '14px', overflow: 'hidden' }}>
           <TableContainer sx={{ maxWidth: '100%', overflowX: 'auto' }}>
             <Table sx={{ minWidth: 650 }} aria-label="state revenue table">
@@ -590,31 +618,14 @@ const StateRevenueTable = ({ csvData, tableName, startYear, endYear, enableMonet
             </Table>
           </TableContainer>
         </Paper>
+        )}
         <div style={{ display: 'flex', gap: '10px', marginBottom: '10px', marginTop: '10px', flexWrap: 'wrap' }}>
-          <Button
-            variant="contained"
-            color="success"
-            onClick={downloadExcel}
-            startIcon={<FaFileExcel />}
-            aria-label="Baixar tabela em Excel"
-            className="action-button"
-          >
-            <span className="button-text">Excel</span>
-          </Button>
-          <Button
-            variant="contained"
-            onClick={downloadPDF}
-            startIcon={<FaFilePdf />}
-            aria-label="Baixar tabela em PDF"
-            sx={{
-              backgroundColor: globalTheme.palette.primary.main,
-              color: globalTheme.palette.primary.contrastText,
-              '&:hover': { backgroundColor: globalTheme.palette.primary.dark },
-            }}
-            className="action-button"
-          >
-            <span className="button-text">PDF</span>
-          </Button>
+          <MenuExportar
+            opcoes={[
+              { rotulo: 'Planilha (Excel)', detalhe: '.xlsx, com valores numéricos', icone: <FaFileExcel />, acao: downloadExcel },
+              { rotulo: 'Documento (PDF)', detalhe: 'pronto para imprimir', icone: <FaFilePdf />, acao: downloadPDF },
+            ]}
+          />
           <TechnicalSheetButton dialogTitle={`Ficha técnica — ${tableName}`}>
               <ConteudoFicha chave="estado" />
             </TechnicalSheetButton>

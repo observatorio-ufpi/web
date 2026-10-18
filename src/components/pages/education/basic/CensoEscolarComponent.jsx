@@ -10,6 +10,7 @@ import CensoEscolarFilterComponent from './CensoEscolarFilterComponent.jsx';
 import TechnicalSheetButton from '../../../common/TechnicalSheetButton.jsx';
 import EmptyState from '../../../common/EmptyState';
 import { ConteudoFicha } from '../../../common/fichasTecnicas';
+import SkeletonTabela from '../../../common/SkeletonTabela';
 
 function CensoEscolarComponent() {
   const apiRef = useRef();
@@ -242,7 +243,7 @@ function CensoEscolarComponent() {
         />
       </div>
 
-      {isLoading && <Loading />}
+      {isLoading && <SkeletonTabela cards={0} />}
 
       {error && (
         <EmptyState erro titulo="Não foi possível carregar os dados" texto="Tente novamente em alguns instantes." />

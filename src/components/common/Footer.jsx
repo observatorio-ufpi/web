@@ -4,7 +4,7 @@ import { FaInstagram } from 'react-icons/fa';
 
 const Footer = () => {
   return (
-    <footer className="border-t border-yellow-200 py-12" style={{ backgroundColor: 'var(--background-color)' }}>
+    <footer className="border-t border-yellow-200 py-12 print:hidden" style={{ backgroundColor: 'var(--background-color)' }}>
       <div className="max-w-7xl mx-auto px-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-6 sm:gap-8">
           {/* Coluna 1: Redes sociais */}

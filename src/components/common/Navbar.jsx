@@ -20,7 +20,7 @@ const Navbar = () => {
   return (
     <>
       {/* Header Secundário - Navegação + CTA */}
-      <header className="shadow-sm" style={{ backgroundColor: 'var(--background-color)' }}>
+      <header className="shadow-sm print:hidden" style={{ backgroundColor: 'var(--background-color)' }}>
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             {/* Logo Opepi */}
@@ -56,6 +56,16 @@ const Navbar = () => {
                   }`}
                 >
                   quem somos
+                </Link>
+                <Link 
+                  to="/como-usar" 
+                  className={`px-3 py-1 rounded-full text-sm font-medium transition-all duration-200 ${
+                    isActive('/como-usar') 
+                      ? 'text-brand bg-areia' 
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  como usar
                 </Link>
                 <Link 
                   to="https://repositorio.opepi.pi.gov.br" 
@@ -115,6 +125,17 @@ const Navbar = () => {
                   onClick={() => setIsMenuOpen(false)}
                 >
                   quem somos
+                </Link>
+                <Link 
+                  to="/como-usar" 
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                    isActive('/como-usar') 
+                      ? 'text-brand bg-areia' 
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                  }`}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  como usar
                 </Link>
                 <Link 
                   to="/o-que-fazemos" 

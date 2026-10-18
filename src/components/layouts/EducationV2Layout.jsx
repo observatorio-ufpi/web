@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
+import useSidebarResponsiva from '../../hooks/useSidebarResponsiva';
 import { Outlet } from 'react-router-dom';
 import EducationV2Sidebar from '../common/EducationV2Sidebar';
 import Footer from '../common/Footer';
@@ -11,12 +12,8 @@ import { EducationV2FilterProvider } from '../../contexts/EducationV2FilterConte
 const EducationV2Layout = () => {
   const [isOpen, setIsOpen] = useState(false);
 
-  useEffect(() => {
-    const handleResize = () => setIsOpen(window.innerWidth >= 768);
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  // Abre/fecha a sidebar só quando a largura cruza o breakpoint (ver hook)
+  useSidebarResponsiva(setIsOpen);
 
   return (
     <EducationV2FilterProvider>

@@ -14,6 +14,7 @@ import { municipios } from '../../../../../../utils/municipios.mapping.jsx';
 import { cores } from '../../../../../../theme/tokens';
 import { tableOptions, TABLE_MAPPINGS } from '../tables/tableConfig.js';
 import { formatarMoedaCompacta } from '../tables/SummaryCards';
+import BotaoCopiarLink from '../../../../../common/BotaoCopiarLink';
 
 // Comparação de 2 a 4 municípios num mesmo ano, para um tipo de dado.
 // Uma única consulta traz todos os municípios do ano (a mesma usada nos cards);
@@ -66,6 +67,7 @@ const ComparisonPage = () => {
   const [valores, setValores] = useState(null); // typeToRowToValue de todos os municípios no ano
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState(false);
+  const [tentativa, setTentativa] = useState(0); // "Tentar de novo" refaz a busca
 
   const config = TABLE_MAPPINGS[tabela];
   const tituloTabela = tableOptions.find((t) => t.value === tabela)?.label || '';
@@ -95,7 +97,7 @@ const ComparisonPage = () => {
     return () => {
       cancelado = true;
     };
-  }, [tabela, ano]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [tabela, ano, tentativa]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const nomes = selecionados.map((c) => municipios[c]?.nomeMunicipio || c);
   useTituloDinamico(selecionados.length >= 2 ? `Comparar: ${nomes.join(', ')}` : 'Comparar municípios');
@@ -125,6 +127,7 @@ const ComparisonPage = () => {
         caminho="Dados financeiros  ›  Comparar municípios"
         titulo="Comparar municípios"
         etiquetas={selecionados.length ? [...nomes, String(ano)] : [String(ano)]}
+        acoes={<BotaoCopiarLink />}
       />
 
       {/* Controles da comparação */}
@@ -171,7 +174,14 @@ const ComparisonPage = () => {
       </Box>
 
       {carregando && <Loading />}
-      {erro && <EmptyState erro titulo="Não foi possível carregar os dados" texto="Tente novamente em alguns instantes." />}
+      {erro && (
+        <EmptyState
+          erro
+          titulo="Não foi possível carregar os dados"
+          texto="Pode ser uma instabilidade na conexão ou no servidor."
+          onTentarDeNovo={() => setTentativa((t) => t + 1)}
+        />
+      )}
       {!carregando && !erro && selecionados.length < 2 && (
         <EmptyState titulo="Escolha os municípios" texto={`Selecione de 2 a ${MAX_MUNICIPIOS} municípios para comparar lado a lado.`} />
       )}

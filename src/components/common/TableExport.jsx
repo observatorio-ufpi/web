@@ -1,12 +1,11 @@
 import { Button, Tooltip } from '@mui/material';
-import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
 import React from 'react';
 import { FaFileExcel, FaFilePdf } from 'react-icons/fa';
 import { EXCEL_CABECALHO_FUNDO, PDF_CABECALHO_FUNDO } from '../../utils/exportStyle';
+import MenuExportar from './MenuExportar';
+import { carregarLogo, topoConteudoPdf, finalizarPdfComLogo } from '../../utils/logoExportacao';
+import { carregarExcelJS, carregarHtml2canvas, carregarJsPDF } from '../../utils/bibliotecasExportacao';
 
 /**
  * Componente para exportar tabelas para PDF e Excel
@@ -98,12 +97,16 @@ const TableExport = ({
         return;
       }
 
+      const jsPDF = await carregarJsPDF();
       const pdf = new jsPDF('l', 'pt', 'a4');
+      // Cabeçalho com a logo em todas as páginas: o conteúdo começa abaixo dele
+      const logo = await carregarLogo();
+      const topo = topoConteudoPdf(pdf);
 
       // Adicionar título se fornecido
       if (tableTitle) {
         pdf.setFontSize(16);
-        pdf.text(tableTitle, 40, 40);
+        pdf.text(tableTitle, 40, topo + 14);
       }
 
       // Preparar dados para o autoTable
@@ -118,8 +121,9 @@ const TableExport = ({
           if (row.hasOwnProperty(header)) {
             const value = row[header];
             if (value !== undefined && value !== null) {
-              // Formatar números com vírgula
-              tableRow.push(formatNumberWithComma(value));
+              // Ano e códigos ficam como estão (antes saía "2.007");
+              // os demais números ganham separador de milhar
+              tableRow.push(/^(ano|year)$|codigo/i.test(header) ? String(value) : formatNumberWithComma(value));
             } else {
               tableRow.push('');
             }
@@ -168,8 +172,8 @@ const TableExport = ({
       pdf.autoTable({
         head: [displayHeaders],
         body: tableRows,
-        startY: tableTitle ? 60 : 40,
-        margin: { top: 60, right: 40, bottom: 40, left: 40 },
+        startY: tableTitle ? topo + 28 : topo + 8,
+        margin: { top: topo + 6, right: 40, bottom: 40, left: 40 },
         styles: { overflow: 'linebreak', cellWidth: 'auto', fontSize: 10, halign: 'left', valign: 'middle' },
         headStyles: { fillColor: PDF_CABECALHO_FUNDO, textColor: 255, fontStyle: 'bold', halign: 'center' },
         bodyStyles: { valign: 'middle' },
@@ -179,6 +183,7 @@ const TableExport = ({
       // Adicionar o gráfico em uma nova página se existir
       if (chartRef?.current) {
         pdf.addPage();
+        const html2canvas = await carregarHtml2canvas();
         const canvas = await html2canvas(chartRef.current);
         const imgData = canvas.toDataURL('image/png');
 
@@ -188,7 +193,7 @@ const TableExport = ({
 
         // Verificar se o gráfico cabe na página
         const maxWidth = pageWidth - 80; // 40px de margem em cada lado
-        const maxHeight = pageHeight - 80; // 40px de margem em cima e embaixo
+        const maxHeight = pageHeight - topo - 50; // abaixo do cabeçalho, com margem embaixo
 
         let imgWidth, imgHeight;
 
@@ -204,11 +209,12 @@ const TableExport = ({
 
         // Centralizar o gráfico na página
         const x = 40;
-        const y = (pageHeight - imgHeight) / 2;
+        const y = topo + (pageHeight - topo - 30 - imgHeight) / 2;
 
         pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
       }
 
+      finalizarPdfComLogo(pdf, logo);
       pdf.save(`${generateFileName()}.pdf`);
     } catch (error) {
       console.error('Erro ao exportar para PDF:', error);
@@ -236,8 +242,9 @@ const TableExport = ({
       }
 
       // Criar workbook com ExcelJS
+      const ExcelJS = await carregarExcelJS();
       const workbook = new ExcelJS.Workbook();
-      workbook.creator = 'Sistema de Observatório';
+      workbook.creator = 'OPEPI/UFPI';
       workbook.created = new Date();
 
 
@@ -334,60 +341,14 @@ const TableExport = ({
       gap: '12px',
       margin: '16px 0 0 0'
     }}>
-      <Tooltip title="Exportar para Excel">
-        <Button
-          variant="contained"
-          color="success"
-          onClick={exportToExcel}
-          startIcon={<FaFileExcel size={18} />}
-          sx={{
-            minWidth: '120px',
-            '@media (max-width: 600px)': {
-              minWidth: '40px',
-              padding: '6px !important',
-              '& .MuiButton-startIcon': {
-                margin: 0,
-              },
-              '& .button-text': {
-                display: 'none',
-              },
-              '& svg': {
-                fontSize: '20px',
-              },
-            },
-          }}
-        >
-          <span className="button-text" style={{ fontWeight: 500 }}>Excel</span>
-        </Button>
-      </Tooltip>
-      {showPdfExport && ( // Wrap with conditional rendering
-        <Tooltip title="Exportar para PDF">
-          <Button
-            variant="contained"
-            color="error"
-            onClick={exportToPDF}
-            startIcon={<FaFilePdf size={18} />}
-            sx={{
-              minWidth: '120px',
-              '@media (max-width: 600px)': {
-                minWidth: '40px',
-                padding: '6px !important',
-                '& .MuiButton-startIcon': {
-                  margin: 0,
-                },
-                '& .button-text': {
-                  display: 'none',
-                },
-                '& svg': {
-                  fontSize: '20px',
-                },
-              },
-            }}
-          >
-            <span className="button-text" style={{ fontWeight: 500 }}>PDF</span>
-          </Button>
-        </Tooltip>
-      )}
+      <MenuExportar
+        opcoes={[
+          { rotulo: 'Planilha (Excel)', detalhe: '.xlsx, com valores numéricos', icone: <FaFileExcel />, acao: exportToExcel },
+          ...(showPdfExport
+            ? [{ rotulo: 'Documento (PDF)', detalhe: 'pronto para imprimir', icone: <FaFilePdf />, acao: exportToPDF }]
+            : []),
+        ]}
+      />
     </div>
   );
 };

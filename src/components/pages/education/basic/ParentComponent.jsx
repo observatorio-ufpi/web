@@ -15,14 +15,14 @@ import Button from "@mui/material/Button";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import { ArrowDropDown } from "@mui/icons-material";
-import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
-import JSZip from "jszip";
 import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
 import { ListItemText } from "@mui/material";
 import { cores } from "../../../../theme/tokens";
 import EmptyState from '../../../common/EmptyState';
 import { ConteudoFicha } from '../../../common/fichasTecnicas';
+import SkeletonTabela from '../../../common/SkeletonTabela';
+import { carregarJSZip, carregarXLSX } from '../../../../utils/bibliotecasExportacao';
 
 function ParentComponent() {
   const apiRef = useRef();
@@ -307,6 +307,7 @@ function ParentComponent() {
 
       const orderedHeaders = getOrderedHeaders(allRows, true);
 
+      const XLSX = await carregarXLSX();
       const worksheet = XLSX.utils.json_to_sheet(allRows, {
         header: orderedHeaders,
       });
@@ -425,6 +426,8 @@ function ParentComponent() {
     try {
       setIsLoading(true);
       const cities = getFilteredCities();
+      const JSZip = await carregarJSZip();
+      const XLSX = await carregarXLSX();
       const zip = new JSZip();
       for (const [cityId, cityInfo] of cities) {
         const result = await fetchExportDataForCity(cityId);
@@ -658,7 +661,9 @@ function ParentComponent() {
         ? ` | Filtros: ${uniqueFilterLabels.join(", ")}`
         : "";
 
-    const newTitle = `${baseTitle} em ${locationName} (${yearDisplay})${filterPart}`;
+    // "no Piauí" (e não "em Piauí"); município continua "em Teresina"
+    const preposicao = locationName.startsWith('Piauí') ? 'no' : 'em';
+    const newTitle = `${baseTitle} ${preposicao} ${locationName} (${yearDisplay})${filterPart}`;
 
     setTitle(newTitle);
     const hasMunicipioSelected = uniqueSelectedFilters.some(
@@ -761,7 +766,7 @@ function ParentComponent() {
 
   return (
     <div className="app-container">
-      {isLoading && <Loading />}
+      {isLoading && <SkeletonTabela cards={0} />}
       {error && (
         <EmptyState erro titulo="Não foi possível carregar os dados" texto="Tente novamente em alguns instantes." />
       )}

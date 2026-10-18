@@ -15,6 +15,7 @@ import TableExport from "../../../common/TableExport";
 import HistoricalChart from "../HistoricalChart";
 import temaTabela from '../../../../theme/tabelaTheme';
 import EmptyState from '../../../common/EmptyState';
+import TituloConsultaEducacional from '../../../common/TituloConsultaEducacional';
 
 // ==========================================
 // TEMA E ESTILOS
@@ -3128,16 +3129,8 @@ const ApiDataTable = ({
   return (
     <ThemeProvider theme={theme}>
       <div>
-        {title && (
-          <Box sx={{ padding: 2 }}>
-            <Typography
-              variant="h6"
-              sx={{ marginBottom: 2, textAlign: "center" }}
-            >
-              {title}
-            </Typography>
-          </Box>
-        )}
+        {/* Cabeçalho padrão (título curto + etiquetas), como nas páginas financeiras */}
+        <TituloConsultaEducacional texto={title} area="Educação básica" />
         {/* Série Histórica - Dados individuais por cidade */}
         {isHistorical &&
           hasTerritorialWithOtherFilters &&

@@ -4,6 +4,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useSidebar } from '../layouts/FinancialLayout';
 import FilterComponent from '../helpers/TableFilters';
 import { lerFiltrosMunicipaisDaUrl } from '../../utils/financialUrlFilters';
+import BotaoFiltrosCelular from './BotaoFiltrosCelular';
 
 const FinancialCategorySidebar = () => {
   const location = useLocation();
@@ -41,12 +42,22 @@ const FinancialCategorySidebar = () => {
     if (location.pathname === '/indicadores') return 'indicadores';
     if (location.pathname === '/indicadores-estaduais') return 'indicadores-estaduais';
     if (location.pathname === '/comparar') return 'comparar';
+    if (location.pathname === '/ranking') return 'ranking';
     return 'municipios';
   };
 
   const currentCategory = getCurrentCategory();
 
+  // Quantos filtros de localidade/período estão aplicados (badge do botão "Filtros" no celular)
+  const contarFiltros = (f) =>
+    !f ? 0 :
+    [f.codigoMunicipio, f.territorioDeDesenvolvimentoMunicipio, f.faixaPopulacionalMunicipio,
+      f.aglomeradoMunicipio, f.gerenciaRegionalMunicipio].filter(Boolean).length +
+    (Number(f.anoInicial) !== 2007 || Number(f.anoFinal) !== 2024 ? 1 : 0);
+  const [filtrosAtivos, setFiltrosAtivos] = useState(() => contarFiltros(filtrosDaUrl));
+
   const handleFilterChange = (filters) => {
+    setFiltrosAtivos(contarFiltros(filters));
     setSelectedMunicipio(filters.codigoMunicipio);
     setAnoInicial(filters.anoInicial);
     setAnoFinal(filters.anoFinal);
@@ -70,6 +81,10 @@ const FinancialCategorySidebar = () => {
     window.dispatchEvent(new CustomEvent('applyFinancialFilters', {
       detail: filters
     }));
+
+    // No celular a sidebar cobre quase a tela inteira: ao tocar em "Mostrar",
+    // fecha para o resultado aparecer (em "Limpar", loading é false e ela fica aberta)
+    if (filters.loading && window.innerWidth < 768) setIsOpen(false);
   };
 
   const categories = [
@@ -77,17 +92,20 @@ const FinancialCategorySidebar = () => {
     { id: 'estado', label: 'Estado', path: '/estado' },
     { id: 'indicadores', label: 'Indicadores municipais', path: '/indicadores' },
     { id: 'indicadores-estaduais', label: 'Indicadores estaduais', path: '/indicadores-estaduais' },
-    { id: 'comparar', label: 'Comparar municípios', path: '/comparar' }
+    { id: 'comparar', label: 'Comparar municípios', path: '/comparar' },
+    { id: 'ranking', label: 'Ranking', path: '/ranking' }
   ];
 
   return (
     <>
+      <BotaoFiltrosCelular aberto={isOpen} onClick={() => setIsOpen(true)} ativos={filtrosAtivos} />
+
       {/* Botão para abrir/fechar a sidebar */}
       <button
         onClick={toggleSidebar}
         aria-label="Abrir menu de filtros"
         aria-expanded={isOpen}
-        className={`fixed top-4 left-4 z-50 p-2 bg-ink text-white rounded-lg shadow-lg hover:bg-brand-dark transition-colors ${isOpen ? 'hidden' : ''}`}
+        className={`fixed top-4 left-4 z-50 p-2 bg-ink text-white rounded-lg shadow-lg hover:bg-brand-dark transition-colors ${isOpen ? 'hidden' : 'hidden md:block'}`}
       >
         <FaBars />
       </button>
@@ -142,8 +160,6 @@ const FinancialCategorySidebar = () => {
                     to={categoria.path}
                     aria-current={ativa ? 'page' : undefined}
                     className={`rounded-lg px-2 py-2 text-center text-xs leading-tight transition-colors duration-150 ${
-                      categoria.id === 'comparar' ? 'col-span-2 ' : ''
-                    }${
                       ativa
                         ? 'bg-white font-semibold text-ink shadow-sm'
                         : 'font-medium text-muted hover:bg-white/60 hover:text-ink'
@@ -157,9 +173,11 @@ const FinancialCategorySidebar = () => {
           </nav>
 
           {/* Filtros (na comparação, os controles ficam na própria página) */}
-          {currentCategory === 'comparar' ? (
+          {currentCategory === 'comparar' || currentCategory === 'ranking' ? (
             <p className="mb-3 rounded-lg bg-[#F6F3F2] p-3 text-xs leading-relaxed text-texto">
-              Escolha o tipo de dado, o ano e os municípios no topo da página.
+              {currentCategory === 'ranking'
+                ? 'Escolha o indicador, o ano e o recorte no topo da página.'
+                : 'Escolha o tipo de dado, o ano e os municípios no topo da página.'}
             </p>
           ) : (
           <div className="mb-3">

@@ -1,6 +1,8 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { fetchIPCAData, calculateMonetaryCorrection } from "../../../../../../utils/bacenApi";
 import { Box, Typography, Tooltip } from "@mui/material";
 import { cores } from "../../../../../../theme/tokens";
+import { municipios as municipiosMapa } from "../../../../../../utils/municipios.mapping.jsx";
 
 // Cards de resumo acima da tabela. Calculados a partir dos MESMOS números
 // exibidos na tabela (inclusive corrigidos pelo IPCA, quando ligado) — não há
@@ -17,6 +19,31 @@ import { cores } from "../../../../../../theme/tokens";
 //
 // modo "anos": linhas da tabela são anos (um município)
 // modo "municipios": linhas são municípios (um ano)
+
+// IPCA mensal (Banco Central), buscado uma vez e compartilhado por todos os cards
+let promessaIpca = null;
+const carregarIpca = () => {
+  if (!promessaIpca) {
+    const hoje = new Date().toLocaleDateString("pt-BR");
+    promessaIpca = fetchIPCAData("01/01/2006", hoje).catch(() => {
+      promessaIpca = null; // permite tentar de novo numa próxima vez
+      return null;
+    });
+  }
+  return promessaIpca;
+};
+const useIpca = (ativo) => {
+  const [ipca, setIpca] = useState(null);
+  useEffect(() => {
+    if (!ativo) return undefined;
+    let cancelado = false;
+    carregarIpca().then((d) => !cancelado && setIpca(d));
+    return () => {
+      cancelado = true;
+    };
+  }, [ativo]);
+  return ipca;
+};
 
 const numero = (v) => (typeof v === "number" && !Number.isNaN(v) ? v : null);
 
@@ -44,10 +71,28 @@ const compararComEstado = (referencia, coluna, ano) => {
   if (valores.length < 10 || proprio === null) return null;
   const ordenados = [...valores].sort((a, b) => b - a);
   const crescente = [...valores].sort((a, b) => a - b);
+  // Mesma comparação dentro do território de desenvolvimento do município
+  // (só com 3 ou mais municípios com dado, para a mediana fazer sentido)
+  const territorio = municipiosMapa[referencia.codigo]?.territorioDesenvolvimento;
+  const doTerritorio = territorio
+    ? Object.entries(porMunicipio)
+        .filter(([c, v]) => numero(v) !== null && municipiosMapa[c]?.territorioDesenvolvimento === territorio)
+        .map(([, v]) => v)
+    : [];
+  const terrCrescente = [...doTerritorio].sort((a, b) => a - b);
   return {
     posicao: ordenados.indexOf(proprio) + 1,
     total: valores.length,
     mediana: crescente[Math.floor(crescente.length / 2)],
+    territorio:
+      doTerritorio.length >= 3
+        ? {
+            nome: territorio,
+            posicao: [...doTerritorio].sort((a, b) => b - a).indexOf(proprio) + 1,
+            total: doTerritorio.length,
+            mediana: terrCrescente[Math.floor(terrCrescente.length / 2)],
+          }
+        : null,
   };
 };
 
@@ -175,11 +220,30 @@ const montarCard = (cfg, ctx) => {
             </Nota>
           )}
           {(() => {
+            // Variação real: o valor do ano anterior atualizado pelo IPCA até o fim do último ano
+            if (correcaoAtiva || !ctx.ipca || !va || variacao === null) return null;
+            const fator = calculateMonetaryCorrection(1, `31/12/${anterior}`, `31/12/${ultimo}`, ctx.ipca);
+            const real = ((v - va * fator) / Math.abs(va * fator)) * 100;
+            if (!Number.isFinite(real)) return null;
+            return (
+              <Nota cor={cores.textoSuave}>
+                {real >= 0 ? "▲" : "▼"} {formatarPct(Math.abs(real))} descontada a inflação (IPCA)
+              </Nota>
+            );
+          })()}
+          {(() => {
             const comp = compararComEstado(ctx.referencia, cfg.coluna, ultimo);
             return comp ? (
-              <Nota cor={cores.textoSuave}>
-                {comp.posicao}º maior de {comp.total} municípios · mediana do Piauí: {formatarMoedaCompacta(comp.mediana)}
-              </Nota>
+              <>
+                <Nota cor={cores.textoSuave}>
+                  {comp.posicao}º maior de {comp.total} municípios · mediana do Piauí: {formatarMoedaCompacta(comp.mediana)}
+                </Nota>
+                {comp.territorio && (
+                  <Nota cor={cores.textoSuave}>
+                    {comp.territorio.posicao}º de {comp.territorio.total} no território {comp.territorio.nome} · mediana: {formatarMoedaCompacta(comp.territorio.mediana)}
+                  </Nota>
+                )}
+              </>
             ) : null;
           })()}
         </Card>
@@ -230,7 +294,7 @@ const montarCard = (cfg, ctx) => {
     const ls = comValor(cfg.coluna);
     if (modo === "anos") {
       if (ls.length < 2) return null;
-      const ultimos = ls.slice(-12);
+      const ultimos = ls.slice(-18); // série inteira (2007–2024)
       return (
         <Card rotulo={cfg.rotulo}>
           <MiniBarras
@@ -284,7 +348,14 @@ const montarCard = (cfg, ctx) => {
           {(() => {
             const comp = compararComEstado(ctx.referencia, cfg.coluna, ultimo);
             return comp ? (
-              <Nota cor={cores.textoSuave}>Mediana do Piauí: {formatarPct(comp.mediana)}</Nota>
+              <>
+                <Nota cor={cores.textoSuave}>Mediana do Piauí: {formatarPct(comp.mediana)}</Nota>
+                {comp.territorio && (
+                  <Nota cor={cores.textoSuave}>
+                    Mediana do território {comp.territorio.nome}: {formatarPct(comp.territorio.mediana)}
+                  </Nota>
+                )}
+              </>
             ) : null;
           })()}
         </Card>
@@ -312,7 +383,7 @@ const montarCard = (cfg, ctx) => {
     if (!ls.length) return null;
     if (modo === "anos") {
       const cumpriu = ls.filter((l) => valor(cfg.coluna, l) >= minimoDoAno(cfg.minimo, l));
-      const ultimos = ls.slice(-12);
+      const ultimos = ls.slice(-18); // série inteira (2007–2024)
       const minUltimo = minimoDoAno(cfg.minimo, ls[ls.length - 1]);
       return (
         <Card rotulo={cfg.rotulo}>
@@ -377,12 +448,15 @@ const montarCard = (cfg, ctx) => {
 };
 
 const SummaryCards = ({ resumo, rows, types, dados, modo, nomeLinha, correcaoAtiva, anoReferencia, referencia = null }) => {
+  // IPCA só é necessário quando há card de total por ano e a correção da tabela está desligada
+  const precisaIpca = modo === "anos" && !correcaoAtiva && (resumo || []).some((c) => c.card === "total");
+  const ipca = useIpca(precisaIpca);
   if (!resumo || !resumo.length || !rows.length) return null;
 
   // modo "anos": garante ordem cronológica
   const linhas = modo === "anos" ? [...rows].sort((a, b) => Number(a) - Number(b)) : rows;
   const valor = (coluna, linha) => (dados[coluna] ? dados[coluna][linha] : undefined);
-  const ctx = { linhas, valor, nomeLinha, modo, correcaoAtiva, types, anoReferencia, referencia };
+  const ctx = { linhas, valor, nomeLinha, modo, correcaoAtiva, types, anoReferencia, referencia, ipca };
 
   const cards = resumo
     .map((cfg, i) => ({ chave: `${cfg.card}-${cfg.coluna || cfg.total}-${i}`, el: montarCard(cfg, ctx) }))
@@ -393,6 +467,7 @@ const SummaryCards = ({ resumo, rows, types, dados, modo, nomeLinha, correcaoAti
     <Box
       component="section"
       aria-label="Resumo"
+      className="cards-resumo"
       sx={{
         display: "grid",
         gridTemplateColumns: { xs: "1fr", sm: "repeat(2, minmax(0, 1fr))", md: `repeat(${Math.min(cards.length, 3)}, minmax(0, 1fr))` },

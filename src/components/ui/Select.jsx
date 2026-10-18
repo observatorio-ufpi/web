@@ -3,9 +3,6 @@ import Select from 'react-select';
 import { Tooltip } from '@mui/material';
 import { cores } from '../../theme/tokens';
 
-// Motivo padrão dos filtros de localidade (Território, Faixa, Aglomerado, GRE)
-// desabilitados quando já há um município escolhido — usado nas sidebars
-// financeira e educacionais
 // Opção com explicação em linguagem simples numa segunda linha (campo `descricao`).
 // Só no menu aberto — com a opção já escolhida, o campo mostra só o nome.
 // Uso: <Select options={[{ value, label, descricao }]} formatOptionLabel={formatarOpcaoComDescricao} />
@@ -20,6 +17,9 @@ export const formatarOpcaoComDescricao = ({ label, descricao }, { context }) => 
   </div>
 );
 
+// Motivo padrão dos filtros de localidade (Território, Faixa, Aglomerado, GRE)
+// desabilitados quando já há um município escolhido — usado nas sidebars
+// financeira e educacionais
 export const MOTIVO_MUNICIPIO_SELECIONADO =
   'Desabilitado porque um município específico já foi selecionado acima';
 
@@ -37,6 +37,12 @@ const CustomSelect = ({
   className = '',
   ...props 
 }) => {
+  // No celular, listas curtas não abrem o teclado (não precisam de busca): no iPhone,
+  // tocar num campo com texto menor que 16px dava zoom automático na página e a lista
+  // de opções ficava deslocada para o lado, cortada. Listas longas (ex.: os 224
+  // municípios) continuam com busca, com o texto digitado em 16px para não dar zoom.
+  const ehToque = typeof window !== 'undefined' && window.matchMedia?.('(pointer: coarse)').matches;
+  const buscavel = props.isSearchable ?? !(ehToque && options.length <= 30);
   const sizes = {
     xxs: 'text-[10px]',
     xs: 'text-xs',
@@ -46,6 +52,9 @@ const CustomSelect = ({
   };
   
   const baseClasses = `${sizes[size]} transition-colors duration-200`;
+  // Mesmos tamanhos em px para os estilos do react-select (as classes Tailwind acima
+  // não valem como valor de fontSize)
+  const tamanhoPx = { xxs: '10px', xs: '12px', small: '14px', medium: '16px', large: '18px' }[size] || '16px';
   
   // Estilos customizados baseados no que já existe no Home.jsx
   const customStyles = {
@@ -63,7 +72,8 @@ const CustomSelect = ({
       ...provided,
       backgroundColor: state.isSelected ? cores.marca : state.isFocused ? cores.areia : 'white',
       color: state.isSelected ? 'white' : cores.tinta,
-      fontSize: sizes[size],
+      // opções da lista com no mínimo 14px (legíveis no celular), mesmo em campos compactos
+      fontSize: ['xxs', 'xs'].includes(size) ? '14px' : tamanhoPx,
       '&:hover': {
         backgroundColor: state.isSelected ? cores.marca : cores.areia
       }
@@ -81,16 +91,17 @@ const CustomSelect = ({
     singleValue: (provided) => ({
       ...provided,
       color: cores.tinta,
-      fontSize: sizes[size]
+      fontSize: tamanhoPx
     }),
     placeholder: (provided) => ({
       ...provided,
       color: cores.textoSuave,
-      fontSize: sizes[size]
+      fontSize: tamanhoPx
     }),
     input: (provided) => ({
       ...provided,
-      fontSize: sizes[size]
+      // 16px no celular evita o zoom automático do iPhone ao focar o campo
+      '@media (max-width: 768px)': { fontSize: '16px' },
     }),
     valueContainer: (provided) => ({
       ...provided,
@@ -109,6 +120,7 @@ const CustomSelect = ({
       onChange={onChange}
       placeholder={placeholder}
       isDisabled={disabled}
+      isSearchable={buscavel}
       className={baseClasses}
       classNamePrefix="react-select"
       styles={customStyles}

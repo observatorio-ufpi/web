@@ -1,8 +1,9 @@
-import React, { useState, createContext, useContext, useEffect } from 'react';
+import React, { useState, createContext, useContext } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import FinancialCategorySidebar from '../common/FinancialCategorySidebar';
 import Footer from '../common/Footer';
 import { FinancialFilterProvider } from '../../contexts/FinancialFilterContext';
+import useSidebarResponsiva from '../../hooks/useSidebarResponsiva';
 
 // Contexto para compartilhar o estado da sidebar
 export const SidebarContext = createContext();
@@ -19,23 +20,8 @@ const FinancialLayout = () => {
   const [isOpen, setIsOpen] = useState(false); // Começa fechada
   const navigate = useNavigate();
 
-  // Ajusta o estado inicial baseado no tamanho da tela
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth >= 768) { // md breakpoint
-        setIsOpen(true); // Abre em telas grandes
-      } else {
-        setIsOpen(false); // Fecha em telas pequenas
-      }
-    };
-
-    // Executa na primeira vez
-    handleResize();
-
-    // Escuta mudanças de tamanho
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  // Abre/fecha a sidebar só quando a largura cruza o breakpoint (ver hook)
+  useSidebarResponsiva(setIsOpen);
 
   // Valor do contexto
   const sidebarValue = {
@@ -58,7 +44,7 @@ const FinancialLayout = () => {
             {/* Área de conteúdo */}
             {/* Com a sidebar fechada, o botão ☰ (fixed, top-4/left-4) fica por cima do
                 conteúdo — o pt-16 reserva espaço pra ele não cobrir o topo da página */}
-            <main id="conteudo" tabIndex={-1} className={`min-h-screen p-3 sm:p-4 md:p-6 outline-none ${isOpen ? '' : 'pt-16 sm:pt-16 md:pt-16'}`}>
+            <main id="conteudo" tabIndex={-1} className={`min-h-screen p-3 pb-24 sm:p-4 sm:pb-24 md:p-6 md:pb-6 outline-none ${isOpen ? '' : 'md:pt-16'}`}>
               <Outlet />
             </main>
             

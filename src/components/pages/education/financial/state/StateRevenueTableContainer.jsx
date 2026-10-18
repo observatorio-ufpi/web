@@ -12,6 +12,8 @@ import EmptyState from '../../../../common/EmptyState';
 import { RESUMO_ESTADO } from './stateSummaryConfig';
 import PageHeader, { periodoEtiqueta } from '../../../../common/PageHeader';
 import ComoCitarButton from '../../../../common/ComoCitarButton';
+import SkeletonTabela from '../../../../common/SkeletonTabela';
+import { repetirUltimaConsulta } from '../../../../../utils/repetirConsulta';
 
 const StateRevenueTableContainer = () => {
   const theme = useTheme();
@@ -81,10 +83,10 @@ const StateRevenueTableContainer = () => {
 
       {/* Área de dados - sempre visível */}
       <div className="data-section">
-        {loading && <Loading />}
+        {loading && <SkeletonTabela />}
 
         {!loading && error && (
-          <EmptyState erro titulo="Não foi possível carregar os dados" texto="Tente novamente em alguns instantes." />
+          <EmptyState erro titulo="Não foi possível carregar os dados" texto="Pode ser uma instabilidade na conexão ou no servidor." onTentarDeNovo={repetirUltimaConsulta} />
         )}
 
         {!loading && !error && !csvData && !hasInitialLoad && (

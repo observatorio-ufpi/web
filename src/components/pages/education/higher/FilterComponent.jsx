@@ -8,6 +8,8 @@ import { municipios, Regioes, FaixaPopulacional } from '../../../../utils/cities
 import TechnicalSheetButton from '../../../common/TechnicalSheetButton.jsx';
 import EmptyState from '../../../common/EmptyState';
 import { ConteudoFicha } from '../../../common/fichasTecnicas';
+import SkeletonTabela from '../../../common/SkeletonTabela';
+import TituloConsultaEducacional from '../../../common/TituloConsultaEducacional';
 
 function FilterComponent() {
   const filters = useEducationFilters();
@@ -256,7 +258,7 @@ function FilterComponent() {
       <div className="flex flex-col gap-4 p-0 m-0">
 
           {isLoading && (
-            <Loading />
+            <SkeletonTabela cards={0} />
           )}
           {error && (
             <EmptyState erro titulo="Não foi possível carregar os dados" texto="Tente novamente em alguns instantes." />
@@ -268,9 +270,7 @@ function FilterComponent() {
 
           {!isLoading && !error && data && title ? (
             <Box sx={{ padding: 2 }}>
-              <Typography variant="h6" sx={{ marginBottom: 2, textAlign: 'center' }}>
-                {title}
-              </Typography>
+              <TituloConsultaEducacional texto={title} area="Educação superior" />
             </Box>
           ) : null}
           <ApiHigherContainer

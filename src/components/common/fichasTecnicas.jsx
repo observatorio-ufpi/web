@@ -81,24 +81,25 @@ const EDUCACAO = {
   basica: {
     oQue: 'Dados da educação básica no Piauí: matrículas, escolas, turmas, professores, pessoal auxiliar e funcionários, com detalhamento por etapa, localidade, rede e município.',
     calculo: 'Contagens por ano. Sem detalhamento escolhido, os totais somam combinações fixas para evitar contar o mesmo aluno duas vezes. Etapas anteriores a 2021 são convertidas para a classificação atual quando a série atravessa 2020/2021.',
-    fonte: 'Censo Escolar da Educação Básica (INEP).',
+    fonte: 'Laboratório de Dados Educacionais (LDE), a partir dos microdados do Censo Escolar da Educação Básica (INEP).',
     periodo: 'Anual.',
   },
   superior: {
     oQue: 'Dados da educação superior no Piauí: instituições, matrículas de graduação, docentes e cursos, com detalhamento por modalidade, rede, organização acadêmica, faixa etária, instituição e município.',
     calculo: 'Contagens por ano, conforme os registros importados.',
-    fonte: 'Censo da Educação Superior (INEP).',
+    fonte: 'Laboratório de Dados Educacionais (LDE), a partir dos microdados do Censo da Educação Superior (INEP).',
     periodo: 'Anual.',
   },
   taxas: {
     oQue: 'Indicadores educacionais da população: pessoas fora da escola, frequência líquida, analfabetismo, conclusão da educação básica e do ensino superior e nível de instrução.',
     calculo: 'Os valores vêm calculados na base importada; o sistema não recalcula os denominadores das taxas.',
+    fonte: 'Laboratório de Dados Educacionais (LDE).',
     periodo: 'Conforme a disponibilidade de cada indicador.',
   },
   condicoes: {
     oQue: 'Condições de oferta das escolas: local de funcionamento, infraestrutura básica, espaços pedagógicos, equipamentos e materiais.',
     calculo: 'Contagem de escolas que declaram cada item.',
-    fonte: 'Censo Escolar da Educação Básica (INEP).',
+    fonte: 'Laboratório de Dados Educacionais (LDE), a partir dos microdados do Censo Escolar da Educação Básica (INEP).',
     periodo: 'Anual.',
   },
 };

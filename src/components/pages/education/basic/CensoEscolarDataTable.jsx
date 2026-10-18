@@ -22,6 +22,7 @@ import { Select } from '../../../ui';
 
 import { columnNameMap } from '../../../../utils/columnNameMap';
 import EmptyState from '../../../common/EmptyState';
+import TituloConsultaEducacional from '../../../common/TituloConsultaEducacional';
 
 const BoldTableCell = styled(TableCell)(() => ({
   fontWeight: 'bold',
@@ -180,9 +181,7 @@ function CensoEscolarDataTable({ data, title }) {
 
   return (
     <Box sx={{ padding: 2 }}>
-      <Typography variant="h6" sx={{ marginBottom: 2, textAlign: 'center' }}>
-        {title}
-      </Typography>
+      <TituloConsultaEducacional texto={title} area="Condições de oferta" />
 
       <Box sx={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 2, gap: '12px' }}>
         <Button

@@ -9,9 +9,14 @@ import { Loading } from '../ui';
 import { useIBGEData } from '../../hooks/useIBGEData.jsx';
 import { municipios } from '../../utils/citiesMapping.jsx';
 import '../../style/HomePage.css';
+import { lerRecentes, limparRecentes } from '../../utils/municipiosRecentes';
+// Código IBGE de 6 dígitos (o mesmo do banco e do perfil); citiesMapping usa 7
+import { municipios as municipiosBanco } from '../../utils/municipios.mapping.jsx';
 
 const Home = () => {
   const navigate = useNavigate();
+  // Perfis abertos antes neste navegador (só códigos que ainda existem no mapeamento)
+  const [recentes, setRecentes] = useState(() => lerRecentes().filter((c) => municipiosBanco[c]));
   const { data: piauiData, loading, error, updateRateData } = useIBGEData();
 
   console.log('CI DEPLOYMENT TEST')
@@ -23,6 +28,11 @@ const Home = () => {
   const [municipalityError, setMunicipalityError] = useState(null);
 
   // Lista de municípios para o select (incluindo o estado)
+  // Busca do topo: código de 6 dígitos (padrão do perfil); citiesMapping usa 7, com dígito verificador
+  const opcoesBuscaMunicipio = Object.entries(municipios)
+    .map(([code, data]) => ({ value: String(code).slice(0, 6), label: data.nomeMunicipio }))
+    .sort((a, b) => a.label.localeCompare(b.label, 'pt-BR'));
+
   const municipalitiesList = [
     { code: '22', name: 'Piauí (Estado)' },
     ...Object.entries(municipios).map(([code, data]) => ({
@@ -319,6 +329,52 @@ const Home = () => {
           <p className="text-lg text-gray-600 mb-2">
             Observatório da Política Educacional Piauiense
           </p>
+
+          {/* Busca em destaque: leva direto ao perfil financeiro do município */}
+          <div className="mx-auto mt-8 max-w-xl text-left">
+            <label htmlFor="busca-municipio" className="mb-2 block text-center text-sm font-semibold text-ink">
+              Veja os números da educação do seu município
+            </label>
+            <div className="rounded-2xl border border-line bg-white p-2 shadow-sm">
+              <Select
+                inputId="busca-municipio"
+                options={opcoesBuscaMunicipio}
+                value={null}
+                onChange={(o) => o && navigate(`/municipio/${o.value}`)}
+                placeholder="Digite o nome do município..."
+                noOptionsMessage={() => 'Nenhum município com esse nome'}
+                fullWidth
+              />
+            </div>
+            <p className="mt-2 text-center text-xs text-muted">
+              Arrecadação, Fundeb, cumprimento dos mínimos legais e gastos com educação — os 224 municípios do Piauí.
+            </p>
+            {/* Últimos perfis abertos neste navegador */}
+            {recentes.length > 0 && (
+              <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+                <span className="text-xs font-semibold text-muted">Vistos recentemente:</span>
+                {recentes.map((c) => (
+                  <Link
+                    key={c}
+                    to={`/municipio/${c}`}
+                    className="inline-flex h-7 items-center rounded-full border border-line bg-white px-3 text-[13px] font-medium text-ink transition-colors hover:border-brand hover:bg-areia"
+                  >
+                    {municipiosBanco[c].nomeMunicipio}
+                  </Link>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => {
+                    limparRecentes();
+                    setRecentes([]);
+                  }}
+                  className="text-xs text-muted underline-offset-2 hover:text-ink hover:underline"
+                >
+                  limpar
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </section>
 

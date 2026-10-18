@@ -17,6 +17,7 @@ import TechnicalSheetButton from "../../../../../common/TechnicalSheetButton.jsx
 import EmptyState from '../../../../../common/EmptyState';
 import PageHeader, { periodoEtiqueta } from '../../../../../common/PageHeader';
 import { ConteudoFicha } from '../../../../../common/fichasTecnicas';
+import { repetirUltimaConsulta } from '../../../../../../utils/repetirConsulta';
 
 // Nomes exibidos no cabeçalho (mesmos da lista de filtros da sidebar)
 const NOMES_INDICADORES_ESTADO = {
@@ -129,7 +130,7 @@ function StateIndicatorsContainer() {
           {loading && <Loading />}
 
           {!loading && error && (
-            <EmptyState erro titulo="Não foi possível carregar os dados" texto="Tente novamente em alguns instantes." />
+            <EmptyState erro titulo="Não foi possível carregar os dados" texto="Pode ser uma instabilidade na conexão ou no servidor." onTentarDeNovo={repetirUltimaConsulta} />
           )}
 
           {!loading && !error && !apiData && !hasInitialLoad && (

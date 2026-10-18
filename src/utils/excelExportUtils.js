@@ -1,6 +1,6 @@
-import ExcelJS from 'exceljs';
 import { parseLooseNumber } from './numberFormatUtils.js';
 import { FONTE_EXPORTACAO, EXCEL_CABECALHO_FUNDO, EXCEL_CABECALHO_TEXTO } from './exportStyle';
+import { carregarExcelJS } from './bibliotecasExportacao';
 
 function coerceLooseNumberOrOriginal(value) {
   const n = parseLooseNumber(value);
@@ -34,6 +34,7 @@ export async function buildStyledWorkbook({
   numericColumns = null, // array of 0-based indices. If null, defaults to all except first.
   columnWidths = null, // array of widths (same length as headers)
 }) {
+  const ExcelJS = await carregarExcelJS();
   const workbook = new ExcelJS.Workbook();
   workbook.creator = creator;
   workbook.created = new Date();

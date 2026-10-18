@@ -1,6 +1,4 @@
 import { FaFilePdf, FaFileExcel, FaFileCsv } from "react-icons/fa";
-import jsPDF from "jspdf";
-import "jspdf-autotable";
 import Button from "@mui/material/Button";
 import Paper from "@mui/material/Paper";
 import Table from "@mui/material/Table";
@@ -11,7 +9,6 @@ import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import { styled } from "@mui/material/styles";
 import React, { useState, useEffect, useMemo } from "react";
-import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import { municipios, Regioes, FaixaPopulacional } from "../../../../../../utils/municipios.mapping";
 import FormControlLabel from "@mui/material/FormControlLabel";
@@ -40,6 +37,12 @@ import {
 } from "../../../../../../utils/bacenApi";
 import { FONTE_EXPORTACAO, EXCEL_CABECALHO_FUNDO, EXCEL_CABECALHO_TEXTO, PDF_CABECALHO_FUNDO, PDF_LINHA_ALTERNADA } from '../../../../../../utils/exportStyle';
 import ColunaComExplicacao from "../../../../../common/ColunaComExplicacao";
+import CartoesTabela, { AlternarVisao, useVisaoCelular } from "../../../../../common/CartoesTabela.jsx";
+import { carregarLogo, topoConteudoPdf, finalizarPdfComLogo } from "../../../../../../utils/logoExportacao.js";
+import { carregarExcelJS, carregarJsPDF } from '../../../../../../utils/bibliotecasExportacao';
+import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
+import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
+import UnfoldMoreIcon from "@mui/icons-material/UnfoldMore";
 
 export const SEM_DADO_TOOLTIP =
   "Sem dado disponível para este período/categoria — pode ser porque esse item não existia no RREO deste período, ou porque o município não reportou essa informação.";
@@ -114,6 +117,12 @@ const RevenueTable = ({
   const [correctedData, setCorrectedData] = useState(null);
   const [maxDate, setMaxDate] = useState(null);
   const [menuExportar, setMenuExportar] = useState(null);
+  // No celular: cartões por linha em vez da tabela larga
+  const visao = useVisaoCelular();
+  // Ordenação ao clicar no ícone do cabeçalho: { coluna, desc }. coluna "__linha" = 1ª coluna
+  // (município ou ano). Ciclo: ordena → inverte → volta à ordem original.
+  const [ordem, setOrdem] = useState({ coluna: null, desc: true });
+  useEffect(() => setOrdem({ coluna: null, desc: true }), [tableMapping]);
 
   // Usar useMemo para estabilizar os dados processados
   const { rows, typeToRowToValue, types } = useMemo(() => {
@@ -307,6 +316,7 @@ const RevenueTable = ({
     const { tituloCompleto, nomeArquivoBase, fonte } = montarMetadadosExportacao();
 
     // Criar workbook com ExcelJS
+    const ExcelJS = await carregarExcelJS();
     const workbook = new ExcelJS.Workbook();
     workbook.creator = 'OPEPI/UFPI';
     workbook.created = new Date();
@@ -438,10 +448,14 @@ const RevenueTable = ({
     saveAs(blob, `${nomeArquivoBase}.csv`);
   };
 
-  const downloadPDF = () => {
+  const downloadPDF = async () => {
     const { tituloCompleto, nomeArquivoBase, fonte } = montarMetadadosExportacao();
 
+    const jsPDF = await carregarJsPDF();
     const doc = new jsPDF();
+    // Cabeçalho com a logo em todas as páginas: o conteúdo começa abaixo dele
+    const logo = await carregarLogo();
+    const topo = topoConteudoPdf(doc);
     const headers = [
       groupType === "ano" || groupType === "desagregado" ? "Município" : "Ano",
       ...types,
@@ -469,17 +483,18 @@ const RevenueTable = ({
     if (!dataForTable || dataForTable.length === 0) {
       doc.setFontSize(14);
       doc.setFont(undefined, 'bold');
-      doc.text(tituloCompleto, 14, 15);
+      doc.text(tituloCompleto, 14, topo + 5);
       if (notaValores) {
         doc.setFontSize(9);
         doc.setFont(undefined, 'italic');
-        doc.text(notaValores, 14, 21);
+        doc.text(notaValores, 14, topo + 11);
       }
       doc.setFontSize(11);
       doc.setFont(undefined, 'normal');
-      doc.text("Nenhum dado encontrado para os filtros selecionados.", 14, 30);
+      doc.text("Nenhum dado encontrado para os filtros selecionados.", 14, topo + 20);
       doc.setFontSize(9);
-      doc.text(fonte, 14, 45);
+      doc.text(fonte, 14, topo + 35);
+      finalizarPdfComLogo(doc, logo);
       doc.save(`${nomeArquivoBase}.pdf`);
       return;
     }
@@ -487,11 +502,11 @@ const RevenueTable = ({
     // Adicionar título
     doc.setFontSize(14);
     doc.setFont(undefined, 'bold');
-    doc.text(tituloCompleto, 14, 15);
+    doc.text(tituloCompleto, 14, topo + 5);
     if (notaValores) {
       doc.setFontSize(9);
       doc.setFont(undefined, 'italic');
-      doc.text(notaValores, 14, 21);
+      doc.text(notaValores, 14, topo + 11);
     }
 
     // Criar estilos de coluna para alinhar números à direita (todas exceto a primeira coluna)
@@ -503,7 +518,8 @@ const RevenueTable = ({
     doc.autoTable({
       head: [headers],
       body: dataForTable,
-      startY: 25,
+      startY: topo + 15,
+      margin: { top: topo },
       styles: {
         fontSize: 8,
         cellPadding: 2,
@@ -530,12 +546,13 @@ const RevenueTable = ({
     });
 
     // Adicionar fonte no rodapé
-    const finalY = doc.lastAutoTable?.finalY ?? 25;
+    const finalY = doc.lastAutoTable?.finalY ?? topo + 15;
     doc.setFontSize(9);
     doc.setFont(undefined, 'normal');
     doc.text(fonte, 14, finalY + 10);
 
     // Salvar PDF
+    finalizarPdfComLogo(doc, logo);
     doc.save(`${nomeArquivoBase}.pdf`);
   };
 
@@ -549,6 +566,65 @@ const RevenueTable = ({
 
   const rotuloPrimeiraColuna =
     groupType === "ano" || groupType === "desagregado" ? "Município" : "Ano";
+  const porMunicipio = groupType === "ano" || groupType === "desagregado";
+
+  const alternarOrdem = (coluna) =>
+    setOrdem((o) => {
+      // números: maiores primeiro; 1ª coluna: A→Z ou ano crescente
+      const inicialDesc = coluna !== "__linha";
+      if (o.coluna !== coluna) return { coluna, desc: inicialDesc };
+      if (o.desc === inicialDesc) return { coluna, desc: !inicialDesc };
+      return { coluna: null, desc: true };
+    });
+
+  // Linhas na ordem escolhida (as sem valor ficam sempre no fim)
+  const linhasVisiveis = (() => {
+    if (!ordem.coluna) return rows;
+    const chave = (row) => {
+      if (ordem.coluna === "__linha") return porMunicipio ? municipios[row]?.nomeMunicipio || String(row) : Number(row);
+      const v = finalDisplayData[ordem.coluna]?.[row];
+      return typeof v === "number" && !Number.isNaN(v) ? v : null;
+    };
+    return [...rows].sort((a, b) => {
+      const va = chave(a);
+      const vb = chave(b);
+      if (va === null && vb === null) return 0;
+      if (va === null) return 1;
+      if (vb === null) return -1;
+      const cmp = typeof va === "string" ? va.localeCompare(vb, "pt-BR") : va - vb;
+      return ordem.desc ? -cmp : cmp;
+    });
+  })();
+
+  // função (não componente) para o botão não ser recriado a cada clique e manter o foco
+  const botaoOrdenar = (coluna, nome) => {
+    const ativa = ordem.coluna === coluna;
+    const Icone = !ativa ? UnfoldMoreIcon : ordem.desc ? ArrowDownwardIcon : ArrowUpwardIcon;
+    return (
+      <button
+        type="button"
+        onClick={() => alternarOrdem(coluna)}
+        aria-label={`Ordenar por ${nome}${ativa ? (ordem.desc ? " (maior para menor)" : " (menor para maior)") : ""}`}
+        title="Ordenar"
+        style={{
+          border: 0,
+          background: "none",
+          padding: 2,
+          marginLeft: 2,
+          flexShrink: 0,
+          cursor: "pointer",
+          color: ativa ? cores.marca : "inherit",
+          opacity: ativa ? 1 : 0.55,
+          verticalAlign: "middle",
+          lineHeight: 0,
+          borderRadius: 4,
+        }}
+      >
+        <Icone sx={{ fontSize: 16 }} />
+      </button>
+    );
+  };
+  const ariaSort = (coluna) => (ordem.coluna === coluna ? (ordem.desc ? "descending" : "ascending") : undefined);
 
   return (
     <div>
@@ -659,6 +735,19 @@ const RevenueTable = ({
         </Typography>
       )}
 
+      <AlternarVisao {...visao} />
+      {visao.cartoes ? (
+        <CartoesTabela
+          rows={linhasVisiveis}
+          types={types}
+          rotuloLinha={(row) => (groupType === "ano" || groupType === "desagregado" ? municipios[row]?.nomeMunicipio || row : row)}
+          valor={(type, row) =>
+            finalDisplayData[type] && finalDisplayData[type][row] !== undefined ? formatValue(finalDisplayData[type][row], type) : null
+          }
+          destaque={isColunaTotal}
+          vazio="Nenhum dado encontrado para os filtros selecionados."
+        />
+      ) : (
       <TableContainer
         component={Paper}
         elevation={0}
@@ -673,7 +762,10 @@ const RevenueTable = ({
         <Table sx={{ minWidth: 650 }} aria-label={tableName}>
           <TableHead>
             <TableRow>
-              <HeadCell sx={{ ...stickyFirst, zIndex: 3 }}>{rotuloPrimeiraColuna}</HeadCell>
+              <HeadCell sx={{ ...stickyFirst, zIndex: 3 }} aria-sort={ariaSort("__linha")}>
+                {rotuloPrimeiraColuna}
+                {rows.length > 1 && botaoOrdenar("__linha", rotuloPrimeiraColuna)}
+              </HeadCell>
               {types.map((type) => (
                 <HeadCell
                   key={type}
@@ -681,8 +773,15 @@ const RevenueTable = ({
                     minWidth: larguraColuna(type),
                     ...(isColunaTotal(type) ? { backgroundColor: cores.areiaEscura, color: cores.tinta, fontWeight: 700 } : {}),
                   }}
+                  aria-sort={ariaSort(type)}
                 >
-                  <ColunaComExplicacao nome={type} />
+                  {/* nome e ícone de ordenar juntos (o ícone não quebra sozinho para a linha de baixo) */}
+                  <span style={{ display: "inline-flex", alignItems: "flex-end", justifyContent: "flex-end", gap: 2 }}>
+                    <span style={{ textAlign: "right" }}>
+                      <ColunaComExplicacao nome={type} />
+                    </span>
+                    {rows.length > 1 && botaoOrdenar(type, type)}
+                  </span>
                 </HeadCell>
               ))}
             </TableRow>
@@ -698,7 +797,7 @@ const RevenueTable = ({
                 </BodyCell>
               </TableRow>
             )}
-            {rows.map((row, i) => {
+            {linhasVisiveis.map((row, i) => {
               const fundoLinha = i % 2 === 1 ? cores.zebra : cores.superficie;
               return (
                 <TableRow
@@ -744,6 +843,7 @@ const RevenueTable = ({
           </TableBody>
         </Table>
       </TableContainer>
+      )}
 
       {/* Legenda do "–" (só aparece se a tabela tiver alguma célula vazia) */}
       {mostrarRodape && temCelulaSemDado && (

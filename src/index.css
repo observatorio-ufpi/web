@@ -103,3 +103,27 @@ select:focus-visible {
     scroll-behavior: auto !important;
   }
 }
+
+/* Impressão / "Salvar como PDF" (perfil do município): fundo branco, cores mantidas,
+   cards e seções sem quebra no meio */
+@media print {
+  @page {
+    margin: 14mm 12mm;
+  }
+  html,
+  body,
+  .homepage-background {
+    background: #fff !important;
+  }
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .sem-quebra {
+    break-inside: avoid;
+  }
+  /* No papel a largura cai no layout de 2 colunas; 3 aproveita melhor a folha */
+  .cards-resumo {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+}

@@ -10,6 +10,8 @@ import { Loading } from "../../../ui";
 import TechnicalSheetButton from '../../../common/TechnicalSheetButton.jsx';
 import EmptyState from '../../../common/EmptyState';
 import { ConteudoFicha } from '../../../common/fichasTecnicas';
+import SkeletonTabela from '../../../common/SkeletonTabela';
+import TituloConsultaEducacional from '../../../common/TituloConsultaEducacional';
 
 function FiltrosRateComponent() {
   const yearLimits = useMemo(() => ({
@@ -265,7 +267,7 @@ function FiltrosRateComponent() {
         
 
           {isLoading && (
-            <Loading />
+            <SkeletonTabela cards={0} />
           )}
           {error && (
             <EmptyState erro titulo="Não foi possível carregar os dados" texto="Tente novamente em alguns instantes." />
@@ -277,9 +279,7 @@ function FiltrosRateComponent() {
 
           {!isLoading && !error && data && title ? (
             <Box sx={{ padding: 2 }}>
-              <Typography variant="h6" sx={{ marginBottom: 2, textAlign: 'center' }}>
-                {title}
-              </Typography>
+              <TituloConsultaEducacional texto={title} area="Indicadores educacionais" />
             </Box>
           ) : null}
 

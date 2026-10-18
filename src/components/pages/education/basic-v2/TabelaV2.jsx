@@ -12,8 +12,8 @@ import {
   TableRow,
   Typography,
 } from '@mui/material';
-import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
+import { carregarXLSX } from '../../../../utils/bibliotecasExportacao';
 
 const formatar = (n) => Number(n).toLocaleString('pt-BR');
 
@@ -186,7 +186,7 @@ const TabelaV2 = ({ resposta, titulo }) => {
   const { meta } = resposta;
   const segmentos = resposta.segmentos || [{ era: null, dados: resposta.dados }];
 
-  const exportarXlsx = () => {
+  const exportarXlsx = async () => {
     // Export em formato longo: uma linha por fato, com era quando houver
     const linhas = [];
     for (const seg of segmentos) {
@@ -201,6 +201,7 @@ const TabelaV2 = ({ resposta, titulo }) => {
       }
     }
 
+    const XLSX = await carregarXLSX();
     const worksheet = XLSX.utils.json_to_sheet(linhas);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Dados');

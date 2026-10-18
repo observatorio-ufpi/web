@@ -1,6 +1,5 @@
 import Button from "@mui/material/Button";
 import { saveAs } from "file-saver";
-import JSZip from "jszip";
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import "../../../../../../App.css";
@@ -35,6 +34,9 @@ import { lerFiltrosMunicipaisDaUrl, filtrosMunicipaisParaUrl } from "../../../..
 import { FONTE_EXPORTACAO } from '../../../../../../utils/exportStyle';
 import { ConteudoFicha } from '../../../../../common/fichasTecnicas';
 import ComoCitarButton from "../../../../../common/ComoCitarButton.jsx";
+import SkeletonTabela from '../../../../../common/SkeletonTabela';
+import { repetirUltimaConsulta } from '../../../../../../utils/repetirConsulta';
+import { carregarJSZip } from '../../../../../../utils/bibliotecasExportacao';
 
 // Opções para os selects
 function RevenueTableContainer() {
@@ -446,6 +448,7 @@ function RevenueTableContainer() {
 
   const downloadAllTables = async () => {
     const { transformByMunicipio, transformByAno, standardize, map, name } = TABLE_MAPPINGS[selectedTable];
+    const JSZip = await carregarJSZip();
     const zip = new JSZip();
     const fonte = FONTE_EXPORTACAO;
     
@@ -845,10 +848,10 @@ function RevenueTableContainer() {
       <div className="app-container">
         {/* Área de dados - sempre visível */}
         <div className="data-section">
-          {loading && <Loading />}
+          {loading && <SkeletonTabela />}
 
           {!loading && error && (
-            <EmptyState erro titulo="Não foi possível carregar os dados" texto="Tente novamente em alguns instantes." />
+            <EmptyState erro titulo="Não foi possível carregar os dados" texto="Pode ser uma instabilidade na conexão ou no servidor." onTentarDeNovo={repetirUltimaConsulta} />
           )}
 
           {!loading && !error && !apiData && !hasInitialLoad && (

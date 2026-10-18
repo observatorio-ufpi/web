@@ -40,6 +40,7 @@ import { municipios } from "../../../../../../utils/municipios.mapping";
 import TechnicalSheetButton from "../../../../../common/TechnicalSheetButton.jsx";
 import EmptyState from '../../../../../common/EmptyState';
 import { ConteudoFicha } from '../../../../../common/fichasTecnicas';
+import { repetirUltimaConsulta } from '../../../../../../utils/repetirConsulta';
 
 // Componente de "Em Construção"
 // Indicador ainda não implementado — mesmo formato dos outros avisos (EmptyState)
@@ -985,7 +986,7 @@ function ChartContainer() {
 
           {/* Mostrar erro apenas se o indicador está implementado */}
           {!loading && error && isSubIndicatorImplemented(selectedSubIndicator) && (
-            <EmptyState erro titulo="Não foi possível carregar os dados" texto="Tente novamente em alguns instantes." />
+            <EmptyState erro titulo="Não foi possível carregar os dados" texto="Pode ser uma instabilidade na conexão ou no servidor." onTentarDeNovo={repetirUltimaConsulta} />
           )}
 
           {!loading && !error && !apiData && !hasInitialLoad && isSubIndicatorImplemented(selectedSubIndicator) && (

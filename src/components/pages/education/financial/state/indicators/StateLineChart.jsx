@@ -2,7 +2,6 @@ import React from 'react';
 import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
 import zoomPlugin from 'chartjs-plugin-zoom';
-import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import { FaFileExcel, FaDownload, FaUndo } from 'react-icons/fa';
 import Button from '@mui/material/Button';
@@ -11,6 +10,7 @@ import '../../../../../../style/Buttons.css';
 import { parseLooseNumber } from '../../../../../../utils/numberFormatUtils.js';
 import { downloadChartPngWithBackground } from '../../../../../../utils/chartExportUtils.js';
 import { FONTE_EXPORTACAO, EXCEL_CABECALHO_FUNDO, EXCEL_CABECALHO_TEXTO } from '../../../../../../utils/exportStyle';
+import { carregarExcelJS } from '../../../../../../utils/bibliotecasExportacao';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, zoomPlugin);
 
@@ -36,6 +36,7 @@ const StateLineChart = ({ chartData, title, yAxisLabel = 'Valor (%)' }) => {
     const isPercent = yAxisLabel.includes('%');
 
     // Criar workbook com ExcelJS
+    const ExcelJS = await carregarExcelJS();
     const workbook = new ExcelJS.Workbook();
     workbook.creator = 'OPEPI/UFPI';
     workbook.created = new Date();

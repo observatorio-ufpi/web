@@ -35,9 +35,11 @@ const HigherEducationPage = lazy(() => import("./components/pages/education/high
 const RateIndicatorsPage = lazy(() => import("./components/pages/education/rate/RateIndicatorsPage.jsx"));
 const BasicEducationV2Page = lazy(() => import("./components/pages/education/basic-v2/BasicEducationV2Page.jsx"));
 const PaginaNaoEncontrada = lazy(() => import("./components/navigation/PaginaNaoEncontrada.jsx"));
+const ComoUsar = lazy(() => import("./components/navigation/ComoUsar.jsx"));
 const Glossario = lazy(() => import("./components/navigation/Glossario.jsx"));
 const MunicipalityProfilePage = lazy(() => import("./components/pages/education/financial/municipality/profile/MunicipalityProfilePage.jsx"));
 const ComparisonPage = lazy(() => import("./components/pages/education/financial/municipality/comparison/ComparisonPage.jsx"));
+const RankingPage = lazy(() => import("./components/pages/education/financial/municipality/ranking/RankingPage.jsx"));
 
 // Componente que renderiza o layout baseado na rota
 const AppWithLayout = () => {
@@ -114,11 +116,23 @@ function App() {
             <Route path="indicadores" element={<MunicipalIndicatorsPage />} />
             <Route path="indicadores-estaduais" element={<StateIndicatorsPage />} />
             <Route path="comparar" element={<ComparisonPage />} />
+            <Route path="ranking" element={<RankingPage />} />
           </Route>
 
           {/* Layout antigo mantido para compatibilidade */}
           <Route path="/" element={<AppLayout />}>
           </Route>
+
+          <Route
+            path="/como-usar"
+            element={
+              <>
+                <Navbar />
+                <ComoUsar />
+                <Footer />
+              </>
+            }
+          />
 
           <Route
             path="/glossario"

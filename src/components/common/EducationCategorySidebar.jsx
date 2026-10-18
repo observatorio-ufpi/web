@@ -18,6 +18,7 @@ import {
 import YearRangeFilter from "../helpers/YearRangeFilter";
 import { useEducationFilters } from "../../contexts/EducationFilterContext";
 import { MOTIVO_MUNICIPIO_SELECIONADO, formatarOpcaoComDescricao } from '../ui/Select';
+import BotaoFiltrosCelular from './BotaoFiltrosCelular';
 
 const EducationCategorySidebar = () => {
   const location = useLocation();
@@ -291,12 +292,21 @@ const EducationCategorySidebar = () => {
       (isHistoricalRange && selectedFilterOptions.length === 1));
   return (
     <>
+      <BotaoFiltrosCelular
+        aberto={isOpen}
+        onClick={() => setIsOpen(true)}
+        ativos={
+          [filters.city, filters.territory, filters.faixaPopulacional, filters.aglomerado, filters.gerencia].filter(Boolean).length +
+          (filters.selectedFilters?.length || 0)
+        }
+      />
+
       {/* Botão para abrir/fechar a sidebar */}
       <button
         onClick={toggleSidebar}
         aria-label="Abrir menu de filtros"
         aria-expanded={isOpen}
-        className={`fixed top-4 left-4 z-50 p-2 bg-ink text-white rounded-lg shadow-lg hover:bg-brand-dark transition-colors ${isOpen ? 'hidden' : ''}`}
+        className={`fixed top-4 left-4 z-50 p-2 bg-ink text-white rounded-lg shadow-lg hover:bg-brand-dark transition-colors ${isOpen ? 'hidden' : 'hidden md:block'}`}
       >
         <FaBars />
       </button>
@@ -737,6 +747,8 @@ const EducationCategorySidebar = () => {
                     },
                   }),
                 );
+                // No celular, fecha a sidebar para o resultado aparecer
+                if (window.innerWidth < 768) setIsOpen(false);
               }}
               sx={{ fontSize: "0.875rem" }}
             >
