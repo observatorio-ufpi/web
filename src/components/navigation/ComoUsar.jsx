@@ -77,6 +77,13 @@ const ComoUsar = () => (
         ))}
       </div>
 
+      <p className="mb-6 text-sm text-texto">
+        Prefere ver na tela?{' '}
+        <Link to="/municipios?tour=1" className="font-semibold text-brand hover:text-brand-dark">
+          Fazer o tour guiado (1 minuto) →
+        </Link>
+      </p>
+
       <div className="flex flex-wrap gap-3">
         <Link to="/dados-financeiros" className="rounded-lg bg-brand px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-dark">
           Começar pelos dados financeiros

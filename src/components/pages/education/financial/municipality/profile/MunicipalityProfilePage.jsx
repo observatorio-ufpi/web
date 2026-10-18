@@ -12,40 +12,14 @@ import SummaryCards from '../tables/SummaryCards';
 import BotaoCopiarLink from '../../../../../common/BotaoCopiarLink';
 import ResumoEmTexto from './ResumoEmTexto';
 import { registrarRecente } from '../../../../../../utils/municipiosRecentes';
+import { ANO_FINAL, PERIODOS, PERIODO_PADRAO, SECOES, agruparPorAno, slugTerritorio } from './perfilComum';
+import { Regioes } from '../../../../../../utils/municipios.mapping.jsx';
 
 // Perfil do município: os principais números de todas as tabelas financeiras numa
 // página só, reaproveitando os cards de resumo de cada tabela. Para quem não é da
 // área, é a porta de entrada; cada seção leva à tabela completa.
 // Rota: /municipio/:codigo (código IBGE de 6 dígitos)
 
-const ANO_FINAL = 2024;
-// Período escolhido no topo (fica na URL: ?periodo=5|10|todos)
-const PERIODOS = [
-  { valor: '5', rotulo: 'Últimos 5 anos', anoInicial: ANO_FINAL - 4 },
-  { valor: '10', rotulo: 'Últimos 10 anos', anoInicial: ANO_FINAL - 9 },
-  { valor: 'todos', rotulo: 'Desde 2007', anoInicial: 2007 },
-];
-const PERIODO_PADRAO = '10';
-
-const SECOES = [
-  { titulo: 'Arrecadação', tabelas: ['ownRevenues', 'constitutionalTransfersRevenue', 'municipalTaxesRevenues'] },
-  { titulo: 'Fundeb', tabelas: ['municipalFundebFundefComposition', 'complementationFundebFundef'] },
-  { titulo: 'Cumprimento dos mínimos legais', tabelas: ['constitutionalLimitMde', 'expensesBasicEducationFundeb', 'complementaryProtocol'] },
-  { titulo: 'Gastos e recursos da educação', tabelas: ['areasActivityExpense', 'additionalEducationRevenue', 'basicEducationMinimalPotential'] },
-];
-
-// Mesmo formato que a página de Municípios usa: { ano: [registros] }
-const agruparPorAno = (dadosMunicipio) => {
-  const porAno = {};
-  Object.values(dadosMunicipio || {}).forEach((registros) => {
-    if (!Array.isArray(registros)) return;
-    registros.forEach((r) => {
-      const ano = String(r.ano);
-      (porAno[ano] = porAno[ano] || []).push(r);
-    });
-  });
-  return porAno;
-};
 
 const opcoesMunicipios = Object.entries(municipios)
   .map(([codigo, m]) => ({ value: codigo, label: m.nomeMunicipio }))
@@ -138,6 +112,7 @@ const MunicipalityProfilePage = () => {
     if (codigo !== codigoUrl && municipios[codigo]) navigate(`/municipio/${codigo}${location.search}`, { replace: true });
   }, [codigo, codigoUrl, navigate]); // eslint-disable-line react-hooks/exhaustive-deps
   const municipio = municipios[codigo];
+  const chaveDoTerritorio = municipio && Object.keys(Regioes).find((k) => Regioes[k] === municipio.territorioDesenvolvimento);
   // Entra na lista "Vistos recentemente" da home
   useEffect(() => {
     if (municipio) registrarRecente(codigo);
@@ -189,11 +164,22 @@ const MunicipalityProfilePage = () => {
             <p className="mb-2 text-sm font-semibold uppercase tracking-wider text-brand">Perfil financeiro da educação</p>
             <h1 className="mb-3 text-3xl font-bold text-ink md:text-4xl">{municipio.nomeMunicipio}</h1>
             <div className="flex flex-wrap gap-2">
-              {detalhes.map((d) => (
-                <span key={d} className="inline-flex h-7 items-center rounded-full bg-areia px-3 text-[13px] font-semibold text-[#5C3420]">
-                  {d}
-                </span>
-              ))}
+              {detalhes.map((d) =>
+                chaveDoTerritorio && d === `Território ${municipio.territorioDesenvolvimento}` ? (
+                  <Link
+                    key={d}
+                    to={`/territorio/${slugTerritorio(chaveDoTerritorio)}`}
+                    title={`Ver o perfil do território ${municipio.territorioDesenvolvimento}`}
+                    className="inline-flex h-7 items-center gap-1 rounded-full bg-areia px-3 text-[13px] font-semibold text-[#5C3420] underline-offset-2 hover:bg-[#EBD8CC] hover:underline"
+                  >
+                    {d} <span aria-hidden="true">↗</span>
+                  </Link>
+                ) : (
+                  <span key={d} className="inline-flex h-7 items-center rounded-full bg-areia px-3 text-[13px] font-semibold text-[#5C3420]">
+                    {d}
+                  </span>
+                )
+              )}
             </div>
             <p className="mt-3 text-sm text-muted">
               Período {anoInicial}–{ANO_FINAL}. Valores nominais, em reais, como declarados no RREO.

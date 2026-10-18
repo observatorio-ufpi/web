@@ -19,6 +19,8 @@ import YearRangeFilter from "../helpers/YearRangeFilter";
 import { useEducationFilters } from "../../contexts/EducationFilterContext";
 import { MOTIVO_MUNICIPIO_SELECIONADO, formatarOpcaoComDescricao } from '../ui/Select';
 import BotaoFiltrosCelular from './BotaoFiltrosCelular';
+import { abrirBuscaGlobal } from './BuscaGlobal';
+import { FaSearch as FaSearchBusca } from 'react-icons/fa';
 
 const EducationCategorySidebar = () => {
   const location = useLocation();
@@ -331,6 +333,16 @@ const EducationCategorySidebar = () => {
             aria-label="Fechar menu de filtros"
           >
             <FaTimes />
+          </button>
+          {/* Busca geral (também abre com Ctrl+K) */}
+          <button
+            type="button"
+            onClick={abrirBuscaGlobal}
+            className="absolute top-3 right-14 z-50 rounded-lg border border-line bg-white p-2 text-ink transition-colors hover:border-brand hover:bg-areia"
+            aria-label="Buscar município, tabela ou termo (Ctrl+K)"
+            title="Buscar município, tabela ou termo (Ctrl+K)"
+          >
+            <FaSearchBusca aria-hidden="true" />
           </button>
           <div className="flex items-center mt-0 mb-2">
             <Link to="/" className="flex items-center">

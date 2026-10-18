@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { FaBars, FaTimes } from 'react-icons/fa';
+import { FaBars, FaTimes, FaSearch } from 'react-icons/fa';
+import { abrirBuscaGlobal } from './BuscaGlobal';
 
 const Navbar = () => {
   const location = useLocation();
@@ -81,6 +82,19 @@ const Navbar = () => {
             </div>
             
             {/* Botão CTA - Ocultado em telas pequenas */}
+            {/* Busca geral (Ctrl+K) — na home a busca grande do topo já cumpre esse papel */}
+            {!isActive('/') && (
+            <button
+              type="button"
+              onClick={abrirBuscaGlobal}
+              title="Buscar município, tabela ou termo (atalho: Ctrl+K)"
+              className="hidden items-center gap-1.5 rounded-full px-3 py-1 text-sm font-medium text-gray-600 transition-all duration-200 hover:bg-areia hover:text-gray-900 lg:flex"
+            >
+              <FaSearch aria-hidden="true" className="text-[12px]" />
+              buscar
+            </button>
+            )}
+
             <div className="hidden lg:block">
               <Link 
                 to="/dados-educacionais/basica"
@@ -104,6 +118,16 @@ const Navbar = () => {
           {isMenuOpen && (
             <div className="lg:hidden mt-4 pb-4 border-t border-gray-200">
               <nav className="flex flex-col space-y-2 pt-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    abrirBuscaGlobal();
+                  }}
+                  className="flex items-center gap-2 rounded-md px-3 py-2 text-left text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                >
+                  <FaSearch aria-hidden="true" className="text-xs" /> buscar
+                </button>
                 <Link 
                   to="/" 
                   className={`px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${

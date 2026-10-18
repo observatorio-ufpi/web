@@ -28,6 +28,9 @@ jobs:
         run: npm run build
         env:
           VITE_API_PUBLIC_URL: ${{ secrets.VITE_API_PUBLIC_URL }}
+          # Estatística de uso (Plausible). Sem estes secrets fica desligada.
+          VITE_PLAUSIBLE_DOMAIN: ${{ secrets.VITE_PLAUSIBLE_DOMAIN }}
+          VITE_PLAUSIBLE_SRC: ${{ secrets.VITE_PLAUSIBLE_SRC }}
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4

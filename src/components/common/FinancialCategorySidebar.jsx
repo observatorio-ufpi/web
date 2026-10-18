@@ -5,6 +5,8 @@ import { useSidebar } from '../layouts/FinancialLayout';
 import FilterComponent from '../helpers/TableFilters';
 import { lerFiltrosMunicipaisDaUrl } from '../../utils/financialUrlFilters';
 import BotaoFiltrosCelular from './BotaoFiltrosCelular';
+import { abrirBuscaGlobal } from './BuscaGlobal';
+import { FaSearch } from 'react-icons/fa';
 
 const FinancialCategorySidebar = () => {
   const location = useLocation();
@@ -131,6 +133,16 @@ const FinancialCategorySidebar = () => {
           >
             <FaTimes />
           </button>
+          {/* Busca geral (também abre com Ctrl+K) */}
+          <button
+            type="button"
+            onClick={abrirBuscaGlobal}
+            className="absolute top-3 right-14 z-50 rounded-lg border border-line bg-white p-2 text-ink transition-colors hover:border-brand hover:bg-areia"
+            aria-label="Buscar município, tabela ou termo (Ctrl+K)"
+            title="Buscar município, tabela ou termo (Ctrl+K)"
+          >
+            <FaSearch aria-hidden="true" />
+          </button>
           <div className="flex items-center mt-0 mb-2">
             <Link to="/" className="flex items-center">
               <img
@@ -150,7 +162,7 @@ const FinancialCategorySidebar = () => {
         {/* Navegação */}
         <nav className="p-3">
           {/* Categorias como abas (antes ficavam num select no topo da página) */}
-          <nav aria-label="Categorias de dados financeiros" className="mb-4">
+          <nav aria-label="Categorias de dados financeiros" className="mb-4" data-tour="categorias">
             <div className="grid grid-cols-2 gap-1 rounded-xl bg-[#F6F3F2] p-1">
               {categories.map((categoria) => {
                 const ativa = categoria.id === currentCategory;
@@ -180,7 +192,7 @@ const FinancialCategorySidebar = () => {
                 : 'Escolha o tipo de dado, o ano e os municípios no topo da página.'}
             </p>
           ) : (
-          <div className="mb-3">
+          <div className="mb-3" data-tour="filtros">
             <FilterComponent
               onFilterChange={handleFilterChange}
               selectedMunicipio={selectedMunicipio}

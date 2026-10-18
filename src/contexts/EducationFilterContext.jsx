@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState } from "react";
+import { municipios } from "../utils/citiesMapping";
 
 const EducationFilterContext = createContext();
 
@@ -12,6 +13,13 @@ export const useEducationFilters = () => {
   return context;
 };
 
+const municipioDaUrl = () => {
+  const codigo = new URLSearchParams(window.location.search).get("municipio") || "";
+  if (municipios[codigo]) return codigo;
+  if (/^\d{6}$/.test(codigo)) return Object.keys(municipios).find((c) => c.startsWith(codigo)) || "";
+  return "";
+};
+
 export const EducationFilterProvider = ({ children }) => {
   const [type, setType] = useState("enrollment");
   const [selectedFilters, setSelectedFilters] = useState([]);
@@ -21,7 +29,8 @@ export const EducationFilterProvider = ({ children }) => {
   const [gerencia, setGerencia] = useState("");
   const [startYear, setStartYear] = useState(2007);
   const [endYear, setEndYear] = useState(2024);
-  const [city, setCity] = useState("");
+  // Município pode vir do endereço (?municipio=, 7 ou 6 dígitos) — ex.: busca da home
+  const [city, setCity] = useState(municipioDaUrl);
 
   const [rowDimension, setRowDimension] = useState("");
   const [columnDimension, setColumnDimension] = useState("");

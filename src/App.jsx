@@ -20,6 +20,7 @@ import theme from "./theme/muiTheme.jsx";
 import "./App.css";
 import { Loading } from "./components/ui";
 import { Typography } from '@mui/material';
+import BuscaGlobal from "./components/common/BuscaGlobal.jsx";
 
 // Páginas carregadas sob demanda (lazy) — ver <Suspense> no App
 const QuemSomos = lazy(() => import("./components/navigation/QuemSomos.jsx"));
@@ -38,6 +39,7 @@ const PaginaNaoEncontrada = lazy(() => import("./components/navigation/PaginaNao
 const ComoUsar = lazy(() => import("./components/navigation/ComoUsar.jsx"));
 const Glossario = lazy(() => import("./components/navigation/Glossario.jsx"));
 const MunicipalityProfilePage = lazy(() => import("./components/pages/education/financial/municipality/profile/MunicipalityProfilePage.jsx"));
+const TerritoryProfilePage = lazy(() => import("./components/pages/education/financial/municipality/profile/TerritoryProfilePage.jsx"));
 const ComparisonPage = lazy(() => import("./components/pages/education/financial/municipality/comparison/ComparisonPage.jsx"));
 const RankingPage = lazy(() => import("./components/pages/education/financial/municipality/ranking/RankingPage.jsx"));
 
@@ -86,6 +88,7 @@ function App() {
       <Router>
         <ScrollToTop />
         <TituloDaPagina />
+        <BuscaGlobal />
         {/* Páginas carregadas sob demanda (lazy): cada uma baixa o próprio código
             só quando é aberta — antes o site inteiro vinha num arquivo único de ~3,8 MB */}
         <Suspense fallback={<Loading />}>
@@ -146,6 +149,27 @@ function App() {
           />
 
           {/* Perfil do município: principais números de todas as tabelas financeiras */}
+          {/* Perfil do território de desenvolvimento (soma dos municípios) */}
+          <Route
+            path="/territorio"
+            element={
+              <>
+                <Navbar />
+                <TerritoryProfilePage />
+                <Footer />
+              </>
+            }
+          />
+          <Route
+            path="/territorio/:slug"
+            element={
+              <>
+                <Navbar />
+                <TerritoryProfilePage />
+                <Footer />
+              </>
+            }
+          />
           <Route
             path="/municipio/:codigo"
             element={

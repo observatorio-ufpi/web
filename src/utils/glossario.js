@@ -5,6 +5,10 @@
 // A ordem importa: termos mais específicos vêm antes dos genéricos.
 
 export const GLOSSARIO = [
+  // ---- de onde vêm os dados (não casam com nomes de coluna; aparecem no glossário e na busca)
+  { termo: 'RREO', grupo: 'De onde vêm os dados', busca: [], texto: 'Relatório Resumido da Execução Orçamentária: prestação de contas que todo município e estado publica a cada dois meses (Lei de Responsabilidade Fiscal), mostrando quanto arrecadou e gastou. Os dados financeiros do OPEPI vêm do relatório do 6º bimestre, que fecha o ano.' },
+  { termo: 'Anexo 8 do RREO', grupo: 'De onde vêm os dados', busca: [], texto: 'A parte do RREO dedicada à educação: o "Demonstrativo das Receitas e Despesas com Manutenção e Desenvolvimento do Ensino (MDE)". Mostra os impostos, o Fundeb, os gastos com ensino e se os mínimos legais foram cumpridos. É dele que saem todas as tabelas financeiras do site.' },
+  { termo: 'SIOPE', grupo: 'De onde vêm os dados', busca: [], texto: 'Sistema de Informações sobre Orçamentos Públicos em Educação, do FNDE/MEC. É onde os municípios e o Estado declaram os dados do Anexo 8, e onde qualquer pessoa pode consultar os relatórios originais.' },
   // ---- impostos próprios
   { termo: 'IPTU', grupo: 'Impostos próprios', busca: ['iptu'], texto: 'Imposto sobre a Propriedade Predial e Territorial Urbana, cobrado pelo município dos donos de imóveis urbanos.' },
   { termo: 'ITBI', grupo: 'Impostos próprios', busca: ['itbi'], texto: 'Imposto sobre a Transmissão de Bens Imóveis, cobrado pelo município na compra e venda de imóveis.' },
@@ -45,7 +49,7 @@ export const GLOSSARIO = [
   { termo: 'EJA', grupo: 'Etapas', busca: ['jovens e adultos'], texto: 'Educação de Jovens e Adultos: ensino para quem não concluiu a escola na idade esperada.' },
 ];
 
-const normalizar = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+const normalizar = (s) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 
 // Explicação do termo mais específico encontrado no nome da coluna (ou null)
 export const explicarColuna = (nomeColuna) => {

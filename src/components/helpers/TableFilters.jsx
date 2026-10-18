@@ -557,6 +557,7 @@ const FilterComponent = ({
           <Button
             variant="contained"
             onClick={handleSearch}
+            data-tour="mostrar"
             fullWidth
             size="small"
             sx={{ fontSize: '0.875rem' }}

@@ -1,10 +1,17 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { GLOSSARIO } from '../../utils/glossario';
 
 // Página /glossario: todos os termos usados nas tabelas, agrupados por tema.
+// ?termo=FPM (vindo da busca geral): rola até o termo e o destaca
 const Glossario = () => {
   const grupos = [...new Set(GLOSSARIO.map((g) => g.grupo))];
+  const termoDestacado = new URLSearchParams(useLocation().search).get('termo');
+  useEffect(() => {
+    if (!termoDestacado) return;
+    const el = document.querySelector(`[data-termo="${CSS.escape(termoDestacado)}"]`);
+    if (el) setTimeout(() => el.scrollIntoView({ block: 'center', behavior: 'smooth' }), 100);
+  }, [termoDestacado]);
   return (
     <main className="homepage-background px-4 py-14">
       <div className="mx-auto max-w-4xl">
@@ -20,7 +27,11 @@ const Glossario = () => {
             <h2 id={`grupo-${grupo}`} className="text-xl font-semibold text-ink mb-4">{grupo}</h2>
             <dl className="grid gap-3 md:grid-cols-2">
               {GLOSSARIO.filter((g) => g.grupo === grupo).map((g) => (
-                <div key={g.termo} className="rounded-xl border border-line bg-white px-5 py-4">
+                <div
+                  key={g.termo}
+                  data-termo={g.termo}
+                  className={`rounded-xl border bg-white px-5 py-4 ${g.termo === termoDestacado ? 'border-brand ring-2 ring-brand/30' : 'border-line'}`}
+                >
                   <dt className="font-semibold text-ink mb-1">{g.termo}</dt>
                   <dd className="text-texto leading-relaxed">{g.texto}</dd>
                 </div>

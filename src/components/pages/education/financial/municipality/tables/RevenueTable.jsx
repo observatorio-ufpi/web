@@ -8,7 +8,7 @@ import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import { styled } from "@mui/material/styles";
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, lazy, Suspense } from "react";
 import { saveAs } from "file-saver";
 import { municipios, Regioes, FaixaPopulacional } from "../../../../../../utils/municipios.mapping";
 import FormControlLabel from "@mui/material/FormControlLabel";
@@ -43,6 +43,8 @@ import { carregarExcelJS, carregarJsPDF } from '../../../../../../utils/bibliote
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import UnfoldMoreIcon from "@mui/icons-material/UnfoldMore";
+import MarcaMudancaRREO from "../../../../../common/MarcaMudancaRREO.jsx";
+import { mudancaRREO } from "../../../../../../utils/mudancasRREO";
 
 export const SEM_DADO_TOOLTIP =
   "Sem dado disponível para este período/categoria — pode ser porque esse item não existia no RREO deste período, ou porque o município não reportou essa informação.";
@@ -53,6 +55,8 @@ const larguraColuna = (type) => `${Math.min(15, Math.max(7.5, type.length * 0.42
 
 // Coluna de total (ex.: "Total de Receitas de Impostos Próprios") ganha destaque
 const isColunaTotal = (type) => /total/i.test(type);
+// Gráfico só é baixado quando a pessoa escolhe "Gráfico" (o Recharts é pesado)
+const GraficoSerie = lazy(() => import("./GraficoSerie"));
 
 const HeadCell = styled(TableCell)({
   backgroundColor: cores.areia,
@@ -123,6 +127,10 @@ const RevenueTable = ({
   // (município ou ano). Ciclo: ordena → inverte → volta à ordem original.
   const [ordem, setOrdem] = useState({ coluna: null, desc: true });
   useEffect(() => setOrdem({ coluna: null, desc: true }), [tableMapping]);
+  // Busca por nome dentro da tabela (visão com muitos municípios)
+  const [filtroNome, setFiltroNome] = useState("");
+  // Tabela ou gráfico (só na consulta de um município, com os anos nas linhas)
+  const [formato, setFormato] = useState("tabela");
 
   // Usar useMemo para estabilizar os dados processados
   const { rows, typeToRowToValue, types } = useMemo(() => {
@@ -567,6 +575,7 @@ const RevenueTable = ({
   const rotuloPrimeiraColuna =
     groupType === "ano" || groupType === "desagregado" ? "Município" : "Ano";
   const porMunicipio = groupType === "ano" || groupType === "desagregado";
+  const podeGrafico = groupType === "municipio" && rows.length >= 2;
 
   const alternarOrdem = (coluna) =>
     setOrdem((o) => {
@@ -577,15 +586,23 @@ const RevenueTable = ({
       return { coluna: null, desc: true };
     });
 
+  // Busca sem diferenciar acento/maiúscula ("sao joao" acha "São João")
+  const semAcento = (t) => String(t).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const mostrarBusca = porMunicipio && rows.length > 15;
+  const linhasFiltradas =
+    mostrarBusca && filtroNome.trim()
+      ? rows.filter((row) => semAcento(municipios[row]?.nomeMunicipio || row).includes(semAcento(filtroNome.trim())))
+      : rows;
+
   // Linhas na ordem escolhida (as sem valor ficam sempre no fim)
   const linhasVisiveis = (() => {
-    if (!ordem.coluna) return rows;
+    if (!ordem.coluna) return linhasFiltradas;
     const chave = (row) => {
       if (ordem.coluna === "__linha") return porMunicipio ? municipios[row]?.nomeMunicipio || String(row) : Number(row);
       const v = finalDisplayData[ordem.coluna]?.[row];
       return typeof v === "number" && !Number.isNaN(v) ? v : null;
     };
-    return [...rows].sort((a, b) => {
+    return [...linhasFiltradas].sort((a, b) => {
       const va = chave(a);
       const vb = chave(b);
       if (va === null && vb === null) return 0;
@@ -735,12 +752,87 @@ const RevenueTable = ({
         </Typography>
       )}
 
+      {/* Consulta de um ano só (todos os municípios) num ano de mudança do RREO */}
+      {groupType === "ano" && mudancaRREO(keyTable) && (
+        <Typography variant="caption" sx={{ display: "block", color: "#8A5A12", fontSize: "13px", lineHeight: 1.45, marginBottom: "10px" }}>
+          <strong>Atenção ao comparar com anos anteriores:</strong> {mudancaRREO(keyTable)}
+        </Typography>
+      )}
+      {mostrarBusca && (
+        <Box sx={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap", marginBottom: "10px" }}>
+          <input
+            type="search"
+            value={filtroNome}
+            onChange={(e) => setFiltroNome(e.target.value)}
+            placeholder="Buscar município na tabela..."
+            aria-label="Buscar município na tabela"
+            style={{
+              flex: "1 1 240px",
+              maxWidth: 360,
+              height: 40,
+              padding: "0 12px",
+              border: `1px solid ${cores.linhaForte}`,
+              borderRadius: 8,
+              fontSize: 15,
+              fontFamily: "inherit",
+              backgroundColor: cores.superficie,
+              color: cores.tinta,
+            }}
+          />
+          {filtroNome.trim() && (
+            <Typography variant="caption" sx={{ color: cores.textoSuave, fontSize: "13px" }} aria-live="polite">
+              {linhasVisiveis.length} de {rows.length} municípios
+            </Typography>
+          )}
+        </Box>
+      )}
+      {podeGrafico && (
+        <div className="mb-3 mr-2 inline-flex rounded-lg bg-areia p-1" role="group" aria-label="Formato">
+          {[
+            ["tabela", "Tabela"],
+            ["grafico", "Gráfico"],
+          ].map(([valor, rotulo]) => (
+            <button
+              key={valor}
+              type="button"
+              aria-pressed={formato === valor}
+              onClick={() => setFormato(valor)}
+              className={`rounded-md px-3 py-1.5 text-[13px] font-semibold transition-colors ${
+                formato === valor ? "bg-white text-ink shadow-sm" : "text-muted hover:text-ink"
+              }`}
+            >
+              {rotulo}
+            </button>
+          ))}
+        </div>
+      )}
+      {podeGrafico && formato === "grafico" ? (
+        <Suspense fallback={<div className="h-[440px] animate-pulse rounded-[14px] border border-line bg-white" aria-hidden="true" />}>
+          <GraficoSerie
+            rows={rows}
+            types={types}
+            dados={finalDisplayData}
+            colunaInicial={(resumo || []).find((c) => c.coluna)?.coluna || types.find(isColunaTotal)}
+            notaValores={notaValores}
+          />
+        </Suspense>
+      ) : (
+      <>
       <AlternarVisao {...visao} />
       {visao.cartoes ? (
         <CartoesTabela
           rows={linhasVisiveis}
           types={types}
-          rotuloLinha={(row) => (groupType === "ano" || groupType === "desagregado" ? municipios[row]?.nomeMunicipio || row : row)}
+          rotuloLinha={(row) =>
+            groupType === "ano" || groupType === "desagregado" ? (
+              municipios[row]?.nomeMunicipio || row
+            ) : (
+              <>
+                {row}
+                <MarcaMudancaRREO ano={row} />
+              </>
+            )
+          }
           valor={(type, row) =>
             finalDisplayData[type] && finalDisplayData[type][row] !== undefined ? formatValue(finalDisplayData[type][row], type) : null
           }
@@ -787,13 +879,13 @@ const RevenueTable = ({
             </TableRow>
           </TableHead>
           <TableBody>
-            {rows.length === 0 && (
+            {linhasVisiveis.length === 0 && (
               <TableRow>
                 <BodyCell
                   colSpan={types.length + 1}
                   sx={{ textAlign: "center", color: cores.textoSuave, fontStyle: "italic", py: 4 }}
                 >
-                  Nenhum dado encontrado para os filtros selecionados.
+                  {rows.length > 0 ? "Nenhum município com esse nome." : "Nenhum dado encontrado para os filtros selecionados."}
                 </BodyCell>
               </TableRow>
             )}
@@ -814,9 +906,14 @@ const RevenueTable = ({
                     scope="row"
                     sx={{ ...stickyFirst, backgroundColor: fundoLinha, fontWeight: 600 }}
                   >
-                    {groupType === "ano" || groupType === "desagregado"
-                      ? `${municipios[row]?.nomeMunicipio || row}`
-                      : `${row}`}
+                    {groupType === "ano" || groupType === "desagregado" ? (
+                      `${municipios[row]?.nomeMunicipio || row}`
+                    ) : (
+                      <>
+                        {row}
+                        <MarcaMudancaRREO ano={row} />
+                      </>
+                    )}
                   </BodyCell>
                   {types.map((type) => {
                     const hasValue =
@@ -843,6 +940,8 @@ const RevenueTable = ({
           </TableBody>
         </Table>
       </TableContainer>
+      )}
+      </>
       )}
 
       {/* Legenda do "–" (só aparece se a tabela tiver alguma célula vazia) */}

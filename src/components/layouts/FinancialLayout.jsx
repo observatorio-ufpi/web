@@ -4,6 +4,7 @@ import FinancialCategorySidebar from '../common/FinancialCategorySidebar';
 import Footer from '../common/Footer';
 import { FinancialFilterProvider } from '../../contexts/FinancialFilterContext';
 import useSidebarResponsiva from '../../hooks/useSidebarResponsiva';
+import TourPrimeiraVisita from '../common/TourPrimeiraVisita';
 
 // Contexto para compartilhar o estado da sidebar
 export const SidebarContext = createContext();
@@ -47,6 +48,7 @@ const FinancialLayout = () => {
             <main id="conteudo" tabIndex={-1} className={`min-h-screen p-3 pb-24 sm:p-4 sm:pb-24 md:p-6 md:pb-6 outline-none ${isOpen ? '' : 'md:pt-16'}`}>
               <Outlet />
             </main>
+            <TourPrimeiraVisita />
             
             {/* Footer */}
             <Footer />

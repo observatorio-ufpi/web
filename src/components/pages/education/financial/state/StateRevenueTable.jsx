@@ -29,6 +29,7 @@ import MenuExportar from '../../../../common/MenuExportar';
 import CartoesTabela, { AlternarVisao, useVisaoCelular } from '../../../../common/CartoesTabela.jsx';
 import { carregarLogo, topoConteudoPdf, finalizarPdfComLogo } from "../../../../../utils/logoExportacao.js";
 import { carregarExcelJS, carregarJsPDF } from '../../../../../utils/bibliotecasExportacao';
+import MarcaMudancaRREO from '../../../../common/MarcaMudancaRREO.jsx';
 
 // Mesmo visual da tabela municipal (RevenueTable): cabeçalho areia compacto,
 // números alinhados pelas casas decimais, coluna de total destacada
@@ -555,7 +556,12 @@ const StateRevenueTable = ({ csvData, tableName, startYear, endYear, enableMonet
           <CartoesTabela
             rows={data.years}
             types={data.types}
-            rotuloLinha={(year) => year}
+            rotuloLinha={(year) => (
+              <>
+                {year}
+                <MarcaMudancaRREO ano={year} />
+              </>
+            )}
             valor={(type, year) => {
               const value = finalDisplayData[type] && finalDisplayData[type][year] !== undefined
                 ? finalDisplayData[type][year]
@@ -599,6 +605,7 @@ const StateRevenueTable = ({ csvData, tableName, startYear, endYear, enableMonet
                   >
                     <CenteredTableCell component="th" scope="row" sx={{ textAlign: 'left', fontWeight: 600 }}>
                       {year}
+                      <MarcaMudancaRREO ano={year} />
                     </CenteredTableCell>
                     {data.types.map((type, idx) => {
                       const value = finalDisplayData[type] && finalDisplayData[type][year] !== undefined 
