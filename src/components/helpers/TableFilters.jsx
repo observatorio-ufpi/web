@@ -141,7 +141,7 @@ const FilterComponent = ({
     gerenciaRegionalMunicipio: gerenciaRegionalMunicipio || '',
     // Vem das props quando a sidebar abre a partir de um link com filtros na URL
     anoInicial: anoInicial || 2007,
-    anoFinal: anoFinal || 2024,
+    anoFinal: anoFinal || 2025,
   });
 
   // Converter os valores recebidos para o formato do react-select
@@ -332,7 +332,7 @@ const FilterComponent = ({
     setFaixaPopulacionalMunicipio(null);
     setAglomeradoMunicipio(null);
     setGerenciaRegionalMunicipio(null);
-    setFilters({...filters, anoInicial: 2007, anoFinal: 2024});
+    setFilters({...filters, anoInicial: 2007, anoFinal: 2025});
     setTableTypeState(tableTypeOptions[0]); // Reset para o primeiro tipo (ownRevenues)
     setStateTableTypeState(stateTableTypeOptions[0]); // Reset para o primeiro tipo estadual (tabela1)
     setStateIndicatorTypeState(stateIndicatorTypeOptions[0]); // Reset para o primeiro tipo de indicador estadual
@@ -347,7 +347,7 @@ const FilterComponent = ({
       aglomeradoMunicipio: null,
       gerenciaRegionalMunicipio: null,
       anoInicial: 2007,
-      anoFinal: 2024,
+      anoFinal: 2025,
       tableType: 'ownRevenues',
       stateTableType: 'tabela1',
       stateIndicatorType: 'revenueComposition',
@@ -544,7 +544,7 @@ const FilterComponent = ({
             onStartYearChange={(year) => setFilters({...filters, anoInicial: year})}
             onEndYearChange={(year) => setFilters({...filters, anoFinal: year})}
             minYear={2007}
-            maxYear={2024}
+            maxYear={2025}
           />
         </div>
 

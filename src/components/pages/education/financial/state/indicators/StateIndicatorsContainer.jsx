@@ -40,7 +40,7 @@ function StateIndicatorsContainer() {
   const [selectedIndicator, setSelectedIndicator] = useState("revenueComposition");
   const [hasInitialLoad, setHasInitialLoad] = useState(false);
   const [startYear, setStartYear] = useState(2007);
-  const [endYear, setEndYear] = useState(2023);
+  const [endYear, setEndYear] = useState(2025);
   const [chartTitle, setChartTitle] = useState('');
 
   // Atualizar título quando dados forem carregados
