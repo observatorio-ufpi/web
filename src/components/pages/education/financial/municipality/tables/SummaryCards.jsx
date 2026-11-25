@@ -302,7 +302,7 @@ const montarCard = (cfg, ctx) => {
     const ls = comValor(cfg.coluna);
     if (modo === "anos") {
       if (ls.length < 2) return null;
-      const ultimos = ls.slice(-18); // série inteira (2007–2024)
+      const ultimos = ls.slice(-19); // série inteira (2007–2024)
       return (
         <Card rotulo={cfg.rotulo}>
           <MiniBarras

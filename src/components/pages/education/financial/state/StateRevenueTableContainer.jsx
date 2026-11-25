@@ -19,7 +19,7 @@ const StateRevenueTableContainer = () => {
   const theme = useTheme();
   const [selectedTable, setSelectedTable] = useState('tabela1');
   const [startYear, setStartYear] = useState(2007);
-  const [endYear, setEndYear] = useState(2023);
+  const [endYear, setEndYear] = useState(2025);
   const [hasInitialLoad, setHasInitialLoad] = useState(false);
   const [tableTitle, setTableTitle] = useState('');
 
