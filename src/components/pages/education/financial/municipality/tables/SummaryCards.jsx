@@ -1,8 +1,6 @@
-import React, { useEffect, useState } from "react";
-import { fetchIPCAData, calculateMonetaryCorrection } from "../../../../../../utils/bacenApi";
+import React from "react";
 import { Box, Typography, Tooltip } from "@mui/material";
 import { cores } from "../../../../../../theme/tokens";
-import { municipios as municipiosMapa } from "../../../../../../utils/municipios.mapping.jsx";
 
 // Cards de resumo acima da tabela. Calculados a partir dos MESMOS números
 // exibidos na tabela (inclusive corrigidos pelo IPCA, quando ligado) — não há
@@ -20,34 +18,6 @@ import { municipios as municipiosMapa } from "../../../../../../utils/municipios
 // modo "anos": linhas da tabela são anos (um município)
 // modo "municipios": linhas são municípios (um ano)
 
-// IPCA mensal (Banco Central), buscado uma vez e compartilhado por todos os cards
-let promessaIpca = null;
-const carregarIpca = () => {
-  if (!promessaIpca) {
-    const hoje = new Date().toLocaleDateString("pt-BR");
-    promessaIpca = fetchIPCAData("01/01/2006", hoje).then((d) => {
-      if (!Array.isArray(d)) throw new Error("IPCA inválido");
-      return d;
-    }).catch(() => {
-      promessaIpca = null; // permite tentar de novo numa próxima vez
-      return null;
-    });
-  }
-  return promessaIpca;
-};
-const useIpca = (ativo) => {
-  const [ipca, setIpca] = useState(null);
-  useEffect(() => {
-    if (!ativo) return undefined;
-    let cancelado = false;
-    carregarIpca().then((d) => !cancelado && setIpca(d));
-    return () => {
-      cancelado = true;
-    };
-  }, [ativo]);
-  return ipca;
-};
-
 const numero = (v) => (typeof v === "number" && !Number.isNaN(v) ? v : null);
 
 export const formatarMoedaCompacta = (v) => {
@@ -62,42 +32,8 @@ export const formatarMoedaCompacta = (v) => {
 const formatarPct = (v) =>
   `${v.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`;
 
-// Comparação com os outros municípios no mesmo ano (`referencia`, só no modo "anos").
-// Usa os valores nominais de todos os municípios naquele ano: a posição não depende
-// da correção monetária (todos estão no mesmo ano), e a mediana é mostrada como nominal.
-const compararComEstado = (referencia, coluna, ano) => {
-  if (!referencia || String(referencia.ano) !== String(ano)) return null;
-  const porMunicipio = referencia.valores?.[coluna];
-  if (!porMunicipio) return null;
-  const valores = Object.values(porMunicipio).filter((v) => numero(v) !== null);
-  const proprio = numero(porMunicipio[referencia.codigo]);
-  if (valores.length < 10 || proprio === null) return null;
-  const ordenados = [...valores].sort((a, b) => b - a);
-  const crescente = [...valores].sort((a, b) => a - b);
-  // Mesma comparação dentro do território de desenvolvimento do município
-  // (só com 3 ou mais municípios com dado, para a mediana fazer sentido)
-  const territorio = municipiosMapa[referencia.codigo]?.territorioDesenvolvimento;
-  const doTerritorio = territorio
-    ? Object.entries(porMunicipio)
-        .filter(([c, v]) => numero(v) !== null && municipiosMapa[c]?.territorioDesenvolvimento === territorio)
-        .map(([, v]) => v)
-    : [];
-  const terrCrescente = [...doTerritorio].sort((a, b) => a - b);
-  return {
-    posicao: ordenados.indexOf(proprio) + 1,
-    total: valores.length,
-    mediana: crescente[Math.floor(crescente.length / 2)],
-    territorio:
-      doTerritorio.length >= 3
-        ? {
-            nome: territorio,
-            posicao: [...doTerritorio].sort((a, b) => b - a).indexOf(proprio) + 1,
-            total: doTerritorio.length,
-            mediana: terrCrescente[Math.floor(terrCrescente.length / 2)],
-          }
-        : null,
-  };
-};
+const formatarMinimo = (v) =>
+  Math.abs(v - Math.round(v)) < 0.05 ? `${Math.round(v)}%` : formatarPct(v);
 
 const minimoDoAno = (minimo, ano) => (typeof minimo === "function" ? minimo(Number(ano)) : minimo);
 
@@ -139,7 +75,7 @@ const Nota = ({ children, cor = cores.texto, forte = false }) => (
   <Typography sx={{ fontSize: "13px", lineHeight: 1.4, color: cor, fontWeight: forte ? 600 : 400 }}>{children}</Typography>
 );
 
-const Selo = ({ atende }) => (
+const Selo = ({ atende, quandoAtende = "Atende o mínimo", quandoNaoAtende = "Abaixo do mínimo" }) => (
   <Box
     component="span"
     sx={{
@@ -152,7 +88,7 @@ const Selo = ({ atende }) => (
       color: atende ? cores.atende : cores.naoAtende,
     }}
   >
-    {atende ? "Atende o mínimo" : "Abaixo do mínimo"}
+    {atende ? quandoAtende : quandoNaoAtende}
   </Box>
 );
 
@@ -201,7 +137,7 @@ const MiniBarras = ({ itens, linhaEm = null }) => {
 // ---------- cálculo de cada card ----------
 
 const montarCard = (cfg, ctx) => {
-  const { linhas, valor, nomeLinha, modo, correcaoAtiva } = ctx;
+  const { linhas, valor, nomeLinha, modo } = ctx;
   const comValor = (coluna) => linhas.filter((l) => numero(valor(coluna, l)) !== null);
 
   if (cfg.card === "total") {
@@ -209,51 +145,12 @@ const montarCard = (cfg, ctx) => {
     if (!ls.length) return null;
     if (modo === "anos") {
       const ultimo = ls[ls.length - 1];
-      const anterior = ls.length > 1 ? ls[ls.length - 2] : null;
       const v = valor(cfg.coluna, ultimo);
-      const va = anterior ? valor(cfg.coluna, anterior) : null;
-      const variacao = va ? ((v - va) / Math.abs(va)) * 100 : null;
+      const ligacaoAno = cfg.virgulaAntesDoAno ? "," : "";
+      const ponto = cfg.pontoFinal ? "." : "";
       return (
-        <Card rotulo={`${cfg.rotulo} em ${ultimo}`}>
+        <Card rotulo={`${cfg.rotulo}${ligacaoAno} em ${ultimo}${ponto}`}>
           <Valor>{formatarMoedaCompacta(v)}</Valor>
-          {variacao !== null && Number.isFinite(variacao) && (
-            <Nota cor={variacao >= 0 ? cores.atende : cores.naoAtende} forte>
-              {variacao >= 0 ? "▲" : "▼"} {formatarPct(Math.abs(variacao))} em relação a {anterior}
-              {!correcaoAtiva && <span style={{ fontWeight: 400, color: cores.textoSuave }}> (nominal)</span>}
-            </Nota>
-          )}
-          {(() => {
-            // Variação real: o valor do ano anterior atualizado pelo IPCA até o fim do último ano
-            if (correcaoAtiva || !Array.isArray(ctx.ipca) || !ctx.ipca.length || !va || variacao === null) return null;
-            let fator;
-            try {
-              fator = calculateMonetaryCorrection(1, `31/12/${anterior}`, `31/12/${ultimo}`, ctx.ipca);
-            } catch {
-              return null; // IPCA indisponível: o card mostra só a variação nominal
-            }
-            const real = ((v - va * fator) / Math.abs(va * fator)) * 100;
-            if (!Number.isFinite(real)) return null;
-            return (
-              <Nota cor={cores.textoSuave}>
-                {real >= 0 ? "▲" : "▼"} {formatarPct(Math.abs(real))} descontada a inflação (IPCA)
-              </Nota>
-            );
-          })()}
-          {(() => {
-            const comp = compararComEstado(ctx.referencia, cfg.coluna, ultimo);
-            return comp ? (
-              <>
-                <Nota cor={cores.textoSuave}>
-                  {comp.posicao}º maior de {comp.total} municípios · mediana do Piauí: {formatarMoedaCompacta(comp.mediana)}
-                </Nota>
-                {comp.territorio && (
-                  <Nota cor={cores.textoSuave}>
-                    {comp.territorio.posicao}º de {comp.territorio.total} no território {comp.territorio.nome} · mediana: {formatarMoedaCompacta(comp.territorio.mediana)}
-                  </Nota>
-                )}
-              </>
-            ) : null;
-          })()}
         </Card>
       );
     }
@@ -261,9 +158,6 @@ const montarCard = (cfg, ctx) => {
     return (
       <Card rotulo={`${cfg.rotulo} — soma dos municípios`}>
         <Valor>{formatarMoedaCompacta(soma)}</Valor>
-        <Nota>
-          {ls.length} municípios · média de {formatarMoedaCompacta(soma / ls.length)}
-        </Nota>
       </Card>
     );
   }
@@ -279,7 +173,6 @@ const montarCard = (cfg, ctx) => {
       .sort((a, b) => b.v - a.v);
     if (!somasPartes.length || !somaTotal) return null;
     const maior = somasPartes[0];
-    const fatia = (maior.v / somaTotal) * 100;
     return (
       <Card rotulo={modo === "anos" ? `${cfg.rotulo} em ${linhasConsideradas[0]}` : `${cfg.rotulo} — soma dos municípios`}>
         {/* Nome da coluna sem o detalhamento entre parênteses; nomes longos em letra menor */}
@@ -291,9 +184,6 @@ const montarCard = (cfg, ctx) => {
             <Valor>{nomeCurto}</Valor>
           );
         })()}
-        <Nota>
-          {formatarPct(fatia)} do total ({formatarMoedaCompacta(maior.v)})
-        </Nota>
       </Card>
     );
   }
@@ -303,8 +193,11 @@ const montarCard = (cfg, ctx) => {
     if (modo === "anos") {
       if (ls.length < 2) return null;
       const ultimos = ls.slice(-18); // série inteira (2007–2024)
+      const inicio = ctx.anoInicial ?? ultimos[0];
+      const fim = ctx.anoFinal ?? ultimos[ultimos.length - 1];
+      const rotulo = cfg.periodoNoRotulo ? `${cfg.rotulo}, de ${inicio} a ${fim}` : cfg.rotulo;
       return (
-        <Card rotulo={cfg.rotulo}>
+        <Card rotulo={rotulo}>
           <MiniBarras
             itens={ultimos.map((l, i) => ({
               rotulo: String(l),
@@ -337,8 +230,9 @@ const montarCard = (cfg, ctx) => {
     if (!todas.length) return null;
     const ls = cfg.zeroSemAplicacao ? todas.filter((l) => valor(cfg.coluna, l) > 0) : todas;
     if (!ls.length) {
+      const ano = todas[todas.length - 1];
       return (
-        <Card rotulo={cfg.rotulo}>
+        <Card rotulo={ano ? `${cfg.rotulo} em ${ano}` : cfg.rotulo}>
           <Valor>Não se aplica</Valor>
           <Nota cor={cores.textoSuave}>{cfg.textoSemAplicacao}</Nota>
         </Card>
@@ -351,21 +245,8 @@ const montarCard = (cfg, ctx) => {
       return (
         <Card rotulo={`${cfg.rotulo} em ${ultimo}`}>
           <Valor>{formatarPct(v)}</Valor>
-          <Selo atende={v >= min} />
-          <Nota cor={cores.textoSuave}>Mínimo legal: {formatarPct(min)}</Nota>
-          {(() => {
-            const comp = compararComEstado(ctx.referencia, cfg.coluna, ultimo);
-            return comp ? (
-              <>
-                <Nota cor={cores.textoSuave}>Mediana do Piauí: {formatarPct(comp.mediana)}</Nota>
-                {comp.territorio && (
-                  <Nota cor={cores.textoSuave}>
-                    Mediana do território {comp.territorio.nome}: {formatarPct(comp.territorio.mediana)}
-                  </Nota>
-                )}
-              </>
-            ) : null;
-          })()}
+          <Selo atende={v >= min} quandoAtende={cfg.textoAtende} quandoNaoAtende={cfg.textoAbaixo} />
+          <Nota cor={cores.textoSuave}>{cfg.rotuloMinimo || "Mínimo legal"}: {formatarMinimo(min)}</Nota>
         </Card>
       );
     }
@@ -378,7 +259,7 @@ const montarCard = (cfg, ctx) => {
       <Card rotulo={`${cfg.rotulo} — mediana dos municípios`}>
         <Valor>{formatarPct(mediana)}</Valor>
         <Nota cor={cores.textoSuave}>
-          Mínimo legal: {formatarPct(min)}
+          {cfg.rotuloMinimo || "Mínimo legal"}: {formatarMinimo(min)}
           {cfg.zeroSemAplicacao && ` · ${ls.length} município(s) com complementação`}
           {cfg.zeroSemAplicacao && abaixo > 0 && `, ${abaixo} abaixo do mínimo`}
         </Nota>
@@ -415,7 +296,7 @@ const montarCard = (cfg, ctx) => {
     return (
       <Card rotulo={cfg.rotulo}>
         <Valor>
-          {ls.length - abaixo.length} de {ls.length} municípios
+          {ls.length - abaixo.length} dos {ls.length} municípios
         </Valor>
         <Nota cor={abaixo.length ? cores.naoAtende : cores.atende} forte>
           {abaixo.length
@@ -436,7 +317,9 @@ const montarCard = (cfg, ctx) => {
         <Card rotulo={`${cfg.rotulo} em ${ultimo}`}>
           <Valor>{formatarMoedaCompacta(v)}</Valor>
           <Nota cor={v >= 0 ? cores.atende : cores.naoAtende} forte>
-            {v >= 0 ? "Recebeu mais do que contribuiu" : "Contribuiu mais do que recebeu"}
+            {v >= 0
+              ? cfg.textoPositivo || "Recebeu mais do que contribuiu"
+              : cfg.textoNegativo || "Contribuiu mais do que recebeu"}
           </Nota>
         </Card>
       );
@@ -445,7 +328,7 @@ const montarCard = (cfg, ctx) => {
     return (
       <Card rotulo={cfg.rotulo}>
         <Valor>
-          {ganharam} de {ls.length} municípios
+          {ganharam} dos {ls.length} municípios
         </Valor>
         <Nota>receberam mais do que contribuíram</Nota>
       </Card>
@@ -455,16 +338,13 @@ const montarCard = (cfg, ctx) => {
   return null;
 };
 
-const CardsDeResumo = ({ resumo, rows, types, dados, modo, nomeLinha, correcaoAtiva, anoReferencia, referencia = null }) => {
-  // IPCA só é necessário quando há card de total por ano e a correção da tabela está desligada
-  const precisaIpca = modo === "anos" && !correcaoAtiva && (resumo || []).some((c) => c.card === "total");
-  const ipca = useIpca(precisaIpca);
+const CardsDeResumo = ({ resumo, rows, types, dados, modo, nomeLinha, anoReferencia, anoInicial = null, anoFinal = null }) => {
   if (!resumo || !resumo.length || !rows.length) return null;
 
   // modo "anos": garante ordem cronológica
   const linhas = modo === "anos" ? [...rows].sort((a, b) => Number(a) - Number(b)) : rows;
   const valor = (coluna, linha) => (dados[coluna] ? dados[coluna][linha] : undefined);
-  const ctx = { linhas, valor, nomeLinha, modo, correcaoAtiva, types, anoReferencia, referencia, ipca };
+  const ctx = { linhas, valor, nomeLinha, modo, types, anoReferencia, anoInicial, anoFinal };
 
   const cards = resumo
     .map((cfg, i) => ({ chave: `${cfg.card}-${cfg.coluna || cfg.total}-${i}`, el: montarCard(cfg, ctx) }))

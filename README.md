@@ -1,5 +1,7 @@
 # Getting Started with Create React App
 
+Deploy pela VPN e timeout no SSH: [`docs/deploy-vpn.md`](docs/deploy-vpn.md).
+
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
 ## Available Scripts

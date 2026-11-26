@@ -2,7 +2,7 @@
 // visual do site (theme/tokens.js). Antes: cabeçalho cinza e fonte genérica.
 
 export const FONTE_EXPORTACAO =
-  'Fonte: RREO (Anexo 8 – MDE), 6º bimestre / SIOPE – FNDE. Elaboração: OPEPI/UFPI — opepi.pi.gov.br';
+  'Fonte: RREO (Anexo 8 – MDE, 6º bimestre) disponível em SIOPE/FNDE. Elaboração: OPEPI/UFPI — opepi.pi.gov.br';
 
 // ExcelJS (ARGB)
 export const EXCEL_CABECALHO_FUNDO = 'FFF3E6DE'; // areia

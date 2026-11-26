@@ -33,7 +33,7 @@ const colunaPrincipal = (tabela) => {
 const fmtNum = (v, casas = 2) => v.toLocaleString('pt-BR', { minimumFractionDigits: casas, maximumFractionDigits: casas });
 
 const opcoesAnos = Array.from({ length: ANO_MAX - ANO_MIN + 1 }, (_, i) => ANO_MAX - i).map((a) => ({ value: a, label: String(a) }));
-const TODOS_TERRITORIOS = { value: '', label: 'Todos os territórios' };
+const TODOS_TERRITORIOS = { value: '', label: 'Todos os Territórios' };
 const opcoesTerritorios = [TODOS_TERRITORIOS, ...Object.values(Regioes).sort((a, b) => a.localeCompare(b, 'pt-BR')).map((r) => ({ value: r, label: r }))];
 const TODAS_FAIXAS = { value: '', label: 'Todas as faixas' };
 const opcoesFaixas = [TODAS_FAIXAS, ...Object.values(FaixaPopulacional).map((f) => ({ value: f, label: f }))];
@@ -160,7 +160,7 @@ const RankingPage = () => {
     <div className="app-container">
       <PageHeader
         caminho="Dados financeiros  ›  Ranking"
-        titulo="Ranking dos municípios"
+        titulo="Ranking dos dados financeiros dos municípios"
         etiquetas={[coluna + (usarPorHab ? ' por habitante' : ''), String(ano), ...(recorte.length ? recorte : ['Todo o Piauí'])]}
         acoes={<BotaoCopiarLink />}
       />
@@ -183,7 +183,7 @@ const RankingPage = () => {
         <Rotulo texto="Ano">
           <Select value={{ value: ano, label: String(ano) }} onChange={(o) => setAno(o.value)} options={opcoesAnos} fullWidth />
         </Rotulo>
-        <Rotulo texto="Território de desenvolvimento">
+        <Rotulo texto="Território de Desenvolvimento">
           <Select value={opcoesTerritorios.find((o) => o.value === territorio)} onChange={(o) => setTerritorio(o.value)} options={opcoesTerritorios} fullWidth />
         </Rotulo>
         <Rotulo texto="Faixa populacional">

@@ -25,6 +25,15 @@ const opcoesMunicipios = Object.entries(municipios)
   .map(([codigo, m]) => ({ value: codigo, label: m.nomeMunicipio }))
   .sort((a, b) => a.label.localeCompare(b.label, 'pt-BR'));
 
+// Várias gerências ficam num chip que pode quebrar a linha, para não esticar o cabeçalho.
+const rotuloGre = (gerencia) => {
+  const numeros = String(gerencia).split(',').map((g) => g.trim()).filter((g) => g && g !== 'undefined');
+  if (!numeros.length) return null;
+  if (numeros.length === 1) return { texto: `${numeros[0]}ª Gerência Regional de Ensino`, quebra: false };
+  const anteriores = numeros.slice(0, -1).map((n) => `${n}ª`).join(', ');
+  return { texto: `${anteriores} e ${numeros.at(-1)}ª Gerências Regionais de Ensino`, quebra: true };
+};
+
 const SecaoTabela = ({ codigo, tabela, anoInicial, onCarregado }) => {
   const [estado, setEstado] = useState({ carregando: true, linhas: [], tipos: [], dados: {} });
   const [tentativa, setTentativa] = useState(0); // "Tentar de novo" refaz a busca
@@ -125,13 +134,22 @@ const MunicipalityProfilePage = () => {
 
   const detalhes = useMemo(() => {
     if (!municipio) return [];
+    const gre = rotuloGre(municipio.gerencia);
     return [
-      `IBGE ${codigo}`,
-      municipio.territorioDesenvolvimento && `Território ${municipio.territorioDesenvolvimento}`,
-      municipio.populacao && `${Number(municipio.populacao).toLocaleString('pt-BR')} habitantes`,
-      municipio.faixaPopulacional,
+      { texto: `IBGE ${codigo}` },
+      municipio.territorioDesenvolvimento && {
+        texto: `Território ${municipio.territorioDesenvolvimento}`,
+        link: chaveDoTerritorio ? `/territorio/${slugTerritorio(chaveDoTerritorio)}` : null,
+        title: chaveDoTerritorio ? `Ver o perfil do território ${municipio.territorioDesenvolvimento}` : undefined,
+      },
+      municipio.aglomerado && municipio.aglomerado !== 'undefined' && {
+        texto: `Aglomerado ${municipio.aglomerado}`,
+      },
+      gre && { texto: gre.texto, quebra: gre.quebra },
+      municipio.populacao && { texto: `${Number(municipio.populacao).toLocaleString('pt-BR')} habitantes` },
+      municipio.faixaPopulacional && { texto: municipio.faixaPopulacional },
     ].filter(Boolean);
-  }, [codigo, municipio]);
+  }, [codigo, municipio, chaveDoTerritorio]);
 
   const trocarMunicipio = (
     <div className="max-w-sm print:hidden">
@@ -160,37 +178,40 @@ const MunicipalityProfilePage = () => {
     <main className="homepage-background px-4 py-12">
       <div className="mx-auto max-w-6xl">
         <header className="mb-10 flex flex-wrap items-end justify-between gap-6">
-          <div>
+          <div className="min-w-0 flex-1">
             <p className="mb-2 text-sm font-semibold uppercase tracking-wider text-brand">Perfil financeiro da educação</p>
             <h1 className="mb-3 text-3xl font-bold text-ink md:text-4xl">{municipio.nomeMunicipio}</h1>
-            <div className="flex flex-wrap gap-2">
-              {detalhes.map((d) =>
-                chaveDoTerritorio && d === `Território ${municipio.territorioDesenvolvimento}` ? (
+            <div className="flex max-w-full flex-wrap gap-2">
+              {detalhes.map((d) => {
+                const classe = d.quebra
+                  ? 'inline-flex h-auto max-w-full min-w-0 items-center whitespace-normal rounded-full bg-areia px-3 py-1 text-[13px] font-semibold leading-snug text-[#5C3420]'
+                  : 'inline-flex h-7 items-center rounded-full bg-areia px-3 text-[13px] font-semibold text-[#5C3420]';
+                return d.link ? (
                   <Link
-                    key={d}
-                    to={`/territorio/${slugTerritorio(chaveDoTerritorio)}`}
-                    title={`Ver o perfil do território ${municipio.territorioDesenvolvimento}`}
-                    className="inline-flex h-7 items-center gap-1 rounded-full bg-areia px-3 text-[13px] font-semibold text-[#5C3420] underline-offset-2 hover:bg-[#EBD8CC] hover:underline"
+                    key={d.texto}
+                    to={d.link}
+                    title={d.title}
+                    className={`${classe} gap-1 underline-offset-2 hover:bg-[#EBD8CC] hover:underline`}
                   >
-                    {d} <span aria-hidden="true">↗</span>
+                    {d.texto} <span aria-hidden="true">↗</span>
                   </Link>
                 ) : (
-                  <span key={d} className="inline-flex h-7 items-center rounded-full bg-areia px-3 text-[13px] font-semibold text-[#5C3420]">
-                    {d}
+                  <span key={d.texto} title={d.title} className={classe}>
+                    {d.texto}
                   </span>
-                )
-              )}
+                );
+              })}
             </div>
             <p className="mt-3 text-sm text-muted">
-              Período {anoInicial}–{ANO_FINAL}. Valores nominais, em reais, como declarados no RREO.
-              <span className="print:hidden"> Cada número abre a tabela completa.</span>
+              Período {anoInicial}–{ANO_FINAL}. Em valores nominais, conforme declarado no RREO.
+              <span className="print:hidden"> Cada indicar permite acessar a tabela completa. </span>
             </p>
             {/* Só aparece no papel/PDF: de onde veio e quando foi gerado */}
             <p className="mt-1 hidden text-sm text-muted print:block">
               OPEPI — Observatório da Política Educacional Piauiense (UFPI) · {window.location.host}/municipio/{codigo} · gerado em {new Date().toLocaleDateString('pt-BR')}
             </p>
           </div>
-          <div className="flex flex-col items-stretch gap-3 print:hidden">
+          <div className="flex w-full shrink-0 flex-col items-stretch gap-3 print:hidden sm:w-auto">
             {trocarMunicipio}
             <button
               type="button"
@@ -240,16 +261,24 @@ const MunicipalityProfilePage = () => {
             to={`/comparar?tabela=constitutionalLimitMde&ano=2023&municipios=${codigo}`}
             className="rounded-lg bg-brand px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-dark"
           >
-            Comparar com outros municípios
+            Comparar municípios
           </Link>
           <Link
             to="/glossario"
             className="rounded-lg border border-line-strong bg-white px-5 py-3 text-sm font-semibold text-ink transition-colors hover:border-brand hover:bg-areia"
           >
-            Glossário dos termos
+            Glossário de conceitos e indicadores
           </Link>
+          <a
+            href="https://www.fnde.gov.br/siope/relatoriosMunicipais.jsp"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="rounded-lg border border-line-strong bg-white px-5 py-3 text-sm font-semibold text-ink transition-colors hover:border-brand hover:bg-areia"
+          >
+            Conferir no SIOPE
+          </a>
         </div>
-        <DataSourceNote nivel="municipal" />
+        <DataSourceNote nivel="municipal" semAtalhoSiope />
       </div>
     </main>
   );

@@ -6,45 +6,42 @@ import { FaSlidersH, FaTable, FaShareAlt, FaMapMarkerAlt, FaBalanceScale, FaBook
 const PASSOS = [
   {
     icone: FaSlidersH,
-    titulo: 'Escolha o que quer ver',
+    titulo: 'Escolha o que deseja visualizar',
     texto:
-      'Entre em Dados financeiros ou Dados educacionais. No menu lateral (no celular, botão "Filtros" no rodapé), escolha o tipo de dado, o município ou região e o período, e toque em "Mostrar".',
+      'Acesse Dados financeiros ou Dados educacionais. No menu lateral (ou, no celular, no botão “Filtros”, localizado no rodapé), selecione o tipo de dado, o município ou a região e o período desejado. Em seguida, clique em “Mostrar”.',
   },
   {
     icone: FaTable,
-    titulo: 'Leia o resumo e a tabela',
+    titulo: 'Leia o resumo e consulte a tabela',
     texto:
-      'Os cartões no topo resumem o resultado: total do último ano, variação, maior componente e se o mínimo legal foi cumprido. A tabela traz todos os valores. Passe o mouse no nome de uma coluna para ver o que ela significa.',
+      'Os cartões exibidos na parte superior resumem os resultados: total do último ano, variação, maior componente e cumprimento do mínimo legal. A tabela apresenta todos os valores. Passe o mouse sobre o nome de uma coluna para consultar o significado das informações apresentadas.',
   },
   {
     icone: FaBookOpen,
-    titulo: 'Entenda de onde vêm os números',
+    titulo: 'Entenda a origem dos dados',
     texto:
-      'A "Ficha Técnica" de cada tabela explica o que ela mostra, como é calculada e qual a fonte. O botão "Correção monetária" atualiza os valores pela inflação para comparar anos diferentes.',
+      'A “Ficha Técnica” de cada tabela explica quais informações são apresentadas, como os dados são calculados e quais são suas fontes. O botão “Correção monetária” atualiza os valores de acordo com a inflação, permitindo a comparação entre diferentes anos. O índice adotado foi o IPCA, cabendo ao usuário escolher a data de referência para a correção monetária.',
   },
   {
     icone: FaShareAlt,
     titulo: 'Exporte e compartilhe',
     texto:
-      '"Exportar" baixa a tabela em Excel, PDF ou CSV. "Copiar link" guarda a consulta exatamente como está, para enviar a alguém. "Como citar" gera a referência no padrão ABNT.',
+      'A opção “Exportar” permite baixar a tabela nos formatos Excel, PDF ou CSV. A opção “Copiar link” permite salvar o endereço da consulta com os filtros selecionados, facilitando o seu compartilhamento. Já a opção “Como citar” gera a referência bibliográfica conforme as normas da ABNT.',
   },
 ];
 
 const ATALHOS = [
-  { icone: FaMapMarkerAlt, titulo: 'Perfil do município', texto: 'Todos os principais números de um município numa página só.', link: '/municipio/221100', rotulo: 'Ver um exemplo (Teresina)' },
-  { icone: FaBalanceScale, titulo: 'Comparar municípios', texto: 'Coloque até 4 municípios lado a lado, com a mediana do Piauí como referência.', link: '/comparar', rotulo: 'Abrir comparação' },
-  { icone: FaMapMarkedAlt, titulo: 'Ranking e mapa', texto: 'Os municípios com os maiores e menores valores de um indicador, em lista ou no mapa do Piauí.', link: '/ranking', rotulo: 'Abrir ranking' },
-  { icone: FaBookOpen, titulo: 'Glossário', texto: 'O significado de siglas como FPM, MDE, Fundeb e VAAT, em linguagem simples.', link: '/glossario', rotulo: 'Abrir glossário' },
+  { icone: FaMapMarkerAlt, titulo: 'Perfil do município', texto: 'Consulte os principais dados de um município em uma única página.', link: '/municipio/221100', rotulo: 'Ver um exemplo (Teresina)' },
+  { icone: FaBalanceScale, titulo: 'Comparar municípios', texto: 'Compare até 4 municípios lado a lado, utilizando a mediana do Piauí como referência.', link: '/comparar', rotulo: 'Abrir comparação' },
+  { icone: FaMapMarkedAlt, titulo: 'Ranking e mapa', texto: 'Consulte, em uma lista ou no mapa do Piauí, os municípios com os maiores e os menores valores de determinado indicador.', link: '/ranking', rotulo: 'Abrir ranking' },
+  { icone: FaBookOpen, titulo: 'Glossário', texto: 'Consulte o significado das siglas em linguagem simples', link: '/glossario', rotulo: 'Abrir glossário' },
 ];
 
 const ComoUsar = () => (
   <main className="homepage-background px-4 py-14">
     <div className="mx-auto max-w-4xl">
       <p className="mb-2 text-sm font-semibold uppercase tracking-wider text-brand">Como usar</p>
-      <h1 className="mb-3 text-3xl font-bold text-ink md:text-4xl">Encontre os dados em 4 passos</h1>
-      <p className="mb-10 max-w-2xl text-lg leading-relaxed text-texto">
-        O OPEPI reúne dados do financiamento da educação e da educação básica e superior do Piauí e dos seus 224 municípios.
-      </p>
+      <h1 className="mb-10 text-3xl font-bold text-ink md:text-4xl">Encontre os dados em 4 passos</h1>
 
       <ol className="mb-12 grid gap-4">
         {PASSOS.map(({ icone: Icone, titulo, texto }, i) => (
@@ -65,10 +62,13 @@ const ComoUsar = () => (
 
       <h2 className="mb-4 text-xl font-semibold text-ink">Atalhos úteis</h2>
       <div className="mb-10 grid gap-4 sm:grid-cols-2">
-        {ATALHOS.map(({ icone: Icone, titulo, texto, link, rotulo }) => (
+        {ATALHOS.map(({ icone: Icone, titulo, texto, link, rotulo }, i) => (
           <div key={titulo} className="flex flex-col rounded-2xl border border-line bg-white p-5">
             <Icone className="mb-3 text-xl text-brand" aria-hidden="true" />
-            <h3 className="mb-1 font-semibold text-ink">{titulo}</h3>
+            <h3 className="mb-1 font-semibold text-ink">
+              <span className="mr-2 text-brand">{i + 1}.</span>
+              {titulo}
+            </h3>
             <p className="mb-4 flex-1 text-sm leading-relaxed text-texto">{texto}</p>
             <Link to={link} className="text-sm font-semibold text-brand hover:text-brand-dark">
               {rotulo} →
@@ -78,9 +78,9 @@ const ComoUsar = () => (
       </div>
 
       <p className="mb-6 text-sm text-texto">
-        Prefere ver na tela?{' '}
+        Prefere uma demonstração na tela?{' '}
         <Link to="/municipios?tour=1" className="font-semibold text-brand hover:text-brand-dark">
-          Fazer o tour guiado (1 minuto) →
+          Faça o tour guiado (1 minuto) →
         </Link>
       </p>
 

@@ -26,7 +26,7 @@ const PAGINAS = [
   { titulo: 'Dados financeiros do Estado', destino: '/estado', extra: 'piaui estadual' },
   { titulo: 'Indicadores financeiros dos municípios', destino: '/indicadores', extra: 'graficos' },
   { titulo: 'Indicadores financeiros do Estado', destino: '/indicadores-estaduais', extra: 'graficos estadual' },
-  { titulo: 'Ranking dos municípios', destino: '/ranking', extra: 'maiores menores posicao' },
+  { titulo: 'Ranking dos dados financeiros dos municípios', destino: '/ranking', extra: 'maiores menores posicao' },
   { titulo: 'Mapa do Piauí por indicador', destino: '/ranking?ver=mapa', extra: 'mapa territorio' },
   { titulo: 'Comparar municípios', destino: '/comparar', extra: 'comparacao lado a lado' },
   { titulo: 'Territórios de desenvolvimento', destino: '/territorio', extra: 'regioes territorio' },
@@ -63,7 +63,7 @@ const ITENS = [
     destino: `/municipios?tabela=${t.value}&anoInicial=2024&anoFinal=2024`,
     chave: semAcento(t.label),
   })),
-  ...PAGINAS.map((p) => ({ tipo: 'pagina', titulo: p.titulo, detalhe: 'Página', destino: p.destino, chave: semAcento(`${p.titulo} ${p.extra}`) })),
+  ...PAGINAS.map((p) => ({ tipo: 'pagina', titulo: p.titulo, destino: p.destino, chave: semAcento(`${p.titulo} ${p.extra}`) })),
   ...GLOSSARIO.map((g) => ({
     tipo: 'termo',
     titulo: g.termo,
@@ -74,23 +74,31 @@ const ITENS = [
 ];
 
 const ICONES = { municipio: FaMapMarkerAlt, territorio: FaMapMarkedAlt, tabela: FaTable, pagina: FaFileAlt, termo: FaBook };
-const GRUPOS = { municipio: 'Municípios', territorio: 'Territórios', tabela: 'Tabelas', pagina: 'Páginas', termo: 'Glossário' };
+const GRUPOS = { municipio: 'Municípios', territorio: 'Perfil financeiro dos territórios de desenvolvimento', tabela: 'Tabelas', pagina: 'Páginas', termo: 'Glossário' };
+const ORDEM_TIPO = { municipio: 0, territorio: 1, tabela: 2, pagina: 3, termo: 4 };
 
 // Começa com o texto > começa uma palavra com ele > contém
 const pontuar = (chave, q) => (chave.startsWith(q) ? 0 : chave.includes(` ${q}`) ? 1 : chave.includes(q) ? 2 : -1);
 
-// Resultados para um texto: até 6 por grupo, na ordem municípios → territórios → tabelas → páginas → glossário
+// Resultados para um texto: até 6 por grupo, na ordem municípios → territórios → tabelas → páginas → glossário.
+// Territórios aparecem todos (são 12). Tabelas com a mesma relevância ficam na ordem do catálogo;
+// nos outros grupos, o empate continua alfabético.
 export const buscarResultados = (texto) => {
   const q = semAcento(String(texto || '').trim());
   if (!q) return [];
   const porTipo = {};
-  ITENS.map((it) => ({ it, p: pontuar(it.chave, q) }))
+  ITENS.map((it, ordem) => ({ it, p: pontuar(it.chave, q), ordem }))
     .filter((x) => x.p >= 0)
-    .sort((a, b) => a.p - b.p || a.it.titulo.localeCompare(b.it.titulo, 'pt-BR'))
+    .sort((a, b) =>
+      a.p - b.p ||
+      ORDEM_TIPO[a.it.tipo] - ORDEM_TIPO[b.it.tipo] ||
+      (a.it.tipo === 'tabela' ? a.ordem - b.ordem : a.it.titulo.localeCompare(b.it.titulo, 'pt-BR'))
+    )
     .forEach(({ it }) => {
       (porTipo[it.tipo] = porTipo[it.tipo] || []).push(it);
     });
-  return Object.keys(GRUPOS).flatMap((t) => (porTipo[t] || []).slice(0, 6));
+  const limite = (tipo) => (tipo === 'territorio' ? Infinity : 6);
+  return Object.keys(GRUPOS).flatMap((t) => (porTipo[t] || []).slice(0, limite(t)));
 };
 
 // Destino de um resultado. Município: perfil financeiro (padrão); educacao=true
@@ -143,7 +151,9 @@ export const ListaResultados = ({ id, texto, resultados, ativo, setAtivo, ir, va
               <Icone className="mt-1 shrink-0 text-brand" aria-hidden="true" />
               <span className="min-w-0 flex-1">
                 <span className="block text-[15px] font-medium text-ink">{it.titulo}</span>
-                <span className={`block text-[13px] text-muted ${it.tipo === 'termo' ? '' : 'truncate'}`}>{it.detalhe}</span>
+                {it.detalhe && (
+                  <span className={`block text-[13px] text-muted ${it.tipo === 'termo' ? '' : 'truncate'}`}>{it.detalhe}</span>
+                )}
               </span>
               {it.tipo === 'municipio' && (
                 <span className="flex w-full shrink-0 flex-wrap gap-1.5 pl-7 sm:w-auto sm:justify-end sm:self-center sm:pl-0">
@@ -165,7 +175,7 @@ export const ListaResultados = ({ id, texto, resultados, ativo, setAtivo, ir, va
                     }}
                     className="rounded-full border border-line bg-white px-2.5 py-1 text-[12px] font-semibold text-ink transition-colors hover:border-brand hover:bg-areia"
                   >
-                    Matrículas e escolas
+                    Dados Educacionais
                   </button>
                 </span>
               )}

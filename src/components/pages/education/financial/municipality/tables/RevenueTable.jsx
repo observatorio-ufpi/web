@@ -36,18 +36,16 @@ import {
   getMaxIPCADate,
 } from "../../../../../../utils/bacenApi";
 import { FONTE_EXPORTACAO, EXCEL_CABECALHO_FUNDO, EXCEL_CABECALHO_TEXTO, PDF_CABECALHO_FUNDO, PDF_LINHA_ALTERNADA } from '../../../../../../utils/exportStyle';
-import ColunaComExplicacao from "../../../../../common/ColunaComExplicacao";
 import CartoesTabela, { AlternarVisao, useVisaoCelular } from "../../../../../common/CartoesTabela.jsx";
 import { carregarLogo, topoConteudoPdf, finalizarPdfComLogo } from "../../../../../../utils/logoExportacao.js";
 import { carregarExcelJS, carregarJsPDF } from '../../../../../../utils/bibliotecasExportacao';
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import UnfoldMoreIcon from "@mui/icons-material/UnfoldMore";
-import MarcaMudancaRREO from "../../../../../common/MarcaMudancaRREO.jsx";
 import { mudancaRREO } from "../../../../../../utils/mudancasRREO";
 
 export const SEM_DADO_TOOLTIP =
-  "Sem dado disponível para este período/categoria — pode ser porque esse item não existia no RREO deste período, ou porque o município não reportou essa informação.";
+  'O símbolo "—" na tabela indica ausência de dados para o período ou a categoria selecionada. Isso pode ocorrer porque o item não constava no RREO do período ou porque o município não informou o dado.';
 
 // Largura mínima proporcional ao nome da coluna: nomes longos ("Educação de
 // Jovens e Adultos...") quebravam em 5-6 linhas e deixavam o cabeçalho enorme
@@ -450,7 +448,7 @@ const RevenueTable = ({
         return [escapar(rotulo), ...types.map((t) => numeroBR(finalDisplayData[t]?.[row]))].join(";");
       }),
       "",
-      escapar(notaValores ? `${fonte}. ${notaValores}.` : fonte),
+      escapar(notaValores ? `${fonte}. ${notaValores}` : fonte),
     ];
     const blob = new Blob(["﻿" + linhas.join("\r\n")], { type: "text/csv;charset=utf-8" });
     saveAs(blob, `${nomeArquivoBase}.csv`);
@@ -645,46 +643,20 @@ const RevenueTable = ({
 
   return (
     <div>
-      {groupType !== "desagregado" && (
-        <SummaryCards
-          resumo={resumo}
-          rows={rows}
-          types={types}
-          dados={finalDisplayData}
-          modo={groupType === "municipio" ? "anos" : "municipios"}
-          nomeLinha={(row) => municipios[row]?.nomeMunicipio || row}
-          correcaoAtiva={correcaoAtiva}
-          anoReferencia={keyTable && /^\d{4}$/.test(String(keyTable)) ? Number(keyTable) : anoFinal}
-          referencia={referenciaEstadual}
-        />
-      )}
-
-      {/* Barra da tabela: correção monetária à esquerda, Exportar à direita */}
-      <Box
-        sx={{
-          display: "flex",
-          flexWrap: "wrap",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: "12px",
-          marginBottom: "12px",
-        }}
-      >
-        <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "16px" }}>
-          {enableMonetaryCorrection && (
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={useMonetaryCorrection}
-                  onChange={handleMonetaryCorrectionToggle}
-                  color="primary"
-                />
-              }
-              label={<MonetaryCorrectionLabel />}
-              sx={{ marginRight: 0, "& .MuiFormControlLabel-label": { fontSize: "14px", color: cores.texto } }}
-            />
-          )}
-          {enableMonetaryCorrection && useMonetaryCorrection && (
+      {enableMonetaryCorrection && (
+        <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "16px", marginBottom: "12px" }}>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={useMonetaryCorrection}
+                onChange={handleMonetaryCorrectionToggle}
+                color="primary"
+              />
+            }
+            label={<MonetaryCorrectionLabel />}
+            sx={{ marginRight: 0, "& .MuiFormControlLabel-label": { fontSize: "14px", color: cores.texto } }}
+          />
+          {useMonetaryCorrection && (
             <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ptBR}>
               <DatePicker
                 label="Data de referência"
@@ -697,7 +669,44 @@ const RevenueTable = ({
             </LocalizationProvider>
           )}
         </Box>
+      )}
 
+      {correcaoAtiva && !loading && (
+        <Typography
+          variant="caption"
+          sx={{ display: "block", color: cores.atencao, fontWeight: 600, marginBottom: "16px" }}
+        >
+          {notaValores}
+        </Typography>
+      )}
+
+      {groupType !== "desagregado" && (
+        <SummaryCards
+          resumo={resumo}
+          rows={rows}
+          types={types}
+          dados={finalDisplayData}
+          modo={groupType === "municipio" ? "anos" : "municipios"}
+          nomeLinha={(row) => municipios[row]?.nomeMunicipio || row}
+          correcaoAtiva={correcaoAtiva}
+          anoReferencia={keyTable && /^\d{4}$/.test(String(keyTable)) ? Number(keyTable) : anoFinal}
+          anoInicial={anoInicial}
+          anoFinal={anoFinal}
+          referencia={referenciaEstadual}
+        />
+      )}
+
+      {/* Exportar fica acima da tabela */}
+      <Box
+        sx={{
+          display: "flex",
+          flexWrap: "wrap",
+          alignItems: "center",
+          justifyContent: "flex-end",
+          gap: "12px",
+          marginBottom: "12px",
+        }}
+      >
         <Button
           variant="outlined"
           onClick={(e) => setMenuExportar(e.currentTarget)}
@@ -741,15 +750,6 @@ const RevenueTable = ({
           <CircularProgress />
           <Typography sx={{ ml: 2 }}>Aplicando correção monetária...</Typography>
         </Box>
-      )}
-
-      {correcaoAtiva && !loading && (
-        <Typography
-          variant="caption"
-          sx={{ display: "block", color: cores.atencao, fontWeight: 600, marginBottom: "8px" }}
-        >
-          {notaValores} — não são os valores nominais declarados no RREO.
-        </Typography>
       )}
 
       {/* Consulta de um ano só (todos os municípios) num ano de mudança do RREO */}
@@ -824,14 +824,9 @@ const RevenueTable = ({
           rows={linhasVisiveis}
           types={types}
           rotuloLinha={(row) =>
-            groupType === "ano" || groupType === "desagregado" ? (
-              municipios[row]?.nomeMunicipio || row
-            ) : (
-              <>
-                {row}
-                <MarcaMudancaRREO ano={row} />
-              </>
-            )
+            groupType === "ano" || groupType === "desagregado"
+              ? municipios[row]?.nomeMunicipio || row
+              : row
           }
           valor={(type, row) =>
             finalDisplayData[type] && finalDisplayData[type][row] !== undefined ? formatValue(finalDisplayData[type][row], type) : null
@@ -869,9 +864,7 @@ const RevenueTable = ({
                 >
                   {/* nome e ícone de ordenar juntos (o ícone não quebra sozinho para a linha de baixo) */}
                   <span style={{ display: "inline-flex", alignItems: "flex-end", justifyContent: "flex-end", gap: 2 }}>
-                    <span style={{ textAlign: "right" }}>
-                      <ColunaComExplicacao nome={type} />
-                    </span>
+                    <span style={{ textAlign: "right" }}>{type}</span>
                     {rows.length > 1 && botaoOrdenar(type, type)}
                   </span>
                 </HeadCell>
@@ -906,14 +899,9 @@ const RevenueTable = ({
                     scope="row"
                     sx={{ ...stickyFirst, backgroundColor: fundoLinha, fontWeight: 600 }}
                   >
-                    {groupType === "ano" || groupType === "desagregado" ? (
-                      `${municipios[row]?.nomeMunicipio || row}`
-                    ) : (
-                      <>
-                        {row}
-                        <MarcaMudancaRREO ano={row} />
-                      </>
-                    )}
+                    {groupType === "ano" || groupType === "desagregado"
+                      ? `${municipios[row]?.nomeMunicipio || row}`
+                      : row}
                   </BodyCell>
                   {types.map((type) => {
                     const hasValue =
@@ -960,7 +948,7 @@ const RevenueTable = ({
         >
           <HelpOutlineIcon sx={{ fontSize: "16px", flexShrink: 0, marginTop: "1px" }} />
           <span>
-            <strong>“–”</strong> na tabela significa: {SEM_DADO_TOOLTIP}
+            {SEM_DADO_TOOLTIP}
           </span>
         </Typography>
       )}

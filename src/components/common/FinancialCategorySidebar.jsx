@@ -25,7 +25,8 @@ const FinancialCategorySidebar = () => {
   const [anoFinal, setAnoFinal] = useState(filtrosDaUrl?.anoFinal || 2024);
   const [selectedTableType, setSelectedTableType] = useState(filtrosDaUrl?.tableType || 'ownRevenues');
   const [selectedStateTableType, setSelectedStateTableType] = useState('tabela1');
-  const [selectedStateIndicatorType, setSelectedStateIndicatorType] = useState('revenueComposition');
+  const [selectedStateIndicatorType, setSelectedStateIndicatorType] = useState('financasPublicas');
+  const [selectedStateSubIndicatorType, setSelectedStateSubIndicatorType] = useState('receitasImpostosProprios');
   const [selectedMunicipalIndicatorType, setSelectedMunicipalIndicatorType] = useState('financasPublicas');
   const [selectedMunicipalSubIndicatorType, setSelectedMunicipalSubIndicatorType] = useState('composicaoReceitas');
 
@@ -71,6 +72,9 @@ const FinancialCategorySidebar = () => {
     }
     if (filters.stateIndicatorType) {
       setSelectedStateIndicatorType(filters.stateIndicatorType);
+    }
+    if (filters.stateSubIndicatorType) {
+      setSelectedStateSubIndicatorType(filters.stateSubIndicatorType);
     }
     if (filters.municipalIndicatorType) {
       setSelectedMunicipalIndicatorType(filters.municipalIndicatorType);
@@ -188,8 +192,8 @@ const FinancialCategorySidebar = () => {
           {currentCategory === 'comparar' || currentCategory === 'ranking' ? (
             <p className="mb-3 rounded-lg bg-[#F6F3F2] p-3 text-xs leading-relaxed text-texto">
               {currentCategory === 'ranking'
-                ? 'Escolha o indicador, o ano e o recorte no topo da página.'
-                : 'Escolha o tipo de dado, o ano e os municípios no topo da página.'}
+                ? 'Escolha o indicador, o ano e o recorte da pesquisa ao lado.'
+                : 'Escolha o tipo de dado, o ano e os municípios na parte superior da página.'}
             </p>
           ) : (
           <div className="mb-3" data-tour="filtros">
@@ -209,6 +213,7 @@ const FinancialCategorySidebar = () => {
               selectedStateTableType={selectedStateTableType}
               showStateIndicatorTypeFilter={currentCategory === 'indicadores-estaduais'}
               selectedStateIndicatorType={selectedStateIndicatorType}
+              selectedStateSubIndicatorType={selectedStateSubIndicatorType}
               showMunicipalIndicatorTypeFilter={currentCategory === 'indicadores'}
               selectedMunicipalIndicatorType={selectedMunicipalIndicatorType}
               selectedMunicipalSubIndicatorType={selectedMunicipalSubIndicatorType}

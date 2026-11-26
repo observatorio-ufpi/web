@@ -6,14 +6,13 @@ import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 // botão "Correção Monetária", pra explicação e aviso ficarem iguais em todo lugar.
 
 export const TEXTO_AJUDA_CORRECAO =
-  'Atualiza os valores pela inflação (IPCA) até a data de referência escolhida, ' +
-  'para dar pra comparar anos diferentes. Desligado, os valores são os nominais, ' +
-  'exatamente como declarados no RREO.';
+  'Atualiza os valores pela inflação, medida pelo Índice Nacional de Preços ao Consumidor Amplo (IPCA), ' +
+  'até a data de referência selecionada, permitindo comparar valores de diferentes anos em termos reais.';
 
-// "Valores corrigidos pelo IPCA até 31/08/2026" — vai no título dos arquivos
-// exportados, pra ninguém citar o valor corrigido como se fosse o do RREO.
+// Aviso exibido na tela e nos arquivos exportados, pra ninguém citar o valor
+// atualizado como se fosse o declarado no RREO.
 export const notaCorrecaoMonetaria = (dataReferencia) =>
-  `Valores corrigidos pelo IPCA até ${dataReferencia.toLocaleDateString('pt-BR')}`;
+  `Valores atualizados pelo IPCA até ${dataReferencia.toLocaleDateString('pt-BR')}. Os valores apresentados não correspondem aos valores nominais originalmente declarados no RREO.`;
 
 // Sufixo do nome do arquivo exportado: "corrigido_IPCA_31-08-2026"
 export const sufixoArquivoCorrecao = (dataReferencia) =>
@@ -23,7 +22,7 @@ export const sufixoArquivoCorrecao = (dataReferencia) =>
 // Switch (o rótulo inteiro de um FormControlLabel é clicável).
 export const MonetaryCorrectionLabel = () => (
   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
-    Correção Monetária
+    Correção monetária
     <Tooltip title={TEXTO_AJUDA_CORRECAO} arrow enterTouchDelay={0}>
       <span
         onClick={(e) => e.preventDefault()}

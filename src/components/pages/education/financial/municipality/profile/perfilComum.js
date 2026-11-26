@@ -13,7 +13,7 @@ export const SECOES = [
   { titulo: 'Arrecadação', tabelas: ['ownRevenues', 'constitutionalTransfersRevenue', 'municipalTaxesRevenues'] },
   { titulo: 'Fundeb', tabelas: ['municipalFundebFundefComposition', 'complementationFundebFundef'] },
   { titulo: 'Cumprimento dos mínimos legais', tabelas: ['constitutionalLimitMde', 'expensesBasicEducationFundeb', 'complementaryProtocol'] },
-  { titulo: 'Gastos e recursos da educação', tabelas: ['areasActivityExpense', 'additionalEducationRevenue', 'basicEducationMinimalPotential'] },
+  { titulo: 'Receitas e despesas da educação', tabelas: ['areasActivityExpense', 'additionalEducationRevenue', 'basicEducationMinimalPotential'] },
 ];
 
 // Mesmo formato que a página de Municípios usa: { ano: [registros] }

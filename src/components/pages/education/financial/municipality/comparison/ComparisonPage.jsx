@@ -54,7 +54,12 @@ const lerUrl = (search) => {
   const anoNum = Number(p.get('ano'));
   const ano = anoNum >= ANO_MIN && anoNum <= ANO_MAX ? anoNum : 2023;
   const lista = (p.get('municipios') || '').split(',').filter((c) => municipios[c]).slice(0, MAX_MUNICIPIOS);
-  return { tabela, ano, lista };
+  const colunas = Object.keys(TABLE_MAPPINGS[tabela].map);
+  const colunaPedida = p.get('coluna');
+  const coluna = tabela === 'complementaryProtocol' && colunas.includes(colunaPedida)
+    ? colunaPedida
+    : colunaPrincipal(tabela);
+  return { tabela, ano, lista, coluna };
 };
 
 const ComparisonPage = () => {
@@ -63,6 +68,7 @@ const ComparisonPage = () => {
   const inicial = useMemo(() => lerUrl(location.search), []); // eslint-disable-line react-hooks/exhaustive-deps
   const [tabela, setTabela] = useState(inicial.tabela);
   const [ano, setAno] = useState(inicial.ano);
+  const [coluna, setColuna] = useState(inicial.coluna);
   const [selecionados, setSelecionados] = useState(inicial.lista);
   const [valores, setValores] = useState(null); // typeToRowToValue de todos os municípios no ano
   const [carregando, setCarregando] = useState(false);
@@ -72,14 +78,16 @@ const ComparisonPage = () => {
   const config = TABLE_MAPPINGS[tabela];
   const tituloTabela = tableOptions.find((t) => t.value === tabela)?.label || '';
   const colunas = Object.keys(config.map);
-  const principal = colunaPrincipal(tabela);
+  const escolherColuna = tabela === 'complementaryProtocol';
+  const principal = escolherColuna && config.map[coluna] ? coluna : colunaPrincipal(tabela);
 
   // URL sempre reflete a comparação (dá para compartilhar o link)
   useEffect(() => {
     const p = new URLSearchParams({ tabela, ano: String(ano) });
     if (selecionados.length) p.set('municipios', selecionados.join(','));
+    if (escolherColuna && principal) p.set('coluna', principal);
     navigate({ search: p.toString() }, { replace: true });
-  }, [tabela, ano, selecionados, navigate]);
+  }, [tabela, ano, selecionados, escolherColuna, principal, navigate]);
 
   useEffect(() => {
     let cancelado = false;
@@ -134,7 +142,7 @@ const ComparisonPage = () => {
       <Box
         sx={{
           display: 'grid',
-          gridTemplateColumns: { xs: '1fr', md: '2fr 1fr 3fr' },
+          gridTemplateColumns: { xs: '1fr', md: escolherColuna ? '1.2fr 1.6fr 0.7fr 2fr' : '2fr 1fr 3fr' },
           gap: '12px',
           backgroundColor: cores.superficie,
           border: `1px solid ${cores.linha}`,
@@ -147,18 +155,33 @@ const ComparisonPage = () => {
           Tipo de dado
           <Select
             value={TABELAS.find((t) => t.value === tabela)}
-            onChange={(o) => setTabela(o.value)}
+            onChange={(o) => {
+              setTabela(o.value);
+              setColuna(colunaPrincipal(o.value));
+            }}
             options={TABELAS.map((t) => ({ ...t, descricao: undefined }))}
             size="small"
             fullWidth
           />
         </label>
+        {escolherColuna && (
+          <label style={{ fontSize: 13, fontWeight: 600, color: cores.texto }}>
+            Coluna para comparar
+            <Select
+              value={{ value: principal, label: principal }}
+              onChange={(o) => setColuna(o.value)}
+              options={colunas.map((c) => ({ value: c, label: c }))}
+              size="small"
+              fullWidth
+            />
+          </label>
+        )}
         <label style={{ fontSize: 13, fontWeight: 600, color: cores.texto }}>
           Ano
           <Select value={opcoesAnos.find((a) => a.value === ano)} onChange={(o) => setAno(o.value)} options={opcoesAnos} size="small" fullWidth />
         </label>
         <label style={{ fontSize: 13, fontWeight: 600, color: cores.texto }}>
-          Municípios (de 2 a {MAX_MUNICIPIOS})
+          Municípios (selecione de 2 a {MAX_MUNICIPIOS})
           <Select
             isMulti
             value={opcoesMunicipios.filter((o) => selecionados.includes(o.value))}
@@ -183,7 +206,7 @@ const ComparisonPage = () => {
         />
       )}
       {!carregando && !erro && selecionados.length < 2 && (
-        <EmptyState titulo="Escolha os municípios" texto={`Selecione de 2 a ${MAX_MUNICIPIOS} municípios para comparar lado a lado.`} />
+        <EmptyState titulo="Escolha os municípios" texto={`Selecione de 2 a ${MAX_MUNICIPIOS} municípios para compará-los lado a lado.`} />
       )}
 
       {pronto && (

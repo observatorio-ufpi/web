@@ -29,8 +29,6 @@ import MenuExportar from '../../../../common/MenuExportar';
 import CartoesTabela, { AlternarVisao, useVisaoCelular } from '../../../../common/CartoesTabela.jsx';
 import { carregarLogo, topoConteudoPdf, finalizarPdfComLogo } from "../../../../../utils/logoExportacao.js";
 import { carregarExcelJS, carregarJsPDF } from '../../../../../utils/bibliotecasExportacao';
-import MarcaMudancaRREO from '../../../../common/MarcaMudancaRREO.jsx';
-
 // Mesmo visual da tabela municipal (RevenueTable): cabeçalho areia compacto,
 // números alinhados pelas casas decimais, coluna de total destacada
 const isColunaTotal = (type) => /total/i.test(type);
@@ -547,7 +545,7 @@ const StateRevenueTable = ({ csvData, tableName, startYear, endYear, enableMonet
             variant="caption"
             sx={{ display: 'block', color: '#b45309', fontStyle: 'italic', marginBottom: '6px' }}
           >
-            {notaValores} — não são os valores nominais declarados no RREO.
+            {notaValores}
           </Typography>
         )}
 
@@ -556,12 +554,7 @@ const StateRevenueTable = ({ csvData, tableName, startYear, endYear, enableMonet
           <CartoesTabela
             rows={data.years}
             types={data.types}
-            rotuloLinha={(year) => (
-              <>
-                {year}
-                <MarcaMudancaRREO ano={year} />
-              </>
-            )}
+            rotuloLinha={(year) => year}
             valor={(type, year) => {
               const value = finalDisplayData[type] && finalDisplayData[type][year] !== undefined
                 ? finalDisplayData[type][year]
@@ -605,7 +598,6 @@ const StateRevenueTable = ({ csvData, tableName, startYear, endYear, enableMonet
                   >
                     <CenteredTableCell component="th" scope="row" sx={{ textAlign: 'left', fontWeight: 600 }}>
                       {year}
-                      <MarcaMudancaRREO ano={year} />
                     </CenteredTableCell>
                     {data.types.map((type, idx) => {
                       const value = finalDisplayData[type] && finalDisplayData[type][year] !== undefined 

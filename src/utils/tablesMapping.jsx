@@ -21,7 +21,7 @@ export const mapConstitutionalTransfersRevenue = {
 
 export const mapMunicipalTaxesRevenues = {
   "Receita líquida de impostos próprios": ["RECEITAS_DE_IMPOSTO", "RECEITA_DE_IMPOSTOS", "RECEITAS_DE_IMPOSTOS"],
-  "Receita líquida de transferências constitucionais federais (FPM, IPI-EXP, IOF-Ouro, ICMS desoneração)": [
+  "Receitas de transferências constitucionais": [
     "RECEITAS_DE_TRANSFERENCIAS_CONSTITUCIONAIS_E_LEGAL",
     "RECEITA_DE_TRANSFERENCIAS_CONSTITUCIONAIS_E_LEGAIS",
     "RECEITA_TRANSFERENCIAS_CONSTITUCIONAIS"
@@ -118,9 +118,9 @@ export const mapBasicEducationMinimalPotential = {
 }
 
 export const mapComplementaryProtocol = {
-  "VAAT na educação infantil(%)": ["PERCENTUAL_50_COMPLEMENTACAO_UNIAO_VAAT_EDUCACAO_INFANTIL", "PROPORCAO_50_PORCENTO_FUNDEB_VAAT_EDUCACAO_INFANTIL"],
+  "VAAT aplicado na educação infantil(%)": ["PERCENTUAL_50_COMPLEMENTACAO_UNIAO_VAAT_EDUCACAO_INFANTIL", "PROPORCAO_50_PORCENTO_FUNDEB_VAAT_EDUCACAO_INFANTIL"],
 
-  "VAAT nas despesas de capital(%)": ["MINIMO_15_COMPLEMENTACAO_UNIAO_VAAT_DESPESAS_CAPITAL", "MINIMO_15_PORCENTO_FUNDEB_VAAT_DESPESAS_CAPITAL"],
+  "VAAT aplicado em despesas de capital(%)": ["MINIMO_15_COMPLEMENTACAO_UNIAO_VAAT_DESPESAS_CAPITAL", "MINIMO_15_PORCENTO_FUNDEB_VAAT_DESPESAS_CAPITAL"],
 
   "Total geral das despesas com educação": ["TOTAL_DAS_DESPESAS_COM_ENSINO_POR_SUBFUNCAO", "TOTAL_DESPESAS_COM_ENSINO", "TOTAL_GERAL_DESPESAS_MDE", "TOTAL_GERAL_DESPESAS_EDUCACAO", "TOTAL_GERAL_DAS_DESPESAS_COM_EDUCACAO"],
 
@@ -152,7 +152,7 @@ export const mapAllTables = {
   "Outras transferências e compensações financeiras de impostos e transferências constitucionais": ["COMPENSACOES_FINANCEIRAS", "OUTRAS_TRANSFERENCIAS_IMPOSTOS_E_TRANSFERENCIAS_CONSTITUCIONAIS"],
   "TOTAL TRANSFERENCIAS CONSTITUCIONAIS": ["RECEITAS_DE_TRANSFERENCIAS_CONSTITUCIONAIS_E_LEGAL", "RECEITA_DE_TRANSFERENCIAS_CONSTITUCIONAIS_E_LEGAIS", "RECEITA_TRANSFERENCIAS_CONSTITUCIONAIS"],
   "Receita líquida de impostos próprios": ["RECEITAS_DE_IMPOSTO", "RECEITA_DE_IMPOSTOS", "RECEITAS_DE_IMPOSTOS"],
-  "Receita líquida de transferências constitucionais federais (FPM, IPI-EXP, IOF-Ouro, ICMS desoneração)": [
+  "Receitas de transferências constitucionais": [
     "RECEITAS_DE_TRANSFERENCIAS_CONSTITUCIONAIS_E_LEGAL",
     "RECEITA_DE_TRANSFERENCIAS_CONSTITUCIONAIS_E_LEGAIS",
     "RECEITA_TRANSFERENCIAS_CONSTITUCIONAIS"

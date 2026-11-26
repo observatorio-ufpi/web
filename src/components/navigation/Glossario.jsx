@@ -16,10 +16,10 @@ const Glossario = () => {
     <main className="homepage-background px-4 py-14">
       <div className="mx-auto max-w-4xl">
         <p className="text-sm font-semibold uppercase tracking-wider text-brand mb-2">Glossário</p>
-        <h1 className="text-3xl md:text-4xl font-bold text-ink mb-3">Termos usados nos dados</h1>
+        <h1 className="text-3xl md:text-4xl font-bold text-ink mb-3">Entenda os termos e as fontes dos dados</h1>
         <p className="text-lg text-texto leading-relaxed mb-10 max-w-2xl">
-          Explicações em linguagem simples para as siglas e nomes que aparecem nas tabelas e gráficos.
-          Nas tabelas, os nomes de coluna com sublinhado pontilhado mostram essa explicação ao passar o mouse.
+          Explicações em linguagem simples para as siglas e os termos que aparecem nas tabelas e nos gráficos.
+          Nas tabelas, os nomes das colunas com sublinhado pontilhado apresentam explicações que podem ser visualizadas ao passar o mouse.
         </p>
 
         {grupos.map((grupo) => (
@@ -28,7 +28,7 @@ const Glossario = () => {
             <dl className="grid gap-3 md:grid-cols-2">
               {GLOSSARIO.filter((g) => g.grupo === grupo).map((g) => (
                 <div
-                  key={g.termo}
+                  key={`${grupo}-${g.termo}`}
                   data-termo={g.termo}
                   className={`rounded-xl border bg-white px-5 py-4 ${g.termo === termoDestacado ? 'border-brand ring-2 ring-brand/30' : 'border-line'}`}
                 >

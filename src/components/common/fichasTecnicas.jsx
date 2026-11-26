@@ -57,7 +57,7 @@ const MUNICIPAIS = {
     calculo: 'RPEB = 25% da receita de impostos e transferências − recursos destinados ao Fundeb + recursos recebidos do Fundeb + complementação da União + salário-educação + programas do FNDE + royalties destinados à educação.',
   },
   complementaryProtocol: {
-    oQue: 'Indicadores complementares do novo Fundeb: aplicação do VAAT na educação infantil e em despesas de capital, despesas com pessoal ativo e inativo, transferências a instituições conveniadas, despesas de capital e recursos de MDE fora do Fundeb.',
+    oQue: 'Indicadores complementares do novo Fundeb: VAAT aplicado na educação infantil e VAAT aplicado em despesas de capital, despesas com pessoal ativo e inativo, transferências a instituições conveniadas, despesas de capital e recursos de MDE fora do Fundeb.',
     calculo: 'Percentuais e valores informados no RREO a partir de 2021. Mínimos do VAAT (Lei 14.113/2020): 50% na educação infantil e 15% em despesas de capital — só se aplicam a quem recebe complementação VAAT (0% indica que o município não recebeu).',
   },
 };
@@ -72,7 +72,7 @@ const OUTRAS = {
     calculo: 'Cada indicador é uma razão entre rubricas do RREO (ex.: participação do Fundeb = receitas do Fundeb ÷ receita resultante de impostos × 100). Divisões por zero retornam 0.',
   },
   indicadoresEstaduais: {
-    oQue: 'Gráficos da evolução das finanças da educação do Estado do Piauí: composição das receitas, Fundeb, MDE, despesas com educação, receitas adicionais e RPEB.',
+    oQue: 'Gráficos da evolução das finanças da educação do Estado do Piauí, agrupados como os indicadores municipais: finanças públicas, capacidade de financiamento, recursos do Fundeb e controle da aplicação.',
     calculo: 'Calculados a partir das tabelas estaduais, com as mesmas regras das tabelas.',
   },
 };

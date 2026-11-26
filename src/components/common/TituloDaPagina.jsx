@@ -17,7 +17,7 @@ const TITULOS_POR_ROTA = {
   '/indicadores': 'Indicadores financeiros dos municípios',
   '/indicadores-estaduais': 'Indicadores financeiros do Estado',
   '/comparar': 'Comparar municípios',
-  '/ranking': 'Ranking dos municípios',
+  '/ranking': 'Ranking dos dados financeiros dos municípios',
   '/dados-educacionais/basica': 'Educação básica',
   '/dados-educacionais/condicoes-de-oferta': 'Condições de oferta',
   '/dados-educacionais/superior': 'Educação superior',

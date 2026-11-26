@@ -356,14 +356,14 @@ const Home = () => {
             <br /> <span className="font-light italic">município por município</span>
           </h1>
           <p className="surgir mx-auto mb-9 max-w-2xl text-lg leading-relaxed text-texto" style={{ animationDelay: '160ms' }}>
-            Financiamento, matrículas, escolas e indicadores dos 224 municípios, com fonte oficial — para consultar, comparar e baixar.
+          Dados e indicadores educacionais e financeiros do Estado e dos 224 municípios, com fontes oficiais — para consultar, comparar e baixar.
           </p>
 
           {/* Busca única da página: municípios, territórios, tabelas, páginas e glossário.
               Município: Financiamento ou Matrículas e escolas, direto no resultado. */}
           <div className="surgir relative z-20 mx-auto max-w-2xl text-left" style={{ animationDelay: '240ms' }}>
             <label htmlFor="busca-municipio" className="sr-only">
-              Buscar município, tabela ou termo
+            Digite o nome de um município, uma tabela ou um termo
             </label>
             <BuscaInicio />
             {/* Últimos perfis abertos neste navegador */}
@@ -423,7 +423,7 @@ const Home = () => {
             Monitoramento da ação estatal e direito à educação
           </h2>
           <p className="text-lg text-gray-700 mb-12 max-w-4xl mx-auto leading-relaxed text-center">
-            Ao escolher um eixo temático, você pode consultar painéis com dados e indicadores sobre o Piauí e seus 224 municípios em um período abrangente.
+            Ao escolher um eixo temático, você pode consultar painéis com dados e indicadores sobre o Piauí e seus 224 municípios, abrangendo diferentes períodos.
           </p>
           
           <div className="feature-cards-container">
@@ -432,21 +432,21 @@ const Home = () => {
             {[
               {
                 titulo: 'Dados financeiros',
-                texto: 'Dados sobre o financiamento da educação, com visualizações gráficas e análises.',
+                texto: 'Dados sobre o financiamento da educação, apresentados por meio de visualizações gráficas e análises.',
                 Icone: FaDollarSign,
                 cores: { borda: 'border-line', fundoIcone: 'bg-areia', icone: 'text-brand' },
                 onClick: () => navigate('/dados-financeiros'),
               },
               {
                 titulo: 'Dados educacionais',
-                texto: 'Dados e indicadores sobre educação básica e superior, com visualizações gráficas e análises.',
+                texto: 'Dados e indicadores sobre educação básica e superior, apresentados por meio de visualizações gráficas e análises.',
                 Icone: FaGraduationCap,
                 cores: { borda: 'border-line', fundoIcone: 'bg-areia', icone: 'text-brand' },
                 onClick: () => navigate('/dados-educacionais'),
               },
               {
                 titulo: 'Repositório/Acervo',
-                texto: 'Conjunto de documentos contendo a base legal, normativa e da produção científica que orienta a política educacional no Piauí e em seus 224 municípios.',
+                texto: 'Conjunto de documentos que reúne a legislação, as normas e a produção científica que fundamentam e orientam a política educacional no Piauí e em seus 224 municípios.',
                 Icone: FaFileAlt,
                 cores: { borda: 'border-line', fundoIcone: 'bg-areia', icone: 'text-brand' },
                 onClick: () => { window.location.href = 'https://repositorio.opepi.pi.gov.br'; },
@@ -500,11 +500,11 @@ const Home = () => {
               Para escolher pelo nome, a busca fica no topo da página (antes havia outro seletor aqui). */}
           <p className="mb-2 text-center text-sm font-semibold uppercase tracking-wider text-brand">Panorama</p>
           <h2 className="headline-large text-4xl md:text-5xl text-black text-center mb-6" aria-live="polite">
-            {selectedMunicipality === '22' ? 'O que os dados dizem sobre o Piauí' : `O que os dados dizem sobre ${selectedMunicipalityName}`}
+            {selectedMunicipality === '22' ? 'O que os dados dizem sobre o Piauí?' : `O que os dados dizem sobre ${selectedMunicipalityName}?`}
           </h2>
           <div className="mb-12 flex flex-wrap items-center justify-center gap-3">
             {selectedMunicipality === '22' ? (
-              <p className="text-texto">Clique num município no mapa para ver os números dele.</p>
+              <p className="text-texto">Clique em um município no mapa para visualizar a suas características básicas</p>
             ) : (
               <>
                 <Link
@@ -899,7 +899,7 @@ const Home = () => {
             </div>
 
             {/* Lado Direito - Descrição */}
-            <div className="text-left">
+            <div className="text-justify">
               <p className="text-lg text-gray-700 leading-relaxed">
                 O Observatório da Política Educacional Piauiense (Opepi) se constitui em ação interdisciplinar (Educação, Ciências da Computação, Biblioteconomia e Comunicação Social), interinstitucional (UFPI, UESPI e IFPI) e intercampi (Teresina, Parnaíba, Floriano, São Raimundo Nonato, Picos), materializada pela formação grupos de trabalho e células de pesquisa temáticas dedicadas aos diferentes objetos da política educacional.
                 O Observatório pretende responder à seguinte questão: Quais as tendências, potencialidades e desafios da ação estatal para a garantia do direito à educação no Piauí?

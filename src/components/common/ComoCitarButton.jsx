@@ -8,10 +8,21 @@ import { cores } from '../../theme/tokens';
 // "Como citar": referência no padrão ABNT para quem usa os dados em trabalhos,
 // matérias ou relatórios. Usa o link da consulta atual (os filtros já vão na URL).
 const MESES_ABNT = ['jan.', 'fev.', 'mar.', 'abr.', 'maio', 'jun.', 'jul.', 'ago.', 'set.', 'out.', 'nov.', 'dez.'];
+const SITE_PUBLICO = 'https://opepi.pi.gov.br';
+
+// A citação aponta para o site público, mesmo quando a consulta foi aberta em localhost.
+export const urlDaCitacao = (href) => {
+  try {
+    const u = new URL(href);
+    return `${SITE_PUBLICO}${u.pathname}${u.search}${u.hash}`;
+  } catch {
+    return href;
+  }
+};
 
 export const montarCitacao = (titulo, url, hoje = new Date()) =>
   `OBSERVATÓRIO DA POLÍTICA EDUCACIONAL PIAUIENSE (OPEPI). ${titulo}. Teresina: UFPI, ${hoje.getFullYear()}. ` +
-  `Disponível em: ${url}. Acesso em: ${hoje.getDate()} ${MESES_ABNT[hoje.getMonth()]} ${hoje.getFullYear()}.`;
+  `Disponível em: ${urlDaCitacao(url)}. Acesso em: ${hoje.getDate()} ${MESES_ABNT[hoje.getMonth()]} ${hoje.getFullYear()}.`;
 
 const ComoCitarButton = ({ titulo }) => {
   const [aberto, setAberto] = useState(false);
@@ -37,7 +48,7 @@ const ComoCitarButton = ({ titulo }) => {
         <DialogTitle sx={{ fontWeight: 600 }}>Como citar estes dados</DialogTitle>
         <DialogContent dividers>
           <Typography sx={{ fontSize: '13px', color: cores.textoSuave, marginBottom: '10px' }}>
-            Referência no padrão ABNT, com o link desta consulta:
+            Referência bibliográfica conforme as normas da ABNT, com o link direto para esta consulta
           </Typography>
           <Typography
             sx={{

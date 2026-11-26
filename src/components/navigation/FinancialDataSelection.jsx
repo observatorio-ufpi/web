@@ -32,7 +32,7 @@ const FinancialDataSelection = () => {
           marginBottom: 3,
         }}
       >
-        Selecione o tipo de dados financeiros que deseja visualizar
+        Selecione o tipo de informação financeira que deseja visualizar
       </Typography>
       
       <div 
@@ -136,10 +136,10 @@ const FinancialDataSelection = () => {
                 }}
               />
               <Typography variant="h6" component="h2" gutterBottom>
-                Indicadores - Município
+                Indicadores Municipais
               </Typography>
               <Typography variant="body2" color="textSecondary">
-                Explore indicadores e gráficos financeiros dos municípios.
+                Explore indicadores e gráficos sobre as finanças dos municípios.
               </Typography>
               <Button 
                 component={Link} 
@@ -172,10 +172,10 @@ const FinancialDataSelection = () => {
                 }}
               />
               <Typography variant="h6" component="h2" gutterBottom>
-                Indicadores - Estado
+                Indicadores Estaduais
               </Typography>
               <Typography variant="body2" color="textSecondary">
-                Explore indicadores e gráficos financeiros do estado.
+                Explore indicadores e gráficos sobre as finanças do estado do Piauí.
               </Typography>
               <Button 
                 component={Link} 

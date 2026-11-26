@@ -154,17 +154,10 @@ export const stateTableNames = {
   tabela13: 'Controle da aplicação de recursos em educação no Estado do Piauí'
 };
 
-// Opções para os indicadores do estado
+// Agrupamento dos indicadores do estado, no mesmo modelo dos municipais
 export const stateIndicatorOptions = [
-  { value: 'revenueComposition', label: 'Composição das Receitas' },
-  { value: 'fundeb', label: 'Fundeb' },
-  { value: 'mde', label: 'Manutenção e Desenvolvimento do Ensino (MDE)' },
-  { value: 'educationExpense', label: 'Despesas com Educação' },
-  { value: 'additionalRevenue', label: 'Receitas Adicionais' },
-  { value: 'rpeb', label: 'Composição da Receita Potencial de Educação (RPEB)' },
-  { value: 'publicFinances', label: 'Indicadores de Finanças Públicas' },
-  { value: 'financingCapacity', label: 'Capacidade de Financiamento' },
-  { value: 'fundebResources', label: 'Indicadores dos Recursos do Fundeb' },
-  { value: 'resourceApplicationControl', label: 'Controle da Aplicação dos Recursos' },
-  { value: 'educationInvestment', label: 'Investimento em Educação' },
+  { value: 'financasPublicas', label: '1 - Indicadores de Finanças Públicas' },
+  { value: 'capacidadeFinanciamento', label: '2 - Capacidade de Financiamento' },
+  { value: 'recursosFundeb', label: '3 - Indicadores dos Recursos do Fundeb' },
+  { value: 'controleAplicacao', label: '4 - Controle da Aplicação dos Recursos' },
 ];

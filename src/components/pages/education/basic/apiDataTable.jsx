@@ -612,7 +612,7 @@ const SourceFooter = ({
 }) => (
   <div
     style={{
-      textAlign: "right",
+      textAlign: "left",
       marginTop: "10px",
       fontSize: "12px",
       color: "#666",

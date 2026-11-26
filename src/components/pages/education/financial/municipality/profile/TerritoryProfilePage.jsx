@@ -19,6 +19,15 @@ const ehPct = (coluna) => String(coluna || '').includes('%');
 const num = (v) => (typeof v === 'number' && !Number.isNaN(v) ? v : null);
 const minimoDoAno = (minimo, ano) => (typeof minimo === 'function' ? minimo(Number(ano)) : minimo);
 const pct = (v) => `${v.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`;
+const pctMinimo = (v) => {
+  const inteiro = Math.abs(v - Math.round(v)) < 0.05;
+  const numero = inteiro ? String(Math.round(v)) : v.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  return `${numero}%`;
+};
+const textoDoMinimo = (min) =>
+  Math.round(min) === 70
+    ? `atingiram o mínimo de ${pctMinimo(min)}`
+    : `atingiram o mínimo constitucional de ${pctMinimo(min)}`;
 const mediana = (vs) => {
   const o = [...vs].sort((a, b) => a - b);
   return o.length ? o[Math.floor(o.length / 2)] : null;
@@ -62,18 +71,18 @@ const CardCumprimento = ({ cfg, agregado, total }) => {
   return (
     <div className="rounded-[14px] border border-line bg-white p-4">
       <p className="mb-1 text-[13px] text-muted">
-        {cfg.rotulo} em {ultimo}
+        {cfg.rotulo} em {ultimo}{cfg.pontoFinal ? '.' : ''}
       </p>
       {lista.length ? (
         <>
           <p className="text-2xl font-bold text-ink">
-            {lista.length - abaixo.length} de {lista.length} municípios
+            {lista.length - abaixo.length} dos {lista.length} municípios
           </p>
           <p className="mb-2 text-[13px] text-texto">
-            atingiram o mínimo de {pct(min)}
+            {textoDoMinimo(min)}
             {cfg.zeroSemAplicacao && lista.length < total ? ` (só entram os ${lista.length} que receberam)` : ''}
           </p>
-          {med !== null && <p className="text-[13px] text-muted">Mediana do território: {pct(med)}</p>}
+          {med !== null && <p className="text-[13px] text-muted">Mediana do Território: {pct(med)}</p>}
           {abaixo.length > 0 && (
             <p className="mt-2 text-[13px] leading-relaxed text-texto">
               <span className="font-semibold">Abaixo do mínimo: </span>
@@ -99,7 +108,7 @@ const CardCumprimento = ({ cfg, agregado, total }) => {
           </div>
           <p className="mt-1 flex justify-between text-[11px] text-muted">
             <span>{anos.slice(-18)[0]}</span>
-            <span>% de municípios que cumpriram, por ano</span>
+            <span>% de municípios que cumpriram o mínimo, por ano</span>
             <span>{ultimo}</span>
           </p>
         </>
@@ -139,7 +148,7 @@ const SecaoTerritorio = ({ chave, tabela, anoInicial, total }) => {
       <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
         <h3 className="text-base font-semibold text-ink">{nome}</h3>
         <Link to={link} className="text-sm font-semibold text-brand hover:text-brand-dark print:hidden">
-          Ver município a município →
+          Ver os dados dos municípios →
         </Link>
       </div>
       {estado.carregando && (
@@ -159,7 +168,7 @@ const SecaoTerritorio = ({ chave, tabela, anoInicial, total }) => {
               </button>
             </>
           ) : (
-            'Sem dados do território no período.'
+            'Sem dados do Território no período.'
           )}
         </p>
       )}
@@ -185,8 +194,7 @@ const SecaoTerritorio = ({ chave, tabela, anoInicial, total }) => {
           )}
           {cardsSoma.length > 0 && tiposValor.length > 0 && (
             <p className="text-[12px] text-muted">
-              Valores em reais: soma dos {ag.comDado[ultimo]} municípios com dado em {ultimo}
-              {ag.comDado[ultimo] < total ? ` (de ${total} no território)` : ''}. Valores nominais.
+              Os valores correspondem à soma dos recursos municipais de {ultimo}, por Território de Desenvolvimento.
             </p>
           )}
         </>
@@ -215,10 +223,9 @@ const IndiceTerritorios = () => {
     <main className="homepage-background px-4 py-12">
       <div className="mx-auto max-w-6xl">
         <p className="mb-2 text-sm font-semibold uppercase tracking-wider text-brand">Territórios de desenvolvimento</p>
-        <h1 className="mb-3 text-3xl font-bold text-ink md:text-4xl">Os 12 territórios do Piauí</h1>
+        <h1 className="mb-3 text-3xl font-bold text-ink md:text-4xl">Os 12 Territórios do Piauí</h1>
         <p className="mb-8 max-w-3xl text-lg leading-relaxed text-texto">
-          Cada território reúne municípios vizinhos, conforme o planejamento do Estado. Abra um território para ver a soma dos números dos seus
-          municípios e quantos cumprem os mínimos legais.
+          Cada Território reúne municípios vizinhos, conforme o planejamento estadual. Acesse um Território para visualizar os dados financeiros do conjunto de municípios, por recortes temporais.
         </p>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {territorios.map((t) => (
@@ -270,7 +277,7 @@ const TerritoryProfilePage = () => {
     return (
       <main className="homepage-background px-4 py-14">
         <div className="mx-auto max-w-3xl">
-          <EmptyState titulo="Território não encontrado" texto="Escolha um dos territórios de desenvolvimento abaixo." />
+          <EmptyState titulo="Território não encontrado" texto="Escolha um dos Territórios de desenvolvimento abaixo." />
           <div className="mt-4 flex flex-wrap justify-center gap-2">
             {outros.map(([k, n]) => (
               <Link key={k} to={`/territorio/${slugTerritorio(k)}`} className="rounded-full border border-line bg-white px-3 py-1 text-sm text-ink hover:border-brand">
@@ -288,7 +295,7 @@ const TerritoryProfilePage = () => {
       <div className="mx-auto max-w-6xl">
         <header className="mb-8 flex flex-wrap items-end justify-between gap-6">
           <div>
-            <p className="mb-2 text-sm font-semibold uppercase tracking-wider text-brand">Perfil financeiro do território de desenvolvimento</p>
+            <p className="mb-2 text-sm font-semibold uppercase tracking-wider text-brand">Perfil financeiro do Território de desenvolvimento</p>
             <h1 className="mb-3 text-3xl font-bold text-ink md:text-4xl">{nome}</h1>
             <div className="flex flex-wrap gap-2">
               {[`${membros.length} municípios`, populacao ? `${populacao.toLocaleString('pt-BR')} habitantes` : null].filter(Boolean).map((d) => (
@@ -298,13 +305,12 @@ const TerritoryProfilePage = () => {
               ))}
             </div>
             <p className="mt-3 max-w-3xl text-sm text-muted">
-              Período {periodo.anoInicial}–{ANO_FINAL}. Valores em reais somam os municípios do território; nos percentuais, a página mostra quantos
-              municípios cumpriram cada mínimo legal.
+              Período {periodo.anoInicial}–{ANO_FINAL}. Os valores em reais correspondem à soma dos valores dos municípios que compõem o Território. Os percentuais indicam quantos municípios cumpriram cada mínimo legal.
             </p>
           </div>
           <div className="flex flex-col items-stretch gap-2 print:hidden">
             <label className="text-[13px] font-semibold text-texto">
-              Outro território
+              Outro Território
               <select
                 className="mt-1 block h-10 w-64 rounded-lg border border-line-strong bg-white px-2 text-sm text-ink"
                 value={chave}
@@ -347,8 +353,8 @@ const TerritoryProfilePage = () => {
           </Link>
         </div>
 
-        <section className="mb-10 rounded-2xl border border-line bg-white p-5" aria-label="Municípios do território">
-          <h2 className="mb-3 text-base font-semibold text-ink">Municípios do território</h2>
+        <section className="mb-10 rounded-2xl border border-line bg-white p-5" aria-label="Municípios do Território">
+          <h2 className="mb-3 text-base font-semibold text-ink">Municípios do Território</h2>
           <div className="flex flex-wrap gap-2">
             {membros.map(([codigo, m]) => (
               <Link

@@ -796,7 +796,7 @@ function RevenueTableContainer() {
         : filters.nomeMunicipio
     );
   }
-  if (filters.codigoMunicipio) etiquetas.push(`IBGE ${filters.codigoMunicipio}`);
+  if (filters.codigoMunicipio) etiquetas.push(`Código IBGE: ${filters.codigoMunicipio}`);
   if (filters.territorioDeDesenvolvimentoMunicipio) {
     etiquetas.push(Regioes[filters.territorioDeDesenvolvimentoMunicipio] || filters.territorioDeDesenvolvimentoMunicipio);
   }
@@ -807,7 +807,9 @@ function RevenueTableContainer() {
   if (filters.gerenciaRegionalMunicipio) etiquetas.push(`${filters.gerenciaRegionalMunicipio}ª GRE`);
   if (etiquetas.length === 0) etiquetas.push('Todos os municípios');
   etiquetas.push(
-    filters.anoInicial === filters.anoFinal ? `${filters.anoInicial}` : `${filters.anoInicial}–${filters.anoFinal}`
+    filters.anoInicial === filters.anoFinal
+      ? `Período: ${filters.anoInicial}`
+      : `Período: ${filters.anoInicial}–${filters.anoFinal}`
   );
 
   const tituloTabela = tableOptions.find((t) => t.value === selectedTable)?.label || '';
@@ -855,7 +857,7 @@ function RevenueTableContainer() {
           )}
 
           {!loading && !error && !apiData && !hasInitialLoad && (
-            <EmptyState titulo="Monte sua consulta" texto={'Escolha o tipo de dado, o município e o período na lateral e clique em "Mostrar".'} />
+            <EmptyState titulo="Monte sua consulta" texto={'Selecione o tipo de dado, o município e o período desejados na barra lateral. Em seguida, clique em "Mostrar" para visualizar os resultados.'} />
           )}
 
           {!loading && !error && (!displayApiData || Object.keys(displayApiData).length === 0) && hasInitialLoad && (
@@ -897,11 +899,11 @@ function RevenueTableContainer() {
                         navigate(`/comparar?tabela=${selectedTable}&ano=${filters.anoFinal}&municipios=${filters.codigoMunicipio}`)
                       }
                     >
-                      Comparar
+                      Comparar municípios
                     </Button>
                   )}
                   <ComoCitarButton
-                    titulo={`${tituloTabela} — ${filters.nomeMunicipio || 'municípios do Piauí'}, ${filters.anoInicial === filters.anoFinal ? filters.anoInicial : `${filters.anoInicial}–${filters.anoFinal}`}`}
+                    titulo={`${tituloTabela} ${filters.nomeMunicipio ? `de ${filters.nomeMunicipio}` : 'dos municípios do Piauí'}, ${filters.anoInicial === filters.anoFinal ? filters.anoInicial : `${filters.anoInicial}-${filters.anoFinal}`}`}
                   />
                   <TechnicalSheetButton className="" dialogTitle={`Ficha técnica — ${tituloTabela}`}>
               <ConteudoFicha chave={selectedTable} />
@@ -965,7 +967,7 @@ function RevenueTableContainer() {
                     {variosMunicipios && (
                       <Typography component="h2" sx={{ fontSize: '20px', fontWeight: 600, color: cores.tinta, marginBottom: '12px' }}>
                         {getNomeMunicipio(codigoMunicipio)}{' '}
-                        <span style={{ fontSize: '14px', fontWeight: 400, color: cores.textoSuave }}>IBGE {codigoMunicipio}</span>{' '}
+                        <span style={{ fontSize: '14px', fontWeight: 400, color: cores.textoSuave }}>Código IBGE: {codigoMunicipio}</span>{' '}
                         <Link
                           to={`/municipio/${codigoMunicipio}`}
                           style={{ fontSize: '14px', fontWeight: 600, color: cores.marca, textDecoration: 'none', marginLeft: '8px' }}
@@ -1006,7 +1008,7 @@ function RevenueTableContainer() {
               {rodapeUnico && (
                 <Box sx={{ marginTop: '8px' }}>
                   <Typography sx={{ fontSize: '13px', lineHeight: 1.45, color: cores.textoSuave }}>
-                    <strong>“–”</strong> nas tabelas significa: {SEM_DADO_TOOLTIP}
+                    {SEM_DADO_TOOLTIP}
                   </Typography>
                   <DataSourceNote nivel="municipal" />
                 </Box>

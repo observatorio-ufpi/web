@@ -253,7 +253,7 @@ const processCrossTableData = (data, rowIdField, columnIdField, rowField, column
 // Componente para renderizar a fonte
 const SourceFooter = ({ source = "Laboratório de Dados Educacionais - LDE" }) => (
   <div style={{
-    textAlign: 'right',
+    textAlign: 'left',
     marginTop: '10px',
     fontSize: '12px',
     color: '#666',

@@ -4,7 +4,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { Select } from '../ui';
 import YearRangeFilter from './YearRangeFilter';
 import { FaixaPopulacional, municipios, Regioes } from '../../utils/municipios.mapping';
-import { MOTIVO_MUNICIPIO_SELECIONADO, formatarOpcaoComDescricao } from '../ui/Select';
+import { MOTIVO_MUNICIPIO_SELECIONADO } from '../ui/Select';
 
 const findMunicipioCodigo = (nomeMunicipio) => {
   return Object.keys(municipios).find(
@@ -20,14 +20,14 @@ const tableTypeOptions = [
   { value: 'ownRevenues', label: 'Receita de impostos próprios', descricao: 'Quanto o município arrecadou com seus próprios impostos (IPTU, ISS, ITBI, IRRF).' },
   { value: 'constitutionalTransfersRevenue', label: 'Receita de transferências constitucionais e legais', descricao: 'Repasses que o município recebe do estado e da União (FPM, ICMS, IPVA, ITR).' },
   { value: 'municipalTaxesRevenues', label: 'Receita Líquida de Impostos do Município', descricao: 'Soma dos impostos próprios com os repasses, já descontado o que vai para o Fundeb.' },
-  { value: 'additionalEducationRevenue', label: 'Receitas adicionais da educação no Município', descricao: 'Outros recursos específicos para educação, como salário-educação e transferências do FNDE (PDDE, PNAE, PNATE).' },
-  { value: 'municipalFundebFundefComposition', label: 'Composição do Fundeb no Município', descricao: 'Como o Fundeb é formado e quanto volta para o município.' },
+  { value: 'additionalEducationRevenue', label: 'Receitas adicionais da educação nos municípios.', descricao: 'Outros recursos específicos para educação, como salário-educação e transferências do FNDE (PDDE, PNAE, PNATE).' },
+  { value: 'municipalFundebFundefComposition', label: 'Composição do Fundeb nos municípios', descricao: 'Como o Fundeb é formado e quanto volta para o município.' },
   { value: 'complementationFundebFundef', label: 'Composição da complementação do Fundeb', descricao: 'Quanto a União complementa o Fundeb deste município (VAAF, VAAT, VAAR).' },
-  { value: 'constitutionalLimitMde', label: 'Limite constitucional em MDE no Município', descricao: 'Se o município está aplicando o mínimo de 25% exigido em Manutenção e Desenvolvimento do Ensino.' },
-  { value: 'expensesBasicEducationFundeb', label: 'Despesas com profissionais da Educação básica do Fundeb', descricao: 'Quanto do Fundeb foi gasto com professores e outros profissionais da educação básica.' },
+  { value: 'constitutionalLimitMde', label: 'Aplicação do mínimo constitucional em MDE pelos municípios.', descricao: 'Se o município está aplicando o mínimo de 25% exigido em Manutenção e Desenvolvimento do Ensino.' },
+  { value: 'expensesBasicEducationFundeb', label: 'Despesas com profissionais da educação básica custeadas pelo Fundeb.', descricao: 'Quanto do Fundeb foi gasto com professores e outros profissionais da educação básica.' },
   { value: 'areasActivityExpense', label: 'Despesas em MDE por área de atuação', descricao: 'Gasto em educação dividido por etapa de ensino (creche, pré-escola, fundamental etc.).' },
   { value: 'basicEducationMinimalPotential', label: 'Receita Potencial Mínima vinculada à Educação Básica (RPEB)', descricao: 'Estimativa do mínimo de recursos disponíveis para a educação básica: impostos, Fundeb, salário-educação e programas do FNDE.' },
-  { value: 'complementaryProtocol', label: 'Protocolo Complementar', descricao: 'Indicadores extras de aplicação mínima em MDE e do VAAT na educação infantil.' },
+  { value: 'complementaryProtocol', label: 'Protocolo Complementar', descricao: 'Indicadores extras de aplicação mínima em MDE e do VAAT aplicado na educação infantil.' },
 ];
 
 
@@ -48,15 +48,32 @@ const stateTableTypeOptions = [
   { value: 'tabela13', label: 'Protocolo Complementar', descricao: 'Aplicação do VAAT, despesas com pessoal ativo e inativo, despesas de capital e recursos de MDE fora do Fundeb.' },
 ];
 
-// Opções de tipos de indicadores estaduais
+// Indicadores estaduais, no mesmo agrupamento dos municipais
 const stateIndicatorTypeOptions = [
-  { value: 'revenueComposition', label: 'Composição das Receitas', descricao: 'Peso de cada imposto e transferência na receita do Estado, ano a ano.' },
-  { value: 'fundeb', label: 'Fundeb', descricao: 'Evolução dos recursos do Fundeb no Estado e da complementação da União.' },
-  { value: 'mde', label: 'Manutenção e Desenvolvimento do Ensino (MDE)', descricao: 'Evolução do percentual aplicado em MDE frente ao mínimo de 25%.' },
-  { value: 'educationExpense', label: 'Despesas com Educação', descricao: 'Evolução das despesas do Estado com educação.' },
-  { value: 'additionalRevenue', label: 'Receitas Adicionais', descricao: 'Evolução das receitas adicionais da educação (salário-educação, FNDE, convênios).' },
-  { value: 'rpeb', label: 'Composição da Receita Potencial de Educação (RPEB)', descricao: 'Como se compõe a Receita Potencial Mínima vinculada à Educação Básica.' },
+  { value: 'financasPublicas', label: '1 - Indicadores de Finanças Públicas' },
+  { value: 'capacidadeFinanciamento', label: '2 - Capacidade de Financiamento' },
+  { value: 'recursosFundeb', label: '3 - Indicadores dos Recursos do Fundeb' },
+  { value: 'controleAplicacao', label: '4 - Controle da Aplicação dos Recursos' },
 ];
+
+const stateSubIndicatorOptions = {
+  financasPublicas: [
+    { value: 'receitasImpostosProprios', label: '1.1 - Composição das receitas de impostos próprios' },
+    { value: 'transferenciasConstitucionais', label: '1.2 - Composição das transferências constitucionais' },
+  ],
+  capacidadeFinanciamento: [
+    { value: 'rpeb', label: '2.1 - Composição da Receita Potencial de Educação (RPEB)' },
+    { value: 'receitasAdicionais', label: '2.2 - Receitas adicionais para o financiamento do ensino' },
+  ],
+  recursosFundeb: [
+    { value: 'fundeb', label: '3.1 - Composição do Fundeb' },
+  ],
+  controleAplicacao: [
+    { value: 'mdeValores', label: '4.1 - Valores exigidos e aplicados em MDE' },
+    { value: 'mdePercentual', label: '4.2 - Percentual aplicado em MDE' },
+    { value: 'profissionais', label: '4.3 - Despesas com profissionais da educação básica' },
+  ],
+};
 
 // Opções de tipos de indicadores municipais (5 categorias principais)
 const municipalIndicatorTypeOptions = [
@@ -125,7 +142,8 @@ const FilterComponent = ({
   showMunicipalIndicatorTypeFilter = false,
   selectedTableType = 'ownRevenues',
   selectedStateTableType = 'tabela1',
-  selectedStateIndicatorType = 'revenueComposition',
+  selectedStateIndicatorType = 'financasPublicas',
+  selectedStateSubIndicatorType = 'receitasImpostosProprios',
   selectedMunicipalIndicatorType = 'financasPublicas',
   selectedMunicipalSubIndicatorType = 'composicaoReceitas',
   showMunicipioFilters = true,
@@ -182,10 +200,20 @@ const FilterComponent = ({
 
   // Estado para o tipo de indicador (estadual)
   const [stateIndicatorTypeState, setStateIndicatorTypeState] = useState(
-    selectedStateIndicatorType ? 
+    selectedStateIndicatorType ?
       stateIndicatorTypeOptions.find(opt => opt.value === selectedStateIndicatorType) || stateIndicatorTypeOptions[0]
       : stateIndicatorTypeOptions[0]
   );
+
+  const getInitialStateSubIndicator = () => {
+    const indicatorType = selectedStateIndicatorType || 'financasPublicas';
+    const subOptions = stateSubIndicatorOptions[indicatorType] || stateSubIndicatorOptions.financasPublicas;
+    if (selectedStateSubIndicatorType) {
+      return subOptions.find(opt => opt.value === selectedStateSubIndicatorType) || subOptions[0];
+    }
+    return subOptions[0];
+  };
+  const [stateSubIndicatorState, setStateSubIndicatorState] = useState(getInitialStateSubIndicator);
 
   // Estado para o tipo de indicador (municipal)
   const [municipalIndicatorTypeState, setMunicipalIndicatorTypeState] = useState(
@@ -319,7 +347,8 @@ const FilterComponent = ({
       anoFinal: filters.anoFinal,
       tableType: tableTypeState ? tableTypeState.value : 'ownRevenues',
       stateTableType: stateTableTypeState ? stateTableTypeState.value : 'tabela1',
-      stateIndicatorType: stateIndicatorTypeState ? stateIndicatorTypeState.value : 'revenueComposition',
+      stateIndicatorType: stateIndicatorTypeState ? stateIndicatorTypeState.value : 'financasPublicas',
+      stateSubIndicatorType: stateSubIndicatorState ? stateSubIndicatorState.value : 'receitasImpostosProprios',
       municipalIndicatorType: municipalIndicatorTypeState ? municipalIndicatorTypeState.value : 'financasPublicas',
       municipalSubIndicatorType: municipalSubIndicatorState ? municipalSubIndicatorState.value : 'composicaoReceitas',
       loading: true,
@@ -335,7 +364,8 @@ const FilterComponent = ({
     setFilters({...filters, anoInicial: 2007, anoFinal: 2024});
     setTableTypeState(tableTypeOptions[0]); // Reset para o primeiro tipo (ownRevenues)
     setStateTableTypeState(stateTableTypeOptions[0]); // Reset para o primeiro tipo estadual (tabela1)
-    setStateIndicatorTypeState(stateIndicatorTypeOptions[0]); // Reset para o primeiro tipo de indicador estadual
+    setStateIndicatorTypeState(stateIndicatorTypeOptions[0]);
+    setStateSubIndicatorState(stateSubIndicatorOptions.financasPublicas[0]);
     setMunicipalIndicatorTypeState(municipalIndicatorTypeOptions[0]); // Reset para o primeiro tipo de indicador municipal
     setMunicipalSubIndicatorState(municipalSubIndicatorOptions['financasPublicas'][0]); // Reset para o primeiro subindicador
     
@@ -350,7 +380,8 @@ const FilterComponent = ({
       anoFinal: 2024,
       tableType: 'ownRevenues',
       stateTableType: 'tabela1',
-      stateIndicatorType: 'revenueComposition',
+      stateIndicatorType: 'financasPublicas',
+      stateSubIndicatorType: 'receitasImpostosProprios',
       municipalIndicatorType: 'financasPublicas',
       municipalSubIndicatorType: 'composicaoReceitas',
       loading: false,
@@ -371,12 +402,11 @@ const FilterComponent = ({
         {/* Tipo de Dados Municipal - Exibido apenas quando showTableTypeFilter é true */}
         {showTableTypeFilter && (
           <div className="w-full">
-            <label className="block text-xs font-medium text-gray-600 mb-0.5">Tipo de Dados</label>
+            <label className="block text-xs font-medium text-gray-600 mb-0.5">Tipo de dado</label>
             <Select
               value={tableTypeState}
               onChange={setTableTypeState}
               options={tableTypeOptions}
-              formatOptionLabel={formatarOpcaoComDescricao}
               placeholder="Selecione o tipo..."
               size="xs"
             />
@@ -391,23 +421,38 @@ const FilterComponent = ({
               value={stateTableTypeState}
               onChange={setStateTableTypeState}
               options={stateTableTypeOptions}
-              formatOptionLabel={formatarOpcaoComDescricao}
               placeholder="Selecione o tipo..."
               size="xs"
             />
           </div>
         )}
 
-        {/* Tipo de Indicador Estadual - Exibido apenas quando showStateIndicatorTypeFilter é true */}
+        {/* Indicador e subindicador estaduais, no mesmo modelo dos municipais */}
         {showStateIndicatorTypeFilter && (
           <div className="w-full">
-            <label className="block text-xs font-medium text-gray-600 mb-0.5">Tipo de Indicador</label>
+            <label className="block text-xs font-medium text-gray-600 mb-0.5">Indicador</label>
             <Select
               value={stateIndicatorTypeState}
-              onChange={setStateIndicatorTypeState}
+              onChange={(newValue) => {
+                setStateIndicatorTypeState(newValue);
+                const subOptions = stateSubIndicatorOptions[newValue?.value] || [];
+                setStateSubIndicatorState(subOptions[0] || null);
+              }}
               options={stateIndicatorTypeOptions}
-              formatOptionLabel={formatarOpcaoComDescricao}
               placeholder="Selecione o indicador..."
+              size="xs"
+            />
+          </div>
+        )}
+
+        {showStateIndicatorTypeFilter && stateIndicatorTypeState && (
+          <div className="w-full">
+            <label className="block text-xs font-medium text-gray-600 mb-0.5">Subindicador</label>
+            <Select
+              value={stateSubIndicatorState}
+              onChange={setStateSubIndicatorState}
+              options={stateSubIndicatorOptions[stateIndicatorTypeState.value] || []}
+              placeholder="Selecione o subindicador..."
               size="xs"
             />
           </div>
@@ -426,7 +471,6 @@ const FilterComponent = ({
                 setMunicipalSubIndicatorState(subOptions[0] || null);
               }}
               options={municipalIndicatorTypeOptions}
-              formatOptionLabel={formatarOpcaoComDescricao}
               placeholder="Selecione o indicador..."
               size="xs"
             />
@@ -441,7 +485,6 @@ const FilterComponent = ({
               value={municipalSubIndicatorState}
               onChange={setMunicipalSubIndicatorState}
               options={municipalSubIndicatorOptions[municipalIndicatorTypeState.value] || []}
-              formatOptionLabel={formatarOpcaoComDescricao}
               placeholder="Selecione o subindicador..."
               size="xs"
             />
@@ -484,7 +527,7 @@ const FilterComponent = ({
 
                 {/* Faixa Populacional */}
                 <div className="w-full">
-                  <label className="block text-xs font-medium text-gray-600 mb-0.5">Faixa Populacional</label>
+                  <label className="block text-xs font-medium text-gray-600 mb-0.5">Faixa populacional</label>
                   <Select
                         value={faixaState}
                         onChange={setFaixaPopulacionalMunicipio}

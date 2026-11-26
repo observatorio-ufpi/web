@@ -21,11 +21,60 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
+      - name: Diagnóstico antes do build
+        env:
+          VITE_API_PUBLIC_URL: ${{ secrets.VITE_API_PUBLIC_URL }}
+          VITE_PLAUSIBLE_DOMAIN: ${{ secrets.VITE_PLAUSIBLE_DOMAIN }}
+          VITE_PLAUSIBLE_SRC: ${{ secrets.VITE_PLAUSIBLE_SRC }}
+        run: |
+          set -euo pipefail
+          echo "===== 1/4 ambiente do runner ====="
+          echo "runner: ${RUNNER_OS:-?} ${RUNNER_ARCH:-?}"
+          echo "node: $(node -v)"
+          echo "npm: $(npm -v)"
+          echo "pasta: $(pwd)"
+          echo "CI=${CI:-}"
+          echo "script de build: $(node -p "require('./package.json').scripts.build")"
+          echo
+          echo "===== 2/4 envs do Vite ====="
+          echo "Valores públicos, gravados no bundle. Se o GitHub mostrar ***, o secret foi mascarado no log."
+          mostrar() {
+            local nome="$1"
+            local valor="${2-}"
+            if [ -z "$valor" ]; then
+              echo "$nome: VAZIA"
+            else
+              echo "$nome: $valor"
+              echo "  tamanho: ${#valor} caracteres"
+            fi
+          }
+          mostrar VITE_API_PUBLIC_URL "${VITE_API_PUBLIC_URL:-}"
+          mostrar VITE_PLAUSIBLE_DOMAIN "${VITE_PLAUSIBLE_DOMAIN:-}"
+          mostrar VITE_PLAUSIBLE_SRC "${VITE_PLAUSIBLE_SRC:-}"
+
       - name: Install dependencies
-        run: npm install
+        run: |
+          set -euo pipefail
+          echo "===== 3/4 npm install ====="
+          npm install --loglevel verbose
+          echo "===== npm install concluído ====="
 
       - name: Build project
-        run: npm run build
+        run: |
+          set -euo pipefail
+          echo "===== 4/4 npm run build ====="
+          echo "VITE_API_PUBLIC_URL=${VITE_API_PUBLIC_URL:-}"
+          echo "VITE_PLAUSIBLE_DOMAIN=${VITE_PLAUSIBLE_DOMAIN:-}"
+          echo "VITE_PLAUSIBLE_SRC=${VITE_PLAUSIBLE_SRC:-}"
+          npm run build --loglevel verbose
+          echo "===== build concluído, conferindo a pasta build/ ====="
+          if [ ! -f build/index.html ]; then
+            echo "ERRO: build/index.html não foi gerado. Conteúdo da pasta atual:"
+            ls -la
+            exit 1
+          fi
+          du -sh build
+          find build -maxdepth 2 -type f | sort
         env:
           VITE_API_PUBLIC_URL: ${{ secrets.VITE_API_PUBLIC_URL }}
           # Estatística de uso (Plausible). Sem estes secrets fica desligada.

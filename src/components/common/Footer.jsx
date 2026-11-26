@@ -29,50 +29,21 @@ const Footer = () => {
           {/* Coluna 2: Desenvolvimento */}
           <div className="text-center sm:text-left lg:col-span-4">
             <h3 className="font-bold text-lg mb-4">Desenvolvimento</h3>
-            <div className="mb-4 grid grid-cols-2 gap-4 justify-items-center sm:justify-items-start">
-              <img
-                src="/images/logos/nuppege.png"
-                alt="nuppege"
-                className="h-8"
-              />
-              <img
-                src="/images/logos/logo_ufpi.png"
-                alt="UFPI"
-                className="h-18"
-              />
-              <img
-                src="/images/logos/uespi_logo.webp"
-                alt="UESPI"
-                className="h-18"
-              />
-              <img
-                src="/images/logos/logo_ifpi.png"
-                alt="IFPI"
-                className="h-18"
-              />
-            </div>
+            <img
+              src="/images/logos/desenvolvimento.png"
+              alt="Nuppege, UFPI, UESPI e IFPI"
+              className="mb-4 mx-auto sm:mx-0 h-16 w-auto max-w-full object-contain"
+            />
           </div>
 
           {/* Coluna 3: Apoio */}
           <div className="text-center sm:text-left lg:col-span-4">
             <h3 className="font-bold text-lg mb-4">Apoio</h3>
-            <div className="mb-4 grid grid-cols-2 gap-4 justify-items-center sm:justify-items-start">
-              <img
-                src="/images/logos/fapepi.png"
-                alt="FAPEPI"
-                className="h-14 md:h-18"
-              />
-              <img
-                src="/images/logos/logo_lde.png"
-                alt="LDE"
-                className="h-8 md:h-10"
-              />
-              <img
-                src="/images/logos/logo_cnpq.png"
-                alt="CNPQ"
-                className="h-10"
-              />
-            </div>
+            <img
+              src="/images/logos/apoio.png"
+              alt="FAPEPI, LDE e CNPq"
+              className="mb-4 mx-auto sm:mx-0 h-16 w-auto max-w-full object-contain"
+            />
           </div>
 
           {/* Coluna 4: Conheça */}
@@ -89,7 +60,7 @@ const Footer = () => {
         </div>
 
         <div className="border-t border-line mt-8 pt-8 text-center text-gray-600">
-          <p>©{new Date().getFullYear()} Observatório da política educacional piauiense, Nuppege. Desenvolvido por <a href="https://www.ufpi.br" target="_blank" rel="noopener noreferrer" className="text-brand hover:text-brand-dark transition-colors">UFPI</a></p>
+          <p>©{new Date().getFullYear()} Observatório da Política Educacional Piauiense, Nuppege. Desenvolvido pela <a href="https://www.ufpi.br" target="_blank" rel="noopener noreferrer" className="text-brand hover:text-brand-dark transition-colors">UFPI</a></p>
         </div>
       </div>
     </footer>

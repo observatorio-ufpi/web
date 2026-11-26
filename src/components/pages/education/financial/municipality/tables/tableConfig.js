@@ -36,11 +36,11 @@ export const tableOptions = [
   { value: 'ownRevenues', label: 'Receita de impostos próprios' },
   { value: 'constitutionalTransfersRevenue', label: 'Receita de transferências constitucionais e legais' },
   { value: 'municipalTaxesRevenues', label: 'Receita Líquida de Impostos do Município' },
-  { value: 'additionalEducationRevenue', label: 'Receitas adicionais da educação no Município' },
-  { value: 'municipalFundebFundefComposition', label: 'Composição do Fundeb no Município' },
+  { value: 'additionalEducationRevenue', label: 'Receitas adicionais da educação nos municípios.' },
+  { value: 'municipalFundebFundefComposition', label: 'Composição do Fundeb nos municípios' },
   { value: 'complementationFundebFundef', label: 'Composição da complementação do Fundeb' },
-  { value: 'constitutionalLimitMde', label: 'Limite constitucional em MDE no Município' },
-  { value: 'expensesBasicEducationFundeb', label: 'Despesas com profissionais da Educação básica do Fundeb' },
+  { value: 'constitutionalLimitMde', label: 'Aplicação do mínimo constitucional em MDE pelos municípios.' },
+  { value: 'expensesBasicEducationFundeb', label: 'Despesas com profissionais da educação básica custeadas pelo Fundeb.' },
   { value: 'areasActivityExpense', label: 'Despesas em MDE por área de atuação' },
   { value: 'basicEducationMinimalPotential', label: 'Receita Potencial Mínima vinculada à Educação Básica (RPEB)'},
   { value: 'complementaryProtocol', label: 'Protocolo Complementar' },
@@ -66,8 +66,8 @@ export const TABLE_MAPPINGS = {
     displayName: "Impostos Próprios",
     resumo: [
       { card: "total", coluna: "Total de Receitas de Impostos Próprios", rotulo: "Total arrecadado" },
-      { card: "maiorParte", total: "Total de Receitas de Impostos Próprios", rotulo: "Maior fonte" },
-      { card: "evolucao", coluna: "Total de Receitas de Impostos Próprios", rotulo: "Total por ano" },
+      { card: "maiorParte", total: "Total de Receitas de Impostos Próprios", rotulo: "Principal fonte de arrecadação" },
+      { card: "evolucao", coluna: "Total de Receitas de Impostos Próprios", rotulo: "Evolução da arrecadação anual", periodoNoRotulo: true },
     ],
     monetaryCorrection: true,
   },
@@ -105,10 +105,10 @@ export const TABLE_MAPPINGS = {
     standardize: standardizeTypeAdditionalEducationRevenues,
     map: mapAdditionalMunicipalEducationRevenue,
     name: "Receitas_Adicionais_Educacao_Municipio",
-    displayName: "Receitas adicionais da educação no Município",
+    displayName: "Receitas adicionais da educação nos municípios.",
     resumo: [
-      { card: "total", coluna: "Total de Receitas Adicionais da Educação", rotulo: "Total de receitas adicionais" },
-      { card: "maiorParte", total: "Total de Receitas Adicionais da Educação", rotulo: "Maior fonte" },
+      { card: "total", coluna: "Total de Receitas Adicionais da Educação", rotulo: "Total das receitas adicionais" },
+      { card: "maiorParte", total: "Total de Receitas Adicionais da Educação", rotulo: "Principal fonte de receita" },
       { card: "evolucao", coluna: "Total de Receitas Adicionais da Educação", rotulo: "Total por ano" },
     ],
     monetaryCorrection: true,
@@ -119,10 +119,16 @@ export const TABLE_MAPPINGS = {
     standardize: standardizedTypeMunicipalFundebFundefComposition,
     map: mapMunicipalFundebFundefComposition,
     name: "Composicao_Fundef_Fundeb_Municipio",
-    displayName: "Composição do Fundef/Fundeb no município",
+    displayName: "Composição do Fundeb nos municípios",
     resumo: [
-      { card: "total", coluna: "Total do Fundeb", rotulo: "Total do Fundeb" },
-      { card: "saldo", coluna: "Resultado Líquido (ganhos ou perdas = recebido - enviado)", rotulo: "Saldo da redistribuição" },
+      { card: "total", coluna: "Total do Fundeb", rotulo: "Total de recursos do Fundeb" },
+      {
+        card: "saldo",
+        coluna: "Resultado Líquido (ganhos ou perdas = recebido - enviado)",
+        rotulo: "Saldo líquido da redistribuição",
+        textoPositivo: "O município recebeu mais recursos do Fundeb do que contribuiu para sua composição.",
+        textoNegativo: "O município contribuiu mais para a composição do Fundeb do que recebeu de recursos.",
+      },
       { card: "evolucao", coluna: "Total do Fundeb", rotulo: "Total por ano" },
     ],
   },
@@ -134,8 +140,8 @@ export const TABLE_MAPPINGS = {
     name: "Composicao_Complementacao_Fundef_Fundeb",
     displayName: "Composição da complementação do Fundef/Fundeb",
     resumo: [
-      { card: "total", coluna: "Total de Composição da Complementação do Fundeb", rotulo: "Complementação da União" },
-      { card: "maiorParte", total: "Total de Composição da Complementação do Fundeb", partes: ["VAAF", "VAAT", "VAAR"], rotulo: "Maior modalidade" },
+      { card: "total", coluna: "Total de Composição da Complementação do Fundeb", rotulo: "Total da complementação da União" },
+      { card: "maiorParte", total: "Total de Composição da Complementação do Fundeb", partes: ["VAAF", "VAAT", "VAAR"], rotulo: "Principal modalidade de complementação" },
       { card: "evolucao", coluna: "Total de Composição da Complementação do Fundeb", rotulo: "Total por ano" },
     ],
   },
@@ -147,13 +153,13 @@ export const TABLE_MAPPINGS = {
     name: "Despesas_MDE_Area_Atuacao",
     displayName: "Despesas em MDE por área de atuação",
     resumo: [
-      { card: "total", coluna: "Total de Despesas Típicas com MDE", rotulo: "Total gasto em MDE" },
+      { card: "total", coluna: "Total de Despesas Típicas com MDE", rotulo: "Total das despesas em MDE" },
       {
         card: "maiorParte",
         total: "Total de Despesas Típicas com MDE",
         // Creche e Pré-escola ficam de fora: já estão somadas em Educação Infantil
         partes: ["Educação Infantil", "Ensino Fundamental", "Ensino Médio", "Ensino Superior", "Educação Especial", "Educação Jovens e Adultos", "Ensino Profissional não integrado ao ensino regular", "Outras"],
-        rotulo: "Etapa com mais gasto",
+        rotulo: "Etapa com maiores despesas",
       },
       { card: "evolucao", coluna: "Total de Despesas Típicas com MDE", rotulo: "Total por ano" },
     ],
@@ -176,11 +182,14 @@ export const TABLE_MAPPINGS = {
     standardize: standardizedTypeConstitutionalLimitMde,
     map: mapConstitutionalLimitMde,
     name: "Limite_Constitucional_MDE_Municipio",
-    displayName: "Limite constitucional em MDE no município",
+    displayName: "Aplicação do mínimo constitucional em MDE pelos municípios.",
     resumo: [
       // Mínimo de 25% da receita de impostos em MDE (CF, art. 212)
-      { card: "limite", coluna: "% aplicado em MDE", minimo: 25, rotulo: "Aplicado em MDE" },
-      { card: "cumprimento", coluna: "% aplicado em MDE", minimo: 25, rotulo: "Cumpriu os 25%" },
+      {
+        card: "limite", coluna: "% aplicado em MDE", minimo: 25, rotulo: "Percentual aplicado em MDE",
+        rotuloMinimo: "Mínimo constitucional", textoAtende: "Atende ao mínimo constitucional", textoAbaixo: "Abaixo do mínimo constitucional",
+      },
+      { card: "cumprimento", coluna: "% aplicado em MDE", minimo: 25, rotulo: "Cumprimento do mínimo legal de 25%" },
       { card: "total", coluna: "Valor aplicado em MDE", rotulo: "Valor aplicado em MDE" },
     ],
   },
@@ -190,13 +199,17 @@ export const TABLE_MAPPINGS = {
     standardize: standardizedTypeExpensesBasicEducationFundeb,
     map: mapExpensesBasicEducationFundeb,
     name: "Despesas_Profissionais_Educacao_Basica_Fundef_Fundeb",
-    displayName: "Despesas com profissionais da educação básica com o Fundef/Fundeb",
+    displayName: "Despesas com profissionais da educação básica custeadas pelo Fundeb.",
     resumo: [
       // Fundeb: 60% para o magistério até 2020 (Lei 11.494/2007); 70% para profissionais
       // da educação básica a partir de 2021 (Lei 14.113/2020)
-      { card: "limite", coluna: "% aplicado com profissionais da Educação Básica", minimo: (ano) => (ano <= 2020 ? 60 : 70), rotulo: "Do Fundeb para profissionais" },
-      { card: "cumprimento", coluna: "% aplicado com profissionais da Educação Básica", minimo: (ano) => (ano <= 2020 ? 60 : 70), rotulo: "Cumpriu o mínimo" },
-      { card: "total", coluna: "Despesas com profissionais da Educação básica", rotulo: "Gasto com profissionais" },
+      {
+        card: "limite", coluna: "% aplicado com profissionais da Educação Básica", minimo: (ano) => (ano <= 2020 ? 60 : 70),
+        rotulo: "Percentual do Fundeb destinado aos profissionais",
+        textoAtende: "Atende ao mínimo legal", textoAbaixo: "Abaixo do mínimo legal",
+      },
+      { card: "cumprimento", coluna: "% aplicado com profissionais da Educação Básica", minimo: (ano) => (ano <= 2020 ? 60 : 70), rotulo: "Cumprimento do mínimo legal" },
+      { card: "total", coluna: "Despesas com profissionais da Educação básica", rotulo: "Despesas com profissionais da educação", virgulaAntesDoAno: true, pontoFinal: true },
     ],
   },
   complementaryProtocol: {
@@ -210,14 +223,14 @@ export const TABLE_MAPPINGS = {
       // VAAT: 50% na educação infantil e 15% em despesas de capital (Lei 14.113/2020, arts. 27 e 28)
       // 0% = não recebeu complementação VAAT (a regra só vale para quem recebe)
       {
-        card: "limite", coluna: "VAAT na educação infantil(%)", minimo: 50, rotulo: "VAAT na educação infantil",
-        zeroSemAplicacao: true, textoSemAplicacao: "Valor 0% no período: o município não recebeu complementação VAAT (o mínimo só vale para quem recebe).",
+        card: "limite", coluna: "VAAT aplicado na educação infantil(%)", minimo: 50, rotulo: "VAAT aplicado na educação infantil",
+        zeroSemAplicacao: true, textoSemAplicacao: "O percentual de aplicação é de 0% no período, pois o município não recebeu a complementação-VAAT. O percentual mínimo de 50% aplica-se somente aos municípios beneficiários dessa complementação.",
       },
       {
-        card: "limite", coluna: "VAAT nas despesas de capital(%)", minimo: 15, rotulo: "VAAT em despesas de capital",
-        zeroSemAplicacao: true, textoSemAplicacao: "Valor 0% no período: o município não recebeu complementação VAAT (o mínimo só vale para quem recebe).",
+        card: "limite", coluna: "VAAT aplicado em despesas de capital(%)", minimo: 15, rotulo: "VAAT aplicado em despesas de capital", pontoFinal: true,
+        zeroSemAplicacao: true, textoSemAplicacao: "O percentual de aplicação é de 0% no período, pois o município não recebeu a complementação-VAAT. O percentual mínimo de 15% aplica-se somente aos municípios beneficiários dessa complementação.",
       },
-      { card: "total", coluna: "Total geral das despesas com educação", rotulo: "Total gasto com educação" },
+      { card: "total", coluna: "Total geral das despesas com educação", rotulo: "Total geral despesas com educação" },
     ],
   },
   allTables: {

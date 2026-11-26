@@ -42,7 +42,7 @@ const BoldTableCell = styled(TableCell)(({ theme }) => ({
 // Componente para renderizar a fonte
 const SourceFooter = ({ source = "Microdados do Censo da Educação Superior/INEP" }) => (
   <div style={{
-    textAlign: 'right',
+    textAlign: 'left',
     marginTop: '10px',
     fontSize: '12px',
     color: '#666',
