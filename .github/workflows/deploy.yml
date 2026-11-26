@@ -97,6 +97,61 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+      # O openfortivpn não imprime nada entre pedir a senha e "Connected to gateway.".
+      # Este passo mede DNS, TCP e TLS em separado, para o log dizer em qual deles o runner para.
+      - name: Conferir gateway da VPN a partir do runner
+        env:
+          VPN_CERT_HASH: ${{ secrets.VPN_CERT_HASH }}
+        run: |
+          set -uo pipefail
+          host=vpnssl.ati.pi.gov.br
+          porta=443
+          . /etc/os-release
+          echo "runner: $PRETTY_NAME"
+          echo "openssl: $(openssl version)"
+          echo "===== de onde o runner sai para a internet ====="
+          curl -s -m 10 https://ipinfo.io/json || echo "(ipinfo.io não respondeu)"
+          echo
+
+          echo "===== 1/3 DNS de $host ====="
+          ip=$(getent ahostsv4 "$host" | awk 'NR==1 {print $1}')
+          if [ -z "$ip" ]; then
+            echo "ERRO: o runner não resolveu $host."
+            exit 1
+          fi
+          echo "$host -> $ip"
+
+          echo "===== 2/3 conexão TCP em $ip:$porta ====="
+          inicio=$(date +%s)
+          if timeout 10 bash -c "exec 3<>/dev/tcp/$ip/$porta"; then
+            echo "TCP abriu em $(( $(date +%s) - inicio ))s"
+          else
+            echo "ERRO: a porta $porta não abriu em 10s para o IP do runner mostrado acima."
+            echo "O gateway não aceita conexão vinda deste endereço. O openfortivpn ficaria parado, sem log."
+            exit 1
+          fi
+
+          echo "===== 3/3 handshake TLS ====="
+          if ! timeout 20 openssl s_client -connect "$ip:$porta" -servername "$host" </dev/null >/tmp/gateway-tls.txt 2>&1; then
+            echo "ERRO: o handshake TLS não completou em 20s."
+            cat /tmp/gateway-tls.txt
+            exit 1
+          fi
+          grep -E "^New, |Verify return code|Verification" /tmp/gateway-tls.txt || true
+          openssl x509 -in /tmp/gateway-tls.txt -noout -subject -enddate
+          visto=$(openssl x509 -in /tmp/gateway-tls.txt -noout -fingerprint -sha256 | cut -d= -f2 | tr -d ':' | tr 'A-F' 'a-f')
+          echo "sha256 do certificado entregue: $visto"
+          if [ "$visto" = "${VPN_CERT_HASH:-}" ]; then
+            echo "VPN_CERT_HASH confere com o certificado entregue."
+          elif [ "$visto" = "$(printf '%s' "${VPN_CERT_HASH:-}" | tr -d ': \r\n' | tr 'A-F' 'a-f')" ]; then
+            echo "ERRO: VPN_CERT_HASH tem o hash certo, mas com maiúsculas, dois-pontos ou espaço."
+            echo "O openfortivpn compara o texto exato: 64 caracteres hexadecimais em minúsculas."
+            exit 1
+          else
+            echo "ERRO: VPN_CERT_HASH difere do certificado que o gateway entregou. Atualize o secret com o sha256 acima."
+            exit 1
+          fi
+
       - name: Setup OpenFortiVPN
         env:
           VPN_PASSWORD: ${{ secrets.VPN_PASSWORD }}
@@ -130,8 +185,8 @@ jobs:
           echo "openfortivpn: $(openfortivpn --version 2>&1 | head -1 || true)"
 
           echo "===== VPN: subindo o túnel ====="
-          # O sudo deste runner não entrega o pipe ao openfortivpn, que fica parado em
-          # "VPN account password:". A senha vai no arquivo de config, modo 600, e não é impressa.
+          # A senha vai no arquivo de config, modo 600, e não é impressa. Assim o openfortivpn
+          # não depende do stdin nem mostra o prompt "VPN account password:".
           umask 077
           python3 - <<'PY'
           import os
