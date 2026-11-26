@@ -22,7 +22,7 @@ const FinancialCategorySidebar = () => {
   // Estados para os filtros
   const [selectedMunicipio, setSelectedMunicipio] = useState(filtrosDaUrl?.codigoMunicipio || null);
   const [anoInicial, setAnoInicial] = useState(filtrosDaUrl?.anoInicial || 2007);
-  const [anoFinal, setAnoFinal] = useState(filtrosDaUrl?.anoFinal || 2024);
+  const [anoFinal, setAnoFinal] = useState(filtrosDaUrl?.anoFinal || 2025);
   const [selectedTableType, setSelectedTableType] = useState(filtrosDaUrl?.tableType || 'ownRevenues');
   const [selectedStateTableType, setSelectedStateTableType] = useState('tabela1');
   const [selectedStateIndicatorType, setSelectedStateIndicatorType] = useState('financasPublicas');
@@ -56,7 +56,7 @@ const FinancialCategorySidebar = () => {
     !f ? 0 :
     [f.codigoMunicipio, f.territorioDeDesenvolvimentoMunicipio, f.faixaPopulacionalMunicipio,
       f.aglomeradoMunicipio, f.gerenciaRegionalMunicipio].filter(Boolean).length +
-    (Number(f.anoInicial) !== 2007 || Number(f.anoFinal) !== 2024 ? 1 : 0);
+    (Number(f.anoInicial) !== 2007 || Number(f.anoFinal) !== 2025 ? 1 : 0);
   const [filtrosAtivos, setFiltrosAtivos] = useState(() => contarFiltros(filtrosDaUrl));
 
   const handleFilterChange = (filters) => {

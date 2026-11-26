@@ -192,7 +192,7 @@ const montarCard = (cfg, ctx) => {
     const ls = comValor(cfg.coluna);
     if (modo === "anos") {
       if (ls.length < 2) return null;
-      const ultimos = ls.slice(-18); // série inteira (2007–2024)
+      const ultimos = ls.slice(-19); // série inteira (2007–2025)
       const inicio = ctx.anoInicial ?? ultimos[0];
       const fim = ctx.anoFinal ?? ultimos[ultimos.length - 1];
       const rotulo = cfg.periodoNoRotulo ? `${cfg.rotulo}, de ${inicio} a ${fim}` : cfg.rotulo;

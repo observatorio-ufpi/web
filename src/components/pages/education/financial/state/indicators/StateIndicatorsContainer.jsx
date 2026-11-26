@@ -104,7 +104,7 @@ function StateIndicatorsContainer() {
   const [selectedSubIndicator, setSelectedSubIndicator] = useState('receitasImpostosProprios');
   const [hasInitialLoad, setHasInitialLoad] = useState(false);
   const [startYear, setStartYear] = useState(2007);
-  const [endYear, setEndYear] = useState(2023);
+  const [endYear, setEndYear] = useState(2025);
 
   const loadCSVData = async (subIndicator, inicio, fim) => {
     const spec = SUBINDICADORES[subIndicator];
