@@ -98,11 +98,68 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Setup OpenFortiVPN
+        env:
+          VPN_PASSWORD: ${{ secrets.VPN_PASSWORD }}
+          VPN_USERNAME: ${{ secrets.VPN_USERNAME }}
+          VPN_CERT_HASH: ${{ secrets.VPN_CERT_HASH }}
         run: |
+          set -euo pipefail
+          echo "===== VPN: valores usados ====="
+          echo "gateway: vpnssl.ati.pi.gov.br:443"
+          echo "Se o GitHub mostrar ***, o secret foi mascarado no log. O tamanho continua visível."
+          mostrar() {
+            local nome="$1"
+            local valor="${2-}"
+            if [ -z "$valor" ]; then
+              echo "$nome: VAZIA"
+            else
+              echo "$nome: $valor"
+              echo "  tamanho: ${#valor} caracteres"
+            fi
+          }
+          mostrar VPN_USERNAME "${VPN_USERNAME:-}"
+          mostrar VPN_CERT_HASH "${VPN_CERT_HASH:-}"
+          if [ -z "${VPN_PASSWORD:-}" ]; then
+            echo "VPN_PASSWORD: VAZIA"
+          else
+            echo "VPN_PASSWORD: definida (${#VPN_PASSWORD} caracteres)"
+          fi
+
           sudo apt-get update
           sudo apt-get install -y openfortivpn
-          echo "${{ secrets.VPN_PASSWORD }}" | sudo openfortivpn vpnssl.ati.pi.gov.br:443 -u ${{ secrets.VPN_USERNAME }} --trusted-cert ${{ secrets.VPN_CERT_HASH }} --pppd-use-peerdns=1 &
-          sleep 15
+          echo "openfortivpn: $(openfortivpn --version 2>&1 | head -1 || true)"
+
+          echo "===== VPN: subindo o túnel ====="
+          printf '%s\n' "$VPN_PASSWORD" | sudo openfortivpn vpnssl.ati.pi.gov.br:443 \
+            -u "$VPN_USERNAME" \
+            --trusted-cert "$VPN_CERT_HASH" \
+            --pppd-use-peerdns=1 > /tmp/openfortivpn.log 2>&1 &
+
+          tunel=0
+          for i in $(seq 1 45); do
+            if grep -q "Tunnel is up" /tmp/openfortivpn.log 2>/dev/null; then
+              echo "túnel no ar após ${i}s"
+              tunel=1
+              break
+            fi
+            if ! pgrep -x openfortivpn >/dev/null && [ "$i" -gt 3 ]; then
+              echo "openfortivpn encerrou aos ${i}s, antes do túnel"
+              break
+            fi
+            sleep 1
+          done
+
+          echo "===== log do openfortivpn ====="
+          cat /tmp/openfortivpn.log || true
+          echo "===== interfaces ====="
+          ip -br addr || true
+          echo "===== rotas ====="
+          ip route || true
+
+          if [ "$tunel" -ne 1 ]; then
+            echo "ERRO: o túnel não subiu. A cópia para o servidor nem começa."
+            exit 1
+          fi
 
       - name: Download build artifacts
         uses: actions/download-artifact@v4
@@ -116,6 +173,55 @@ jobs:
           name: static-files
           path: files/
 
+      - name: Conferir SSH antes da cópia
+        env:
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          echo "===== destino da cópia ====="
+          echo "Se o GitHub mostrar ***, o secret foi mascarado no log. O tamanho continua visível."
+          mostrar() {
+            local nome="$1"
+            local valor="${2-}"
+            if [ -z "$valor" ]; then
+              echo "$nome: VAZIA"
+            else
+              echo "$nome: $valor"
+              echo "  tamanho: ${#valor} caracteres"
+            fi
+          }
+          mostrar SERVER_HOST "${SERVER_HOST:-}"
+          mostrar SERVER_USER "${SERVER_USER:-}"
+          if [ -z "${SSH_PRIVATE_KEY:-}" ]; then
+            echo "SSH_PRIVATE_KEY: VAZIA"
+          else
+            echo "SSH_PRIVATE_KEY: definida (${#SSH_PRIVATE_KEY} caracteres)"
+          fi
+          echo "origem: build/*"
+          echo "destino: /tmp/observatorio-build"
+          echo "arquivos em build/:"
+          find build -maxdepth 2 -type f | sort
+
+          echo "===== rota até o servidor ====="
+          ip route get "$SERVER_HOST" || true
+          if ip route get "$SERVER_HOST" | grep -q 'dev ppp'; then
+            echo "rota sai pela interface da VPN"
+          else
+            echo "AVISO: a rota não sai por ppp. O pacote não entra no túnel."
+          fi
+
+          echo "===== teste TCP na porta 22, a partir do runner ====="
+          if timeout 10 bash -c "echo >/dev/tcp/${SERVER_HOST}/22"; then
+            echo "porta 22 respondeu"
+          else
+            echo "ERRO: porta 22 não respondeu em 10s. É o mesmo i/o timeout do scp."
+            echo "===== log do openfortivpn agora ====="
+            cat /tmp/openfortivpn.log || true
+            exit 1
+          fi
+
       - name: Copy build to server
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -124,6 +230,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           source: "build/*"
           target: "/tmp/observatorio-build"
+          debug: true
 
       - name: Copy static files content to server
         uses: appleboy/scp-action@v0.1.7
