@@ -130,10 +130,22 @@ jobs:
           echo "openfortivpn: $(openfortivpn --version 2>&1 | head -1 || true)"
 
           echo "===== VPN: subindo o túnel ====="
-          printf '%s\n' "$VPN_PASSWORD" | sudo openfortivpn vpnssl.ati.pi.gov.br:443 \
-            -u "$VPN_USERNAME" \
-            --trusted-cert "$VPN_CERT_HASH" \
-            --pppd-use-peerdns=1 > /tmp/openfortivpn.log 2>&1 &
+          # O sudo deste runner não entrega o pipe ao openfortivpn, que fica parado em
+          # "VPN account password:". A senha vai no arquivo de config, modo 600, e não é impressa.
+          umask 077
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+          Path("/tmp/openfortivpn.conf").write_text(
+              "host = vpnssl.ati.pi.gov.br\n"
+              "port = 443\n"
+              f"username = {os.environ['VPN_USERNAME']}\n"
+              f"password = {os.environ['VPN_PASSWORD']}\n"
+              f"trusted-cert = {os.environ['VPN_CERT_HASH']}\n"
+              "pppd-use-peerdns = 1\n"
+          )
+          PY
+          sudo openfortivpn -c /tmp/openfortivpn.conf > /tmp/openfortivpn.log 2>&1 &
 
           tunel=0
           for i in $(seq 1 45); do
